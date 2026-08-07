@@ -63,7 +63,7 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   This style of thread is not commonly used in metal fasteners because it requires
 //   machining the threads, which is much more costly than the rolling procedure described
 //   above.  However, plastic threads usually have some sort of gradual thread end.
-//   For models that will be 3D printed, there is no reason to choose the standard
+//   For 3D printed models, there is no reason to choose the standard
 //   bevel end bolt, so in this library the blunt start threads are the default.
 //   If you need standard bevel-end threads, you can choose them with the `blunt_start` options.
 //   Note that blunt start threads are more efficient.
@@ -87,7 +87,7 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 // Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=44): Threaded rod mask produced using `internal=true` with regular bevel at the top and reversed bevel at the bottom.  
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel2=true,bevel1="reverse",internal=true,$fn=80);
 // Continues:
-//   You can also extend the unthreaded section using the `end_len` parameters.  A long unthreaded section will make
+//   You can also extend the unthreaded section using the `end_len` parameters.  A long unthreaded section makes
 //   it impossible to tilt the bolt and produce misaligned threads, so it could make assembly easier.  
 // Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=48): Negative bevel on a regular threaded rod.
 //   threaded_rod(d=13,pitch=2,l=15,end_len2=5,blunt_start=true,bevel=true,$fn=80);
@@ -106,13 +106,13 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   is not as good as the others in practice, because the flat faces on the threads can hit each other.
 //   The lead-in shape is produced by applying a scale factor to the thread cross section that varies along the lead-in length. 
 //   You can also specify a custom shape
-//   by giving a function literal, `f(x,L)` where `L` will be the total linear
-//   length of the lead-in section and `x` will be a value between 0 and 1 giving
+//   by giving a function literal, `f(x,L)` where `L` is the total linear
+//   length of the lead-in section and `x` is a value between 0 and 1 giving
 //   the position in the lead in, with 0 being the tip and 1 being the full height thread.
 //   The return value must be a 2-vector giving the thread width scale and thread height
 //   scale at that location.  If `x<0` the function must return a thread height scale
 //   of zero, but it is usually best if the thread width scale does not go to zero,
-//   because that will give a sharply pointed thread end.  If `x>1` the function must
+//   because that results in a sharply-pointed thread end.  If `x>1` the function must
 //   return `[1,1]`.  
 // Figure(3D,Med,NoAxes,VPR=[75,0,338],VPT=[-2,0,3.3],VPD=25): The standard lead in shapes
 //   left_half()zrot(0){
@@ -141,10 +141,10 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard ISO (metric) or UTS (English) threaded rod.  These threads are close to triangular,
-//   with a 60 degree thread angle.  You can give diameter value which specifies the outer diameter and will produce
-//   the "basic form" or you can
-//   set d to a triplet [d_min, d_pitch, d_major] where are parameters determined by the ISO and UTS specifications
-//   that define clearance sizing for the threading.  See screws.scad for how to make screws
+//   with a 60° thread angle.  You can give diameter value that specifies the outer diameter, producing
+//   the "basic form", or you can
+//   set `d` to a triplet `[d_min, d_pitch, d_major]`, which are parameters determined by the ISO and UTS specifications
+//   that define clearance sizing for the threading.  See [screws.scad](screws.scad) for making screws
 //   using the specification parameters.  
 // Arguments:
 //   d = Outer diameter of threaded rod, or a triplet of [d_min, d_pitch, d_major]. 
@@ -175,7 +175,7 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
@@ -313,7 +313,7 @@ module threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
@@ -346,9 +346,9 @@ module threaded_nut(
     anchor, spin, orient
 ) {
     dummy1=
-          assert(all_nonnegative(pitch), "Nut pitch must be nonnegative")
-          assert(all_positive(id), "Nut inner diameter must be positive")
-          assert(all_positive(h),"Nut thickness must be positive");
+          assert(all_nonnegative(pitch), "\nNut pitch must be nonnegative.")
+          assert(all_positive(id), "\nNut inner diameter must be positive.")
+          assert(all_positive(h),"\nNut thickness must be positive.");
     basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
     dummy2 = assert(basic || is_vector(id,3));
     depth = basic ? cos(30) * 5/8
@@ -396,7 +396,7 @@ module threaded_nut(
 //   For loads in only one direction the asymmetric buttress thread profile can bear greater loads.  
 //   .
 //   By default produces the nominal dimensions
-//   for metric trapezoidal threads: a thread angle of 30 degrees and a depth set to half the pitch.
+//   for metric trapezoidal threads: a thread angle of 30° and a depth set to half the pitch.
 //   You can also specify your own trapezoid parameters.  For ACME threads see acme_threaded_rod().
 // Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
@@ -478,31 +478,64 @@ module threaded_nut(
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2D):
+// Example(2D): A threaded rod profile.
 //   projection(cut=true)
-//       trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
-// Examples(Med): 
-//   trapezoidal_threaded_rod(d=10, l=40, pitch=2, $fn=32);  // Standard metric threading
-//   rot(-65)trapezoidal_threaded_rod(d=10, l=17, pitch=2, blunt_start=false, $fn=32);  // Standard metric threading
-//   trapezoidal_threaded_rod(d=10, l=17, pitch=2, bevel=true, $fn=32);  // Standard metric threading
-//   trapezoidal_threaded_rod(d=10, h=30, pitch=2, left_handed=true, $fa=1, $fs=1);  // Standard metric threading
-//   trapezoidal_threaded_rod(d=10, l=40, pitch=3, left_handed=true, starts=3, $fn=36);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, starts=3, $fa=1, $fs=1, bevel=true, orient=RIGHT, anchor=BOTTOM);
-//   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=90, blunt_start=false, $fa=2, $fs=2);
-//   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=90, end_len=0, $fa=2, $fs=2);   
-//   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=90, left_handed=true, starts=4, $fa=2, $fs=2,end_len=0);
-//   trapezoidal_threaded_rod(d=16, l=40, pitch=2, thread_angle=60);
-//   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=100, starts=4, anchor=BOT, $fa=2, $fs=2,end_len=-2);
-//   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=60, starts=11, lead_in=3, $fn=120);
-//   trapezoidal_threaded_rod(d=10, l=40, end_len2=10, pitch=2, $fn=32);  // Unthreaded top end section
-// Example(Med): Using as a Mask to Make Internal Threads
+//       trapezoidal_threaded_rod(d=10, l=15, pitch=2,
+//          orient=BACK);
+// Example: Standard metric threading
+//   trapezoidal_threaded_rod(d=10, l=40, pitch=2, $fn=32);
+// Example: Standard metric threading with `blunt_start` disabled, causing `bevel=true` to be the default.
+//   rot(-65) trapezoidal_threaded_rod(d=10, l=17, pitch=2,
+//       blunt_start=false, $fn=32);
+// Example: Standard metric threading with default `blunt_start=true` and forced `bevel=true`.
+//   trapezoidal_threaded_rod(d=10, l=17, pitch=2,
+//       bevel=true, $fn=32);
+// Example: Standard metric left-hand threadh 
+//   trapezoidal_threaded_rod(d=10, h=30, pitch=2,
+//       left_handed=true, $fa=1, $fs=1);
+// Example: Triple left-hand thread.
+//   trapezoidal_threaded_rod(d=10, l=40, pitch=3,
+//       left_handed=true, starts=3, $fn=36);
+// Example: Triple thread with anchoring and orientation demonstrated.
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2,
+//       starts=3, $fa=1, $fs=1, bevel=true,
+//       orient=RIGHT, anchor=BOTTOM);
+// Example: A 90° thread, resulting in 45° slopes friendly for 3D printing.
+//   trapezoidal_threaded_rod(d=60, l=16, pitch=8,
+//       thread_depth=3, thread_angle=90,
+//       blunt_start=false, $fa=2, $fs=2);
+// Example: A 90° thread occupying the full length of the rod.
+//   trapezoidal_threaded_rod(d=60, l=16, pitch=8,
+//       thread_depth=3, thread_angle=90,
+//       end_len=0, $fa=2, $fs=2);
+// Example: Quadruple left-handed 90° threads on a short cylinder, approximating fastening lugs.
+//   trapezoidal_threaded_rod(d=60, l=16, pitch=8,
+//       thread_depth=3, thread_angle=90,
+//       left_handed=true, starts=4,
+//       $fa=2, $fs=2,end_len=0);
+// Example(Med):
+//   trapezoidal_threaded_rod(d=16, l=40,
+//       pitch=2, thread_angle=60);
+// Example:
+//   trapezoidal_threaded_rod(d=25, l=40,
+//       pitch=10, thread_depth=8/3,
+//       thread_angle=100, starts=4, anchor=BOT,
+//       $fa=2, $fs=2,end_len=-2);
+// Example:
+//   trapezoidal_threaded_rod(d=50, l=35,
+//       pitch=8, thread_angle=60,
+//       starts=11, lead_in=3, $fn=120);
+// Example: Unthreaded top end section
+//   trapezoidal_threaded_rod(d=10, l=40,
+//       end_len2=10, pitch=2, $fn=32);
+// Example(Med): Using as a mask to make internal threads
 //   bottom_half() difference() {
 //       cube(50, center=true);
 //       trapezoidal_threaded_rod(d=40, l=51, pitch=5, thread_angle=30, internal=true, bevel=true, orient=RIGHT, $fn=36);
 //   }
-// Example(Med;VPR=[100,0,5];VPD=220): Masking a Horizontal Threaded Hole
+// Example(Med;VPR=[100,0,5];VPD=220): Masking a horizontal threaded hole
 //   difference() {
 //     cuboid(50);
 //     trapezoidal_threaded_rod(
@@ -513,6 +546,52 @@ module threaded_nut(
 //         teardrop=true, orient=FWD
 //     );
 //   }
+// Example(Med): Garden hose threads on male and female connectors (cross section view) using specifications from ASME B1.20.7-1991
+//   tpi = 11.5;  // threads per inch
+//   pitch = 1/tpi * INCH;
+//   thread_depth = 0.649519*pitch;
+//   $fn=64;
+//   
+//   // make nipple (male end)
+//   
+//   dia_male = (1 + 1/16) * INCH; // 1.0625"
+//   pilot = 1/8 * INCH;
+//   nipple_len = 9/16 * INCH;
+//   nipple_inside_dia = 25/32 * INCH;
+//   
+//   color("gold") down(pitch) difference() {
+//       zrot(195) trapezoidal_threaded_rod(d=dia_male,
+//           l=nipple_len, pitch=pitch,
+//           thread_depth=thread_depth, thread_angle=60,
+//           end_len2=pilot, bevel2=0.2, lead_in_ang2=44,
+//           anchor=BOTTOM);
+//       down(0.1) cylinder(nipple_len+0.2, d=nipple_inside_dia);
+//       translate([0.1,-20.1,-1]) cube(25); // cut section
+//   }
+//   
+//   // make coupling (female end)
+//   
+//   dia_female = (1 + 1/16 + 0.01) * INCH; // 1.0725"
+//   coupling_len = 17/32 * INCH;
+//   coupling_thread_len = 3/8 * INCH;
+//   gasket_space = coupling_len - coupling_thread_len;
+//   wall = 5;  // arbitrary, make bigger, add knurl, etc.
+//   gasket_seat_thickness = 6; // arbitrary
+//   coupling_total_len = coupling_len + gasket_seat_thickness;
+//   
+//   color("silver") difference() {
+//       cylinder(coupling_len+gasket_seat_thickness,
+//           d=dia_female+2*wall);
+//       down(0.2) cylinder(coupling_total_len+0.4,
+//           d=nipple_inside_dia+1);
+//       down(0.1) trapezoidal_threaded_rod(d=dia_female,
+//           l=coupling_len+0.1, pitch=pitch,
+//           thread_depth=thread_depth, thread_angle=60,
+//           internal=true, end_len1=0.1, end_len2=gasket_space,
+//           lead_in_ang1=38, anchor=BOTTOM);
+//       translate([0,-20,-1]) cube(25); // cut section
+//   }
+
 function trapezoidal_threaded_rod(
     d, l, pitch,
     thread_angle,
@@ -549,15 +628,15 @@ module trapezoidal_threaded_rod(
     teardrop=false,
     anchor, spin, orient
 ) {
-    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
+    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "\nCannot define both flank angle and thread angle.");
     thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
-    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
-             assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
+    dummy1 = assert(all_nonnegative(pitch),"\nMust give a positive pitch value.")
+             assert(thread_angle>=0 && thread_angle<180, "\nInvalid thread angle or flank angle.")
              assert(thread_angle<=90 || all_positive([thread_depth]),
-                   "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
+                   "\nThread angle (2*flank_angle) must be smaller than 90° with default thread depth of pitch/2.");
     depth = first_defined([thread_depth,pitch/2]);
     pa_delta = 0.5*depth*tan(thread_angle/2) / pitch;
-    dummy2 = assert(pa_delta<=1/4, "Specified thread geometry is impossible");
+    dummy2 = assert(pa_delta<=1/4, "\nSpecified thread geometry is impossible.");
     rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
@@ -588,7 +667,7 @@ module trapezoidal_threaded_rod(
 //   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle=|flank_angle=], [thread_depth], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.  By default produces
-//   the nominal dimensions for metric trapezoidal threads: a thread angle of 30 degrees and a depth
+//   the nominal dimensions for metric trapezoidal threads: a thread angle of 30° and a depth
 //   set to half the pitch.  You can also specify your own trapezoid parameters.  For ACME threads see
 //   acme_threaded_nut().
 // Arguments:
@@ -625,7 +704,7 @@ module trapezoidal_threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, $slop=0.1, anchor=UP);
@@ -678,15 +757,15 @@ module trapezoidal_threaded_nut(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
+    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "\nCannot define both flank angle and thread angle.");
     thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
-    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
-             assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
+    dummy1 = assert(all_nonnegative(pitch),"\nMust give a positive pitch value.")
+             assert(thread_angle>=0 && thread_angle<180, "\nInvalid thread angle or flank angle.")
              assert(thread_angle<=90 || all_positive([thread_depth]),
-                   "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
+                   "\nThread angle (2*flank_angle) must be smaller than 90° with default thread depth of pitch/2.");
     depth = first_defined([thread_depth,pitch/2]);
     pa_delta = 0.5*depth*tan(thread_angle/2) / pitch;
-    dummy2 = assert(pitch==0 || pa_delta<1/4, "Specified thread geometry is impossible");
+    dummy2 = assert(pitch==0 || pa_delta<1/4, "\nSpecified thread geometry is impossible.");
     rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
@@ -717,7 +796,7 @@ module trapezoidal_threaded_nut(
 // Usage:
 //   acme_threaded_rod(d, l|length, tpi|pitch=, [internal=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs an ACME trapezoidal threaded screw rod.  This form has a 29 degree thread angle with a
+//   Constructs an ACME trapezoidal threaded screw rod.  This form has a 29° thread angle with a
 //   symmetric trapezoidal thread.  
 // Arguments:
 //   d = Outer diameter of threaded rod.
@@ -747,7 +826,7 @@ module trapezoidal_threaded_nut(
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
@@ -795,7 +874,7 @@ module acme_threaded_rod(
     teardrop=false,
     anchor, spin, orient
 ) {
-    dummy = assert(num_defined([pitch,tpi])==1,"Must give exactly one of pitch and tpi");
+    dummy = assert(num_defined([pitch,tpi])==1,"\nMust give exactly one of pitch and tpi.");
     pitch = is_undef(pitch) ? INCH/tpi : pitch;
     trapezoidal_threaded_rod(
         d=d, l=l, pitch=pitch,
@@ -859,7 +938,7 @@ module acme_threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
@@ -895,7 +974,7 @@ module acme_threaded_nut(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    dummy = assert(num_defined([pitch,tpi])==1,"Must give exactly one of pitch and tpi");
+    dummy = assert(num_defined([pitch,tpi])==1,"\nMust give exactly one of pitch and tpi.");
     pitch = is_undef(pitch) ? INCH/tpi : pitch;
     dummy2=assert(is_num(pitch) && pitch>=0);
     trapezoidal_threaded_nut(
@@ -932,8 +1011,8 @@ module acme_threaded_nut(
 //   npt_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard NPT pipe end threading. If `internal=true`, creates a mask for making
-//   internal pipe threads.  Tapers smaller upwards if `internal=false`.  Tapers smaller downwards
-//   if `internal=true`.  If `hollow=true` and `internal=false`, then the pipe threads will be
+//   internal pipe threads.  Tapers smaller upward if `internal=false`.  Tapers smaller downward
+//   if `internal=true`.  If `hollow=true` and `internal=false`, then the pipe threads are
 //   hollowed out into a pipe with the apropriate internal diameter.
 // Arguments:
 //   size = NPT standard pipe size in inches.  1/16", 1/8", 1/4", 3/8", 1/2", 3/4", 1", 1+1/4", 1+1/2", or 2".  Default: 1/2"
@@ -946,7 +1025,7 @@ module acme_threaded_nut(
 //   internal = If true, make this a mask for making internal threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): The straight gray rectangle reveals the tapered threads.  
 //   projection(cut=true) npt_threaded_rod(size=1/4, orient=BACK);
@@ -986,7 +1065,7 @@ module npt_threaded_rod(
     assert(is_undef(bevel) || is_bool(bevel));
     assert(is_bool(hollow));
     assert(is_bool(internal));
-    assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
+    assert(!(internal&&hollow), "\nCannot created a hollow internal threads mask.");
     info_table = [
         // Size    len      OD    TPI
         [ 1/16,  [ 0.3896, 0.308, 27  ]],
@@ -1001,7 +1080,7 @@ module npt_threaded_rod(
         [ 2,     [ 1.0582, 2.362, 11.5]],
     ];
     info = [for (data=info_table) if(approx(size,data[0])) data[1]][0];
-    dummy1 = assert(is_def(info), "Unsupported NPT size.  Try one of 1/16, 1/8, 1/4, 3/8, 1/2, 3/4, 1, 1+1/4, 1+1/2, 2");
+    dummy1 = assert(is_def(info), "\nUnsupported NPT size. Try one of 1/16, 1/8, 1/4, 3/8, 1/2, 3/4, 1, 1+1/4, 1+1/2, 2.");
     l = INCH * info[0];
     d = INCH * info[1];
     pitch = INCH / info[2];
@@ -1084,7 +1163,7 @@ module npt_threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   bspp_threaded_rod(size=3/8, length = 10, $fn=72);
@@ -1150,12 +1229,12 @@ module bspp_threaded_rod(
     anchor, spin, orient
 )
 {
-    assert(!is_undef(size), "undefined size");
-    assert(is_num(size), "size is not a number");
+    assert(!is_undef(size), "\nUndefined size.");
+    assert(is_num(size), "\nsize is not a number.");
     _pitch = 0;
     _diameter = 1;
     index = search(size, bspp_dimensions);
-    forcefuncall = assert(len(index), str("Unsupported BSPP size ", size, "."));
+    forcefuncall = assert(len(index), str("\nUnsupported BSPP size ", size, "."));
     p = INCH / bspp_dimensions[index[0]][1][_pitch];
     d = INCH * bspp_dimensions[index[0]][1][_diameter];
     theta = 55 / 2;
@@ -1208,7 +1287,7 @@ module bspp_threaded_rod(
 // Usage:
 //   buttress_threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a simple buttress threaded rod with a 45 degree angle.  The buttress thread or sawtooth thread has low friction and high loading
+//   Constructs a simple buttress threaded rod with a 45° angle.  The buttress thread or sawtooth thread has low friction and high loading
 //   in one direction at the cost of higher friction and inferior loading in the other direction.  Buttress threads are sometimes used on
 //   vises, which are loaded only in one direction.  
 // Arguments:
@@ -1240,7 +1319,7 @@ module bspp_threaded_rod(
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
@@ -1354,7 +1433,7 @@ module buttress_threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   buttress_threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.05, $fa=1, $fs=1);
@@ -1454,7 +1533,7 @@ module buttress_threaded_nut(
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
@@ -1562,7 +1641,7 @@ module square_threaded_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   square_threaded_nut(nutwidth=16, id=10, h=10, pitch=2, starts=2, $slop=0.1, $fn=32);
@@ -1634,7 +1713,7 @@ module square_threaded_nut(
 //   l / length / h / height = Length of threaded rod.
 //   pitch = Thread spacing. Also, the diameter of the ball bearings used.
 //   ball_diam = The diameter of the ball bearings to use with this ball screw.
-//   ball_arc = The arc portion that should touch the ball bearings. Default: 120 degrees.
+//   ball_arc = The arc portion, in degrees, that should touch the ball bearings. Default: 120
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
@@ -1657,7 +1736,7 @@ module square_threaded_nut(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=100
 //   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=100, orient=BACK, $fn=24, blunt_start=false);
@@ -1737,8 +1816,8 @@ module ball_screw_rod(
 //   Constructs a generic threaded rod using an arbitrary thread profile that you supply.  The rod can be tapered
 //   (e.g. for pipe threads).  For specific thread types use other modules that supply the appropriate profile.
 //   .
-//   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile
-//   X values must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you
+//   You give the profile as a 2D path that gets scaled by the pitch to produce the final thread shape.  The profile
+//   X values must be between -1/2 and 1/2.  The Y=0 point aligns with the specified rod diameter, so generally you
 //   want a Y value of zero at the peak (which makes your specified diameter the outer diameter of the threads).  The
 //   value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The first
 //   and last points should generally have the same Y value, but it is not necessary to give values at X=1/2 or X=-1/2
@@ -1747,10 +1826,10 @@ module ball_screw_rod(
 //   .
 //   If internal is true then produce a thread mask to difference from an object.  When internal is true the rod
 //   diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the
-//   specified size.  The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 *
-//   $slop` gap on each side.  If bevel is set to true and internal is false then the ends of the rod will be beveled.
-//   When bevel is true and internal is true the ends of the rod will be filled in so that the rod mask will create a
-//   bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
+//   specified size.  The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a
+//   `2 * $slop` gap on each side. If `bevel=true` and `internal=false` then the ends of the rod are beveled.
+//   When `bevel=true` and `internal=true`, the ends of the rod are filled in so that the rod mask creates a
+//   bevel when subtracted from an object.  The bevel is at 45° and is the depth of the threads.
 //   .
 //   Blunt start threading, which is the default, specifies that the thread ends abruptly at its full width instead of
 //   running off the end of the shaft and leaving a sharp edged partial thread at the end of the screw.  This makes
@@ -1758,7 +1837,7 @@ module ball_screw_rod(
 //   faster to model, but if you really need standard threads that run off the end you can set `blunt_start=false`.
 //   .
 //   The teardrop option cuts off the threads with a teardrop for 3d printability of horizontal holes.  By default,
-//   if the screw outer radius is r then the flat top will be at distance 1.05r from the center, adding a 5% space.  
+//   if the screw outer radius is r then the flat top is distance 1.05r from the center, adding a 5% space.  
 //   You can set teardrop to a numerical value to adjust that percentage, e.g. a value of 0.1 would give a 10% space.
 //   You can set teardrop to "max" to create a pointy-top teardrop with no flat section.  
 // Arguments:
@@ -1791,9 +1870,9 @@ module ball_screw_rod(
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop (see above). Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.5]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile will be scaled up by the pitch in order to produce the final thread profile.  
+// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.5]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile is scaled up by the pitch to produce the final thread profile.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
@@ -1856,20 +1935,20 @@ module generic_threaded_rod(
     lead_in1 = first_defined([lead_in1, lead_in]);
     lead_in2 = first_defined([lead_in2, lead_in]);
     lead_in_func = is_func(lead_in_shape) ? lead_in_shape
-                 : assert(is_string(lead_in_shape),"lead_in_shape must be a function or string")
+                 : assert(is_string(lead_in_shape),"\nlead_in_shape must be a function or string.")
                    let(ind = search([lead_in_shape], _lead_in_table,0)[0])
-                   assert(ind!=[],str("Unknown lead_in_shape, \"",lead_in_shape,"\""))
+                   assert(ind!=[],str("\nUnknown lead_in_shape, \"",lead_in_shape,"\"."))
                    _lead_in_table[ind[0]][1];
     dummy0 = 
-      assert(all_positive([pitch]),"Thread pitch must be a positive value")
-      assert(all_positive([len]),"Length must be a postive value")
-      assert(is_path(profile),"Profile must be a path")
-      assert(is_bool(blunt_start1), "blunt_start1/blunt_start must be boolean")
-      assert(is_bool(blunt_start2), "blunt_start2/blunt_start must be boolean")
+      assert(all_positive([pitch]),"\nThread pitch must be a positive value.")
+      assert(all_positive([len]),"\nLength must be a postive value.")
+      assert(is_path(profile),"\nProfile must be a path.")
+      assert(is_bool(blunt_start1), "\nblunt_start1/blunt_start must be boolean.")
+      assert(is_bool(blunt_start2), "\nblunt_start2/blunt_start must be boolean.")
       assert(is_bool(left_handed))
-      assert(all_positive([r1,r2]), "Must give d or both d1 and d2 as positive values")
-      assert(is_undef(bevel1) || is_num(bevel1) || is_bool(bevel1) || bevel1=="reverse", "bevel1/bevel must be a number, boolean or \"reverse\"")
-      assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "bevel2/bevel must be a number, boolean or \"reverse\"");
+      assert(all_positive([r1,r2]), "\nMust give d or both d1 and d2 as positive values.")
+      assert(is_undef(bevel1) || is_num(bevel1) || is_bool(bevel1) || bevel1=="reverse", "\nbevel1/bevel must be a number, boolean or \"reverse\".")
+      assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "\nbevel2/bevel must be a number, boolean or \"reverse\".");
 
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;    // Internal radius adjusted for faceting
@@ -1878,8 +1957,8 @@ module generic_threaded_rod(
     r2adj = r2 * rsc + islop;
     profbounds = pointlist_bounds(profile);
     dummy4 = assert(profbounds[0].x>=-1/2 && profbounds[1].x<=1/2,
-                    "profile's x values must lie in the interval [-1/2,1/2]")
-             assert(profile[0].x<last(profile).x, "profile's first point must have smaller x value than its last point");
+                    "\nprofile's x values must lie in the interval [-1/2,1/2].")
+             assert(profile[0].x<last(profile).x, "\nprofile's first point must have smaller x value than its last point.");
     extreme = internal? profbounds[1].y : profbounds[0].y;
     profile = !internal ? profile
             : let(
@@ -1914,7 +1993,7 @@ module generic_threaded_rod(
     // applied later via difference/union if blunt start is off, so set bevel to zero in the latter case.  
     bevel_size1 = blunt_start1?bev1:0;
     bevel_size2 = blunt_start2?bev2:0;
-    // This is the bevel size for clipping, which is only done when blunt start is off
+    // This is the bevel size for clipping, which is done only when blunt start is off
     clip_bev1 = blunt_start1?0:bev1;
     clip_bev2 = blunt_start2?0:bev2;
     end_len1_base = !blunt_start1? 0 : first_defined([end_len1,end_len, 0]);
@@ -1932,9 +2011,9 @@ module generic_threaded_rod(
     turns2 = len2/pitch+1;
     dir = left_handed? -1 : 1;
     dummy2=
-        assert(abs(bevel_size1)+abs(bevel_size2)<len, "Combined bevel size exceeds length of screw")
-        assert(r1adj+extreme*pitch-bevel_size1>0, "bevel1 is too large to fit screw diameter")
-        assert(r2adj+extreme*pitch-bevel_size2>0, "bevel2 is too large to fit screw diameter");
+        assert(abs(bevel_size1)+abs(bevel_size2)<len, "\nCombined bevel size exceeds length of screw.")
+        assert(r1adj+extreme*pitch-bevel_size1>0, "\nbevel1 is too large to fit screw diameter.")
+        assert(r2adj+extreme*pitch-bevel_size2>0, "\nbevel2 is too large to fit screw diameter.");
          
     margin1 = profile[0].y==extreme ? profile[0].x : -1/2;
     margin2 = last(profile).y==extreme? last(profile).x : 1/2;
@@ -1945,7 +2024,7 @@ module generic_threaded_rod(
          let(
              user_ang = first_defined([lead_in_ang1,lead_in_ang])
          )
-         assert(is_undef(user_ang) || is_undef(lead_in1), "Cannot define lead_in/lead_in1 by both length and angle")
+         assert(is_undef(user_ang) || is_undef(lead_in1), "\nCannot define lead_in/lead_in1 by both length and angle.")
          quantup(
                  is_def(user_ang) ? user_ang : default(lead_in1, lead_in_default)*360/(2*PI*r1adj)
                  , 360/sides);
@@ -1953,7 +2032,7 @@ module generic_threaded_rod(
          let(
              user_ang = first_defined([lead_in_ang2,lead_in_ang])
          )
-         assert(is_undef(user_ang) || is_undef(lead_in2), "Cannot define lead_in/lead_in2 by both length and angle")
+         assert(is_undef(user_ang) || is_undef(lead_in2), "\nCannot define lead_in/lead_in2 by both length and angle.")
          quantup(
                  is_def(user_ang) ? user_ang : default(lead_in2, lead_in_default)*360/(2*PI*r2adj)
                  , 360/sides);
@@ -1964,9 +2043,9 @@ module generic_threaded_rod(
     cut_ang1 = quantup(360 * (len1/pitch-margin1+end_len1/pitch) / starts + lead_in_ang1-360*turns1/starts,360/sides)+360*turns1/starts;
     cut_ang2 = quantdn(360 * (len2/pitch-margin2-end_len2/pitch) / starts - lead_in_ang2-360*turns1/starts,360/sides)+360*turns1/starts;
     dummy1 =
-      assert(cut_ang1<cut_ang2, "lead in length are too long for the amount of thread: they overlap")
-      assert(is_num(lead_in_ang1), "lead_in1/lead_in must be a number")
-      assert(r1adj+profmin>0 && r2adj+profmin>0, "Screw profile deeper than rod radius");
+      assert(cut_ang1<cut_ang2, "\nlead in lengths are too long for the amount of thread: they overlap.")
+      assert(is_num(lead_in_ang1), "\nlead_in1/lead_in must be a number.")
+      assert(r1adj+profmin>0 && r2adj+profmin>0, "\nScrew profile deeper than rod radius.");
     map_threads = right((r1adj + r2adj) / 2)                   // Shift profile out to thread radius
                 * affine3d_skew(sxz=(r2adj-r1adj)/len)         // Skew correction for tapered threads
                 * frame_map(x=[0,0,1], y=[1,0,0])          // Map profile to 3d, parallel to z axis
@@ -1990,7 +2069,7 @@ module generic_threaded_rod(
                     for (turns = [turns1:1:turns2]) 
                         let(
                             tang = turns/starts * 360 + ang,
-                            // _EPSILON offset prevents funny looking extensions of the thread from its very tip
+                            // _EPSILON offset prevents funny looking extensions of the thread from its tip
                             // by forcing values near the tip to evaluate as less than zero = beyond the tip end
                             hsc = tang < cut_ang1 ? lead_in_func(-_EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
                                 : tang > cut_ang2 ? lead_in_func(-_EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
@@ -2026,9 +2105,9 @@ module generic_threaded_rod(
                           ]);
     slope = (r1adj-r2adj)/len;
     dummy3 = 
-      assert(r1adj+pmax-clip_bev1>0, "bevel1 is too large to fit screw diameter")
-      assert(r2adj+pmax-clip_bev2>0, "bevel2 is too large to fit screw diameter")
-      assert(abs(clip_bev1)+abs(clip_bev2)<len, "Combined bevel size exceeds length of screw");
+      assert(r1adj+pmax-clip_bev1>0, "\nbevel1 is too large to fit screw diameter.")
+      assert(r2adj+pmax-clip_bev2>0, "\nbevel2 is too large to fit screw diameter.")
+      assert(abs(clip_bev1)+abs(clip_bev2)<len, "\nCombined bevel size exceeds length of screw.");
     
     attachable(anchor,spin,orient, r1=r1adj, r2=r2adj, l=len) {
         union(){
@@ -2066,11 +2145,11 @@ module generic_threaded_rod(
 
           // Add teardrop profile
           if (teardrop!=false) {
-              fact = is_num(teardrop) ? assert(teardrop>=0,"teardrop value cannot be negative")1-1/sqrt(2)+teardrop
+              fact = is_num(teardrop) ? assert(teardrop>=0,"\nteardrop value cannot be negative.")1-1/sqrt(2)+teardrop
                    : is_bool(teardrop) ? 1-1/sqrt(2)+0.05
                    : teardrop=="max" ? 1/sqrt(2)
-                   : assert(false,"invalid teardrop value");
-              dummy = assert(fact<=1/sqrt(2), "teardrop value too large");
+                   : assert(false,"\ninvalid teardrop value.");
+              dummy = assert(fact<=1/sqrt(2), "\nteardrop value too large.");
               pdepth = pmax-profmin;              
               trap1 = back((r1adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r1adj+pmax)*sqrt(2), h = (r1adj+pmax)*fact,anchor=FWD),1),-l/2));
               trap2 = back((r2adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r2adj+pmax)*sqrt(2), h = (r2adj+pmax)*fact,anchor=FWD),1), l/2));
@@ -2086,7 +2165,7 @@ module generic_threaded_rod(
                       [each cut2, each trap2]
               ];
               vnf_polyhedron(vnf_vertex_array(vert,caps=true,col_wrap=true));
-              //     Old code creates an internal teardrop which unfortunately doesn't print well
+              //     Old code creates an internal teardrop that unfortunately doesn't print well
               //ang = min(45,opp_hyp_to_ang(rmax+profmin, rmax+pmax));
               //xrot(-90) teardrop(l=l, r1=r1adj+profmin, r2=r2adj+profmin, ang=ang, cap_h1=r1adj+pmax, cap_h2=r2adj+pmax);
           }
@@ -2148,7 +2227,7 @@ module __rot_if_old()
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 function generic_threaded_nut(
     nutwidth,
@@ -2195,10 +2274,10 @@ module generic_threaded_nut(
     id1 = first_defined([id1,id]);
     id2 = first_defined([id2,id]);
     h = one_defined([h,height,thickness,l,length],"h,height,thickness,l,length");
-    dummyA = assert(is_num(pitch) && pitch>=0, "pitch must be a nonnegative number")
-             assert(is_num(h) && h>0, "height/thickness must be a positive number")
-             assert(in_list(shape,["square","hex"]), "shape must be \"hex\" or \"square\"")
-             assert(all_positive([id1,id2]), "Inner diameter(s) of nut must be positive number(s)");
+    dummyA = assert(is_num(pitch) && pitch>=0, "\npitch must be a nonnegative number.")
+             assert(is_num(h) && h>0, "\nheight/thickness must be a positive number.")
+             assert(in_list(shape,["square","hex"]), "\nshape must be \"hex\" or \"square\".")
+             assert(all_positive([id1,id2]), "\nInner diameter(s) of nut must be positive number(s).");
     slope = (id2-id1)/h;
     full_id1 = id1-slope*extra/2;
     full_id2 = id2+slope*extra/2;
@@ -2270,23 +2349,23 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //   to handle threads found in plastic and glass bottles.
 //   .
 //   You can specify a thread_depth and flank_angle, in which case you get a symmetric trapezoidal
-//   thread, whose inner diameter (the base of the threads for external threading) is d (so the
-//   total diameter will be d + thread_depth).  This differs from the threaded_rod modules, where
-//   the specified diameter is the outer diameter.  Alternatively you can give a profile, following
-//   the same rules as for general_threaded_rod.  The Y=0 point will align with the specified
-//   diameter, and the profile should range in X from -1/2 to 1/2.  You cannot specify both the
-//   profile and the thread_depth or flank_angle.
+//   thread, whose inner diameter (the base of the threads for external threading) is `d` (so the
+//   total diameter is `d + thread_depth`). This differs from the threaded_rod modules, where
+//   the specified diameter is the outer diameter. Alternatively you can give a profile, following
+//   the same rules as for general_threaded_rod.  The Y=0 point align1 with the specified
+//   diameter, and the profile should range in X from -1/2 to 1/2. You cannot specify both the
+//   profile and the `thread_depth` or `flank_angle`.
 //   .
 //   Unlike {{generic_threaded_rod()}, when internal=true this module generates the threads, not a thread mask.
 //   The profile needs to be inverted to produce the proper thread form.  If you use the built-in trapezoidal
 //   thread you get the inverted thread, designed so that the inner diameter is d.  If you supply a custom profile
 //   you must invert it yourself to get internal threads.  With adequate clearance
-//   this thread will mate with the thread that uses the same parameters but has internal=false.  Note that
-//   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
-//   subtract any $slop for clearance.  
+//   this thread would mate with the thread that uses the same parameters but has `internal=false`.
+//   Unlike the threaded_rod modules, `thread_helix()` does not adjust the diameter for faceting, nor does it
+//   subtract any `$slop` for clearance.
 //   .
-//   The lead_in options specify a lead-in section where the ends of the threads scale down to avoid a sharp face at the thread ends.
-//   You can specify the length of this scaling directly with the lead_in parameters or as an angle using the lead_in_ang parameters.
+//   The `lead_in` options specify a lead-in section where the ends of the threads scale down to avoid a sharp face at the thread ends.
+//   You can specify the length of this scaling directly with the `lead_in` parameters or as an angle using the `lead_in_ang` parameters.
 //   If you give a positive value, the extrusion is lengthenend by the specified distance or angle; if you give a negative
 //   value then the scaled end is included in the extrusion length specified by `turns`.  If the value is zero then no scaled ends
 //   are produced.  The shape of the scaled ends can be controlled with the lead_in_shape parameter.  Supported options are "sqrt", "linear"
@@ -2345,12 +2424,12 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //   ---
 //   turns = Number of revolutions to rotate thread around.
 //   thread_depth = Depth of threads from top to bottom.
-//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
+//   flank_angle = Angle of thread faces to plane perpendicular to screw. Default: 15°
 //   thread_angle = Angle between two thread faces.  
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
-//   internal = if true make internal threads.  The only effect this has is to change how the thread lead_in is constructed. When true, the lead-in section tapers towards the outside; when false, it tapers towards the inside.  Default: false
+//   internal = if true make internal threads.  The only effect this has is to change how the thread lead_in is constructed. When true, the lead-in section tapers toward the outside; when false, it tapers toward the inside.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
 //   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
@@ -2363,7 +2442,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(2DMed): Typical Tooth Profile
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
@@ -2399,13 +2478,13 @@ module thread_helix(
     lead_in_sample=10,
     anchor, spin, orient
 ) {
-    dummy1=assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle")
+    dummy1=assert(num_defined([thread_angle,flank_angle])<=1, "\nCannot define both flank angle and thread angle.")
            assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),
-                  "Cannot give thread_depth or flank_angle with a profile")
-           assert(all_positive([turns]), "The turns parameter must be a positive number")
-           assert(all_positive(pitch), "pitch must be a positive number")
-           assert(num_defined([flank_angle,thread_angle])<=1, "Cannot give both thread_angle and flank_angle")
-           assert(is_def(profile) || is_def(thread_depth), "If profile is not given, must give thread depth");
+                  "\nCannot give thread_depth or flank_angle with a profile.")
+           assert(all_positive([turns]), "\nThe turns parameter must be a positive number.")
+           assert(all_positive(pitch), "\npitch must be a positive number.")
+           assert(num_defined([flank_angle,thread_angle])<=1, "\nCannot give both thread_angle and flank_angle.")
+           assert(is_def(profile) || is_def(thread_depth), "\nIf profile is not given, must give thread depth.");
     flank_angle = first_defined([flank_angle,u_mul(0.5,thread_angle),15]);
     h = pitch*starts*abs(turns);
     r1 = get_radius(d1=d1, d=d, dflt=10);
@@ -2416,7 +2495,7 @@ module thread_helix(
             dz = tdp * tan(flank_angle),
             cap = (1 - 2*dz)/2
         )
-        assert(cap/2+dz<=0.5, "Invalid geometry: incompatible thread depth and thread_angle/flank_angle")
+        assert(cap/2+dz<=0.5, "\nInvalid geometry: incompatible thread depth and thread_angle/flank_angle.")
         internal?
           [
             [-cap/2-dz, tdp],
