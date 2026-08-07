@@ -562,10 +562,10 @@ function generic_bottle_neck(
 //   wall = Wall thickness.  Default: 2
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
-//   height = Interior height of the cap. Default: 11.2
-//   thread_od = Outer diameter of the threads. Default: 25.1
-//   neck_od = Outer diameter of neck. Default: undef
-//   thread_depth = Depth of the threads. Default: 1.6
+//   height = Interior height of the cap.
+//   thread_od = Outer diameter of the threads.
+//   neck_od = Outer diameter of neck.
+//   thread_depth = Depth of the threads.
 //   tolerance = Extra space to add to the outer diameter of threads and neck. Applied to radius. Default: 0.2
 //   flank_angle = Angle of taper on threads. Default: 15
 //   pitch = Thread pitch. Default: 2.7
@@ -581,9 +581,9 @@ function generic_bottle_neck(
 module generic_bottle_cap(
     wall = 2,
     texture = "none",
-    height = 11.2,
-    thread_depth = 1.6,
-    thread_od = 25.1,
+    height,
+    thread_depth,
+    thread_od,
     tolerance = 0.2,
     neck_od,
     flank_angle = 15,
@@ -912,7 +912,7 @@ function bottle_adapter_cap_to_cap(
 //   thread_od1 = Outer diameter of threads on top neck. Default: 27.6
 //   height1 =  Height of top neck above support ring. Default: 17
 //   support_od1 = Outer diameter of the support ring on the top neck. Set to 0 for no ring. Default: 33
-//   thread_pitch1 = Thread pitch of top neck.
+//   thread_pitch1 = Thread pitch of top neck. Default: 2.7
 //   neck_od2 = Outer diameter of bottom neck w/o threads.  Leave undefined to duplicate neck_od1
 //   neck_id2 = Inner diameter of bottom neck.  Leave undefined to duplicate neck_id1
 //   thread_od2 = Outer diameter of threads on bottom neck.  Leave undefined to duplicate thread_od1
@@ -933,7 +933,7 @@ module bottle_adapter_neck_to_neck(
     thread_od1 = 27.6,
     height1 = 17,
     support_od1 = 33,
-    thread_pitch1 = 3.18,
+    thread_pitch1 = 2.7,
     neck_od2, neck_id2,
     thread_od2, height2,
     support_od2,  pitch2,
