@@ -213,9 +213,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   If either argument is just a single edge set
 //   descriptor it can be passed directly rather than in a singleton list.
 //   Each edge set descriptor must be one of:
-//   - A vector pointing toward an edge, indicating that single edge.
-//   - A vector pointing toward a face, indicating all edges surrounding that face.
-//   - A vector pointing toward a corner, indicating all edges touching that corner.
+//   - A 3-vector with entries in {-1,0,1} pointing toward an edge, indicating that single edge.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a face, indicating all edges surrounding that face.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a corner, indicating all edges touching that corner.
 //   - The string `"X"`, indicating all X axis aligned edges.
 //   - The string `"Y"`, indicating all Y axis aligned edges.
 //   - The string `"Z"`, indicating all Z axis aligned edges.
@@ -4225,7 +4225,7 @@ EDGE_OFFSETS = [
 function _is_edge_array(x) = is_list(x) && is_vector(x[0]) && len(x)==3 && len(x[0])==4;
 
 
-function _edge_set(v) =
+function _edge_set(v,name) =
     _is_edge_array(v)? v : [
     for (ax=[0:2]) [
         for (b=[-1,1], a=[-1,1]) let(
@@ -4238,12 +4238,13 @@ function _edge_set(v) =
                 v=="ALL"? true :    // Return all edges.
                 v=="NONE"? false :  // Return no edges.
                 let(valid_values = ["X", "Y", "Z", "ALL", "NONE"])
-                assert(
-                    in_list(v, valid_values),
-                    str("\n", v, " must be a vector, edge array, or one of ", valid_values, ".")
-                ) v
+                assert(false, str("\nEdge selector in \"",name,"\" parameter is invalid string \"",v,"\". Valid strings are ", valid_values, "."))
             ) :
+            assert(is_vector(v,3), str("\nEdge selector in \"",name,"\" parameter is ",v,". Edge selectors must be 3-vectors."))
+            assert([for (x=v) x==-1 || x==0 || x==1]==[true,true,true],
+                   str("\nEdge selector ",v," in \"",name,"\" parameter has invalid component.  Components must be -1, 0, or 1."))
             let(nonz = sum(v_abs(v)))
+            assert(nonz>0,str("\nInvalid edge selector [0,0,0] in \"",name,"\" parameter. \nDid you add two edge selectors instead of passing them as a list?"))
             nonz==2? (v==v2) :  // Edge: return matching edge.
             let(
                 matches = num_true([
@@ -4286,13 +4287,11 @@ function _normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 /// See Also:  EDGES_NONE, EDGES_ALL
 ///
 function _edges(v, except=[]) =
-    v==[] ? EDGES_NONE :
-    (is_string(v) || is_vector(v) || _is_edge_array(v))? _edges([v], except=except) :
-    (is_string(except) || is_vector(except) || _is_edge_array(except))? _edges(v, except=[except]) :
-    except==[]? _normalize_edges(sum([for (x=v) _edge_set(x)])) :
-    _normalize_edges(
-        _normalize_edges(sum([for (x=v) _edge_set(x)])) -
-        sum([for (x=except) _edge_set(x)])
+    v==[] ? EDGES_NONE
+  : is_string(v) || is_vector(v) || _is_edge_array(v) ? _edges([v], except=except)
+  : is_string(except) || is_vector(except) || _is_edge_array(except)? _edges(v, except=[except])
+  : except==[]? _normalize_edges(sum([for (x=v) _edge_set(x,"edges")]))
+  : _normalize_edges( _normalize_edges(sum([for (x=v) _edge_set(x,"edges")])) - sum([for (x=except) _edge_set(x,"except")])
     );
 
 
@@ -4390,7 +4389,7 @@ function _is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==
 function _normalize_corners(v) = [for (x=v) x>0? 1 : 0];
 
 
-function _corner_set(v) =
+function _corner_set(v,name) =
     _is_corner_array(v)? v : [
     for (i=[0:7]) let(
         v2 = CORNER_OFFSETS[i]
@@ -4399,11 +4398,12 @@ function _corner_set(v) =
             v=="ALL"? true :    // Return all corners.
             v=="NONE"? false :  // Return no corners.
             let(valid_values = ["ALL", "NONE"])
-            assert(
-                in_list(v, valid_values),
-                str("\n", v, " must be a vector, corner array, or one of ", valid_values, ".")
-            ) v
+            assert(false, str("\nCorner selector in \"",name,"\" parameter is invalid string \"",v,"\". Valid strings are ", valid_values, "."))
         ) :
+        assert(is_vector(v,3), str("\nCorner selector in \"",name,"\" parameter is ",v,". Corner selectors must be 3-vectors."))
+        assert([for (x=v) x==-1 || x==0 || x==1]==[true,true,true],
+               str("\nCorner selector ",v," in \"",name,"\" parameter has invalid component.  Components must be -1, 0, or 1."))
+        assert(sum(v_abs(v))>0,str("\nInvalid corner selector [0,0,0] in \"",name,"\" parameter.\nDid you add two corner selectors instead of passing them as a list?"))
         all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
     )? 1 : 0
 ];
@@ -4424,10 +4424,10 @@ function _corners(v, except=[]) =
     v==[] ? CORNERS_NONE :
     (is_string(v) || is_vector(v) || _is_corner_array(v))? _corners([v], except=except) :
     (is_string(except) || is_vector(except) || _is_corner_array(except))? _corners(v, except=[except]) :
-    except==[]? _normalize_corners(sum([for (x=v) _corner_set(x)])) :
+    except==[]? _normalize_corners(sum([for (x=v) _corner_set(x,"corners")])) :
     let(
-        a = _normalize_corners(sum([for (x=v) _corner_set(x)])),
-        b = _normalize_corners(sum([for (x=except) _corner_set(x)]))
+        a = _normalize_corners(sum([for (x=v) _corner_set(x,"corners")])),
+        b = _normalize_corners(sum([for (x=except) _corner_set(x,"except")]))
     ) _normalize_corners(a - b);
 
 
@@ -4655,7 +4655,7 @@ function parent_part(name,ind=0) =
 // Description:
 //   Restores the transformation and parent geometry contained in the specified description that you obtained with {{parent()}}.  
 //   If you don't give a description then restores the global world coordinate system with a zero size cuboid object as the parent.
-// .
+//   .
 //   Be careful not to use restore() as a descendent of code that duplicates its children such as {{attach()}} or {{align()}} with anchor or alignment lists, or
 //   any of the distributors such as {{move_copies()}}.  This will result in the entire restored
 //   geometry being duplicated multiple times onto itself, which will look identical, but make your model less efficient.  
