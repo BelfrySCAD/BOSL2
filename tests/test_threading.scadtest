@@ -77,6 +77,58 @@ test_acme_threaded_nut();
 '''
 
 [[test]]
+name = "test_garden_hose_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_garden_hose_threaded_rod() {
+    $fn = 8;
+    garden_hose_threaded_rod(l=30);
+}
+test_garden_hose_threaded_rod();
+'''
+
+[test]]
+name = "test_garden_hose_male"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_garden_hose_male() {
+    $fn = 8;
+    garden_hose_male(wall=3);
+}
+test_garden_hose_male();
+'''
+
+[test]]
+name = "test_garden_hose_female"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_garden_hose_female() {
+    $fn = 8;
+    garden_hose_female(wall=4, addl_space=1);
+}
+test_garden_hose_female();
+'''
+
+[test]]
+name = "test_garden_hose_gasket"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_garden_hose_gasket() {
+    $fn = 8;
+    garden_hose_gasket();
+}
+test_garden_hose_gasket();
+'''
+
+[[test]]
 name = "test_npt_threaded_rod"
 script = '''
 include <../std.scad>
