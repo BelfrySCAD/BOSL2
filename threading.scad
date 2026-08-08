@@ -964,7 +964,7 @@ module acme_threaded_nut(
 // Synopsis: Creates a threaded rod compatible with the North American garden hose thread.
 // SynTags: Geom
 // Topics: Threading, Screws
-// See Also: garden_hose_threaded_nut()
+// See Also: garden_hose_male(), garden_hose_female()
 // Usage:
 //   garden_hose_threaded_rod(d, l|length, [internal=], ...) [ATTACHMENTS];
 // Description:
