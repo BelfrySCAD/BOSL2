@@ -33,7 +33,7 @@ include <rounding.scad>
 // Arguments:
 //   wall = Wall thickness in mm.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: "support-ring"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
@@ -160,22 +160,26 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   r = Outer radius of the cap.
 //   d = Outer diameter of the cap.
 //   wall = Wall thickness in mm.
-//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin)  Default: 0
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
 // Named Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
-// Examples:
+// Example:
 //   pco1810_cap();
-//   pco1810_cap(texture="knurled");
-//   pco1810_cap(texture="ribbed");
-// Example: Standard Anchors
+// Example(Med;VPT=[0,0,8];VPD=200): PCO1810 caps with different texture options. Clockwise from top: knurled, sharp_knurled, ribbed, sharp_ribbed. Center: hex_faces. All textures increase the overall diameter of the part to preserve the original wall thickness.
+//   back(36) pco1810_cap(texture="knurled");
+//   right(36) pco1810_cap(texture="sharp_knurled");
+//   fwd(36) pco1810_cap(texture="ribbed");
+//   left(36) pco1810_cap(texture="sharp_ribbed");
+//   pco1810_cap(texture="hex_faces");
+// Example: Standard anchors
 //   pco1810_cap(texture="ribbed") show_anchors(custom=false);
-// Example: Custom Named Anchors
+// Example: Custom named anchors
 //   expose_anchors(0.3)
-//       pco1810_cap(texture="ribbed")
+//       pco1810_cap(texture="knurled")
 //           show_anchors(std=false);
 module pco1810_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
@@ -201,15 +205,7 @@ module pco1810_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=
     attachable(anchor,spin,orient, d=w, l=hh, anchors=anchors) {
         down(hh/2) zrot(45) {
             difference() {
-                union() {
-                    if (texture == "knurled") {
-                        cyl(d=w, h=hh, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
-                    } else if (texture == "ribbed") {
-                        cyl(d=w, h=hh, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
-                    } else {
-                        cyl(d=w, l=hh, anchor=BOTTOM);
-                    }
-                }
+                _tex_cyl(w, hh, texture, BOTTOM, "pco1810_cap");
                 up(hh-tamper_ring_h) cyl(d=cap_id, h=tamper_ring_h+wwall, anchor=BOTTOM);
             }
             up(hh-tamper_ring_h+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, lead_in=-thread_depth, internal=true, anchor=BOTTOM);
@@ -254,6 +250,9 @@ function pco1810_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orien
 //   expose_anchors(0.3)
 //       pco1881_neck()
 //           show_anchors(std=false);
+
+function pco1881_neck(wall, anchor, spin, orient) = no_function("pco1881_neck");
+
 module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 {
     inner_d = 21.74;
@@ -349,9 +348,6 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     }
 }
 
-function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
-    no_function("pco1881_neck");
-
 
 // Module: pco1881_cap()
 // Synopsis: Creates a cap for a PCO1881 standard bottle.
@@ -364,44 +360,43 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
-//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
-// Examples:
+// Example:
 //   pco1881_cap();
-//   pco1881_cap(texture="knurled");
-//   pco1881_cap(texture="ribbed");
+// Example(Med;VPT=[0,0,7];VPD=200): PCO1881 caps with different texture options. Clockwise from top: knurled, sharp_knurled, ribbed, sharp_ribbed. Center: hex_faces. All textures increase the overall diameter to preserve the original wall thickness.
+//   back(36) pco1881_cap(texture="knurled");
+//   right(36) pco1881_cap(texture="sharp_knurled");
+//   fwd(36) pco1881_cap(texture="ribbed");
+//   left(36) pco1881_cap(texture="sharp_ribbed");
+//   pco1881_cap(texture="hex_faces");
 // Example: Standard anchors
 //   pco1881_cap(texture="ribbed") show_anchors(custom=false);
 // Example: Custom named anchors
 //   expose_anchors(0.5)
 //       pco1881_cap(texture="ribbed")
 //           show_anchors(std=false);
+
+function pco1881_cap(wall, texture, anchor, spin, orient) = no_function("pco1881_cap");
+
 module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     $fn = segs(33/2);
     w = 28.58 + 2*wall;
-    h = 11.2 + wall;
+    hh = 11.2 + wall;
     anchors = [
-        named_anchor("inside-top", [0,0,-(h/2-wall)])
+        named_anchor("inside-top", [0,0,-(hh/2-wall)])
     ];
-    attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
-        down(h/2) zrot(45) {
+    attachable(anchor,spin,orient, d=w, l=hh, anchors=anchors) {
+        down(hh/2) zrot(45) {
             difference() {
-                union() {
-                    if (texture == "knurled") {
-                        cyl(d=w, h=11.2+wall, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
-                    } else if (texture == "ribbed") {
-                        cyl(d=w, h=11.2+wall, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
-                    } else {
-                        cyl(d=w, l=11.2+wall, anchor=BOTTOM);
-                    }
-                }
-                up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
+                _tex_cyl(w, hh, texture, BOTTOM, "pco1881_cap");
+                up(wall) cyl(d=28.58, h=hh, anchor=BOTTOM);
             }
             up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, lead_in=-1.6, internal=true, anchor=BOTTOM);
         }
@@ -409,8 +404,6 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     }
 }
 
-function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
-    no_function("pco1881_cap");
 
 
 
@@ -560,7 +553,7 @@ function generic_bottle_neck(
 //   specify the thread geometry. Most glass bottles conform to the SPI standard and caps for them may be more easily produced using {{sp_cap()}}.
 // Arguments:
 //   wall = Wall thickness.  Default: 2
-//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   ---
 //   height = Interior height of the cap.
 //   thread_od = Outer diameter of the threads.
@@ -601,34 +594,24 @@ module generic_bottle_cap(
     thread_od = !is_undef(thread_od) ? thread_od : neck_od+2*thread_depth;
     threadOuterDTol = thread_od + 2*tolerance;
     w = threadOuterDTol + 2 * wall;
-    h = height + wall;
+    hh = height + wall;
     neckOuterDTol = neck_od + 2 * tolerance;
 
     diamMagMult = (w > 32.58) ? w / 32.58 : 1;
     heightMagMult = (height > 11.2) ? height / 11.2 : 1;
 
     anchors = [
-        named_anchor("inside-top", [0, 0, -(h / 2 - wall)])
+        named_anchor("inside-top", [0, 0, -(hh / 2 - wall)])
     ];
-    attachable(anchor, spin, orient, d = w, l = h, anchors = anchors) {
-        down(h / 2) {
+    attachable(anchor, spin, orient, d = w, l = hh, anchors = anchors) {
+        down(hh / 2) {
             difference() {
-                union() {
-                    // For the knurled and ribbed caps the PCO caps in BOSL2 cut into the wall
-                    // thickness so the wall+texture are the specified wall thickness.  That
-                    // seems wrong so this does specified thickness+texture
-                    if (texture == "knurled") 
-                        cyl(d=w + 1.5*diamMagMult, l=h, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
-                    else if (texture == "ribbed") 
-                        cyl(d=w + 1.5*diamMagMult, l=h, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
-                    else 
-                        cyl(d = w, l = h, anchor = BOTTOM);
-                }
-                up(wall) cyl(d = threadOuterDTol, h = h, anchor = BOTTOM);
+                _tex_cyl(w, hh, texture, BOTTOM, "generic_bottle_cap");
+                up(wall) cyl(d = threadOuterDTol, h = hh, anchor = BOTTOM);
             }
             up(wall + pitch / 2) {
                 thread_helix(d = neckOuterDTol+.02, pitch = pitch, thread_depth = thread_depth+.01, flank_angle = flank_angle,
-                             turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
+                    turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
             }
         }
         children();
@@ -654,7 +637,7 @@ function generic_bottle_cap(
 //   Creates a threaded neck to cap adapter
 // Arguments:
 //   wall = Thickness of wall between neck and cap when d=0.  Leave undefined to have the outside of the tube go from the OD of the neck support ring to the OD of the cap.  Default: undef
-//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   cap_wall = Wall thickness of the cap in mm. Default: 2
 //   cap_h = Interior height of the cap in mm. Default: 11.2
 //   cap_thread_depth = Cap thread depth.  Default: 1.6
@@ -782,7 +765,7 @@ function bottle_adapter_neck_to_cap(
 //   Creates a threaded cap to cap adapter.
 // Arguments:
 //   wall = Wall thickness in mm.
-//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   cap_h1 = Interior height of top cap. Default: 11.2
 //   cap_thread_depth1 = Thread depth on top cap. Default: 1.6
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm. Applied to radius. Default: 0.2
@@ -815,7 +798,7 @@ module bottle_adapter_cap_to_cap(
     cap_thread_pitch2,
     d = 0,
     neck_id,
-    taper_lead_in = 0, anchor, spin,orient
+    taper_lead_in = 0, anchor=CENTER, spin,orient
 ) {
     cap_h2 = default(cap_h2,cap_h1);
     cap_thread_depth2 = default(cap_thread_depth2,cap_thread_depth1);
@@ -1056,7 +1039,7 @@ function bottle_adapter_neck_to_neck(
 //   id = inner diameter
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   bead = if true apply a bead to the neck.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
@@ -1170,7 +1153,7 @@ function _sp_thread_profile(tpi, a, S, style, flip=false) =
 
 
 function sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient) = no_function("sp_neck");
-module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
+module sp_neck(diam,type,wall,id,style="L",bead=false, anchor=BOTTOM, spin, orient)
 {
     assert(num_defined([wall,id])==1, "\nMust define exactly one of wall and id.");
     
@@ -1275,9 +1258,9 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   top_adj = Amount to reduce top space in the cap, which means it doesn't screw down as far.  Default: 0
 //   bot_adj = Amount to reduce extension of cap at the bottom, which also means it doesn't screw down as far.  Default: 0
-//   texture = texture for outside of cap, one of "knurled", "ribbed" or "none.  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   $slop = Increase inner diameter by `2 * $slop`.  
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
@@ -1285,7 +1268,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   sp_cap(22,400,2);
 //   sp_cap(22,410,2);
 //   sp_cap(28,415,1.5,style="M");
-module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor=CENTER, spin=0, orient=UP)
+module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     table = struct_val(_sp_specs,type);
     dum1=assert(is_def(table),"\nUnknown SP closure type. Must be one of 400, 410, or 415.");
@@ -1309,20 +1292,14 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anc
 
     depth = a/2;
     taperlen = 2*a;
-    assert(in_list(texture, ["none","knurled","ribbed"]));
     space=2*depth/10+2*get_slop();
-    attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall){
+    w = T+space+2*wall;
+    hh = H+wall-bot_adj;
+    attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall) {
         xrot(180)
-        up((H-bot_adj)/2-wall/2){
-            difference(){
-                up(wall){
-                   if (texture=="knurled")
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,texture="trunc_pyramids", tex_size=[3,3], style="convex");
-                   else if (texture == "ribbed") 
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8,tex_taper=0,texture="trunc_ribs", tex_size=[3,3], style="min_edge");
-                   else
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
-                }
+        up((H-bot_adj)/2-wall/2) {
+            difference() {
+                up(wall) _tex_cyl(w, hh, texture, TOP, "sp_cap");
                 cyl(d=T+space, l=H-bot_adj+1, anchor=TOP);
             }
             thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, lead_in=taperlen, anchor=TOP, internal=true);
@@ -1388,7 +1365,7 @@ function sp_diameter(diam,type) =
 //   id = inner diameter
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   bead = if true apply a bead to the neck.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
@@ -1455,7 +1432,7 @@ function _gl_thread_profile(tpi, a, S, style, flip=false) =
 
 
 function mason_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient) = no_function("mason_neck");
-module mason_neck(diam,type,wall,id,style="L", bead=false, anchor=CENTER, spin=0, orient=UP)
+module mason_neck(diam,type,wall,id,style="L", bead=false, anchor=BOTTOM, spin=0, orient=UP)
 {
     assert(num_defined([wall,id])==1, "\nMust define exactly one of wall and id.");
     
@@ -1541,9 +1518,9 @@ module mason_neck(diam,type,wall,id,style="L", bead=false, anchor=CENTER, spin=0
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   top_adj = Amount to reduce top space in the cap, which means it doesn't screw down as far.  Default: 3
 //   bot_adj = Amount to reduce extension of cap at the bottom, which also means it doesn't screw down as far.  Default: 0
-//   texture = texture for outside of cap, one of "knurled", "ribbed" or "none.  Default: "none"
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
 //   $slop = Increase inner diameter by `2 * $slop`.  
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
@@ -1551,7 +1528,7 @@ module mason_neck(diam,type,wall,id,style="L", bead=false, anchor=CENTER, spin=0
 //   mason_cap(86,400,2);
 
 function mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor, spin, orient) = no_function("mason_cap");
-module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor=CENTER, spin=0, orient=UP)
+module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     table = struct_val(_gl_specs,type);
     dum1=assert(is_def(table),"\nUnknown glass jar closure type. Must be 400 or 450.");
@@ -1574,20 +1551,14 @@ module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", 
 
     depth = a/2;
     taperlen = 2*a;
-    assert(in_list(texture, ["none","knurled","ribbed"]));
     space=2*depth/10+2*get_slop();
+    w = T+space+2*wall;
+    hh = H+wall-bot_adj;
     attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall){
         xrot(180)
         up((H-bot_adj)/2-wall/2){
-            difference(){
-                up(wall){
-                   if (texture=="knurled")
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,texture="trunc_pyramids", tex_size=[3,3], style="convex");
-                   else if (texture == "ribbed") 
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8,tex_taper=0,texture="trunc_ribs", tex_size=[3,3], style="min_edge");
-                   else
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
-                }
+            difference() {
+                up(wall) _tex_cyl(w, hh, texture, TOP, "mason_cap");
                 cyl(d=T+space, l=H-bot_adj+1, anchor=TOP);
             }
             thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, lead_in=taperlen, anchor=TOP, internal=true);

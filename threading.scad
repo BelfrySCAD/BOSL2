@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: threading.scad
 //   Provides generic threading support and specialized support for standard triangular (UTS/ISO) threading,
-//   trapezoidal threading (ACME), hose couplers, pipe threading, buttress threading, square threading and ball screws.  
+//   trapezoidal threading (ACME), garden hose couplers, pipe threading, buttress threading, square threading and ball screws.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/threading.scad>
@@ -285,7 +285,7 @@ module threaded_rod(
 // Arguments:
 //   nutwidth = flat to flat width of nut
 //   id = inner diameter of threaded hole, measured from bottom of threads
-//   h / height / l / length / thickness = height/thickness of nut.
+//   h / height / l / length / thickness = height/thickness of nut. Only `h` is positional, others must be named.
 //   pitch = Distance between threads, or zero for no threads. 
 //   ---
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
@@ -347,8 +347,7 @@ module threaded_nut(
 ) {
     dummy1=
           assert(all_nonnegative(pitch), "\nNut pitch must be nonnegative.")
-          assert(all_positive(id), "\nNut inner diameter must be positive.")
-          assert(all_positive(h),"\nNut thickness must be positive.");
+          assert(all_positive(id), "\nNut inner diameter must be positive.");
     basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
     dummy2 = assert(basic || is_vector(id,3));
     depth = basic ? cos(30) * 5/8
@@ -961,13 +960,103 @@ module acme_threaded_nut(
 //   In other countries, a British Standard Pipe (BSP) thread is used, which is 14 TPI, not compatible with the GHT standard. These modules implement the GHT standard.
 
 
-// Module: male_garden_hose()
+// Module: garden_hose_threaded_rod()
+// Synopsis: Creates a threaded rod compatible with the North American garden hose thread.
+// SynTags: Geom
+// Topics: Threading, Screws
+// See Also: garden_hose_threaded_nut()
+// Usage:
+//   garden_hose_threaded_rod(d, l|length, [internal=], ...) [ATTACHMENTS];
+// Description:
+//   Constructs a threaded rod compatible with 3/4-11.5NH garden hose threads as described by ANSI-ASME B1.20.7.
+//   .
+// Arguments:
+//   l / length / h / height = Length of threaded rod. Only `l` is positional, others must be named.
+//   ---
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
+//   bevel1 = Set bevel for bottom end.
+//   bevel2 = Set bevel for top end. 
+//   internal = If true, make this a mask for making internal threads.  Default: false
+//   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
+//   blunt_start1 = If true apply truncated blunt start threads bottom end.
+//   blunt_start2 = If true apply truncated blunt start threads top end.
+//   end_len = Specify the unthreaded length at the end after blunt start threads.  Default: 0
+//   end_len1 = Specify unthreaded length at the bottom
+//   end_len2 = Specify unthreaded length at the top
+//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
+//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
+//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
+//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Example: Garden hose threaded rod of arbitrary length.
+//   garden_hose_threaded_rod(l=25, $fn=60);
+function garden_hose_threaded_rod(
+    l,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, h, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    teardrop=false,
+    anchor, spin, orient
+) = no_function("garden_hose_threaded_rod");
+module garden_hose_threaded_rod(
+    l,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, h, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    teardrop=false,
+    anchor, spin, orient
+) {
+    thread_angle = 60;
+    tpi = 11.5;
+    pitch = 1/tpi * INCH;
+    thread_depth = 0.649519*pitch;
+    d = (1 + 1/16 + (internal ? 0.01 : 0)) * INCH; // 1.0625" external, 1.0725" internal
+    pa_delta = 0.5*thread_depth*tan(thread_angle/2) / pitch;
+    rr1 = -thread_depth/pitch;
+    z1 = 1/4-pa_delta;
+    z2 = 1/4+pa_delta;
+    profile = [
+               [-z2, rr1],
+               [-z1,  0],
+               [ z1,  0],
+               [ z2, rr1],
+              ];
+    generic_threaded_rod(d=d,l=l,pitch=pitch,profile=profile,
+        left_handed=false,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=1,
+        internal=internal, length=length, height=height, h=h,
+        blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
+        lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
+        lead_in_ang=lead_in_ang, lead_in_ang1=lead_in_ang1, lead_in_ang2=lead_in_ang2,
+        end_len=end_len, end_len1=end_len1, end_len2=end_len2,
+        teardrop=teardrop, anchor=anchor,spin=spin,orient=orient)
+      children();
+}
+
+
+// Module: garden_hose_male()
 // Synopsis: Creates a male garden hose coupler
 // SynTags: Geom
 // Topics: Threading
-// See Also: female_garden_hose()
+// See Also: garden_hose_female()
 // Usage:
-//   male_garden_hose([wall], ...) [ATTACHMENTS];
+//   garden_hose_male([wall], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard male coupler compatible with a standard North American garden hose, using ANSI-ASME B1.20.7 specifications.
 //   The `wall` thickness default is set to give the coupler an inner diameter of 25/32" according to the spec.
@@ -979,15 +1068,13 @@ module acme_threaded_nut(
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
 // Example:
-//   male_garden_hose();
+//   garden_hose_male();
 
-module male_garden_hose(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
+function garden_hose_male(wall, anchor, spin, orient) = no_function("garden_hose_male");
+module garden_hose_male(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
     tpi = 11.5;
     pitch = 1/tpi * INCH;
     thread_depth = 0.649519*pitch;
-
-    // make nipple (male end)
-
     dia_male = (1 + 1/16) * INCH; // 1.0625"
     pilot = 1/8 * INCH;
     nipple_len = 9/16 * INCH;
@@ -996,9 +1083,8 @@ module male_garden_hose(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
 
     attachable(anchor, spin, orient, d=dia_male, l=nipple_len) {
         difference() {
-            trapezoidal_threaded_rod(d=dia_male, l=nipple_len, pitch=pitch,
-                thread_depth=thread_depth, thread_angle=60,
-                end_len2=pilot, bevel2=0.2, lead_in_ang2=44, anchor=CENTER);
+            //garden_hose_threaded_rod(l=nipple_len, end_len2=pilot, bevel2=0.2, lead_in_ang2=44, anchor=CENTER);
+            trapezoidal_threaded_rod(d=dia_male, l=nipple_len, pitch=pitch, thread_depth=thread_depth, thread_angle=60, end_len2=pilot, bevel2=0.2, lead_in_ang2=44, anchor=CENTER);
             cylinder(nipple_len+0.2, d=nipple_inside_dia, center=true);
         }
         children();
@@ -1006,38 +1092,71 @@ module male_garden_hose(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
 }
 
 
-// Module: female_garden_hose()
+/// Internal function: _tex_cyl()
+/// Called by garden_hose_female() and bottle cap functions in bottlecaps.scad,
+/// to generate a cylinder with an optional knurling texture.
+/// All textures expand the diameter due to not reducing the original wall thickness.
+/// w = diameter, hh = height, texture=one of 5 choices, anchor=cylinder anchor end, modname=calling module
+module _tex_cyl(w, hh, texture, anchor, modname) {
+    if (texture == "knurled")
+        cyl(d=w, h=hh, texture="trunc_pyramids", tex_size=[3,3], style="convex", anchor=anchor);
+    else if (texture == "sharp_knurled")
+        cyl(d=w, h=hh, texture="diamonds", tex_size=[3,3], style="concave", anchor=anchor);
+    else if (texture == "ribbed")
+        cyl(d=w, h=hh, texture="trunc_ribs", tex_size=[3,3], /*chamfer2=.8,*/ tex_taper=0, style="min_edge", anchor=anchor); // removed chamfer to preserve wall thickness
+    else if (texture == "sharp_ribbed")
+        cyl(d=w, h=hh, texture="ribs", tex_size=[3,3], style="min_edge", anchor=anchor);
+    else if (texture == "hex_faces")
+        let(cd = w/cos(30), dmid = (w + cd)/2) intersection() {
+            cyl(d=cd, l=hh, anchor=anchor, $fn=6);
+            cyl(d=dmid, l=hh, chamfer=(cd-dmid)/2+0.4, chamfang=40, anchor=anchor);
+        }
+    else {
+        if (texture != "none") echo(str("WARNING: Unrecognized texture value \"", texture, "\" in ", modname, "(). Defaulting to \"none\"."));
+        cyl(d=w, l=hh, anchor=anchor);
+    }
+}
+
+
+// Module: garden_hose_female()
 // Synopsis: Creates a female garden hose coupler with textured surface
 // SynTags: Geom
 // Topics: Threading
-// See Also: male_garden_hose()
+// See Also: garden_hose_female()
 // Usage:
-//   female_garden_hose([gasket_seat], [wall=], [texture=], ...) [ATTACHMENTS];
+//   garden_hose_female([gasket_seat], [wall=], [texture=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a female hose coupler compatible with a standard North American garden hose, using ANSI-ASME B1.20.7 specifications for the threads, with space to accommodate a rubber gasket assuming a standard 25/32" inner diameter.
-//   The mating male coupler, if created with `male_garden_hose()`, may have a smaller inner diameter, which would still completely cover the gasket.
+//   Constructs a female hose coupler compatible with a standard North American garden hose, using [ANSI-ASME B1.20.7 specifications](https://web.archive.org/web/20170826074605/http://gost-snip.su/download/asme_b1_20_7i991_hose_coupling_screw_threads_inch)
+//   for the threads, with space to accommodate a rubber gasket assuming a standard 25/32" inner diameter.
+//   The mating male coupler, if created with `garden_hose_male()`, may have a smaller inner diameter, which would still completely cover the gasket.
 //   .
 //   For structural integrity when 3D printing, the `wall` and `gasket_seat` parameters have arbitrary but reasonable default values. The larger these values, the stronger the part.
 //   .
 //   This design does not include a slip joint between the rotating collar and the pipe that seals against the gasket. The coupler consists of only a rotating collar that seals against the gasket, which should be lubricated with silicone grease to allow the gasket to slide between the male and female coupler while tightening.
 // Arguments:
 //   gasket_seat = thickness of structure that the rubber sealing gasket rests on. Default: 5
+//   addl_space = Millimeters of additional space between the threads and gasket seat, to accommodate a swivel tube with a brim. Default: 0
 //   wall = wall thickness around the thread outer diameter. Default: 5
-//   texture = texture for outside of coupler, one of "knurled", "ribbed" or "none.  Default: "none"
+//   texture = texture for outside of coupler, one of "knurled", "ribbed", "sharp_ribbed", "hex_faces", or "none". Default: "none"
 //   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
-// Example:
-//   female_garden_hose(texture="ribbed");
+// Example(Med;NoAxes;VPD=230;VPT=[0,0,9]): Female garden hose connectors with different finishes. Clockwise from top: knurled, sharp_knurled, ribbed, sharp_ribbed. Center: hex_faces.
+//   $fn = 48;
+//   back(40) garden_hose_female(texture="knurled");
+//   right(40) garden_hose_female(texture="sharp_knurled");
+//   fwd(40) garden_hose_female(texture="ribbed");
+//   left(40) garden_hose_female(texture="sharp_ribbed");
+//   garden_hose_female(texture="hex_faces");
 
-
-module female_garden_hose(gasket_seat=5, wall=5, texture="none", anchor=BOTTOM, spin=0, orient=UP) {
+function garden_hose_female(gasket_seat, addl_space, wall, texture, anchor, spin, orient) = no_function("garden_hose_female");
+module garden_hose_female(gasket_seat=5, addl_space=0, wall=5, texture="none", anchor=BOTTOM, spin=0, orient=UP) {
     tpi = 11.5;
     pitch = 1/tpi * INCH;
     thread_depth = 0.649519*pitch;
     nipple_inside_dia = 25/32 * INCH;
     dia_female = (1 + 1/16 + 0.01) * INCH; // 1.0725" in the spec
-    coupling_len = 17/32 * INCH;
+    coupling_len = 17/32 * INCH + addl_space;
     coupling_thread_len = 3/8 * INCH;
     gasket_space = coupling_len - coupling_thread_len;
     coupling_total_len = coupling_len + gasket_seat;
@@ -1045,22 +1164,53 @@ module female_garden_hose(gasket_seat=5, wall=5, texture="none", anchor=BOTTOM, 
 
     attachable(anchor, spin, orient, d=total_dia, l=coupling_total_len) {
         xrot(180) down(coupling_total_len/2) difference() {
-            if (texture=="knurled")
-                cyl(d=total_dia, l=coupling_total_len, center=false, texture="trunc_pyramids", tex_size=[3,3], style="convex");
-            else if (texture == "ribbed")
-                cyl(d=total_dia, l=coupling_total_len, center=false, chamfer2=.8, tex_taper=0, texture="trunc_ribs", tex_size=[3,3], style="min_edge");
-            else
-                cyl(d=total_dia, l=coupling_total_len, center=false);
-            //cylinder(coupling_total_len, d=total_dia);
+            _tex_cyl(total_dia, coupling_total_len, texture, BOTTOM, "garden_hose_female");
             down(0.2) cylinder(coupling_total_len+0.4, d=nipple_inside_dia+1);
-            down(0.1) trapezoidal_threaded_rod(d=dia_female, l=coupling_len+0.1, pitch=pitch,
-                thread_depth=thread_depth, thread_angle=60, internal=true,
-                end_len1=0.1, end_len2=gasket_space, lead_in_ang1=38, anchor=BOTTOM);
+            down(0.1)
+                garden_hose_threaded_rod(l=coupling_len+0.1, internal=true, end_len1=0.1, end_len2=gasket_space, lead_in_ang1=38, anchor=BOTTOM);
         }
         children();
     }
 }
 
+
+// Module: garden_hose_gasket()
+// Synopsis: Creates a North American garden hose washer or gasket
+// SynTags: Geom
+// Topics: Threading
+// See Also: garden_hose_female()
+// Usage:
+//   garden_hose_gasket([od=], [id=], [thickness=]) [ATTACHMENTS];
+// Description:
+//   Constructs a garden hose washer that fits inside a female hose coupler compatible with a standard North American garden hose. This would typically be 3D printed using TPU or another waterproof flexible material.
+// Arguments:
+//   od = Outer diameter, normally 1" converted to millimeters. Default: 25.4
+//   id = Inner diameter, normally 5/8" converted to millimeters. Default: 15.875
+//   thickness = Normally 1/8" thick, converted to millimeters. Default: 3
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).
+// Example:
+//   garden_hose_gasket();
+// Example(Med;NoAxes;VPD=87;VPR=[110,0,116];VPT=[0,0,10]): Cut-away assembly view of male hose connector (yellow), female hose connector (green), and hose gasket (brown).
+//   $fn = 60;
+//   color("lightgreen") difference() {
+//       garden_hose_female(texture="knurled");
+//       down(3) cube(25);
+//   }
+//   color("brown") up(5) garden_hose_gasket();
+//   up(8.01) zrot(60) xrot(180) garden_hose_male(anchor=TOP);
+
+function garden_hose_gasket(od, id, thickness, anchor, spin, orient) = no_function("garden hose gasket");
+module garden_hose_gasket(od=25.4, id=15.875, thickness=3, anchor=BOTTOM, spin=0, orient=UP) {
+    attachable(anchor, spin, orient, d=od, l=thickness) {
+        difference() {
+            cylinder(thickness, d=od, center=true, $fa=4);
+            cylinder(thickness+0.1, d=id, center=true, $fa=4);
+        }
+        children();
+    }
+}
 
 
 
