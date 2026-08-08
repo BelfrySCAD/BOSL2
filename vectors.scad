@@ -39,13 +39,13 @@ _BOSL2_VECTORS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   is_vector([3,4,5,6]);                  // Returns true
 //   is_vector([3,4,undef,5]);              // Returns false
 //   is_vector([3,4,5],3);                  // Returns true
-//   is_vector([3,4,5],4);                  // Returns true
+//   is_vector([3,4,5],4);                  // Returns false
 //   is_vector([]);                         // Returns false
 //   is_vector([0,4,0],3,zero=false);       // Returns true
 //   is_vector([0,0,0],zero=false);         // Returns false
 //   is_vector([0,0,1e-12],zero=false);     // Returns false
-//   is_vector([0,1,0],all_nonzero=false);  // Returns false
-//   is_vector([1,1,1],all_nonzero=false);  // Returns true
+//   is_vector([0,1,0],all_nonzero=true);   // Returns false
+//   is_vector([1,1,1],all_nonzero=true);   // Returns true
 //   is_vector([],zero=false);              // Returns false
 function is_vector(v, length, zero, all_nonzero=false, eps=_EPSILON) =
     is_list(v) && len(v)>0 && []==[for(vi=v) if(!is_finite(vi)) 0] 
@@ -440,21 +440,21 @@ function furthest_point(pt, points) =
 //   query = list of points to find matches for.
 //   r = the search radius.
 //   target = list of the points to search for matches or a search tree.
-// Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
+// Example(2D,Med): A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
 //   points = list_to_matrix(rands(0,10,k*2,seed=13333),2);
 //   queries = [for(i=[3,7],j=[3,7]) [i,j]];
-//   search_ind = vector_search(queries, points, 1);
+//   search_ind = vector_search(queries, 1, points);
 //   move_copies(points) circle(r=.08);
 //   for(i=idx(queries)){
 //       color("blue")stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
 //       color("red") move_copies(select(points, search_ind[i])) circle(r=.08);
 //   }
-// Example: when a series of searches with different radius are needed, its is faster to pre-compute the tree
+// Example(2D,Med): when a series of searches with different radius are needed, its is faster to pre-compute the tree
 //   $fn=32;
 //   k = 2000;
-//   points = list_to_matrix(rands(0,10,k*2),2,seed=13333);
+//   points = list_to_matrix(rands(0,10,k*2,seed=13333),2);
 //   queries1 = [for(i=[3,7]) [i,i]];
 //   queries2 = [for(i=[3,7]) [10-i,i]];
 //   r1 = 1;
@@ -517,14 +517,13 @@ function _bt_search(query, r, points, tree) =
             [ if(norm(query-points[tree[0]])<=r) tree[0] ],
             _bt_search(query, r, points, tree[2]),
             _bt_search(query, r, points, tree[3]) ) ;
-     
 
 // Function: vector_search_tree()
 // Synopsis: Makes a distance search tree for a list of points.
 // Topics: Search, Points, Closest
 // See Also: vector_nearest(), vector_search()
 // Usage:
-//    tree = vector_search_tree(points,leafsize);
+//    tree = vector_search_tree(points,[leafsize],[treemin]);
 // Description:
 //    Construct a search tree for the given list of points to be used as input
 //    to the function `vector_search()`. The use of a tree speeds up the
@@ -544,7 +543,7 @@ function _bt_search(query, r, points, tree) =
 //    points = list of points to store in the search tree.
 //    leafsize = the size of the tree leaves. Default: 25
 //    treemin = the minimum size of the point list for which a tree search is done. Default: 400
-// Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
+// Example(2D,Med): A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
 //   points = random_points(k, scale=10, dim=2,seed=13333);
@@ -596,7 +595,7 @@ function _bt_tree(points, ind, leafsize=25) =
 //    query = point to search for
 //    k = number of neighbors to return
 //    target = a list of points or a search tree to search in
-// Example:  Four queries to find the 15 nearest points.  The circles show the radius defined by the most distant query result.  Note they are different for each query.  
+// Example(2D,Med):  Four queries to find the 15 nearest points.  The circles show the radius defined by the most distant query result.  Note they are different for each query.  
 //    $fn=32;
 //    k = 1000;
 //    points = list_to_matrix(rands(0,10,k*2,seed=13333),2);
@@ -730,8 +729,8 @@ function fit_to_box(pts, x, y, z) =
     assert(is_path(pts) || is_vnf(pts), "\npts must be a valid 2D or 3D path, or a VNF structure.")
     assert(any_defined([x,y,z]), "\nAt least one [min,max] range x, y, or z must be defined.")
     assert(is_undef(x) || is_vector(x,2), "\nx must be a 2-vector [min,max].")
-    assert(is_undef(y) || is_vector(y,2), "\nx must be a 2-vector [min,max].")
-    assert(is_undef(z) || is_vector(z,2), "\nx must be a 2-vector [min,max].")
+    assert(is_undef(y) || is_vector(y,2), "\ny must be a 2-vector [min,max].")
+    assert(is_undef(z) || is_vector(z,2), "\nz must be a 2-vector [min,max].")
     let(
         isvnf = is_vnf(pts),
         p = isvnf ? pts[0] : pts,
