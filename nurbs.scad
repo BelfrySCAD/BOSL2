@@ -28,10 +28,10 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Usage:
 //   pts = nurbs_curve(control, degree, splinesteps, [mult=], [weights=], [type=], [knots=]);
 //   pts = nurbs_curve(control, degree, u=, [mult=], [weights=], [type=], [knots=]);
-//   dpts = nurbs_curve(control, degree, splinesteps, deriv=d, ...);
-//   dpts = nurbs_curve(control, degree, u=, deriv=d, ...);
-//   list = nurbs_curve(control, degree, splinesteps, deriv=[d1,d2,...], ...);
-//   list = nurbs_curve(control, degree, u=, deriv=[d1,d2,...], ...);
+//   dpts = nurbs_curve(control, degree, splinesteps, deriv=d, [two_sided=], ...);
+//   dpts = nurbs_curve(control, degree, u=, deriv=d, [two_sided=], ...);
+//   list = nurbs_curve(control, degree, splinesteps, deriv=[d1,d2,...], [two_sided=], ...);
+//   list = nurbs_curve(control, degree, u=, deriv=[d1,d2,...], [two_sided=], ...);
 // Description:
 //   Compute the points specified by a NURBS curve.  You specify the NURBS by supplying the control points, knots and weights.
 //   Only the control points are required.  The knots and weights default to uniform, in which case you get a uniform B-spline.
@@ -79,10 +79,39 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   .
 //   **Derivatives:** The `deriv` parameter requests curve derivatives in addition to, or instead of, curve points.
 //   - `deriv=0` (default) — returns the curve points, same as without the parameter.  The output is a flat list of points, backward-compatible with code that does not use `deriv`.
-//   - `deriv=d` (positive integer) — returns a flat list of d-th derivative vectors at each evaluation point, one vector per point.
-//   - `deriv=[d1,d2,...]` (list of integers) — returns a list of lists.  Each element of the outer list corresponds to one entry of the `deriv` list, and contains the derivative vectors of that order at every evaluation point.  The output order matches the order of the `deriv` list, so `deriv=[0,1,2]` gives `[curve_pts, first_derivs, second_derivs]`.
+//   - `deriv=d` (positive integer) — returns a flat list of d-th derivative entries at each evaluation point, one entry per point.
+//   - `deriv=[d1,d2,...]` (list of integers) — returns a list of lists.  Each element of the outer list corresponds to one entry of the `deriv` list, and contains the derivative entries of that order at every evaluation point.  The output order matches the order of the `deriv` list, so `deriv=[0,1,2]` gives `[curve_pts, first_derivs, second_derivs]`.
 //   .
-//   The derivative order must be non-negative and cannot exceed the curve degree.  When `u` is a single scalar and `deriv` is a list, the return value is a list of single vectors (one per requested order) rather than a list of lists.
+//   The derivative order must be non-negative and cannot exceed the curve degree.  When `u` is a single scalar and `deriv` is a list, the return value is a list of single entries (one per requested order) rather than a list of lists.
+//   .
+//   A NURBS curve need not be differentiable everywhere: at a knot of multiplicity m, derivatives
+//   of order larger than degree−m generally do not exist because the left and right limits differ.
+//   At a corner (m equal to the degree) already the first derivative jumps.  Because `splinesteps`
+//   sampling places an evaluation point exactly at every knot, such points are hit routinely; in
+//   particular `deriv=degree` does not exist at any interior knot unless the curve happens to be
+//   smoother there than the multiplicity guarantees.  The `two_sided` parameter selects what is
+//   returned at these points:
+//   - `two_sided=false` (default) — every derivative entry is a single vector.  Where the requested
+//     derivative does not exist, the entry is `NAN`.  You can detect these entries with `is_nan()`.
+//     Note that NAN propagates silently through further arithmetic, so check for it before using
+//     derivative values from a curve that may have corners.
+//   - `two_sided=true` — every derivative entry is a list: a singleton `[d]` containing the
+//     derivative vector at differentiable points, and a pair `[dleft, dright]` giving the one-sided
+//     left and right derivatives at non-differentiable points.  Test `len(entry)==2` to detect the
+//     non-differentiable points.
+//   .
+//   Whether a derivative exists is decided by comparing the two one-sided values, not from the knot
+//   multiplicity alone, so a curve that is accidentally smoother than its knot multiplicity
+//   guarantees is treated as differentiable.  At the domain endpoints of clamped and open curves
+//   only one side of the curve exists, and the one-sided derivative is returned as the derivative
+//   there (never NAN).  Closed curves are periodic, so both sides exist everywhere, including at
+//   the seam.  A clamped or open curve whose first and last control points coincide is also treated
+//   as periodic at its domain boundary — this is the case for a clamped curve built by gluing
+//   segments end to end (as in the circle example below), and for the curve
+//   {{nurbs_interp()}}(`closed=true`, `corners=`) returns, whose corners force a "clamped" type
+//   NURBS that nonetheless starts and ends at the same corner point.  The `two_sided` parameter
+//   affects only derivative orders 1 and higher: order-0 entries (curve points) are always plain
+//   points.
 //   .
 //   For unweighted B-splines the derivatives are computed exactly using the difference-control-point method (Piegl & Tiller, "The NURBS Book", Algorithm A3.3).  For rational NURBS (when `weights` is given) the geometric derivatives are obtained from the homogeneous B-spline derivatives via the quotient-rule formula (Piegl & Tiller, Eq. 4.8 / Algorithm A4.2).
 // Arguments:
@@ -96,6 +125,7 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
 //   knots = List of knot values.  Default: uniform
 //   deriv = Integer or list of integers selecting which derivative orders to return.  0 = curve points.  Default: 0
+//   two_sided = If true, return each derivative entry as a singleton `[d]` at differentiable points and as a pair `[dleft,dright]` of one-sided derivatives at non-differentiable points.  If false, return plain derivative vectors, with NAN where the derivative does not exist.  Default: false
 // Example(2D,NoAxes): Compute some points and draw a curve and also some specific points:
 //   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   curve = nurbs_curve(control,2,splinesteps=16);
@@ -201,8 +231,16 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2]];
 //   w = [1,1/3,1/3,1,1/3,1/3];
 //   debug_nurbs(control, 3, splinesteps=16,weights=w,mult=[1,3,3],width=.1,size=.2,type="closed",show_knots=true);
+// Example(2D,NoAxes): One-sided derivatives at a corner.  This quadratic has a corner at the multiplicity-2 knot (u=3/7).  The default `two_sided=false` returns NAN for the first derivative there; `two_sided=true` returns both one-sided tangents, drawn here as arrows into (red) and out of (blue) the corner.
+//   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   mult = [1,1,1,2,1,1,1,1];
+//   stroke(nurbs_curve(pts,2,mult=mult,splinesteps=16));
+//   corner = nurbs_curve(pts,2,mult=mult,u=3/7);
+//   tang = nurbs_curve(pts,2,mult=mult,u=3/7,deriv=1,two_sided=true);
+//   color("red") stroke([corner-15*unit(tang[0]), corner], endcap2="arrow2", width=1);
+//   color("blue") stroke([corner, corner+15*unit(tang[1])], endcap2="arrow2", width=1);
 
-function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots,deriv=0) =
+function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots,deriv=0,two_sided=false) =
     let(
         splinesteps = !any_defined([splinesteps,u]) ? 16 : splinesteps
     )
@@ -210,14 +248,15 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
        assert(len(control)>=6, "Invalid NURBS parameter list")
        assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_curve(control[2], control[1], splinesteps, u, weights=control[5],mult=control[4], type=control[0], knots=control[3], deriv=deriv)
+       nurbs_curve(control[2], control[1], splinesteps, u, weights=control[5],mult=control[4], type=control[0], knots=control[3], deriv=deriv, two_sided=two_sided)
   : assert(num_defined([splinesteps,u])==1, "Must define exactly one of u and splinesteps")
     is_finite(u) ?
-        let(r=nurbs_curve(control,degree,u=[u],mult=mult,weights=weights,knots=knots,type=type,deriv=deriv))
+        let(r=nurbs_curve(control,degree,u=[u],mult=mult,weights=weights,knots=knots,type=type,deriv=deriv,two_sided=two_sided))
         !is_list(deriv) ? r[0] : [for(d=r) d[0]]
   : assert(is_undef(splinesteps) || (is_int(splinesteps) && splinesteps>0), "splinesteps must be a positive integer")
-    let(u=is_range(u) ? list(u) : u)                  
+    let(u=is_range(u) ? list(u) : u)
     assert(is_undef(u) || (is_vector(u) && min(u)>=0 && max(u)<=1), "u must be a list of points on the interval [0,1] or a range contained in that interval")
+    assert(is_bool(two_sided), "two_sided must be a boolean")
     is_def(weights) ? assert(is_vector(weights, len(control)), "Weights should be a vector whose length is the number of control points")
                       let(
                            dim   = len(control[0]),
@@ -232,18 +271,32 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                  str("Derivative order exceeds curve degree ",degree))
                           let(
                                max_d   = is_list(deriv) ? max(deriv) : deriv,
+                               // Request both one-sided homogeneous derivatives so the geometric
+                               // left/right derivatives can be formed at points where the curve
+                               // may not be differentiable.  Entries of hderivs[k] for k>=1 are
+                               // singletons [v] or pairs [left,right]; hderivs[0] is plain points.
                                hderivs = nurbs_curve(hctrl, degree, u=u, splinesteps=splinesteps,
                                                      mult=mult, knots=knots, type=type,
-                                                     deriv=[for(k=[0:1:max_d]) k]),
+                                                     deriv=[for(k=[0:1:max_d]) k], two_sided=true),
                                n_u     = len(hderivs[0]),
-                               geo_all = [for(i=[0:1:n_u-1])
-                                   _rational_derivs_at_u([for(k=[0:1:max_d]) hderivs[k][i]], dim, max_d)
+                               geo_lr  = [for(i=[0:1:n_u-1])
+                                   let(
+                                        anypair = [for(k=[1:1:max_d]) if (len(hderivs[k][i])==2) 1] != [],
+                                        geo_l = _rational_derivs_at_u(
+                                                    [hderivs[0][i], for(k=[1:1:max_d]) hderivs[k][i][0]],
+                                                    dim, max_d),
+                                        geo_r = !anypair ? geo_l
+                                              : _rational_derivs_at_u(
+                                                    [hderivs[0][i], for(k=[1:1:max_d]) last(hderivs[k][i])],
+                                                    dim, max_d)
+                                   )
+                                   [geo_l, geo_r]
                                ]
                           )
                           is_list(deriv) ?
-                              [for(d=deriv) [for(i=[0:1:n_u-1]) geo_all[i][d]]]
+                              [for(d=deriv) [for(i=[0:1:n_u-1]) _sided_out(geo_lr[i][0][d], geo_lr[i][1][d], d, two_sided)]]
                           :
-                              [for(i=[0:1:n_u-1]) geo_all[i][deriv]]
+                              [for(i=[0:1:n_u-1]) _sided_out(geo_lr[i][0][deriv], geo_lr[i][1][deriv], deriv, two_sided)]
   :
     let(
          uniform = is_undef(knots), 
@@ -371,21 +424,32 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                        // Chain rule: t = bound[0] + (bound[1]-bound[0])*u, so
                        // d^k/du^k = (bound[1]-bound[0])^k * d^k/dt^k.
                        // For clamped, bound=undef and the mapping is identity (no scaling needed).
+                       let(
+                           // Knot-run info for every evaluation point: [first_index, multiplicity]
+                           // when the point lies (approx) on a knot, undef otherwise.  Used to
+                           // detect points where the requested derivative order may not exist.
+                           runinfo = [for(uval=adjusted_u) _knot_run_info(knot, uval)]
+                       )
                        is_list(deriv) ?
                            [for(d=deriv)
                                let(scale = is_undef(bound) || d==0 ? 1 : pow(bound[1]-bound[0], d))
                                [for(i=idx(adjusted_u))
-                                   scale * _nurbs_eval_deriv(knot,
+                                   let(base = scale * _nurbs_eval_deriv(knot,
                                                              select(control, knotidx_list[i]-degree, knotidx_list[i]),
-                                                             adjusted_u[i], knotidx_list[i], degree, d)
+                                                             adjusted_u[i], knotidx_list[i], degree, d))
+                                   d==0 ? base
+                                   : _deriv_sided(base, d, runinfo[i], adjusted_u[i], knot, control,
+                                                  degree, type, scale, two_sided)
                                ]
                            ]
-                       : // integer deriv > 0: flat list of derivative vectors
+                       : // integer deriv > 0: flat list of derivative entries
                          let(scale = is_undef(bound) ? 1 : pow(bound[1]-bound[0], deriv))
                          [for(i=idx(adjusted_u))
-                             scale * _nurbs_eval_deriv(knot,
+                             let(base = scale * _nurbs_eval_deriv(knot,
                                                        select(control, knotidx_list[i]-degree, knotidx_list[i]),
-                                                       adjusted_u[i], knotidx_list[i], degree, deriv)
+                                                       adjusted_u[i], knotidx_list[i], degree, deriv))
+                             _deriv_sided(base, deriv, runinfo[i], adjusted_u[i], knot, control,
+                                          degree, type, scale, two_sided)
                          ]
                    : uniform?
                           let(
@@ -472,6 +536,84 @@ function _bspline_deriv_cpts(local_ctrl, knot, k, p, d_so_far, target_d) =
 function _nurbs_eval_deriv(knot, local_ctrl, u, k, p, d) =
     d == 0 ? _nurbs_pt(knot, local_ctrl, u, 1, p, k)
   : _nurbs_pt(knot, _bspline_deriv_cpts(local_ctrl, knot, k, p, 0, d), u, 1, p-d, k);
+
+
+// Locate t in the knot vector: returns [first_index, multiplicity] of the run of
+// knots (approx) equal to t, or undef when t does not lie on a knot.
+
+function _knot_run_info(knot, t) =
+    let(idxs = [for(i=idx(knot)) if (approx(knot[i], t)) i])
+    idxs == [] ? undef : [idxs[0], len(idxs)];
+
+
+// Package the d-th derivative at one evaluation point from its one-sided values.
+// Existence is decided by comparing the sides with a magnitude-relative tolerance
+// (derivative magnitudes scale with the curve size, so the absolute EPSILON of
+// approx() alone would misclassify large curves).
+
+function _sided_out(left, right, d, two_sided) =
+    d == 0 ? left
+  : approx(left, right, EPSILON * (1 + norm(left) + norm(right)))
+      ? (two_sided ? [left] : left)
+  : two_sided ? [left, right] : NAN;
+
+
+// Resolve the d-th derivative at an evaluation point that may fall on a knot
+// where that derivative does not exist.
+//
+//   base = one-sided value the span logic produced (right-sided, except
+//          left-sided at the domain end), already chain-rule scaled.
+//   run  = [first_knot_index, multiplicity] if the point lies on a knot, else undef.
+//
+// At a knot of multiplicity m the curve is guaranteed C^(degree-m), so for
+// d <= degree-m the derivative exists and base is returned.  Otherwise both
+// one-sided derivatives are computed and compared: if they agree the curve is
+// smoother there than the multiplicity bound guarantees and the common value is
+// returned; if they disagree the result is NAN (two_sided=false) or the pair
+// [left, right] (two_sided=true).  At true clamped/open domain endpoints only
+// one side exists and it is returned as the derivative; closed curves are
+// periodic, so the side missing at one end of the seam is evaluated at the
+// other end.
+//
+// A clamped/open curve whose first and last control points coincide is also
+// periodic at its domain boundary even though its type is not "closed" --
+// this is BOSL2's own documented pattern for gluing curve segments into a
+// loop via a repeated endpoint (see the nurbs_curve() "gluing two
+// semi-circles together" example), and it is exactly what
+// nurbs_interp(closed=true, corners=...) produces: corners force a
+// "clamped" assembly, but the assembled curve starts and ends at the same
+// corner point, so u=0 and u=1 are the same point in space with a real
+// corner there.  The wraparound math below only depends on knot[degree]
+// being the domain-start value and knot[len(control)] the domain-end value
+// (both true for clamped and open knot vectors by construction, independent
+// of any array extension), so the same formula that handles the "closed"
+// type's pre-extended arrays works unchanged on the plain unextended arrays
+// of such a loop.
+
+function _deriv_sided(base, d, run, t, knot, control, degree, type, scale, two_sided) =
+    is_undef(run) || d <= degree - run[1] ? (two_sided ? [base] : base)
+  : let(
+        n_ctrl    = len(control),
+        k_l       = run[0] - 1,
+        k_r       = run[0] + run[1] - 1,
+        valid_l   = k_l >= degree,
+        valid_r   = k_r <= n_ctrl - 1,
+        loop_ends = type != "closed"
+                  && approx(control[0], last(control),
+                            EPSILON * (1 + norm(control[0]) + norm(last(control))))
+    )
+    type != "closed" && !loop_ends && (!valid_l || !valid_r) ? (two_sided ? [base] : base)
+  : let(
+        lrun  = valid_l ? run : _knot_run_info(knot, knot[n_ctrl]),
+        lt    = valid_l ? t   : knot[n_ctrl],
+        lk    = valid_l ? k_l : lrun[0] - 1,
+        rrun  = valid_r ? run : _knot_run_info(knot, knot[degree]),
+        rt    = valid_r ? t   : knot[degree],
+        rk    = valid_r ? k_r : rrun[0] + rrun[1] - 1,
+        left  = scale * _nurbs_eval_deriv(knot, select(control, lk-degree, lk), lt, lk, degree, d),
+        right = scale * _nurbs_eval_deriv(knot, select(control, rk-degree, rk), rt, rk, degree, d)
+    )
+    _sided_out(left, right, d, two_sided);
 
 
 // Binomial coefficient C(n,k), computed recursively via Pascal's triangle.
@@ -1410,7 +1552,7 @@ function is_nurbs_patch(x) =
 // Function: nurbs_patch_points()
 // Synopsis: Computes specified point(s) on a NURBS surface patch
 // Topics: NURBS Patches
-// See Also: nurbs_vnf(), nurbs_curve()
+// See Also: nurbs_vnf(), nurbs_normals(), nurbs_curve()
 // Usage:
 //   pointgrid = nurbs_patch_points(patch, degree, [splinesteps], [u=], [v=], [weights=], [type=], [mult=], [knots=]);
 // Description:
@@ -1465,7 +1607,12 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
             patch = [for(i=idx(patch)) [for (j=idx(patch[0])) [each patch[i][j]*weights[i][j], weights[i][j]]]],
             pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, u=u, v=v, type=type, mult=mult, knots=knots)
        )
-       [for(row=pts) [for (pt=row) select(pt,0,-2)/last(pt)]]
+       // The homogeneous recursion returns a single point when u and v are both
+       // scalars, a list of points when exactly one is scalar, and a grid
+       // otherwise; dehomogenize whichever shape came back.
+       is_num(u) && is_num(v) ? select(pts,0,-2)/last(pts)
+     : is_num(u) || is_num(v) ? [for (pt=pts) select(pt,0,-2)/last(pt)]
+     : [for(row=pts) [for (pt=row) select(pt,0,-2)/last(pt)]]
    :
     assert(is_undef(u) || is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
     assert(is_undef(v) || is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
@@ -1493,12 +1640,214 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
     )
     [for (i = idx(vsplines[0])) nurbs_curve(column(vsplines,i), degree[1], splinesteps=splinesteps[1], u=v, mult=mult[1], knots=knots[1], type=type[1])];
 
-    
+
+// Function: nurbs_normals()
+// Synopsis: Computes unit normal(s) of a NURBS surface patch, tracking per-sector normals at creases.
+// Topics: NURBS Patches
+// See Also: nurbs_patch_points(), nurbs_vnf(), nurbs_curve()
+// Usage:
+//   normalgrid = nurbs_normals(patch, degree, [splinesteps], [u=], [v=], [weights=], [type=], [mult=], [knots=], [two_sided=]);
+// Description:
+//   Computes unit surface normals of a 3D NURBS patch at the same sample points that
+//   {{nurbs_patch_points()}} would produce: uniformly in the spline parameter with `splinesteps`, or at the
+//   given `u` and `v` parameter values.  The output is a grid of normal entries indexed `[u_index][v_index]`
+//   (a single entry when both `u` and `v` are scalars).  The normal is computed as the unit vector in the
+//   direction of the cross product $\partial S/\partial u \times \partial S/\partial v$, so its orientation
+//   follows the right-hand rule from the u direction to the v direction; negate the result if you need the
+//   opposite orientation.
+//   .
+//   A NURBS surface need not be smooth everywhere.  A knot with multiplicity equal to the degree creates a
+//   crease running across the surface, and `splinesteps` sampling places sample points exactly on every
+//   knot, so crease points are hit routinely.  Crossing a crease in the u direction, the partial
+//   $\partial S/\partial u$ jumps while $\partial S/\partial v$ stays continuous, and vice versa, so a
+//   sample point can carry one normal (smooth), two normals (on one crease), or four normals (at the
+//   crossing point of creases in both directions).  The `two_sided` parameter selects how these are
+//   reported:
+//   - `two_sided=false` (default) — every entry is a single unit vector.  Where the normal is not unique,
+//     or where the surface is degenerate (a zero tangent, e.g. on an edge collapsed to a point, or parallel
+//     tangents), the entry is `NAN`.  You can detect these entries with `is_nan()`.
+//   - `two_sided=true` — every entry is a list.  At points with a unique normal it is a singleton `[n]`.
+//     Where the one-sided normals differ it is a 2×2 matrix of sector normals indexed
+//     `[u_side][v_side]` with side 0 the minus (lower parameter) side and side 1 the plus side:
+//     `[[n(u-,v-), n(u-,v+)], [n(u+,v-), n(u+,v+)]]`.
+//     On a crease in u only, the two rows differ and the entries within each row are equal, so the pair of
+//     normals `[n(u-), n(u+)]` is column 0 of the matrix; on a crease in v only, the columns differ and
+//     `[n(v-), n(v+)]` is row 0.  At a crossing all four sectors can differ.  Degenerate sectors are `NAN`
+//     inside the matrix.  Test `len(entry)==1` to detect unique normals.
+//   .
+//   Uniqueness is decided by comparing the sector normals themselves, not from knot multiplicity, so a
+//   surface that is geometrically smooth across a parametric crease (for example, a surface built from
+//   rational circle arcs, where the tangent speed jumps but its direction does not) reports a unique
+//   normal there.  At clamped or open patch boundaries only one side of the surface exists and the
+//   one-sided normal is reported as the normal; directions of type "closed" are periodic, so both sides
+//   exist everywhere including the seam, and a clamped direction whose first and last control points
+//   coincide row-by-row is likewise treated as periodic at its boundary (see {{nurbs_curve()}}).
+// Arguments:
+//   patch = rectangular list of 3D control points, or a NURBS parameter list
+//   degree = a scalar or 2-vector giving the degree of the NURBS in the two directions
+//   splinesteps = a scalar or 2-vector giving the number of segments between each knot in the two directions.  Default: 16 if `u` and `v` are not given
+//   ---
+//   u = evaluation points in the u direction of the patch
+//   v = evaluation points in the v direction of the patch
+//   mult = a single list or pair of lists giving the knot multiplicity in the two directions.  Default: all 1
+//   knots = a single list or pair of lists giving the knot vector in each of the two directions.  Default: uniform
+//   weights = a matrix whose size corresponds to `patch` giving the weight at each control point in the patch.  Default: all 1
+//   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
+//   two_sided = If true, return each entry as a singleton `[n]` where the normal is unique and as a 2×2 matrix of sector normals where it is not.  If false, return plain unit vectors, with NAN where the normal is not unique.  Default: false
+// Example(3D,NoScale): Normals drawn along a smooth patch
+//   patch = [
+//       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
+//       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
+//       [[-50,-16, 20], [-16,-16,  40], [ 16,-16,  40], [50,-16, 20]],
+//       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]],
+//   ];
+//   pts = nurbs_patch_points(patch, 3, splinesteps=5);
+//   nrm = nurbs_normals(patch, 3, splinesteps=5);
+//   vnf_polyhedron(vnf_vertex_array(pts));
+//   for (a=idx(pts), b=idx(pts[0]))
+//       stroke([pts[a][b], pts[a][b]+12*nrm[a][b]], width=1, endcap2="arrow2");
+// Example(3D,NoScale): This patch has a crease (multiplicity-2 knot in a quadratic direction).  On the crease the normal is not unique: `two_sided=true` returns the sector normals, drawn here in red and blue for the two sides of the crease.
+//   patch = [for (i=[0:4]) [for (j=[0:3]) [i*25, j*25, i==2 ? 40 : 0]]];
+//   pts = nurbs_patch_points(patch, [2,3], mult=[[1,2,1],undef], splinesteps=4);
+//   nrm = nurbs_normals(patch, [2,3], mult=[[1,2,1],undef], splinesteps=4, two_sided=true);
+//   vnf_polyhedron(vnf_vertex_array(pts));
+//   for (a=idx(pts), b=idx(pts[0]))
+//       if (len(nrm[a][b])==1)
+//           stroke([pts[a][b], pts[a][b]+12*nrm[a][b][0]], width=1, endcap2="arrow2");
+//       else {
+//           color("red")  stroke([pts[a][b], pts[a][b]+14*nrm[a][b][0][0]], width=1, endcap2="arrow2");
+//           color("blue") stroke([pts[a][b], pts[a][b]+14*nrm[a][b][1][0]], width=1, endcap2="arrow2");
+//       }
+// Example(3D,Med,VPT=[0,0,20],VPR=[60,0,25],VPD=320): An interpolated surface with creases in both directions ({{nurbs_interp_surface()}} with `row_edges=` and `col_edges=`).  The loop below draws every distinct sector normal, colored by its position in the sector matrix: red = (u-,v-), blue = (u-,v+), orange = (u+,v-), purple = (u+,v+).  A row crease shows red+orange pairs, a column crease shows red+blue pairs, and their crossing on the peak shows four distinct sector normals.  Note that whether two normals appear is decided by the geometry, not by the crease knots alone: the boundary data here folds along with the interior, so the pairs persist to the patch edge — if a boundary row is a straight line the crease flattens out there and the sector normals merge into a single normal.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 0], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0, 0], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0, 0]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 0], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   pts = nurbs_patch_points(S, splinesteps=5);
+//   nrm = nurbs_normals(S, splinesteps=5, two_sided=true);
+//   sector_color = [["red","blue"],["orange","purple"]];
+//   for (a=idx(pts), b=idx(pts[0])) {
+//       p = pts[a][b];
+//       n = nrm[a][b];
+//       if (len(n)==1)
+//           color("green") stroke([p, p+10*n[0]], width=0.6, endcap2="arrow2");
+//       else
+//           for (i=[0,1], j=[0,1]) {
+//               dup = [for (pi=[0,1], pj=[0,1])
+//                         if ((pi<i || (pi==i && pj<j)) && approx(n[pi][pj], n[i][j], 1e-6)) 1] != [];
+//               if (!dup)
+//                   color(sector_color[i][j])
+//                       stroke([p, p+12*n[i][j]], width=0.6, endcap2="arrow2");
+//           }
+//   }
+
+function nurbs_normals(patch, degree, splinesteps, u, v, weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef], two_sided=false) =
+    is_list(patch) && _valid_surface_type(patch[0]) ?
+       assert(len(patch)>=6, "NURBS parameter list is invalid")
+       assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
+              "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
+       nurbs_normals(patch[2], patch[1], splinesteps, u, v, patch[5], patch[0], knots=patch[3], mult=patch[4], two_sided=two_sided)
+  : assert(is_undef(splinesteps) || !any_defined([u,v]), "Cannot combine splinesteps with u and v")
+    assert(is_bool(two_sided), "two_sided must be a boolean")
+    assert(is_nurbs_patch(patch), "Input patch is not a rectangular array of points")
+    assert(len(patch[0][0])==3, "nurbs_normals: control points must be 3D (normals are only defined for surfaces in 3-space)")
+    assert(is_undef(u) || is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
+    assert(is_undef(v) || is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
+    assert(num_defined([u,v])!=1, "Must define both u and v (when using)")
+    let(
+        rational = is_def(weights),
+        dummy = !rational ? 0
+              : assert(is_matrix(weights,len(patch),len(patch[0])), "The weights parameter must be a matrix that matches the size of the patch array")
+                assert(all_positive(flatten(weights)), "The weights must all be positive: a zero weight makes the surface undefined at that point, and negative weights are not supported")
+                0,
+        hpatch = !rational ? patch
+               : [for(i=idx(patch)) [for (j=idx(patch[0])) [each patch[i][j]*weights[i][j], weights[i][j]]]],
+        u = is_range(u) ? list(u) : u,
+        v = is_range(v) ? list(v) : v,
+        degree = force_list(degree,2),
+        type = force_list(type,2),
+        splinesteps = is_undef(splinesteps) ? [undef,undef] : force_list(splinesteps,2),
+        mult = is_vector(mult) || is_undef(mult) ? [mult,mult]
+             : assert((is_undef(mult[0]) || is_vector(mult[0])) && (is_undef(mult[1]) || is_vector(mult[1])), "mult must be a vector or list of two vectors")
+               mult,
+        knots = is_vector(knots) || is_undef(knots) ? [knots,knots]
+              : assert((is_undef(knots[0]) || is_vector(knots[0])) && (is_undef(knots[1]) || is_vector(knots[1])), "knots must be a vector or list of two vectors")
+                knots
+    )
+    is_num(u) && is_num(v) ?
+        _nurbs_normals_grid(hpatch, degree, splinesteps, [u], [v], type, mult, knots, rational, two_sided)[0][0]
+  : is_num(u) ? _nurbs_normals_grid(hpatch, degree, splinesteps, [u], v, type, mult, knots, rational, two_sided)[0]
+  : is_num(v) ? column(_nurbs_normals_grid(hpatch, degree, splinesteps, u, [v], type, mult, knots, rational, two_sided),0)
+  : _nurbs_normals_grid(hpatch, degree, splinesteps, u, v, type, mult, knots, rational, two_sided);
+
+
+// Tensor-product partial derivatives via the curve machinery: collapsing one
+// direction by plain evaluation leaves a curve in the other direction whose
+// derivative is the surface partial.  dS/du jumps only across u-creases
+// (its v dependence enters through the C0-continuous v basis) and dS/dv only
+// across v-creases, so the two-sided curve derivative in each direction
+// supplies exactly the sector tangents needed at creases.  For rational
+// patches the collapse runs in homogeneous space and the geometric partials
+// come from the quotient rule at each point.
+
+function _nurbs_normals_grid(hpatch, degree, splinesteps, u, v, type, mult, knots, rational, two_sided) =
+    let(
+        // collapse v, then differentiate in u (also yields the surface points)
+        rowcurves = [for (r = idx(hpatch))
+            nurbs_curve(hpatch[r], degree[1], splinesteps=splinesteps[1], u=v, type=type[1], mult=mult[1], knots=knots[1])],
+        ures = [for (b = idx(rowcurves[0]))
+            nurbs_curve([for (r = idx(hpatch)) rowcurves[r][b]], degree[0], splinesteps=splinesteps[0], u=u,
+                        type=type[0], mult=mult[0], knots=knots[0], deriv=[0,1], two_sided=true)],
+        // collapse u, then differentiate in v
+        colcurves = [for (c = idx(hpatch[0]))
+            nurbs_curve(column(hpatch,c), degree[0], splinesteps=splinesteps[0], u=u, type=type[0], mult=mult[0], knots=knots[0])],
+        vres = [for (a = idx(colcurves[0]))
+            nurbs_curve([for (c = idx(hpatch[0])) colcurves[c][a]], degree[1], splinesteps=splinesteps[1], u=v,
+                        type=type[1], mult=mult[1], knots=knots[1], deriv=1, two_sided=true)]
+    )
+    [for (a = idx(colcurves[0]))
+        [for (b = idx(rowcurves[0]))
+            _nurbs_normal_at(ures[b][0][a], ures[b][1][a], vres[a][b], rational, two_sided)]];
+
+
+// Assemble the normal entry at one sample point from the (possibly two-sided)
+// homogeneous partials.  hu and hv are singletons [t] or pairs [t_minus,t_plus]
+// as returned by nurbs_curve(two_sided=true).
+
+function _nurbs_normal_at(H, hu, hv, rational, two_sided) =
+    let(
+        S  = rational ? select(H,0,-2)/last(H) : H,
+        w  = rational ? last(H) : 1,
+        su = [for (h = hu) rational ? (select(h,0,-2) - last(h)*S)/w : h],
+        sv = [for (h = hv) rational ? (select(h,0,-2) - last(h)*S)/w : h],
+        m  = [for (i = [0,1])
+                 [for (j = [0,1])
+                     let(
+                         a = su[min(i, len(su)-1)],
+                         b = sv[min(j, len(sv)-1)],
+                         c = cross(a, b)
+                     )
+                     norm(c) <= EPSILON * (1 + norm(a)*norm(b)) ? NAN : c/norm(c)]],
+        flat = [m[0][0], m[0][1], m[1][0], m[1][1]],
+        ndef = [for (x = flat) if (is_vector(x)) x],
+        unique = len(ndef) == 0 ? true
+               : len(ndef) == 4 && [for (x = ndef) if (!approx(x, ndef[0], 1e-6)) 1] == []
+    )
+    unique ? (len(ndef) == 0 ? (two_sided ? [NAN] : NAN)
+                             : (two_sided ? [ndef[0]] : ndef[0]))
+  : two_sided ? m : NAN;
+
+
 // Function&Module: nurbs_vnf()
 // Synopsis: Generates a (possibly non-manifold) VNF for a single NURBS surface patch.
 // SynTags: VNF
 // Topics: NURBS Patches
-// See Also: nurbs_patch_points()
+// See Also: nurbs_patch_points(), nurbs_normals()
 // Usage: (as a function)
 //   vnf = nurbs_vnf(patch, degree, [splinesteps], [mult=], [knots=], [weights=], [type=], [style=], [reverse=], [triangulate=], [caps=], [cap1=], [cap2=]);
 // Usage: (as a module)
@@ -1919,7 +2268,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(surface, 3, col_wrap = true, normal1 = DOWN*4, normal2 = UP*2);
 //   
-// Example(3D,Med,VPR=[80,0,45],VPT=[0,0,30],VPD = 270): A more extreme example of controlling end shape with normals.
+// Example(3D,Med,VPR=[80,0,45],VPT=[0,0,30],VPD = 250): A more extreme example of controlling end shape with normals.
 //   surface = [ repeat([0,0,-15],14),
 //      for(i=[0:4]) zrot(i*15,path3d(star(or=15,ir=13, n=7),i*15)),
 //      repeat([0,0,5*15],14)
@@ -3412,14 +3761,58 @@ function _full_closed_knots(bar_knots, n, p) =
 
 // Collocation Matrices
 
+// Find the knot span containing parameter t: the index s with U[s] <= t < U[s+1].
+// When t lies at (or within 1e-12 of) the final knot value, returns the last
+// non-empty span, so that evaluating the de Boor triangle there yields the
+// left-limit basis values -- the same endpoint convention as _nip().
+// Returns undef when t is outside the knot range.
+
+function _find_span(t, U) =
+    let(
+        maxidx = len(U) - 1,
+        hits = abs(t - U[maxidx]) < 1e-12
+             ? [for (s = [0:1:maxidx-1])
+                   if (U[s+1] - U[s] > 1e-15 && U[maxidx] - U[s+1] < 1e-12) s]
+             : [for (s = [0:1:maxidx-1]) if (U[s] <= t && t < U[s+1]) s]
+    )
+    hits == [] ? undef : last(hits);
+
+
+// One row of a collocation matrix: the degree-p basis functions
+// N_{0,p}(t) .. N_{ncols-1,p}(t).  Only the p+1 functions N_{s-p..s} are
+// non-zero at t (s = span of t), and _deboor_to_degree() computes all of them
+// in one O(p^2) triangle, so a row costs O(ncols + p^2) instead of ncols
+// separate exponential-in-p _nip() recursions.  Falls back to _nip() when the
+// span sits too close to the ends of the knot vector for the de Boor window
+// (only happens for evaluation outside the curve domain, e.g. Greville points
+// of an unclamped knot vector).
+
+function _basis_row(t, p, U, ncols) =
+    let(s = _find_span(t, U))
+    is_undef(s) || s < p || s + p + 1 > len(U) - 1
+      ? [for (j = [0:1:ncols-1]) _nip(j, p, t, U)]
+      : let(b = _deboor_to_degree(s, p, t, U))
+        [for (j = [0:1:ncols-1]) j < s-p || j > s ? 0 : b[j-s+p]];
+
+
+// Periodic version with n columns: extended basis index e in [s-p, s] aliases
+// control point e-n when e >= n, which is equivalent to the wrapped basis
+// B_j = N_j + N_{j+n} for j < p (the two supports are disjoint when n > p).
+
+function _basis_row_periodic(t, p, U, n) =
+    let(s = _find_span(t, U))
+    is_undef(s) || s < p || s + p + 1 > len(U) - 1
+      ? [for (j = [0:1:n-1])
+            _nip(j, p, t, U) + (j < p ? _nip(j + n, p, t, U) : 0)]
+      : let(b = _deboor_to_degree(s, p, t, U))
+        [for (j = [0:1:n-1])
+            sum([0, for (e = [s-p:1:s]) if (e == j || e - n == j) b[e-s+p]])];
+
+
 // Standard collocation matrix for clamped type.
 
 function _collocation_matrix(params, n, p, U) =
-    [for (k = [0:1:n])
-        [for (j = [0:1:n])
-            _nip(j, p, params[k], U)
-        ]
-    ];
+    [for (k = [0:1:n]) _basis_row(params[k], p, U, n+1)];
 
 
 // Periodic collocation matrix for closed type (n x n).
@@ -3431,35 +3824,14 @@ function _collocation_matrix(params, n, p, U) =
 //   B_j(t) = N_j(t)                  if j >= p
 
 function _collocation_matrix_periodic(params, n, p, U_periodic) =
-    [for (k = [0:1:n-1])
-        [for (j = [0:1:n-1])
-            _nip(j, p, params[k], U_periodic)
-          + (j < p ? _nip(j + n, p, params[k], U_periodic) : 0)
-        ]
-    ];
+    [for (k = [0:1:n-1]) _basis_row_periodic(params[k], p, U_periodic, n)];
 
 
 // Degree Elevation
 
-// Greville abscissae for B-spline basis of degree p with full knot
-// vector U.  Returns n+1 values where n = len(U) - p - 2.  Each g_i
-// is the average of knots U[i+1] .. U[i+p].  For a clamped knot
-// vector, g_0 = 0 and g_n = 1.  These are optimal collocation sites
-// for the B-spline space and automatically satisfy the Schoenberg-
-// Whitney condition for non-singular collocation.
-
-function _greville(U, p) =
-    let(n = len(U) - p - 2)
-    [for (i = [0:1:n])
-        sum([for (j = [i+1:1:i+p]) U[j]]) / p
-    ];
-
-
 // Increment the multiplicity of every distinct value in a knot vector
 // by 1.  Walk the vector; at the end of each run of equal values emit
-// one extra copy.  Equivalent to the new_interior construction in
-// _elevate_once_clamped but applied to the complete (full) knot vector.
-// Used by _elevate_once_open.
+// one extra copy.  Used by _elevate_once.
 
 function _increment_knot_mults(U) =
     [for (i = [0:1:len(U)-1]) each
@@ -3468,13 +3840,41 @@ function _increment_knot_mults(U) =
     ];
 
 
-// Single degree elevation of a clamped or open B-spline via exact collocation.
+// Generalized de Boor: evaluates the degree-p polar form (blossom) of a
+// B-spline at the p arguments args[0..p-1], starting from the local control
+// points local_ctrl = P_{s-p..s} of an anchor span s.  This is _nurbs_pt()
+// with the fixed parameter u replaced by args[r-1] at recursion level r.
+// The multi-affine blossom identity makes every level exact for ANY argument
+// values: level r combines b(args[0..r-1], U[i]...) and b(args[0..r-1],
+// ...U[i+p-r+1]) which differ in a single slot, and the weight
+// (args[r-1]-U[i])/(U[i+p-r+1]-U[i]) is the unique affine combination placing
+// args[r-1] in that slot.  The anchor span only needs U[s] < U[s+1], which
+// guarantees every denominator (they all bracket [U[s], U[s+1]]) is non-zero.
+
+function _blossom(local_ctrl, U, s, p, args, r=1) =
+    r > p ? local_ctrl[0]
+  : let(
+        u = args[r-1],
+        ctrl_new = [for(i=[s-p+r:1:s])
+                       let(alpha = (u-U[i]) / (U[i+p-r+1]-U[i]))
+                       (1-alpha) * local_ctrl[i-1-(s-p)-r+1] + alpha*local_ctrl[i-(s-p)-r+1]
+                   ]
+    )
+    _blossom(ctrl_new, U, s, p, args, r+1);
+
+
+// Single degree elevation of a clamped or open B-spline, computed locally and
+// exactly by blossoming (Prautzsch's method).
 //
 // The elevated curve lies in the degree-(p+1) B-spline space whose knot
-// vector has each distinct value's multiplicity incremented by 1.
-// Evaluating the original curve at the Greville abscissae of the new basis
-// and solving the collocation system recovers the exact elevated control
-// points (the new space contains the original curve exactly).
+// vector V has each distinct value's multiplicity incremented by 1.  Its
+// control points are symmetrized blossoms of the original curve: with
+// q = p+1,
+//     Q_k = (1/q) * sum_{j=0..p} b( V[k+1..k+q] with the j-th entry omitted )
+// where b() is the degree-p polar form of the original spline, evaluated with
+// the generalized de Boor triangle (_blossom(), an exact affine identity for
+// any anchor span).  Each control point costs O(p^3) local work, so the whole
+// elevation is O(n p^3) -- no global collocation solve, no conditioning risk.
 //
 // Input  ctrl  = control points (any dimension >= 1)
 //         p     = current degree (>= 1)
@@ -3484,25 +3884,49 @@ function _increment_knot_mults(U) =
 
 function _elevate_once(ctrl, p, U) =
     let(
-        n_old = len(ctrl) - 1,
-        dim   = len(ctrl[0]),
         p_new = p + 1,
         U_new = _increment_knot_mults(U),
         n_new = len(U_new) - p_new - 2,
-        grev  = _greville(U_new, p_new),
-        C_vals = [for (u = grev)
-            let(row = [for (j = [0:1:n_old]) _nip(j, p, u, U)])
-            [for (d = [0:1:dim-1])
-                sum([for (j = [0:1:n_old]) row[j] * ctrl[j][d]])]
-        ],
-        A = [for (k = [0:1:n_new])
-            [for (i = [0:1:n_new]) _nip(i, p_new, grev[k], U_new)]
-        ],
-        Q = linear_solve(A, C_vals)
+        // Zero-pad with p knots and p zero control points on each side.  Near
+        // the ends of an OPEN knot vector the spline is a partial basis sum;
+        // basis functions absent from the representation have coefficient
+        // zero, and the padding makes those zeros explicit so that every span
+        // of the original knot range is a valid blossom anchor with a full
+        // window of p+1 control points.  The pad spacing h is arbitrary (the
+        // blossom identities are exact for any knots); it is chosen at the
+        // scale of the existing spans for numerical conditioning.  For a
+        // clamped knot vector the padding never enters any window.
+        h      = (last(U) - U[0]) / (len(U) - 1),
+        Upad   = [for (i = [p:-1:1]) U[0] - i*h, each U, for (i = [1:1:p]) last(U) + i*h],
+        zero   = 0 * ctrl[0],
+        cpad   = [each repeat(zero, p), each ctrl, each repeat(zero, p)],
+        // Valid anchor range [p, smax] in Upad = exactly the spans of U.
+        smax   = len(U) + p - 2,
+        Q = [for (k = [0:1:n_new])
+                let(
+                    // Anchor at the non-empty span nearest the argument
+                    // midpoint: the de Boor--Fix identity Q_k = blossom of the
+                    // polynomial piece on any non-empty span inside the k-th
+                    // elevated basis function's support, which this is.
+                    args = [for (i = [k+1:1:k+p_new]) U_new[i]],
+                    mid  = (args[0] + args[p]) / 2,
+                    s    = _nearest_nonempty_span(Upad, p, smax, _find_span(mid, Upad)),
+                    local_ctrl = select(cpad, s-p, s)
+                )
+                sum([for (j = [0:1:p])
+                        _blossom(local_ctrl, Upad, s, p,
+                                 [for (i = [0:1:p]) if (i != j) args[i]])
+                    ]) / p_new
+            ]
     )
-    assert(Q != [],
-           "nurbs_elevate_degree: singular collocation (should not happen)")
     [Q, U_new, p_new];
+
+
+// Index of the non-empty span (U[i] < U[i+1]) in [lo, hi] closest to s.
+
+function _nearest_nonempty_span(U, lo, hi, s) =
+    let(cands = [for (i = [lo:1:hi]) if (U[i+1] - U[i] > 1e-15) i])
+    cands[min_index([for (c = cands) abs(c - s)])];
 
 
 
@@ -3812,9 +4236,7 @@ function _nurbs_interp_clamped_constrained(points, p, method, eff_der, eff_curv,
         N_rows = n + 1 + n_constraint,
 
         // Interpolation rows: N_{j,p}(t_k)
-        interp_rows = [for (k = [0:1:n])
-            [for (j = [0:1:M-1]) _nip(j, p, params[k], U_full)]
-        ],
+        interp_rows = [for (k = [0:1:n]) _basis_row(params[k], p, U_full, M)],
 
         // First-derivative rows: N'_{j,p}(t_k)
         deriv_rows = [for (spec = der_specs)
@@ -4149,12 +4571,7 @@ function _closed_constrained_solve(points, p, method, eff_der, eff_curv, rot,
         N_rows = n + n_constraint,
 
         // Interpolation rows: aliased basis for M control points
-        interp_rows = [for (k = [0:1:n-1])
-            [for (j = [0:1:M-1])
-                _nip(j, p, params[k], U_full)
-              + (j < p ? _nip(j + M, p, params[k], U_full) : 0)
-            ]
-        ],
+        interp_rows = [for (k = [0:1:n-1]) _basis_row_periodic(params[k], p, U_full, M)],
 
         // First-derivative rows: aliased derivative basis
         deriv_rows = [for (spec = der_specs)
@@ -4231,9 +4648,7 @@ function _build_clamped_system(params, p, extra_pts=0) =
         aug_int     = [for (i = [1:1:len(aug_bar)-2]) aug_bar[i]],
         U_full      = _full_clamped_knots(aug_int, p),
         // Rectangular (n+1) × M matrix: n+1 data rows, M control columns.
-        // _collocation_matrix uses a single n for both dimensions, so build inline.
-        N_mat       = [for (k = [0:1:n])
-                           [for (j = [0:1:M-1]) _nip(j, p, params[k], U_full)]],
+        N_mat       = [for (k = [0:1:n]) _basis_row(params[k], p, U_full, M)],
         knots       = [0, each aug_int, 1]
       )
       [N_mat, knots];
@@ -4282,13 +4697,8 @@ function _build_closed_system(params, p, extra_pts=0) =
             d_min < eps_knot ? u + eps_knot : u
         ],
         // Rectangular n × M matrix: n data rows, M control columns.
-        // _collocation_matrix_periodic uses a single n for both dimensions, so
-        // build inline. Periodic wrapping folds basis j < p by adding N_{j+M}.
-        N_mat       = [for (k = [0:1:n-1])
-                           [for (j = [0:1:M-1])
-                               _nip(j, p, col_safe[k], U_full)
-                             + (j < p ? _nip(j + M, p, col_safe[k], U_full) : 0)
-                           ]]
+        // Periodic wrapping folds basis j < p by adding N_{j+M}.
+        N_mat       = [for (k = [0:1:n-1]) _basis_row_periodic(col_safe[k], p, U_full, M)]
       )
       [N_mat, aug_bar];
 
@@ -4329,9 +4739,7 @@ function _build_clamped_system_with_derivs(params, p, has_sd, has_ed, extra_pts=
         aug_bar       = _fix_tiny_spans(aug_bar_merged, len(aug_bar_merged) - 1),
         int_kn      = [for (i = [1:1:len(aug_bar)-2]) aug_bar[i]],
         U_full      = _full_clamped_knots(int_kn, p),
-        interp_rows = [for (k = [0:1:n])
-                           [for (j = [0:1:M-1]) _nip(j, p, params[k], U_full)]
-                      ],
+        interp_rows = [for (k = [0:1:n]) _basis_row(params[k], p, U_full, M)],
         deriv_start = has_sd
                     ? [[for (j = [0:1:M-1]) _dnip(j, p, params[0], U_full)]]
                     : [],
