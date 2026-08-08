@@ -209,13 +209,13 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   is a list of edge set descriptors to include in the edge set, and the `except` argument is a list of
 //   edge set descriptors to remove from the edge set.
 //   The default value for `edges` is `"ALL"`, the set of all edges.
-//   The default value for `except` is the    empty set, meaning no edges are removed.
+//   The default value for `except` is the empty set, meaning no edges are removed.
 //   If either argument is just a single edge set
 //   descriptor it can be passed directly rather than in a singleton list.
 //   Each edge set descriptor must be one of:
-//   - A 3-vector with entries in {-1,0,1} pointing toward an edge, indicating that single edge.
-//   - A 3-vector with entries in {-1,0,1} pointing toward a face, indicating all edges surrounding that face.
-//   - A 3-vector with entries in {-1,0,1} pointing toward a corner, indicating all edges touching that corner.
+//   - A 3-vector with entries in {-1,0,1} pointing toward an edge of a centered cube, indicating that single edge.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a face of a centered cube, indicating all edges surrounding that face.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a corner of a centered cube, indicating all edges touching that corner.
 //   - The string `"X"`, indicating all X axis aligned edges.
 //   - The string `"Y"`, indicating all Y axis aligned edges.
 //   - The string `"Z"`, indicating all Z axis aligned edges.
@@ -231,7 +231,8 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //       ```
 //   .
 //   You can specify edge descriptors directly by giving a vector, or you can use sums of the
-//   named direction vectors described above.  Below we show all of the edge sets you can
+//   named direction vectors described above.  
+//   Below we show all of the edge sets you can
 //   describe with sums of the direction vectors, and then we show some examples of combining
 //   edge set descriptors.
 // Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward an edge select that single edge
@@ -325,9 +326,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   If either argument is just a single corner set
 //   descriptor it can be passed directly rather than in a singleton list.
 //   Each corner set descriptor must be one of:
-//   - A vector pointing toward a corner, indicating that corner.
-//   - A vector pointing toward an edge indicating both corners at the ends of that edge.
-//   - A vector pointing toward a face, indicating all the corners of that face.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a corner of a centered cube, indicating that corner.
+//   - A 3-vector with entries in {-1,0,1} pointing toward an edge of a centered cube indicating both corners at the ends of that edge.
+//   - A 3-vector with entries in {-1,0,1} pointing toward a face of a centered cube, indicating all the corners of that face.
 //   - The string `"ALL"`, indicating all corners.
 //   - The string `"NONE"`, indicating no corners at all.
 //   - A length 8 vector where each entry corresponds to a corner and is 1 if the corner is included and 0 if it is excluded.  The corner ordering is
