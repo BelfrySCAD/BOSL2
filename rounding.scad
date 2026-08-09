@@ -934,8 +934,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   )
   assert(d_first>=0 && d_next>=0, str("Joint value negative when adding path ",i+1))
   
-  assert(d_first<path_length(revresult),str("Path ",i," is too short for specified cut distance ",d_first))
-  assert(d_next<path_length(nextpath), str("Path ",i+1," is too short for specified cut distance ",d_next))
+  assert(d_first<path_length(revresult),str("paths[",i,"] is too short for specified cut distance ",d_first))
+  assert(d_next<path_length(nextpath), str("paths[",i+1,"] is too short for specified cut distance ",d_next))
   let(
       firstcut = path_cut_points(revresult, d_first, direction=true),
       nextcut = path_cut_points(nextpath, d_next, direction=true)

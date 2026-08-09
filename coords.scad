@@ -249,12 +249,16 @@ function xy_to_polar(x, y) =
 //   data = apply(M,path3d(circle(r=10, $fn=20)));
 //   move_copies(data) sphere(r=1);
 //   color("red") move_copies(project_plane(data, data)) sphere(r=1);
-// Example:
+// Example(3D,VPR=[70.40,0.00,18.70],VPD=292.71,VPT=[-3.65,16.28,13.46]): The arrows show the projection from the red circle to its projection in yellow.  Since we didn't use {{path3d()}} the projected curve is still a 3D curve with zero $z$ component.  
 //   xyzpath = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
 //   mat = project_plane(xyzpath);
-//   xypath = path2d(apply(mat, xyzpath));
-//   #stroke(xyzpath,closed=true);
+//   xypath = apply(mat, xyzpath);
+//   %show_plane([0,0,1,0],[140,180]);
+//   stroke(xyzpath,closed=true,color="red");
 //   stroke(xypath,closed=true);
+//   color("lightblue")
+//     for(i=idx(xyzpath))
+//       stroke([xyzpath[i], point3d(xypath[i])], endcap2="arrow2");
 function project_plane(plane,p) =
       is_matrix(plane,3,3) && is_undef(p) ? // no data, 3 points given
           assert(!is_collinear(plane),"\nPoints defining the plane must not be collinear.")
