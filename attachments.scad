@@ -611,7 +611,7 @@ module orient(anchor, spin) {
 //   .
 //   Several options can adjust how the child is positioned.  You can specify `inset=` to inset the
 //   aligned object from its alignment location. If you set `inside=true` then the
-//   child appears inside the parent instead of on its surface so that you can use {{diff()}} to subract it.
+//   child appears inside the parent instead of on its surface so that you can use {{diff()}} to subtract it.
 //   In this case the child receives a default "remove" tag.
 //   .
 //   The overlap option and shiftout option both move the object away from its aligned position.  They
