@@ -42,7 +42,7 @@ function substr(str, pos=0, len=undef) =
                  : _substr(str,pos,len);
 
 function _substr(str,pos,len) =
-    assert(pos>=0,"pos value for substr() must be nonnegative")
+    assert(pos>=0,"\npos value for substr() must be nonnegative.")
     len <= 0 || pos>=len(str) ? ""
   :
     chr([for(i=[pos:pos+len-1]) ord(str[i])]);
@@ -78,7 +78,7 @@ function suffix(str,len) =
 //   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
 //   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
 //   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
-//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns `undef`.
+//   and `last` is true then the search finds the pattern if it begins at index `start`. If no match exists, returns `undef`.
 //   If you set `all` to true then `str_find()` returns all of the matches in a list, or an empty list if there are no matches.
 // Arguments:
 //   str = String to search.
@@ -103,8 +103,8 @@ function suffix(str,len) =
 //   m=str_find("abc123def123abc","1234",all=true);  // Returns []
 //   n=str_find("abc","",all=true);                  // Returns [0,1,2]
 function str_find(str,pattern,start=undef,last=false,all=false) =
-    assert(_is_liststr(str), "str must be a string or list")
-    assert(_is_liststr(pattern), "pattern must be a string or list")
+    assert(_is_liststr(str), "\nstr must be a string or list.")
+    assert(_is_liststr(pattern), "\npattern must be a string or list.")
     all? _str_find_all(str,pattern) :
     let( start = first_defined([start,last?len(str)-len(pattern):0]) )
     pattern==""? start :
@@ -153,8 +153,8 @@ function _str_find_all(str,pattern) =
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.
 function substr_match(str,start,pattern) =
-     assert(_is_liststr(str), "str must be a string or list")
-     assert(_is_liststr(pattern), "pattern must be a string or list")
+     assert(_is_liststr(str), "\nstr must be a string or list.")
+     assert(_is_liststr(pattern), "\npattern must be a string or list.")
      len(str)-start <len(pattern)? false
    : _substr_match_recurse(str,start,pattern,len(pattern));
 
@@ -217,7 +217,7 @@ function ends_with(str,pattern) = _is_liststr(str) && substr_match(str,len(str)-
 //   If sep is a single string then each character in sep is treated as a delimiting character and the input string is
 //   split at every delimiting character.  Empty strings can occur whenever two delimiting characters are sequential.
 //   If sep is a list of strings then the input string is split sequentially using each string from the list in order.
-//   If keep_nulls is true then the output will have length equal to `len(sep)+1`, possibly with trailing null strings
+//   If keep_nulls is true then the output length is equal to `len(sep)+1`, possibly with trailing null strings
 //   if the string runs out before the separator list.
 // Arguments:
 //   str = String to split.
@@ -288,8 +288,8 @@ function str_join(list,sep="",_i=0, _result="") =
 // Description:
 //   Takes a string `s` and strips off all leading and/or trailing characters that exist in string `c`.
 //   By default strips both leading and trailing characters.  If you set start or end to true then
-//   it will strip only the leading or trailing characters respectively.  If you set start
-//   or end to false then it will strip only the trailing or leading characters.
+//   it strips only the leading or trailing characters respectively. If you set start
+//   or end to false then it strips only the trailing or leading characters.
 // Arguments:
 //   s = The string to strip leading or trailing characters from.
 //   c = The string of characters to strip.
@@ -347,7 +347,7 @@ function str_strip(s,c,start,end) =
 
 function str_pad(str,length,char=" ",left=false) =
   assert(is_str(str))
-  assert(is_str(char) && len(char)==1, "char must be a single character string")
+  assert(is_str(char) && len(char)==1, "\nchar must be a single character string.")
   assert(is_bool(left))
   let(
     padding = chr(repeat(ord(char),length-len(str)))
@@ -364,7 +364,7 @@ function str_pad(str,length,char=" ",left=false) =
 //   newstr = str_replace_char(str, char, replace);
 // Description:
 //   Replace every occurence of `char` (a single character string) in the input string
-//   with the string `replace` which can be any string.
+//   with the string `replace`, which can be any string.
 // Arguments:
 //   str = string to process
 //   char = single character string to search for
@@ -375,9 +375,39 @@ function str_pad(str,length,char=" ",left=false) =
 
 function str_replace_char(str,char,replace) =
    assert(is_str(str))
-   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a single character string")
+   assert(is_str(char) && len(char)==1, "\nSearch pattern 'char' must be a single character string.")
    assert(is_str(replace))
    str_join([for(c=str) c==char ? replace : c]);
+
+
+
+// Function: str_collapse_char()
+// Synopsis: Collapse a specific repeating character in a string.
+// Topics: Strings
+// See Also: str_strip()
+// Usage:
+//   newstr = str_collapse_char(str, char);
+// Description:
+//  Collapse any repeated sequences of a specified character in the input string into a single character.
+//  This is useful to collapse multiple sequental spaces in a string that spans multiple indented lines in your source code.
+// Arguments:
+//   str = string to process
+//   char = single character string to search for repetitions. Default: space character
+// Example:
+//   s1 = str_collapse_char("a-b--c---d----e", "-");  // Returns: "a-b-c-d-e"
+//   
+//   st = "abc
+//         def
+//         xyz";  // parsed as "abc      def      xyz"
+//   s2 = str_collapse_char(st);                      // Returns: "abc def xyz"
+
+function str_collapse_char(str, char=" ") =
+    assert(is_str(str))
+    assert(is_str(char) && len(char)==1, "\nSearch pattern 'char' must be a single character string.")
+    let(oc = ord(char), n=len(str)-1)
+        chr([for(i=[0:n]) let(c=ord(str[i]))
+            if (c!=oc || i==0 || ord(str[i-1])!=c) c]);
+
 
 
 // Function: downcase()
@@ -659,7 +689,7 @@ function format_fixed(f,digits=6) =
 // Description:
 //   Formats the given floating point number `f` into a string with `sig` significant digits.
 //   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
-//   If the number can be represented in `sig` significant digits without a mantissa, it will be.
+//   If possible, the number is represented in `sig` significant digits without a mantissa.
 //   If given a list of numbers, recursively prints each item in the list, returning a string like `[3,4,5]`
 // Arguments:
 //   f = The floating point number to format.
@@ -703,8 +733,8 @@ function format_float(f,sig=12) =
 ///   _format_matrix(M, [sig], [sep], [eps])
 /// Description:
 ///   Convert a numerical matrix into a matrix of strings where every column
-///   is the same width so it will display in neat columns when printed.
-///   Values below eps will display as zero.  The matrix can include nans, infs
+///   is the same width so it displays in neat columns when printed.
+///   Values below eps display as zero. The matrix can include nans, infs
 ///   or undefs and the rows can be different lengths.
 /// Arguments:
 ///   M = numerical matrix to convert
@@ -718,7 +748,7 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
        space_figure = chr(8199),
        sep = is_num(sep) && sep>=0 ? chr(repeat(ord(space_figure),sep))
            : is_string(sep) ? sep
-           : assert(false,"Invalid separator: must be a string or positive integer giving number of spaces"),
+           : assert(false,"\nInvalid separator: must be a string or positive integer giving number of spaces."),
        strarr=
          [for(row=M)
              [for(entry=row)
@@ -762,13 +792,13 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
 //   Given a format string and a list of values, inserts the values into the placeholders in the format string and returns it.
 //   Formatting placeholders have the following syntax:
 //   - A leading `{` character to show the start of the placeholder.
-//   - An integer index into the `vals` list to specify which value should be formatted at that place. If not given, the first placeholder will use index `0`, the second will use index `1`, etc.
+//   - An integer index into the `vals` list to specify which value should be formatted at that place. If not given, the first placeholder uses index `0`, the second uses index `1`, etc.
 //   - An optional `:` separator to indicate that what follows if a formatting specifier.  If not given, no formatting info follows.
 //   - An optional `-` character to indicate that the value should be left justified if the value needs field width padding.  If not given, right justification is used.
-//   - An optional `0` character to indicate that the field should be padded with `0`s.  If not given, spaces will be used for padding.
-//   - An optional integer field width, which the value should be padded to.  If not given, no padding will be performed.
+//   - An optional `0` character to indicate that the field should be padded with `0`s.  If not given, spaces are used for padding.
+//   - An optional integer field width, which the value should be padded to.  If not given, no padding is performed.
 //   - An optional `.` followed by an integer precision length, for specifying how many digits to display in numeric formats.  If not give, 6 digits is assumed.
-//   - An optional letter to indicate the formatting style to use.  If not given, `s` is assumed, which will do it's generic best to format any data type.
+//   - An optional letter to indicate the formatting style to use. If not given, `s` is assumed, which does its generic best to format any data type.
 //   - A trailing `}` character to show the end of the placeholder.
 //   .
 //   Formatting styles, and their effects are as follows:
@@ -798,7 +828,7 @@ function format(fmt, vals) =
         for(i = idx(parts))
         let(
             found_brace = i==0 || [for (c=parts[i]) if(c=="}") c] != [],
-            err = assert(found_brace, "Unbalanced { in format string."),
+            err = assert(found_brace, "\nUnbalanced { in format string."),
             p = i==0? [undef,parts[i]] : str_split(parts[i],"}"),
             fmta = p[0],
             raw = p[1]
@@ -831,7 +861,7 @@ function format(fmt, vals) =
                     typ=="F"? upcase(format_fixed(val,default(prec,6))) :
                     typ=="g"? downcase(format_float(val,default(prec,6))) :
                     typ=="G"? upcase(format_float(val,default(prec,6))) :
-                    assert(false,str("Unknown format type: ",typ)),
+                    assert(false,str("\nUnknown format type \"",typ,"\".")),
                 padlen = max(0,wid-len(unpad)),
                 padfill = chr([for (i=[0:1:padlen-1]) zero? 48 : 32]),
                 out = left? str(unpad, padfill) : str(padfill, unpad)
