@@ -401,13 +401,13 @@ function str_replace_char(str,char,replace) =
 //         xyz";  // parsed as "abc      def      xyz"
 //   s2 = str_collapse_char(st);                      // Returns: "abc def xyz"
 
-function str_collapse_char(string, char=" ", result="", pos=0) =
+function str_collapse_char(str, char=" ", result="", pos=0) =
     assert(is_str(str))
     assert(is_str(char) && len(char)==1, "\nSearch pattern 'char' must be a single character string.")
-    pos >= len(string) ? result
-    : pos == 0 ? str_collapse_char(string, char, string[0], pos+1)
-    : string[pos] == char && string[pos-1] == char ? str_collapse_char(string, char, result, pos+1)
-    : str_collapse_char(string, char, str(result, string[pos]), pos+1);
+    pos >= len(str) ? result
+    : pos == 0 ? str_collapse_char(str, char, str[0], pos+1)
+    : str[pos] == char && str[pos-1] == char ? str_collapse_char(str, char, result, pos+1)
+    : str_collapse_char(str, char, str(result, str[pos]), pos+1);
 
 
 
