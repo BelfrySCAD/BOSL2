@@ -26,12 +26,12 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Topics: NURBS Curves
 // See Also: debug_nurbs()
 // Usage:
-//   pts = nurbs_curve(control, degree, splinesteps, [mult=], [weights=], [type=], [knots=]);
-//   pts = nurbs_curve(control, degree, u=, [mult=], [weights=], [type=], [knots=]);
-//   dpts = nurbs_curve(control, degree, splinesteps, deriv=d, [two_sided=], ...);
-//   dpts = nurbs_curve(control, degree, u=, deriv=d, [two_sided=], ...);
-//   list = nurbs_curve(control, degree, splinesteps, deriv=[d1,d2,...], [two_sided=], ...);
-//   list = nurbs_curve(control, degree, u=, deriv=[d1,d2,...], [two_sided=], ...);
+//   pts = nurbs_curve(control, degree, splinesteps, [mult=], [weights=], [type=], [knots=], [close_loop=]);
+//   pts = nurbs_curve(control, degree, u=, [mult=], [weights=], [type=], [knots=], [close_loop=]);
+//   dpts = nurbs_curve(control, degree, splinesteps, deriv=d, [two_sided=], [close_loop=], ...);
+//   dpts = nurbs_curve(control, degree, u=, deriv=d, [two_sided=], [close_loop=], ...);
+//   list = nurbs_curve(control, degree, splinesteps, deriv=[d1,d2,...], [two_sided=], [close_loop=], ...);
+//   list = nurbs_curve(control, degree, u=, deriv=[d1,d2,...], [two_sided=], [close_loop=], ...);
 // Description:
 //   Compute the points specified by a NURBS curve.  You specify the NURBS by supplying the control points, knots and weights.
 //   Only the control points are required.  The knots and weights default to uniform, in which case you get a uniform B-spline.
@@ -114,6 +114,8 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   points.
 //   .
 //   For unweighted B-splines the derivatives are computed exactly using the difference-control-point method (Piegl & Tiller, "The NURBS Book", Algorithm A3.3).  For rational NURBS (when `weights` is given) the geometric derivatives are obtained from the homogeneous B-spline derivatives via the quotient-rule formula (Piegl & Tiller, Eq. 4.8 / Algorithm A4.2).
+//   .
+//   **Closed curves and point repetition:** For `type="closed"` with `splinesteps`, the default behavior (`close_loop=false`) omits the final curve point because the curve is periodic: u=0 and u=1 map to the same point. This is consistent with BOSL2's general convention of not repeating closing points. Set `close_loop=true` to include the final point explicitly, making the output path suitable for direct use with `polygon()`. This parameter only affects the output when using `splinesteps`; it has no effect when specifying explicit `u` values. For derivatives with `two_sided=true`, the seam point uses wraparound logic to obtain two-sided derivatives, so no information is lost even though the final point is not repeated in the default output.
 // Arguments:
 //   control = list of control points in any dimension or a NURBS parameter list
 //   degree = degree of NURBS
@@ -126,6 +128,7 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   knots = List of knot values.  Default: uniform
 //   deriv = Integer or list of integers selecting which derivative orders to return.  0 = curve points.  Default: 0
 //   two_sided = If true, return each derivative entry as a singleton `[d]` at differentiable points and as a pair `[dleft,dright]` of one-sided derivatives at non-differentiable points.  If false, return plain derivative vectors, with NAN where the derivative does not exist.  Default: false
+//   close_loop = For `type="closed"`, if true include the final curve point (which coincides with the first point, making the output path explicitly closed).  If false, omit the final point.  Default: false
 // Example(2D,NoAxes): Compute some points and draw a curve and also some specific points:
 //   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   curve = nurbs_curve(control,2,splinesteps=16);
@@ -240,7 +243,7 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   color("red") stroke([corner-15*unit(tang[0]), corner], endcap2="arrow2", width=1);
 //   color("blue") stroke([corner, corner+15*unit(tang[1])], endcap2="arrow2", width=1);
 
-function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots,deriv=0,two_sided=false) =
+function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots,deriv=0,two_sided=false,close_loop=false) =
     let(
         splinesteps = !any_defined([splinesteps,u]) ? 16 : splinesteps
     )
@@ -248,10 +251,10 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
        assert(len(control)>=6, "Invalid NURBS parameter list")
        assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_curve(control[2], control[1], splinesteps, u, weights=control[5],mult=control[4], type=control[0], knots=control[3], deriv=deriv, two_sided=two_sided)
+       nurbs_curve(control[2], control[1], splinesteps, u, weights=control[5],mult=control[4], type=control[0], knots=control[3], deriv=deriv, two_sided=two_sided, close_loop=close_loop)
   : assert(num_defined([splinesteps,u])==1, "Must define exactly one of u and splinesteps")
     is_finite(u) ?
-        let(r=nurbs_curve(control,degree,u=[u],mult=mult,weights=weights,knots=knots,type=type,deriv=deriv,two_sided=two_sided))
+        let(r=nurbs_curve(control,degree,u=[u],mult=mult,weights=weights,knots=knots,type=type,deriv=deriv,two_sided=two_sided,close_loop=close_loop))
         !is_list(deriv) ? r[0] : [for(d=r) d[0]]
   : assert(is_undef(splinesteps) || (is_int(splinesteps) && splinesteps>0), "splinesteps must be a positive integer")
     let(u=is_range(u) ? list(u) : u)
@@ -263,7 +266,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                            hctrl = [for(i=idx(control)) [each control[i]*weights[i],weights[i]]]
                       )
                       deriv == 0 ?
-                          let(curve = nurbs_curve(hctrl,degree,u=u,splinesteps=splinesteps, mult=mult, knots=knots, type=type))
+                          let(curve = nurbs_curve(hctrl,degree,u=u,splinesteps=splinesteps, mult=mult, knots=knots, type=type, close_loop=close_loop))
                           [for(pt=curve) select(pt,0,-2)/last(pt)]
                       :
                           assert(is_list(deriv) ? min(deriv)>=0 : deriv>=0, "Derivative orders must be non-negative")
@@ -277,7 +280,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                // singletons [v] or pairs [left,right]; hderivs[0] is plain points.
                                hderivs = nurbs_curve(hctrl, degree, u=u, splinesteps=splinesteps,
                                                      mult=mult, knots=knots, type=type,
-                                                     deriv=[for(k=[0:1:max_d]) k], two_sided=true),
+                                                     deriv=[for(k=[0:1:max_d]) k], two_sided=true, close_loop=close_loop),
                                n_u     = len(hderivs[0]),
                                geo_lr  = [for(i=[0:1:n_u-1])
                                    let(
@@ -376,10 +379,10 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                : [knot[degree], knot[len(control)]],
          adjusted_u_orig = !is_undef(splinesteps) ?
                               [for(i=[degree:1:len(control)-1])
-                                each 
+                                each
                                   if (!approx(knot[i],knot[i+1]))
                                     lerpn(knot[i],knot[i+1],splinesteps, endpoint=false),
-                               if (type!="closed") knot[len(control)]
+                               if (type!="closed" || close_loop) knot[len(control)]
                               ]
                          : is_undef(bound) ? u
                          : add_scalar((bound[1]-bound[0])*u,bound[0]),
@@ -2071,6 +2074,13 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="chamfer"));
 //       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="round"));
 //   }
+// Example(3D): A cylindrical sheet closed in one direction (the u-direction).  No boundary walls are created at the u ends because the surface wraps around continuously.  The v-direction remains clamped, so walls appear at the v ends.
+//   patch = [
+//       [[30, 0, -25], [21, 21, -25], [0, 30, -25], [-21, 21, -25], [-30, 0, -25], [30, 0, -25]],
+//       [[30, 0, 0], [21, 21, 0], [0, 30, 0], [-21, 21, 0], [-30, 0, 0], [30, 0, 0]],
+//       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
+//   ];
+//   vnf_polyhedron(nurbs_sheet(patch, 2, [0, -3], type=["closed", "clamped"]));
 
 function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
                      weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
