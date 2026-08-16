@@ -2057,7 +2057,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   color("lime") nurbs_vnf(patch, 3);
 //   vnf_polyhedron(nurbs_sheet(patch, 3, [0,-10]));
-// Example(3D,Big,VPT=[0,0,25],VPR=[0,0,25],VPD=700): The three crease treatments on a surface with creases in both directions: sharp (left), chamfer (center), round (right).  The sheet is offset upward, toward the convex side of the ridges, so the crease treatment is visible along the offset ridge lines.
+// Example(3D,Big,VPT=[0,0,25],VPR=[90,0,25],VPD=700): The three crease treatments on a surface with creases in both directions: sharp (left), chamfer (center), round (right).  The sheet is offset upward, toward the convex side of the ridges, so the crease treatment is visible along the offset ridge lines.
 //   surface = [
 //     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
 //     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
