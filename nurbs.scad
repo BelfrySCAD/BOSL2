@@ -2038,6 +2038,11 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   supported: the sheet wraps around closed directions and boundary walls are created only along
 //   clamped or open edges.  Surfaces with degenerate points (zero tangents, e.g. an edge collapsed to a
 //   point) cannot be offset and produce an error.
+//   .
+//   **Capping open ends:** {{nurbs_sheet()}} cannot offset surfaces with degenerate rows, which {{nurbs_interp_surface()}} uses
+//   with its `caps` parameter to create automatic caps. To cap the open ends of a sheet, create the sheet without degenerate rows,
+//   then manually add boundary caps by extracting the boundary points with {{nurbs_patch_points()}} at `u=[0]` or `u=[1]`, forming
+//   them into faces with {{vnf_vertex_array()}}, and joining them using {{vnf_join()}}. See the "Creating a capped sheet" example below.
 // Arguments:
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
 //   degree = a scalar or 2-vector giving the degree of the NURBS in the two directions
@@ -2081,6 +2086,15 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
 //   ];
 //   vnf_polyhedron(nurbs_sheet(patch, 2, [0, -3], type=["closed", "clamped"]));
+// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefor cannot offset surfaces with degenerate rows (where all control points are identical).  
+//   thickness = 3;
+//   star_pts = star(or=25, ir=21, n=7);
+//   surface = [ for(i=[0:4]) zrot(i*10,path3d(star_pts,i*5)), ];
+//   S = nurbs_interp_surface(surface, 3, col_wrap=true);
+//   sheet = nurbs_sheet(S, delta=[0, -thickness]);
+//   star_region = [nurbs_curve(nurbs_interp(star_pts, 3, closed=true))];
+//   cap = linear_sweep(star_region, thickness, anchor=BOT);
+//   vnf_polyhedron(vnf_join([sheet, cap]));
 
 function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
                      weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
