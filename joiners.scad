@@ -1486,4 +1486,180 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
   }
 }
 
+// Section: Bayonet Mounts
+
+
+// Module: bayonet_mount()
+// Synopsis: Creates a twist-lock bayonet mount with configurable pins.
+// SynTags: Geom
+// Topics: Joiners, Parts, 3D Printing
+// See Also: snap_pin(), dovetail(), rabbit_clip()
+// Usage:
+//   bayonet_mount(d, h, pin_h, [pins=], [pin_ang=], [taper_ang=], [clearance=], [wall=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates a bayonet (twist-lock) mount — a set of pins/flanges on a
+//   cylindrical surface that lock into corresponding slots when twisted.
+//   Use with {{bayonet_socket()}} to create the mating part.
+//   .
+//   The mount produces radial pins on the outside of a cylinder. The pins
+//   have an optional taper angle for friction-fit locking.  Designed to be
+//   printable without supports in the default orientation (pins pointing outward).
+// Arguments:
+//   d = Outer diameter of the cylinder.
+//   h = Height of the cylindrical body.
+//   pin_h = Height (radial thickness) of each pin.
+//   ---
+//   pins = Number of pins evenly spaced around the cylinder. Default: 3
+//   pin_ang = Angular width of each pin in degrees. Default: 30
+//   taper_ang = Taper angle for friction locking, in degrees. Default: 0
+//   clearance = Gap for mating tolerance. Default: 0.2
+//   wall = Wall thickness of the cylinder. Default: 2
+//   anchor = Translate so anchor point is at origin. Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis. Default: `0`
+//   orient = Vector to rotate top toward. Default: `UP`
+// Example: Basic 3-pin mount
+//   bayonet_mount(d=30, h=8, pin_h=2);
+// Example: 4-pin with taper
+//   bayonet_mount(d=30, h=8, pin_h=2, pins=4, taper_ang=5);
+// Example: Large pin angle
+//   bayonet_mount(d=40, h=10, pin_h=3, pin_ang=45, pins=2);
+module bayonet_mount(
+    d, h, pin_h,
+    pins=3,
+    pin_ang=30,
+    taper_ang=0,
+    clearance=0.2,
+    wall=2,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
+) {
+    assert(is_finite(d) && d>0, "\nd must be a positive number.");
+    assert(is_finite(h) && h>0, "\nh must be a positive number.");
+    assert(is_finite(pin_h) && pin_h>0, "\npin_h must be a positive number.");
+    assert(is_integer(pins) && pins>=1, "\npins must be a positive integer.");
+    assert(is_finite(pin_ang) && pin_ang>0 && pin_ang<360/pins, "\npin_ang must be positive and less than 360/pins.");
+    assert(is_finite(taper_ang) && taper_ang>=0 && taper_ang<90, "\ntaper_ang must be between 0 and 90.");
+    r = d/2;
+    pin_step = 360 / pins;
+    attachable(anchor, spin, orient, d=d+2*pin_h, l=h) {
+        union() {
+            // Cylindrical body
+            tube(od=d, wall=wall, h=h);
+            // Pins
+            for (i = [0:1:pins-1]) {
+                zrot(i * pin_step)
+                difference() {
+                    // Pin body: arc segment
+                    intersection() {
+                        tube(od=d+2*pin_h, id=d-0.01, h=h);
+                        pie_slice(
+                            d=d+2*pin_h+1,
+                            h=h,
+                            ang=pin_ang,
+                            spin=-pin_ang/2
+                        );
+                    }
+                    // Taper cut
+                    if (taper_ang > 0) {
+                        zrot(pin_ang/2)
+                        fwd(d/2)
+                        xrot(90-taper_ang)
+                        cube([d+2*pin_h+2, h*2, h*2], center=true);
+                    }
+                }
+            }
+        }
+        children();
+    }
+}
+
+
+// Module: bayonet_socket()
+// Synopsis: Creates a socket (receiver) for a {{bayonet_mount()}}.
+// SynTags: Geom
+// Topics: Joiners, Parts, 3D Printing
+// See Also: bayonet_mount(), snap_pin(), dovetail()
+// Usage:
+//   bayonet_socket(d, h, pin_h, [pins=], [pin_ang=], [clearance=], [wall=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates the socket (receiver) for a bayonet twist-lock mount.
+//   This is a cylinder with L-shaped slots that accept the pins from
+//   {{bayonet_mount()}} — insert vertically, then twist to lock.
+//   .
+//   The slot consists of a vertical entry channel and a horizontal
+//   locking channel. Clearance is added automatically for fit.
+// Arguments:
+//   d = Inner diameter of the socket (matches mount outer diameter).
+//   h = Height of the socket body.
+//   pin_h = Depth of the slots (matches mount pin_h).
+//   ---
+//   pins = Number of slots matching the mount pins. Default: 3
+//   pin_ang = Angular width of each slot. Default: 30
+//   clearance = Extra clearance for mating tolerance. Default: 0.2
+//   wall = Wall thickness of the socket cylinder. Default: 2
+//   anchor = Translate so anchor point is at origin. Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis. Default: `0`
+//   orient = Vector to rotate top toward. Default: `UP`
+// Example: Socket matching default mount
+//   bayonet_socket(d=30, h=12, pin_h=2);
+// Example: 4-slot socket
+//   bayonet_socket(d=30, h=12, pin_h=2, pins=4);
+module bayonet_socket(
+    d, h, pin_h,
+    pins=3,
+    pin_ang=30,
+    clearance=0.2,
+    wall=2,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
+) {
+    assert(is_finite(d) && d>0, "\nd must be a positive number.");
+    assert(is_finite(h) && h>0, "\nh must be a positive number.");
+    assert(is_finite(pin_h) && pin_h>0, "\npin_h must be a positive number.");
+    assert(is_integer(pins) && pins>=1, "\npins must be a positive integer.");
+    assert(is_finite(pin_ang) && pin_ang>0 && pin_ang<360/pins, "\npin_ang must be positive and less than 360/pins.");
+    r = d/2;
+    cl = clearance;
+    pin_step = 360 / pins;
+    slot_h = h/3;  // Vertical entry is top third
+    lock_h = pin_h + 2*cl;
+    attachable(anchor, spin, orient, d=d+2*wall, l=h) {
+        difference() {
+            // Outer cylinder
+            tube(od=d+2*wall, id=d, h=h);
+            // L-shaped slots for each pin
+            for (i = [0:1:pins-1]) {
+                zrot(i * pin_step) {
+                    // Vertical entry slot (top)
+                    up(h/2 - slot_h/2)
+                    intersection() {
+                        tube(od=d+2*pin_h+2*cl+0.01, id=d-0.01, h=slot_h+0.01);
+                        pie_slice(
+                            d=d+2*pin_h+2*cl+1,
+                            h=slot_h+0.01,
+                            ang=pin_ang+2*cl,
+                            spin=-(pin_ang+2*cl)/2
+                        );
+                    }
+                    // Horizontal locking channel (bottom of entry)
+                    up(h/2 - slot_h - lock_h/2 + 0.01)
+                    intersection() {
+                        tube(od=d+2*pin_h+2*cl+0.01, id=d-0.01, h=lock_h);
+                        pie_slice(
+                            d=d+2*pin_h+2*cl+1,
+                            h=lock_h,
+                            ang=pin_ang*2+2*cl,
+                            spin=-(pin_ang+2*cl)/2
+                        );
+                    }
+                }
+            }
+        }
+        children();
+    }
+}
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
