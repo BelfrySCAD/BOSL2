@@ -2086,7 +2086,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
 //   ];
 //   vnf_polyhedron(nurbs_sheet(patch, 2, [0, -3], type=["closed", "clamped"]));
-// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefor cannot offset surfaces with degenerate rows (where all control points are identical).  
+// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).  
 //   thickness = 3;
 //   star_pts = star(or=25, ir=21, n=7);
 //   surface = [ for(i=[0:4]) zrot(i*10,path3d(star_pts,i*5)), ];
@@ -2095,98 +2095,6 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   star_region = [nurbs_curve(nurbs_interp(star_pts, 3, closed=true))];
 //   cap = linear_sweep(star_region, thickness, anchor=BOT);
 //   vnf_polyhedron(vnf_join([sheet, cap]));
-
-function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
-                     weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
-    is_list(patch) && _valid_surface_type(patch[0]) ?
-       assert(len(patch)>=6, "NURBS parameter list is invalid")
-       assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
-              "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_sheet(patch[2], patch[1], delta, splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
-                   style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3])
-  : assert(is_vector(delta,2) && delta[0]!=delta[1],
-           "delta must be a 2-vector designating two different offset distances")
-    assert(in_list(edge, ["sharp","chamfer","round"]),
-           "edge must be one of \"sharp\", \"chamfer\" or \"round\"")
-    assert(is_int(roundsteps) && roundsteps>=1, "roundsteps must be a positive integer")
-    let(
-        type = force_list(type,2),
-        pts = nurbs_patch_points(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots),
-        nrm = nurbs_normals(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots, two_sided=true),
-        dummy = assert([for (row=nrm, e=row)
-                           if (len(e)==1 ? !is_vector(e[0])
-                                         : [for (i=[0,1], j=[0,1]) if (!is_vector(e[i][j])) 1] != []) 1] == [],
-                       "nurbs_sheet: surface has degenerate points where the normal is undefined"),
-        // sector-normal matrix at every sample: [[n(u-,v-),n(u-,v+)],[n(u+,v-),n(u+,v+)]]
-        M = [for (row=nrm) [for (e=row) len(e)==1 ? [[e[0],e[0]],[e[0],e[0]]] : e]],
-        // creases detected from the data: a u (row) split where any sector matrix
-        // has differing rows, a v (column) split where any has differing columns
-        usplit = [for (a=idx(M))
-                     [for (b=idx(M[0])) if (!approx(M[a][b][0][0],M[a][b][1][0],1e-6)
-                                         || !approx(M[a][b][0][1],M[a][b][1][1],1e-6)) 1] != []],
-        vsplit = [for (b=idx(M[0]))
-                     [for (a=idx(M)) if (!approx(M[a][b][0][0],M[a][b][0][1],1e-6)
-                                      || !approx(M[a][b][1][0],M[a][b][1][1],1e-6)) 1] != []],
-        // expanded sample lists: [original_index, side_parameter]; crease rows/columns
-        // are replicated so the join geometry (chamfer strip or rounding arc) appears
-        // between the copies.  edge="sharp" needs no replication (pointwise miter).
-        K = edge=="round" ? roundsteps : 1,
-        uexp = [for (a=idx(M)) each edge=="sharp" || !usplit[a] ? [[a,0]]
-                                  : [for (k=[0:1:K]) [a, k/K]]],
-        vexp = [for (b=idx(M[0])) each edge=="sharp" || !vsplit[b] ? [[b,0]]
-                                     : [for (k=[0:1:K]) [b, k/K]]],
-        offsurf = [for (d = delta)
-            [for (ui = uexp)
-                [for (vi = vexp)
-                    let(P = pts[ui[0]][vi[0]], sect = M[ui[0]][vi[0]])
-                    edge=="sharp" ? P - d*_sheet_miter(sect)
-                  : P - d*_nslerp(_nslerp(sect[0][0], sect[0][1], vi[1]),
-                                  _nslerp(sect[1][0], sect[1][1], vi[1]), ui[1])
-                ]
-            ]
-        ],
-        u_closed = type[0]=="closed",
-        v_closed = type[1]=="closed",
-        vnf = u_closed && v_closed ?
-                 // no boundary at all: two nested closed shells
-                 vnf_join([vnf_vertex_array(offsurf[0], row_wrap=true, col_wrap=true, style=style),
-                           vnf_reverse_faces(vnf_vertex_array(offsurf[1], row_wrap=true, col_wrap=true, style=style))])
-            : v_closed ?
-                 // walls at the u ends: stack the surfaces into one closed band of rows
-                 vnf_vertex_array(concat(offsurf[0], reverse(offsurf[1])), row_wrap=true, col_wrap=true, style=style)
-            :    // walls at the v ends; u direction closed wraps rows, clamped gets end caps
-                 vnf_vertex_array([for (i=idx(offsurf[0])) concat(offsurf[0][i], reverse(offsurf[1][i]))],
-                                  col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style)
-    )
-    delta[0] > delta[1] ? vnf_reverse_faces(vnf) : vnf;
-
-
-// Spherical interpolation between unit vectors (nlerp fallback when nearly parallel).
-
-function _nslerp(a, b, t) =
-    let(th = acos(min(1, max(-1, a*b))))
-    th < 1e-4 ? unit((1-t)*a + t*b)
-  : (sin((1-t)*th)*a + sin(t*th)*b) / sin(th);
-
-
-// Miter direction for a sharp offset at a point with the given 2x2 sector-normal
-// matrix: the vector m with m . n_i = 1 for every distinct sector normal, so that
-// P - d*m lies at distance d from the surface on every side of the crease.  With
-// one normal this is the normal itself; with two it reduces to the standard 2D
-// offset miter (n1+n2)/(1+n1.n2); with more it is the least-squares corner.
-
-function _sheet_miter(sect) =
-    let(
-        flat = [sect[0][0], sect[0][1], sect[1][0], sect[1][1]],
-        ns = [for (i=idx(flat))
-                 if ([for (j=[0:1:i-1]) if (approx(flat[j], flat[i], 1e-6)) 1] == []) flat[i]]
-    )
-    len(ns)==1 ? ns[0]
-  : let(m = linear_solve(ns, repeat(1, len(ns))))
-    assert(m != [], "nurbs_sheet: sharp crease is too extreme to miter (fold-back); use edge=\"chamfer\" or edge=\"round\"")
-    m;
-
-
 
 // Function&Module: nurbs_interp_surface()
 // Synopsis: Returns a NURBS surface that passes through a grid of 3D data points.
@@ -3168,6 +3076,96 @@ module nurbs_interp_surface(points, degree, splinesteps=16,
                 for (pt = row)
                     translate(pt) sphere(r=data_size, $fn=16);
 }
+
+function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
+                     weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
+    is_list(patch) && _valid_surface_type(patch[0]) ?
+       assert(len(patch)>=6, "NURBS parameter list is invalid")
+       assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
+              "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
+       nurbs_sheet(patch[2], patch[1], delta, splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
+                   style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3])
+  : assert(is_vector(delta,2) && delta[0]!=delta[1],
+           "delta must be a 2-vector designating two different offset distances")
+    assert(in_list(edge, ["sharp","chamfer","round"]),
+           "edge must be one of \"sharp\", \"chamfer\" or \"round\"")
+    assert(is_int(roundsteps) && roundsteps>=1, "roundsteps must be a positive integer")
+    let(
+        type = force_list(type,2),
+        pts = nurbs_patch_points(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots),
+        nrm = nurbs_normals(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots, two_sided=true),
+        dummy = assert([for (row=nrm, e=row)
+                           if (len(e)==1 ? !is_vector(e[0])
+                                         : [for (i=[0,1], j=[0,1]) if (!is_vector(e[i][j])) 1] != []) 1] == [],
+                       "nurbs_sheet: surface has degenerate points where the normal is undefined"),
+        // sector-normal matrix at every sample: [[n(u-,v-),n(u-,v+)],[n(u+,v-),n(u+,v+)]]
+        M = [for (row=nrm) [for (e=row) len(e)==1 ? [[e[0],e[0]],[e[0],e[0]]] : e]],
+        // creases detected from the data: a u (row) split where any sector matrix
+        // has differing rows, a v (column) split where any has differing columns
+        usplit = [for (a=idx(M))
+                     [for (b=idx(M[0])) if (!approx(M[a][b][0][0],M[a][b][1][0],1e-6)
+                                         || !approx(M[a][b][0][1],M[a][b][1][1],1e-6)) 1] != []],
+        vsplit = [for (b=idx(M[0]))
+                     [for (a=idx(M)) if (!approx(M[a][b][0][0],M[a][b][0][1],1e-6)
+                                      || !approx(M[a][b][1][0],M[a][b][1][1],1e-6)) 1] != []],
+        // expanded sample lists: [original_index, side_parameter]; crease rows/columns
+        // are replicated so the join geometry (chamfer strip or rounding arc) appears
+        // between the copies.  edge="sharp" needs no replication (pointwise miter).
+        K = edge=="round" ? roundsteps : 1,
+        uexp = [for (a=idx(M)) each edge=="sharp" || !usplit[a] ? [[a,0]]
+                                  : [for (k=[0:1:K]) [a, k/K]]],
+        vexp = [for (b=idx(M[0])) each edge=="sharp" || !vsplit[b] ? [[b,0]]
+                                     : [for (k=[0:1:K]) [b, k/K]]],
+        offsurf = [for (d = delta)
+            [for (ui = uexp)
+                [for (vi = vexp)
+                    let(P = pts[ui[0]][vi[0]], sect = M[ui[0]][vi[0]])
+                    edge=="sharp" ? P - d*_sheet_miter(sect)
+                  : P - d*_nslerp(_nslerp(sect[0][0], sect[0][1], vi[1]),
+                                  _nslerp(sect[1][0], sect[1][1], vi[1]), ui[1])
+                ]
+            ]
+        ],
+        u_closed = type[0]=="closed",
+        v_closed = type[1]=="closed",
+        vnf = u_closed && v_closed ?
+                 // no boundary at all: two nested closed shells
+                 vnf_join([vnf_vertex_array(offsurf[0], row_wrap=true, col_wrap=true, style=style),
+                           vnf_reverse_faces(vnf_vertex_array(offsurf[1], row_wrap=true, col_wrap=true, style=style))])
+            : v_closed ?
+                 // walls at the u ends: stack the surfaces into one closed band of rows
+                 vnf_vertex_array(concat(offsurf[0], reverse(offsurf[1])), row_wrap=true, col_wrap=true, style=style)
+            :    // walls at the v ends; u direction closed wraps rows, clamped gets end caps
+                 vnf_vertex_array([for (i=idx(offsurf[0])) concat(offsurf[0][i], reverse(offsurf[1][i]))],
+                                  col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style)
+    )
+    delta[0] > delta[1] ? vnf_reverse_faces(vnf) : vnf;
+
+
+// Spherical interpolation between unit vectors (nlerp fallback when nearly parallel).
+
+function _nslerp(a, b, t) =
+    let(th = acos(min(1, max(-1, a*b))))
+    th < 1e-4 ? unit((1-t)*a + t*b)
+  : (sin((1-t)*th)*a + sin(t*th)*b) / sin(th);
+
+
+// Miter direction for a sharp offset at a point with the given 2x2 sector-normal
+// matrix: the vector m with m . n_i = 1 for every distinct sector normal, so that
+// P - d*m lies at distance d from the surface on every side of the crease.  With
+// one normal this is the normal itself; with two it reduces to the standard 2D
+// offset miter (n1+n2)/(1+n1.n2); with more it is the least-squares corner.
+
+function _sheet_miter(sect) =
+    let(
+        flat = [sect[0][0], sect[0][1], sect[1][0], sect[1][1]],
+        ns = [for (i=idx(flat))
+                 if ([for (j=[0:1:i-1]) if (approx(flat[j], flat[i], 1e-6)) 1] == []) flat[i]]
+    )
+    len(ns)==1 ? ns[0]
+  : let(m = linear_solve(ns, repeat(1, len(ns))))
+    assert(m != [], "nurbs_sheet: sharp crease is too extreme to miter (fold-back); use edge=\"chamfer\" or edge=\"round\"")
+    m;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
