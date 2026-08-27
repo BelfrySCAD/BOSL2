@@ -192,7 +192,7 @@ function version_cmp(a,b) =
 // Example:
 //   assert(supports("simplify-op"), "simplify() not supported in this OpenSCAD interpreter");
 function supports(feature, minlev=1) =
-    !is_undef($_SUPPORTED_FEATURE) && supported_feature("separate-children") > minlev;
+    !is_undef($_SUPPORTED_FEATURE) && supported_feature(feature) > minlev;
 
 
 // Function: assert_supported()
