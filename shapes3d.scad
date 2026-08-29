@@ -2936,44 +2936,65 @@ module zcyl(
 // See Also: rect_tube()
 // Description:
 //   Makes a hollow tube that can be cylindrical or conical by specifying inner and outer dimensions or by giving one dimension and
-//   wall thickness.
+//   wall thickness.  You can control the facet count of the inner tube explicitly using `ifn`, for example to create a square hole
+//   in a circular tube that respects `$fs` and `$fa`.  
 //   .
-//   Chamfering and rounding lengths are measured based on the corners of the object except for the inner diameter when `circum=true`, in
-//   which case chamfers and roundings are measured from the facets.  This matters only when `$fn` is small.
+//   When you give `wall`, it is the minimum distance between the inner and outer polygon surfaces.  The calculation takes
+//   into account the facet counts of both polygons and their relative alignment.  Thus `wall` is not precisely the difference
+//   between the inner and outer radii.  If you explicitly set `$fn` so that the inner and outer polygons have parallel edges
+//   then `wall` is the distance between those parallel edges (which is only the difference of the radii if they are circumscribing.
 //   .
-//   Attachment to the tube places objects on the **outside** of the tube.
-//   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
-//   to switch goeomtry to the inside.
+//   The `circum` parameter specifies that a radius/diamter be treated as circumscribing, so for example a circumscribing inner
+//   diameter guarantees that the hole is big enough to admit a cylinder of the specified diameter.  The options for `circum` are
+//     * `false`: Dimensions treated as usual, which makes the faceted cylinder inside the ideal cylinder
+//     * `"inner"`: The inner polygon circumscribes the idealized cylinder of the given radius/diameter 
+//     * `"outer"`: The outer polygon circumscribes the idealized cylinder of the given radius/diameter 
+//     * `"both"`: Both polygons circumscribe their idealized circle.
+//     * `true`: Equivalent to `"inner"`.
 //   .
-//   When the `realign` parameter is false the inner and outer cylinders each have an edge aligned with the X+ axis. 
-//   If `realign` is true then the inner and outer cylindres each have a face is aligned with the X+ axis.  By default
-//   `realign` is false when `circum` is false and true if `circum` is true.  This means that when `$fn` is a multiple of four the approximate cylinder always
-//   has exactly correct dimensions on the X and Y axes regardless of the setting for circum, and it also means that cylinders match "octa"
-//   style spheroids on any of the coordinate planes. 
+//   The `circum` applies only to dimensions you specify explicitly, not to dimensions derived from `wall`.  It is an error
+//   to specify `circum` for a dimension derived from `wall`, e.g. to give `ir` and `wall` with `circum="outer"`.
+//   .
+//   The `ifn` parameter specifies the number of facets on the inner polygon.  If `ifn` is not given, the inner and outer facet
+//   counts are determined independently using `$fn`, `$fs` and `$fa` so they can be different.  
+//   .
+//   Attachment to the tube places objects on the outside of the tube.  Attachment geometry is based on the idealized circular
+//   dimensions, not on the polygon's vertices or facets.
+//   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside" to switch to the inside.
+//   .
+//   When `realign` is false the inner and outer cylinders each have an edge aligned with the X+ axis.
+//   If `realign` is true then the inner and outer cylinders each have a face aligned with the X+ axis.  The inner and outer
+//   cylinders are always aligned the same way.
+//   By default `realign` is false when `circum` is false and true otherwise.  This means that when `$fn` is a multiple of four
+//   the approximate cylinder always has exactly correct dimensions on the X and Y axes regardless of the setting for `circum`,
+//   and it also means that cylinders match "octa" style spheroids on any of the coordinate planes.
+//
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
 //   tube(h|l, or, ir, [center|anchor=], [realign=], [spin=],[orient=]) [ATTACHMENTS];
 //   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
 // Usage: Specify wall thickness
-//   tube(h|l, or|od=|ir=|id=, wall=, ...) [ATTACHMENTS];
+//   tube(h|l, or|od=|ir|id=, wall=, ...) [ATTACHMENTS];
 // Usage: Conical tubes
 //   tube(h|l, ir1=|id1=, ir2=|id2=, or1=|od1=, or2=|od2=, ...) [ATTACHMENTS];
 //   tube(h|l, or1=|od1=, or2=|od2=, wall=, ...) [ATTACHMENTS];
 // Usage: Rounded and chamfered tubes
 //   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=], [clip_angle=]);
 //   tube(..., [chamfer=], [ichamfer=], [ochamfer=], [chamfer1=], [chamfer2=], [ichamfer1=], [ichamfer2=], [ochamfer1=], [ochamfer2=]);
+//
 // Attachable Parts:
 //   "inside" = The inside of the tube
+//
 // Arguments:
 //   h / l / height / length = height of tube. Default: 1
-//   or = Outer radius of tube. Default: 1
-//   ir = Inner radius of tube.
-//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=CENTER`
+//   or = Outer radius. Default: 1
+//   ir = Inner radius.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`. Default: `anchor=CENTER`
 //   ---
-//   od = Outer diameter of tube.
-//   id = Inner diameter of tube.
-//   wall = horizontal thickness of tube wall. Default 1
-//   or1 = Outer radius of bottom of tube.  Default: value of r)
-//   or2 = Outer radius of top of tube.  Default: value of r)
+//   od = Outer diameter.
+//   id = Inner diameter.
+//   wall = Wall thickness. Default: 1
+//   or1 = Outer radius of bottom of tube.
+//   or2 = Outer radius of top of tube.
 //   od1 = Outer diameter of bottom of tube.
 //   od2 = Outer diameter of top of tube.
 //   ir1 = Inner radius of bottom of tube.
@@ -2981,34 +3002,33 @@ module zcyl(
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
 //   ifn = Set the number of facets on the inside of the tube.
-//   circum = If true, the tube hole circumscribes the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   circum = `false`, `true`, `"inner"`, `"outer"`, or `"both"`.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
-//   rounding = The radius of the rounding on the ends of the tube.  Default: none.
+//   rounding = The radius of the rounding on the ends of the tube. Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the tube.
 //   rounding2 = The radius of the rounding on the top end of the tube.
-//   irounding = The radius of the rounding on the inside of the ends of the tube.  
+//   irounding = The radius of the rounding on the inside of the ends of the tube.
 //   irounding1 = The radius of the rounding on the bottom inside end of the tube.
 //   irounding2 = The radius of the rounding on the top inside end of the tube.
 //   orounding = The radius of the rounding on the outside of the ends of the tube.
 //   orounding1 = The radius of the rounding on the bottom outside end of the tube.
 //   orounding2 = The radius of the rounding on the top outside end of the tube.
-//   rounding_fn = Set `$fn` for roundings.  
-//   chamfer = The size of the chamfer on the ends of the tube.  Default: none.
+//   rounding_fn = Set `$fn` for roundings.
+//   chamfer = The size of the chamfer on the ends of the tube. Default: none.
 //   chamfer1 = The size of the chamfer on the bottom end of the tube.
 //   chamfer2 = The size of the chamfer on the top end of the tube.
-//   ichamfer = The size of the chamfer on the inside of the ends of the tube.  
+//   ichamfer = The size of the chamfer on the inside of the ends of the tube.
 //   ichamfer1 = The size of the chamfer on the bottom inside end of the tube.
 //   ichamfer2 = The size of the chamfer on the top inside end of the tube.
-//   ochamfer = The size of the chamfer on the outside of the ends of the tube. 
+//   ochamfer = The size of the chamfer on the outside of the ends of the tube.
 //   ochamfer1 = The size of the chamfer on the bottom outside end of the tube.
 //   ochamfer2 = The size of the chamfer on the top outside end of the tube.
-//   teardrop = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_angle = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, with the rounding stopping at the bottom of the shape.  Default: (no clipping)
-//   realign = If false a vertical edge is aligned to the X+ axis.  If true a vertical face is aligned to the X+ axis. The inner and out parts of the tube are always aligned the same way.  Default: false if `circum=false` and true if `circum=true`
-//   realign = If true, rotate the inner and outer parts tube by half the angle of one face so that a face is aligned at the X+ axis.  Default: false if `circum=false` and true if `circum=true`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   teardrop = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, altering to a chamfer at that angle. If true, the limit angle is 45 degrees. Default: false
+//   clip_angle = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, with the rounding stopping at the bottom of the shape. Default: (no clipping)
+//   realign = If false a vertical edge is aligned to the X+ axis. If true a vertical face is aligned to the X+ axis. Default: false when circum=false, true otherwise.
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [anchor](attachments.scad#subsection-spin). Default: `0`
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
 //
 // Example: These all Produce the Same Tube
 //   tube(h=30, or=40, wall=5);
@@ -3042,20 +3062,53 @@ module zcyl(
 //     tube(ir=10,or=20,or2=5,ir2=2, h=30,
 //         rounding1=5, rounding2=1.5, clip_angle=40);
 // Example: Mixing chamfers and roundings
-//   back_half()
-//     tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
-// Example: Tube with a square hole circumscribing its diameter
+//   tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
+// Example(NoAxes): Tube with a square hole circumscribing its diameter; the blue cylinder fits in the hole
 //   tube(od=22, id=9, h=10, $fn=48, ifn=4, circum=true);
-//   half_of(v=[-1,1]) color("lightblue") cyl(d=9, h=12, $fn=32);
-// Example: Round ended hexagonal tube using `rounding_fn` to get sufficient facets on the roundings
+//   color("lightblue") cyl(d=9, h=10, $fn=32);
+// Example(NoAxes): Same as above but `wall` sets the minimum thickness of the tube wall, and we set realign to false so the corner aligns with the X axis
+//   tube(wall=1, id=9, h=10, $fn=48, ifn=4, circum="inner", realign=false);
+//   color("lightblue") cyl(d=9, h=10, $fn=32);
+// Example(NoAxes): Round ended hexagonal tube using `rounding_fn` to get sufficient facets on the roundings
 //   tube(or=10, ir=7, h=10, $fn=6, rounding_fn=64, rounding=1.3, teardrop=true);
-// Example: This example shows a regular attachment to the outside of the tube in light blue and then using {{attach_part()}} to attach the pink cube to the inside of the tube.  
+// Example: This example shows a regular attachment to the outside of the tube in light blue and then using {{attach_part()}} to attach the pink cube to the inside of the tube.
 //   tube(ir1=10,ir2=20,h=20, wall=3){
 //     color("lightblue")attach(RIGHT,BOT) cuboid(4);
 //     color("pink")
 //        attach_part("inside")
 //        attach(BACK,BOT) cuboid(4);
-//   }  
+//   }
+
+function _tube_poly_deltas(n, m, realign=false) =
+    let(
+        g = gcd(n, m),
+        l = lcm(n, m),
+        d1 = (m/g % 2 == 0) ? 0 : 180/l,
+        d2 = (n/g % 2 == 0) ? 0 : 180/l
+    )
+    [d1, d2];
+
+function _tube_outer_radius(n, m, r_in, wall, realign=false) =
+    let(
+        d = _tube_poly_deltas(n, m, realign),
+        d1 = d[0],
+        d2 = d[1]
+    )
+    max(
+        (wall + r_in*cos(d1)) / cos(180/m),
+        (wall + r_in*cos(180/n)) / cos(d2)
+    );
+
+function _tube_inner_radius(n, m, r_out, wall, realign=false) =
+    let(
+        d = _tube_poly_deltas(n, m, realign),
+        d1 = d[0],
+        d2 = d[1]
+    )
+    min(
+        (r_out*cos(180/m) - wall) / cos(d1),
+        (r_out*cos(d2) - wall) / cos(180/n)
+    );
 
 function tube(
     h, or, ir, center,
@@ -3069,8 +3122,6 @@ function tube(
     ifn, rounding_fn, circum=false
 ) = no_function("tube");
 
-
-
 module tube(
     h, or, ir, center,
     od, id, wall,
@@ -3082,44 +3133,94 @@ module tube(
     teardrop=false, clip_angle=90, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) {
-    realign = assert(is_bool(circum))
-              default(realign,circum);
+    circum_check =
+        assert(
+            in_list(circum,[false,true,"inner","outer","both"]),
+            "\ncircum must be false, true, \"inner\", \"outer\", or \"both\"."
+        );
+
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
+
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
     irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
     irr2 = get_radius(r1=ir2, r=ir, d1=id2, d=id, dflt=undef);
-    wall = default(wall, 1);
+
+    wall_defined = is_def(wall);
+    wall = default(wall,1);
+
+    circum_inner = in_list(circum,[true,"inner","both"]);
+    circum_outer = in_list(circum,["outer","both"]);
+
+    /*
+     * These tests are deliberately made against the explicitly supplied
+     * radius/diameter values before any missing dimension is derived.
+     */
+    circum_validate =
+        assert(
+            !(wall_defined && circum_outer &&
+              is_undef(orr1) && is_undef(orr2)),
+            "\nCannot give circum=\"outer\" unless an outer diameter or radius is explicitly given."
+        )
+        assert(
+            !(wall_defined && circum_inner &&
+              is_undef(irr1) && is_undef(irr2)),
+            "\nCannot give circum=\"inner\" or circum=true unless an inner diameter or radius is explicitly given."
+        );
+
+    /*
+     * Establish the idealized dimensions.  These remain separate from
+     * the polygon circumradii because attachment geometry uses the
+     * idealized dimensions.
+     */
     r1 = default(orr1, u_add(irr1,wall));
     r2 = default(orr2, u_add(irr2,wall));
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
+
     checks =
-        assert(is_bool(realign))      
         assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
         assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
         assert(is_vector(shift,2), "\n'shift' must be a 2D vector.")
-        assert(all_defined([r1, r2, ir1, ir2]), "\nMust specify two of inner radius/diam, outer radius/diam, and wall width.")
+        assert(all_defined([r1,r2,ir1,ir2]), "\nMust specify two of inner radius/diam, outer radius/diam, and wall width.")
         assert(num_defined([rounding,chamfer])<2, "\nCannot give both rounding and chamfer.")
         assert(num_defined([irounding,ichamfer])<2, "\nCannot give both irounding and ichamfer.")
         assert(num_defined([orounding,ochamfer])<2, "\nCannot give both orounding and ochamfer.")
         assert(num_defined([rounding1,chamfer1])<2, "\nCannot give both rounding1 and chamfer1.")
-        assert(num_defined([irounding1,ichamfer1])<2, "\nCannot give both irounding1 and ichamfern.")
+        assert(num_defined([irounding1,ichamfer1])<2, "\nCannot give both irounding1 and ichamfer1.")
         assert(num_defined([orounding1,ochamfer1])<2, "\nCannot give both orounding1 and ochamfer1.")
         assert(num_defined([rounding2,chamfer2])<2, "\nCannot give both rounding2 and chamfer2.")
-        assert(num_defined([irounding2,ichamfer2])<2, "\nCannot give both irounding2 and ichamfern.")
+        assert(num_defined([irounding2,ichamfer2])<2, "\nCannot give both irounding2 and ichamfer2.")
         assert(num_defined([orounding2,ochamfer2])<2, "\nCannot give both orounding2 and ochamfer2.");
-    names = ["irounding","orounding","rounding","irounding1","irounding2","orounding1","orounding2",
-             "ichamfer","ochamfer","chamfer","ichamfer1","ichamfer2","ochamfer1","ochamfer2"];
-    vals =  [irounding,orounding,rounding,irounding1,irounding2,orounding1,orounding2,
-             ichamfer,ochamfer,chamfer,ichamfer1,ichamfer2,ochamfer1,ochamfer2];
+
+    names = [
+        "irounding","orounding","rounding",
+        "irounding1","irounding2","orounding1","orounding2",
+        "ichamfer","ochamfer","chamfer",
+        "ichamfer1","ichamfer2","ochamfer1","ochamfer2"
+    ];
+
+    vals = [
+        irounding,orounding,rounding,
+        irounding1,irounding2,orounding1,orounding2,
+        ichamfer,ochamfer,chamfer,
+        ichamfer1,ichamfer2,ochamfer1,ochamfer2
+    ];
+
     bad = [for(i=idx(names)) if (is_def(vals[i]) && !is_finite(vals[i])) i];
-    checks2 = assert(bad==[],str("\nRounding/chamfer parameters must be numbers. The following are invalid: ",
-                                 select(names,bad)));
+
+    checks2 =
+        assert(
+            bad==[],
+            str("\nRounding/chamfer parameters must be numbers. The following are invalid: ",
+                select(names,bad))
+        );
+
     findval = function (factor,vlist,i=0)
-         i>=len(vlist) || is_def(vlist[i][1]) ? undef
-                      : is_def(vlist[i][0]) ? factor*vlist[i][0]
-                      : findval(factor,vlist,i+1);
+        i>=len(vlist) || is_def(vlist[i][1]) ? undef
+        : is_def(vlist[i][0]) ? factor*vlist[i][0]
+        : findval(factor,vlist,i+1);
+
     irounding1 = findval(-1,[[irounding1,ichamfer1],[rounding1,chamfer1],[irounding,ichamfer],[rounding,chamfer]]);
     irounding2 = findval(-1,[[irounding2,ichamfer2],[rounding2,chamfer2],[irounding,ichamfer],[rounding,chamfer]]);
     orounding1 = findval(1,[[orounding1,ochamfer1],[rounding1,chamfer1],[orounding,ochamfer],[rounding,chamfer]]);
@@ -3129,61 +3230,145 @@ module tube(
     ochamfer1 = findval(1,[[ochamfer1,orounding1],[chamfer1,rounding1],[ochamfer,orounding],[chamfer,rounding]]);
     ochamfer2 = findval(1,[[ochamfer2,orounding2],[chamfer2,rounding2],[ochamfer,orounding],[chamfer,rounding]]);
 
-    /*  This is too restrictive, at least on cones 
-    dummy = 
-      assert( first_defined([irounding1,ichamfer1,0])+first_defined([orounding1,ochamfer1,0]) <= r1-ir1, "\nChamfer/rounding doesn't fit at bottom.")
-      assert( first_defined([irounding2,ichamfer2,0])+first_defined([orounding2,ochamfer2,0]) <= r2-ir2, "\nChamfer/rounding doesn't fit at top.")
-      assert( -first_defined([irounding1,ichamfer1,0])<ir1, "\nNegative inside chamfer/rounding doesn't fit at bottom.")
-      assert( -first_defined([irounding2,ichamfer2,0])<ir1, "\nNegative inside chamfer/rounding doesn't fit at top.");
-    */
-
     anchor = get_anchor(anchor, center, BOT, CENTER);
 
+    /*
+     * realign must be established before calculating the polygon wall,
+     * because the wall calculation depends on the relative alignment
+     * of the two polygons.
+     */
+    realign = default(realign, circum_inner || circum_outer);
+
+    /*
+     * The inner and outer polygons can have different facet counts.
+     */
     osides = segs(max(r1,r2));
     isides = default(ifn, segs(max(ir1,ir2)));
 
-    adj_ir1 = circum ? ir1/cos(180/isides) : ir1;
-    adj_ir2 = circum ? ir2/cos(180/isides) : ir2;
+    /*
+     * These are the actual polygon circumradii used to construct the
+     * tube.  r1/r2/ir1/ir2 remain the idealized dimensions for
+     * attachment geometry.
+     *
+     * Convert explicitly supplied dimensions to polygon circumradii.
+     * A dimension derived from wall is handled below and is therefore
+     * not circum-adjusted.
+     */
+    inner_circum1 =
+        is_def(irr1) && circum_inner
+            ? ir1 / cos(180/isides)
+            : ir1;
 
-    
-    morecheck=
-        assert(adj_ir1 <= r1, "\nInner radius is larger than outer radius.")
-        assert(adj_ir2 <= r2, "\nInner radius is larger than outer radius.");
+    inner_circum2 =
+        is_def(irr2) && circum_inner
+            ? ir2 / cos(180/isides)
+            : ir2;
 
+    outer_circum1 =
+        is_def(orr1) && circum_outer
+            ? r1 / cos(180/osides)
+            : r1;
+
+    outer_circum2 =
+        is_def(orr2) && circum_outer
+            ? r2 / cos(180/osides)
+            : r2;
+
+    /*
+     * wall always specifies the minimum distance between the polygons.
+     * If an inner dimension is explicitly supplied, derive the outer
+     * polygon from it.  Otherwise derive the inner polygon from the
+     * explicitly supplied outer dimension.
+     */
+    adj_ir1 = wall_defined && !is_def(irr1)
+      ? _tube_inner_radius(isides,osides,outer_circum1,wall,realign)
+      : inner_circum1;
+
+    adj_ir2 = wall_defined && !is_def(irr2)
+      ? _tube_inner_radius(isides,osides,outer_circum2,wall,realign)
+      : inner_circum2;
+
+    adj_r1 = wall_defined && !is_def(orr1)
+      ? _tube_outer_radius(isides,osides,inner_circum1,wall,realign)
+      : outer_circum1;
+
+    adj_r2 = wall_defined && !is_def(orr2)
+      ? _tube_outer_radius(isides,osides,inner_circum2,wall,realign)
+      : outer_circum2;
+
+    morecheck =
+        assert(adj_ir1 <= adj_r1, "\nInner radius is larger than outer radius.")
+        assert(adj_ir2 <= adj_r2, "\nInner radius is larger than outer radius.");
 
     $fn = default(rounding_fn,$fn);
 
-    outside= [
-               [0,-h/2],
-               each _cyl_path(r1,r2,h, 
-                              chamfer1=ochamfer1, chamfer2=ochamfer2,
-                              rounding1=orounding1, rounding2=orounding2,
-                              teardrop=teardrop, clip_angle=clip_angle,n=osides, noscale=true),
-               [0,h/2]
-             ];
-    ipath = _cyl_path(adj_ir1,adj_ir2,h, 
-                      chamfer1=ichamfer1, chamfer2=ichamfer2,
-                      rounding1=irounding1,rounding2=irounding2,n=isides, noscale=!circum);
+    outside = [
+        [0,-h/2],
+        each _cyl_path(
+            adj_r1,adj_r2,h,
+            chamfer1=ochamfer1,
+            chamfer2=ochamfer2,
+            rounding1=orounding1,
+            rounding2=orounding2,
+            teardrop=teardrop,
+            clip_angle=clip_angle,
+            n=osides,
+            noscale=!circum_outer
+        ),
+        [0,h/2]
+    ];
+
+    ipath = _cyl_path(
+        adj_ir1,adj_ir2,h,
+        chamfer1=ichamfer1,
+        chamfer2=ichamfer2,
+        rounding1=irounding1,
+        rounding2=irounding2,
+        n=isides,
+        noscale=!circum_inner
+    );
+
     inside = [
-               [0,-h/2-1],
-               ipath[0]-[0,1],
-               each ipath, 
-               last(ipath)+[0,1],
-               [0,h/2+1]
-             ];
+        [0,-h/2-1],
+        ipath[0]-[0,1],
+        each ipath,
+        last(ipath)+[0,1],
+        [0,h/2+1]
+    ];
+
+    /*
+     * Attachment geometry deliberately uses the idealized dimensions,
+     * not the polygon circumradii.
+     */
     parts = [
-               define_part("inside", attach_geom(r1=ir1, r2=ir2, l=h), inside=true)
-            ];
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h, parts=parts) {
-        down(h/2) skew(sxz=shift.x/h, syz=shift.y/h) up(h/2) 
-          difference(){
-            zrot(realign? 180/osides : 0)rotate_extrude($fn=osides,angle=360) polygon(outside);
-            zrot(realign? 180/isides : 0)rotate_extrude($fn=isides,angle=360) polygon(inside);
-          }
+        define_part(
+            "inside",
+            attach_geom(r1=ir1, r2=ir2, l=h),
+            inside=true
+        )
+    ];
+
+    attachable(
+        anchor,spin,orient,
+        r1=r1,r2=r2,l=h,
+        parts=parts
+    ) {
+        down(h/2)
+            skew(sxz=shift.x/h, syz=shift.y/h)
+            up(h/2)
+            difference() {
+                zrot(realign ? 180/osides : 0)
+                    rotate_extrude($fn=osides,angle=360)
+                    polygon(outside);
+
+                zrot(realign ? 180/isides : 0)
+                    rotate_extrude($fn=isides,angle=360)
+                    polygon(inside);
+            }
+
         children();
     }
-}    
-
+}
 
 
 // Function&Module: pie_slice()
