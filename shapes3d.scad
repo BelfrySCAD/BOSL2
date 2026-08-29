@@ -3157,16 +3157,10 @@ module tube(
      * radius/diameter values before any missing dimension is derived.
      */
     circum_validate =
-        assert(
-            !(wall_defined && circum_outer &&
-              is_undef(orr1) && is_undef(orr2)),
-            "\nCannot give circum=\"outer\" unless an outer diameter or radius is explicitly given."
-        )
-        assert(
-            !(wall_defined && circum_inner &&
-              is_undef(irr1) && is_undef(irr2)),
-            "\nCannot give circum=\"inner\" or circum=true unless an inner diameter or radius is explicitly given."
-        );
+        assert(!(wall_defined && circum_outer && is_undef(orr1) && is_undef(orr2)),
+              "\nCannot give circum=\"outer\" unless an outer diameter or radius is explicitly given.")
+        assert(!(wall_defined && circum_inner && is_undef(irr1) && is_undef(irr2)),
+              "\nCannot give circum=\"inner\" or circum=true unless an inner diameter or radius is explicitly given.");
 
     /*
      * Establish the idealized dimensions.  These remain separate from
@@ -3179,6 +3173,11 @@ module tube(
     ir2 = default(irr2, u_sub(orr2,wall));
 
     checks =
+        assert(!wall_defined || wall >= 0,"\nWall thickness must be nonnegative.")
+        assert(is_undef(orr1) || orr1 > 0,"\nOuter radius/diameter must be positive.")
+        assert(is_undef(orr2) || orr2 > 0,"\nOuter radius/diameter must be positive.")
+        assert(is_undef(irr1) || irr1 >= 0,"\nInner radius/diameter must be nonnegative.")
+        assert(is_undef(irr2) || irr2 >= 0,"\nInner radius/diameter must be nonnegative.")
         assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
         assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
         assert(is_vector(shift,2), "\n'shift' must be a 2D vector.")
