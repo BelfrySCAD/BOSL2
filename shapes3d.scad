@@ -2642,10 +2642,7 @@ function xcyl(
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(h=h, r=r, center=center,
-        l=l, r1=r1, r2=r2,
-        d=d, d1=d1, d2=d2,
-        length=length, height=height,
+    vnf=cyl(l=l,r1=r1,r2=r1, center=center,
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
         rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -2756,10 +2753,8 @@ function ycyl(
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(h=h, r=r, center=center,
-        l=l, r1=r1, r2=r2,
-        d=d, d1=d1, d2=d2,
-        length=length, height=height,
+    vnf=cyl(l=l, center=center,
+        r1=r1,r2=r2,
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
         rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -2868,10 +2863,8 @@ function zcyl(
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(h=h, r=r, center=center,
+    vnf=cyl(center=center,
         l=l, r1=r1, r2=r2,
-        d=d, d1=d1, d2=d2,
-        length=length, height=height,
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
         rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -2943,6 +2936,8 @@ module zcyl(
 //   into account the facet counts of both polygons and their relative alignment.  Thus `wall` is not precisely the difference
 //   between the inner and outer radii.  If you explicitly set `$fn` so that the inner and outer polygons have parallel edges
 //   then `wall` is the distance between those parallel edges (which is only the difference of the radii if they are circumscribing.
+//   (Versions prior to 2.0.752 had a bug where `wall` was interpreted as a change in radius, which for small facet
+//   count gives an undersized wall.  If you need the old behavior, specify `ir` and `or` instead of using `wall`.)  
 //   .
 //   The `circum` parameter specifies that a radius/diamter be treated as circumscribing, so for example a circumscribing inner
 //   diameter guarantees that the hole is big enough to admit a cylinder of the specified diameter.  The options for `circum` are
@@ -2954,6 +2949,9 @@ module zcyl(
 //   .
 //   The `circum` applies only to dimensions you specify explicitly, not to dimensions derived from `wall`.  It is an error
 //   to specify `circum` for a dimension derived from `wall`, e.g. to give `ir` and `wall` with `circum="outer"`.
+//   For very small facet counts, specifying a circumscribing cylinder can enlarge the shape a lot.  This means that
+//   an apparently reasonable shape like `tube(ir=10, or=14, $fn=4, circum="inner")` is illegal because the effective inner radius 
+//   is 14.14, which is larger than 14.  
 //   .
 //   The `ifn` parameter specifies the number of facets on the inner polygon.  If `ifn` is not given, the inner and outer facet
 //   counts are determined independently using `$fn`, `$fs` and `$fa` so they can be different.  
