@@ -1198,8 +1198,8 @@ function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true
                  reorient(anchor=anchor, spin=spin, two_d=true, region=pts, extent=atype=="hull", cp=cp, p=pts)
          :
          let(
-             startpath = _stroke_end(width,left_path, right_path, start),
-             endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
+             startpath = _stroke_end(width,left_path, right_path, start,"start"),
+             endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end,"end"),
              clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
          )
          assert(clipping_ok, "End treatment removed the whole stroke")
@@ -1276,7 +1276,7 @@ function _parse_stroke_end(spec,name) =
           struct_set([], spec);
 
 
-function _stroke_end(width,left, right, spec) =
+function _stroke_end(width,left, right, spec, location) =
         let(
                 type = struct_val(spec, "type"),
                 user_angle = default(struct_val(spec, "angle"), 0),
@@ -1331,6 +1331,8 @@ function _stroke_end(width,left, right, spec) =
                                 90-vector_angle([newright[1],newright[0],newleft[0]])/2,
                         jointleft = 8*cutleft/cos(leftangle)/(1+4*bez_k),
                         jointright = 8*cutright/cos(rightangle)/(1+4*bez_k),
+                        dum=assert(abs(jointleft)<=path_length(newleft) && abs(jointright)<=path_length(newright),
+                                   str("Roundover is too big to fit on the path at the ",location)),
                         pathcutleft = path_cut_points(newleft,abs(jointleft)),
                         pathcutright = path_cut_points(newright,abs(jointright)),
                         leftdelete = intright? pathcutleft[1] : pathcutleft[1] + pathclip[1] -1,
@@ -1340,7 +1342,7 @@ function _stroke_end(width,left, right, spec) =
                         roundover_fits = is_def(rightcorner) && is_def(leftcorner) &&
                                          jointleft+jointright < norm(rightcorner-leftcorner)
                 )
-                assert(roundover_fits,"Roundover too large to fit")
+                assert(roundover_fits,str("Roundovers are too big: they overlap each other at the ",location))
                 let(
                         angled_dir = unit(newleft[0]-newright[0]),
                         nPleft = [
