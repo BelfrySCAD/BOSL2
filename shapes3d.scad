@@ -2419,7 +2419,6 @@ function cyl(
                  : tex_reps,
         tex_depth = is_def(tex_scale)? echo("In cyl() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
                   : default(tex_depth,1),
-fdsa=        echo(l=l,h=h,length=length,height=height),
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=legacy ? undef : r2, r=r, d1=d2, d=d, dflt=1),
