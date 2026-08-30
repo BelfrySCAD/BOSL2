@@ -2965,9 +2965,12 @@ module zcyl(
 //   When `realign` is false the inner and outer cylinders each have an edge aligned with the X+ axis.
 //   If `realign` is true then the inner and outer cylinders each have a face aligned with the X+ axis.  The inner and outer
 //   cylinders are always aligned the same way.
-//   By default `realign` is false when `circum` is false and true otherwise.  This means that when `$fn` is a multiple of four
-//   the approximate cylinder always has exactly correct dimensions on the X and Y axes regardless of the setting for `circum`,
-//   and it also means that cylinders match "octa" style spheroids on any of the coordinate planes.
+//   By default `realign` is false when `circum` is false and true otherwise, i.e. if either the inner or outer cylinder is
+//   circumscribing.  For a single cylinder, if `$fn` is a multiple of four
+//   the approximate cylinder always has exactly correct dimensions on the X and Y axes if realign is true when that cylinder is circumscribing
+//   and false otherwise.  This means that the tube will match dimensions on the X and Y axies by default if `circum=false` or if `circum="both"`.
+//   If `circum="inside"` or `circum=true` then the innter cylinder will match dimensions and if `circum="outer"` then the outer cylinder with
+//   match dimensions.  Similarly cylinders that match dimensions will match "octa" style spheroids.  
 //
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
 //   tube(h|l, or, ir, [center|anchor=], [realign=], [spin=],[orient=]) [ATTACHMENTS];
@@ -3002,8 +3005,8 @@ module zcyl(
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
 //   ifn = Set the number of facets on the inside of the tube.
-//   circum = `false`, `true`, `"inner"`, `"outer"`, or `"both"`.
-//   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
+//   circum = `false`, `true`, `"inner"`, `"outer"`, or `"both"`.  Default: false
+//   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.  Default: [0,0]
 //   rounding = The radius of the rounding on the ends of the tube. Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the tube.
 //   rounding2 = The radius of the rounding on the top end of the tube.
