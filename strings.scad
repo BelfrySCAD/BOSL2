@@ -103,55 +103,41 @@ function suffix(str,len) =
 //   m=str_find("abc123def123abc","1234",all=true);  // Returns []
 //   n=str_find("abc","",all=true);                  // Returns [0,1,2]
 
-/// More efficient str_find, tested about 4X faster than the version prior to September 2026,
-/// running all the examples above a couple thousand times.
-/// Tested 7X faster for longer strings when all=true. Also improves with less occurrences of pattern.
-/// This uses OpenSCAD's faster internal search() as an initial filter to find positions of the first
-/// character of 'pattern' within 'str', filtering further by last pattern character before doing
-/// substring comparisons. Comparisons are done on unicode values rather than string characters.
-function str_find(str, pattern, start=undef, last=false, all=false) =
-    let(
-        strt = first_defined([start, last ? len(str)-len(pattern) : 0]),
-        n = len(str),
-        m = len(pattern)
-    )
-    m == 0 ? (all ? count(n) : strt) :
-    m > n - strt ? (all ? [] : undef)
-    : let(
-        // Pre-convert once, then all comparisons are O(1) array indexing
-        chars = [for(c = str) ord(c)],
-        pat   = [for(c = pattern) ord(c)],
-        // get candidate test positions based on OpenSCAD search(), exclude outside 'start' bound
-        candidates = [ for(c = search(pat[0], chars, num_returns_per_match=0))
-            if((c >= strt && !last) || (c <= strt && last)) c ]
-    ) all ?
-        last ?
-            let(r = _find_rev(chars, pat, candidates, len(candidates) - 1, m))
-                r == undef ? [] : [r]
-        : [ for(p = candidates)
-             if (chars[p + m - 1] == pat[m - 1])
-                if (_find_match(chars, pat, p, 1, m - 2)) p]
-    : last ? _find_rev(chars, pat, candidates, len(candidates) - 1, m)
-    : _find_fwd(chars, pat, candidates, 0, m);
+function str_find(str,pattern,start=undef,last=false,all=false) =
+    assert(_is_liststr(str), "\nstr must be a string or list.")
+    assert(_is_liststr(pattern), "\npattern must be a string or list.")
+    all? _str_find_all(str,pattern) :
+    let( start = first_defined([start,last?len(str)-len(pattern):0]) )
+    pattern==""? start :
+    last? _str_find_last(str,pattern,start) :
+    _str_find_first(str,pattern,len(str)-len(pattern),start);
 
-function _find_fwd(chars, pat, cands, i, m) =
-    i >= len(cands) ? undef :
-    let(p = cands[i])
-        chars[p + m - 1] != pat[m - 1] ? _find_fwd(chars, pat, cands, i + 1, m)
-        : _find_match(chars, pat, p, 1, m - 2) ? p
-        : _find_fwd(chars, pat, cands, i + 1, m);
+function _str_find_first(str,pattern,max_sindex,sindex) =
+    sindex<=max_sindex && !substr_match(str,sindex, pattern)?
+        _str_find_first(str,pattern,max_sindex,sindex+1) :
+        (sindex <= max_sindex ? sindex : undef);
 
-function _find_rev(chars, pat, cands, i, m) =
-    i < 0 ? undef
-    : let(p = cands[i])
-        chars[p + m - 1] != pat[m - 1] ? _find_rev(chars, pat, cands, i - 1, m)
-        : _find_match(chars, pat, p, 1, m - 2) ? p
-        : _find_rev(chars, pat, cands, i - 1, m);
-
-function _find_match(chars, pat, offset, j, end) =
-    j > end ? true
-    : chars[offset + j] != pat[j] ? false
-    : _find_match(chars, pat, offset, j + 1, end);
+function _str_find_last(str,pattern,sindex) =
+    sindex>=0 && !substr_match(str,sindex, pattern)?
+        _str_find_last(str,pattern,sindex-1) :
+        (sindex >=0 ? sindex : undef);
+/*
+function _str_find_all(str,pattern) =
+    pattern == "" ? count(len(str)) :
+    [for(i=[0:1:len(str)-len(pattern)]) if (substr_match(str,i,pattern)) i];
+*/
+/// More efficient _str_find_all, tested about 4X-7X faster than the version prior to September 2026.
+/// Improves with less occurrences of pattern in str, or if first char of pattern is sparse in str.
+function _str_find_all(str, pattern) =
+    let(n = len(str), m = len(pattern))
+    m == 0 ? count(n)
+    : m > n ? [] : let( // get candidate test positions based on OpenSCAD search()
+        candidates = search(pattern[0], str, num_returns_per_match=0)[0]
+    ) is_undef(candidates) ? []
+    : m==1 ? candidates
+    : [ for(p = candidates)
+        if (str[p+m-1] == pattern[m-1]) // test last char in pattern before rest of pattern
+            if(m==2 || _substr_match_recurse(str,p,pattern,m-2,1)) p ];
 
 
 
