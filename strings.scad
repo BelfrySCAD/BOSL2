@@ -79,7 +79,7 @@ function suffix(str,len) =
 //   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
 //   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
 //   and `last` is true then the search finds the pattern if it begins at index `start`. If no match exists, returns `undef`.
-//   If you set `all` to true then `str_find()` returns all of the matches in a list, or an empty list if there are no matches.
+//   If you set `all` to true then `str_find()` returns all of the matches as a list, or an empty list if there are no matches.
 // Arguments:
 //   str = String to search.
 //   pattern = string pattern to search for
@@ -97,11 +97,12 @@ function suffix(str,len) =
 //   g=str_find("abc123def123abc","b",last=true);    // Returns 13
 //   h=str_find("abc123def123abc","1234",last=true); // Returns undef
 //   i=str_find("abc","",last=true);                 // Returns 3
-//   j=str_find("abc123def123", "123", start=8, last=true));  // Returns 3
+//   j=str_find("abc123def123", "123", start=8, last=true);  // Returns 3
 //   k=str_find("abc123def123abc","123",all=true);   // Returns [3,9]
 //   l=str_find("abc123def123abc","b",all=true);     // Returns [1,13]
 //   m=str_find("abc123def123abc","1234",all=true);  // Returns []
 //   n=str_find("abc","",all=true);                  // Returns [0,1,2]
+
 function str_find(str,pattern,start=undef,last=false,all=false) =
     assert(_is_liststr(str), "\nstr must be a string or list.")
     assert(_is_liststr(pattern), "\npattern must be a string or list.")
@@ -120,10 +121,25 @@ function _str_find_last(str,pattern,sindex) =
     sindex>=0 && !substr_match(str,sindex, pattern)?
         _str_find_last(str,pattern,sindex-1) :
         (sindex >=0 ? sindex : undef);
-
+/*
 function _str_find_all(str,pattern) =
     pattern == "" ? count(len(str)) :
     [for(i=[0:1:len(str)-len(pattern)]) if (substr_match(str,i,pattern)) i];
+*/
+/// More efficient _str_find_all, tested about 4X-7X faster than the version prior to September 2026.
+/// Improves with less occurrences of pattern in str, or if first char of pattern is sparse in str.
+function _str_find_all(str, pattern) =
+    let(n = len(str), m = len(pattern))
+    m == 0 ? count(n)
+    : m > n ? [] : let( // get candidate test positions based on OpenSCAD search()
+        candidates = search(pattern[0], str, num_returns_per_match=0)[0]
+    ) is_undef(candidates) ? []
+    : m==1 ? candidates
+    : [ for(p = candidates)
+        if (str[p+m-1] == pattern[m-1]) // test last char in pattern before rest of pattern
+            if(m==2 || _substr_match_recurse(str,p,pattern,m-2,1)) p ];
+
+
 
 // Function: substr_match()
 // Synopsis: Returns true if the string `pattern` matches the string `str`.
@@ -148,7 +164,6 @@ function _str_find_all(str,pattern) =
 //   e=substr_match("abcde",19,"cd");  // Returns false
 //   f=substr_match("abc",1,"");       // Returns true
 
-//
 //    This is carefully optimized for speed.  Precomputing the length
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.
@@ -278,7 +293,6 @@ function str_join(list,sep="",_i=0, _result="") =
 
 
 
-
 // Function: str_strip()
 // Synopsis: Strips given leading and trailing characters from a string.
 // Topics: Strings
@@ -356,6 +370,34 @@ function str_pad(str,length,char=" ",left=false) =
 
 
 
+// Function: str_replace()
+// Synopsis: Replace all occurrences of the specified substring in a string with another string.
+// Topics: Strings
+// See Also: str_find(), substr_match(), str_replace_char()
+// Usage:
+//   newstr = str_replace(str, search, replace);
+// Description:
+//   Replace every occurence of `search` in the input string
+//   with the string `replace`, which can be any string.
+//   .
+//   If replacing all occurrences of one character, it is much more efficient
+//   to use {{str_replace_char()}}, which can be an order of magnitude faster.
+// Arguments:
+//   str = string to process
+//   search = single character string to search for
+//   replace = string that replaces all copies of `search`
+// Example:
+//   s1 = str_replace_char("abcdefgabcdefg","bc","XYZ");     // Returns: "aXYZdefgaXYZdefg"
+
+function str_replace(str, search, replace) =
+    assert(is_string(str) && is_string(search) && is_string(replace), "\nAll arguments of str_replace() must be strings.")
+    len(search) == 0 ? str
+     : let(pos = str_find(str, search))
+        pos == undef ? str : str(substr(str, 0, pos), replace,
+            str_replace(substr(str, pos + len(search)), search, replace));
+
+
+
 // Function: str_replace_char()
 // Synopsis: Replace specified character in a string with a string.
 // Topics: Strings
@@ -370,7 +412,7 @@ function str_pad(str,length,char=" ",left=false) =
 //   char = single character string to search for
 //   replace = string that replaces all copies of `char`
 // Example:
-//   s1 = str_replace_char("abcdcba","c","_123_");     // Returns: "ab123d123ba"
+//   s1 = str_replace_char("abcdcba","c","_123_");     // Returns: "ab_123_d_123_ba"
 //   s2 = str_replace_char(" s t r i n g ", " ", "");  // Returns: "string"
 
 function str_replace_char(str,char,replace) =
