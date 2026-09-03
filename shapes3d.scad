@@ -4407,7 +4407,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Topics: Attachments, Text
 // See Also: path_text(), text() 
 // Usage:
-//   text3d(text, [h], [size], [font], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
+//   text3d(text, [h], [size], [font], [em=], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
 // Description:
 //   Creates a 3D text block that supports anchoring and single-parameter attachment to attachable objects.  You cannot attach children to text.
 //   .
@@ -4436,6 +4436,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   size = The font is created at this size divided by 0.72.   Default: 10
 //   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
 //   ---
+//   em = Set the standard font size (the em) to this value without scaling by 0.72  
 //   spacing = The relative spacing multiplier between characters.  Default: `1.0`
 //   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
 //   language = The language the text is in.  Default: `"en"`
@@ -4455,14 +4456,17 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
 //   text3d("Fogmobar", h=2, anchor=RIGHT);
 //   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
-module text3d(text, h, size=10, font, spacing=1.0, direction="ltr", language="en", script="latin",
-              height, thickness, atype, center=false,
+module text3d(text, h, size, font, spacing=1.0, direction="ltr", language="en", script="latin",
+              height, thickness, atype, center=false, em,
               anchor, spin=0, orient=UP) {
     no_children($children);
     h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
-    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "\natype must be \"ycenter\" or \"baseline\".");
-    assert(is_bool(center));
-    assert(is_undef($attach_to),"\ntext3d() does not support parent-child anchor attachment with two parameters.");
+    checks = 
+        assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "\natype must be \"ycenter\" or \"baseline\".")
+        assert(is_bool(center))
+        assert(is_undef($attach_to),"\ntext3d() does not support parent-child anchor attachment with two parameters.")
+        assert(num_defined([size,em])<2, "Cannot give both \"size\" and \"em\"");
+    size = first_defined([size, u_mul(em,0.72), 10]);
     atype = default(atype, center?"ycenter":"baseline");
     anchor = default(anchor, center?CENTER:LEFT);
     geom = attach_geom(size=[size,size,h]);
