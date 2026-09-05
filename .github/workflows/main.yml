@@ -93,14 +93,15 @@ jobs:
         belfryscad --mdimggen -T
 
   CheckDocs:
-    # macOS purely for CPU speed -- -T renders nothing, so this job needs no
-    # GL at all. On ubuntu the swapped job wanted ~69 minutes (it reached 87%
-    # when a 60-minute limit cancelled it), against a steady ~41 for the
-    # openscad-docsgen setup it replaces. The same command over the same
-    # library takes 33m23s on a developer's Mac, so the runner was the
-    # variable, not a hang.
-    runs-on: macos-latest
-    timeout-minutes: 120
+    # Back on ubuntu, so this is directly comparable with the ~41 minutes
+    # openscad-docsgen held here for years. The first swapped run wanted ~69
+    # (cancelled at 60, having reached 87%); two fixes since then account for
+    # ~36% of that: belfryscad no longer parses each example twice (~33%,
+    # BelfrySCAD #345) and -T no longer builds geometry it throws away (~3%,
+    # evaluator 1.1.0). 90 minutes is deliberate headroom while the real
+    # figure is unknown -- tighten it once a green run has been timed.
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
     - name: Checkout
       uses: actions/checkout@v4
