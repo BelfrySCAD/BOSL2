@@ -94,7 +94,12 @@ jobs:
 
   CheckDocs:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 120, not 60. Measured on this runner: openscad-docsgen took a steady
+    # ~41 minutes, belfryscad --docsgen needs ~69 -- it reached 87% when the
+    # old 60-minute limit cancelled it. Slower per script, but it replaces
+    # a process launch per Example with in-process evaluation, so the gap is
+    # in the evaluator rather than in startup overhead.
+    timeout-minutes: 120
     steps:
     - name: Checkout
       uses: actions/checkout@v4
