@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 20
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Install Required Libraries
       run: sudo apt-get install libfuse2
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 5
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Check Function Test Coverage
       run: |
@@ -60,16 +60,16 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Clone Wiki
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -105,16 +105,16 @@ jobs:
     timeout-minutes: 75
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Clone Wiki
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
