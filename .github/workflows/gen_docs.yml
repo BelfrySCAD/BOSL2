@@ -1,9 +1,27 @@
+# Full documentation build, rendered by BelfrySCAD's own evaluator rather
+# than by launching the OpenSCAD binary once per image.
+#
+# This is the render-everything counterpart to the Checks workflow's
+# CheckDocs job, which runs the same tool with -T (execute every script,
+# generate no images).
 name: Regenerate Docs
-on: [workflow_dispatch]
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_to_wiki:
+        description: "Push the generated docs to the live wiki (overwrites it)"
+        type: boolean
+        default: true
 
 jobs:
   RegenerateDocs:
-    runs-on: ubuntu-latest
+    # macOS for a real GL implementation. This job actually renders; on
+    # Linux the offscreen renderer falls back to EGL against software Mesa,
+    # which is slower and one more way for CI output to differ from what a
+    # developer sees locally. CheckDocs stays on ubuntu because -T renders
+    # nothing at all.
+    runs-on: macos-latest
     timeout-minutes: 90
     steps:
     - name: Checkout
@@ -15,33 +33,37 @@ jobs:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
-    - name: Apt Update
-      run: sudo apt update
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
 
-    - name: Install Required Libraries
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle libfuse2
-
-    - name: Install OpenSCAD-DocsGen package.
-      run: sudo pip3 install openscad-docsgen imageio
-
-    - name: Install OpenSCAD
-      run: |
-        cd $GITHUB_WORKSPACE
-        wget https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
-        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
-        sudo chmod +x /usr/local/bin/openscad
+    # BelfrySCAD replaces openscad-docsgen AND the OpenSCAD binary. Gone
+    # with them: the AppImage download, libfuse2, imageio, python3-pil, and
+    # xvfb -- the renderer is offscreen, so there is no X server for a
+    # virtual display to stand in for. gifsicle went too; APNG is always
+    # used, so no GIF is ever written to optimise.
+    - name: Install BelfrySCAD
+      run: pip install belfryscad
 
     - name: Generate Docs
-      uses: GabrielBB/xvfb-action@v1.6
       env:
         OPENSCADPATH: ${{ github.workspace }}/..
+      run: belfryscad --docsgen -f
+
+    # Uploaded whether or not the wiki gets published, and on failure too,
+    # so a partial or unpublished run can still be inspected.
+    - name: Upload generated docs
+      if: always()
+      uses: actions/upload-artifact@v6
       with:
-        run: openscad-docsgen -f
+        name: bosl2-wiki
+        path: BOSL2.wiki
 
     - name: Upload Docs to Wiki
+      if: ${{ inputs.publish_to_wiki }}
       uses: SwiftDocOrg/github-wiki-publish-action@v1
       with:
         path: "BOSL2.wiki"
       env:
         GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PAT }}
-
