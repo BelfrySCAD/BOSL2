@@ -19,7 +19,7 @@ jobs:
       run: sudo apt update
 
     - name: Install Required Libraries
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle libfuse2
+      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle libfuse2 xvfb
 
     - name: Install OpenSCAD-DocsGen package.
       run: sudo pip3 install openscad-docsgen imageio
@@ -36,12 +36,11 @@ jobs:
         cd $GITHUB_WORKSPACE
         ./scripts/check_for_tabs.sh
 
+    # xvfb-run directly -- see the note in gen_docs.yml.
     - name: Generate Tutorials
-      uses: GabrielBB/xvfb-action@v1.6
       env:
         OPENSCADPATH: ${{ github.workspace }}/..
-      with:
-        run: openscad-mdimggen -f
+      run: xvfb-run --auto-servernum openscad-mdimggen -f
 
     - name: Upload Tutorials to Wiki
       uses: SwiftDocOrg/github-wiki-publish-action@v1
