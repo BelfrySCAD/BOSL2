@@ -93,12 +93,13 @@ jobs:
         belfryscad --mdimggen -T
 
   CheckDocs:
-    runs-on: ubuntu-latest
-    # 120, not 60. Measured on this runner: openscad-docsgen took a steady
-    # ~41 minutes, belfryscad --docsgen needs ~69 -- it reached 87% when the
-    # old 60-minute limit cancelled it. Slower per script, but it replaces
-    # a process launch per Example with in-process evaluation, so the gap is
-    # in the evaluator rather than in startup overhead.
+    # macOS purely for CPU speed -- -T renders nothing, so this job needs no
+    # GL at all. On ubuntu the swapped job wanted ~69 minutes (it reached 87%
+    # when a 60-minute limit cancelled it), against a steady ~41 for the
+    # openscad-docsgen setup it replaces. The same command over the same
+    # library takes 33m23s on a developer's Mac, so the runner was the
+    # variable, not a hang.
+    runs-on: macos-latest
     timeout-minutes: 120
     steps:
     - name: Checkout
