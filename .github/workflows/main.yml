@@ -98,10 +98,11 @@ jobs:
     # (cancelled at 60, having reached 87%); two fixes since then account for
     # ~36% of that: belfryscad no longer parses each example twice (~33%,
     # BelfrySCAD #345) and -T no longer builds geometry it throws away (~3%,
-    # evaluator 1.1.0). 90 minutes is deliberate headroom while the real
-    # figure is unknown -- tighten it once a green run has been timed.
+    # evaluator 1.1.0). Timed green at 45m44s, so 75 keeps roughly the
+    # proportional slack the old 60-minute limit gave that ~41 -- enough for
+    # a slow runner, short enough that a hang is caught not sat through.
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 75
     steps:
     - name: Checkout
       uses: actions/checkout@v4
