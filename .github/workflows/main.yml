@@ -68,21 +68,16 @@ jobs:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
-    - name: Apt Update
-      run: sudo apt update
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
 
-    - name: Install Required Libraries
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil libfuse2
-
-    - name: Install OpenSCAD-DocsGen package.
-      run: sudo pip3 install openscad-docsgen imageio
-
-    - name: Install OpenSCAD
-      run: |
-        cd $GITHUB_WORKSPACE
-        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
-        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
-        sudo chmod +x /usr/local/bin/openscad
+    # Same swap as CheckDocs below, and same reason there are no GL
+    # libraries: --mdimggen -T executes every code block but writes no
+    # images, so the renderer is never imported.
+    - name: Install BelfrySCAD
+      run: pip install belfryscad
 
     - name: Tabs Check
       run: |
@@ -95,7 +90,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-mdimggen -T
+        belfryscad --mdimggen -T
 
   CheckDocs:
     runs-on: ubuntu-latest
