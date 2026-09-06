@@ -1322,7 +1322,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 //   flip = If true, reverses the orientation of any external profile parts at each edge.  Default false
-//   corner_type = Specifies how exterior corners should be formed.  Must be one of `"none"`, `"chamfer"`, `"round"`, or `"sharp"`.  Default: `"none"`
+//   corner_type = Specifies how to form exterior corners, and if `size` is set, interior corners.  Must be one of `"none"`, `"chamfer"`, `"round"`, or `"sharp"`.  Default: `"none"`
 //   size = If given the width and height of the 2D profile, enable rounding and chamfering of internal corners when given a negative profile.
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
@@ -1420,7 +1420,7 @@ module edge_profile_asym(
     edges=EDGES_ALL, except=[],
     excess=0.01, convexity=10,
     flip=false, corner_type="none",
-    size=[0,0]
+    size=undef
 ) {
     function _corner_orientation(pos,pvec) =
         let(
@@ -1561,7 +1561,11 @@ module edge_profile_asym(
     check1 = assert($parent_geom != undef, "\nNo object to attach to!")
              assert(is_cuboid, "Parent must be a cuboid")      
              assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
-             assert(is_bool(flip));
+             assert(is_bool(flip))
+             assert(is_undef(size) || (is_num(size) && size>0) || (is_vector(size,2) && all_positive(size)),
+                    "size must be a positive number of 2-vector");
+    size = is_undef(size) ? [0,0] : force_list(size,2);
+    
     edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
@@ -1596,11 +1600,11 @@ module edge_profile_asym(
                 $profile_type = "corner";
                 position(pos) {
                     multmatrix(mirT) {
-                        if (vp1.x == vp2.x && size.y > 0) {
+                        if (vp1.x == vp2.x && size.x>0) {
                             zflip() {
                                 if (corner_type=="chamfer") {
                                     fn = $fn;
-                                    move([size.y,size.y]) {
+                                    move(size) {
                                         rotate_extrude(angle=90, $fn=4)
                                             left_half(planar=true, $fn=fn)
                                                 zrot(-90) fwd(size.y) children();
@@ -1613,7 +1617,7 @@ module edge_profile_asym(
                                                     square([size.x+0.01, size.y+0.01]);
                                     }
                                 } else if (corner_type=="round") {
-                                    move([size.y,size.y]) {
+                                    move(size) {
                                         rotate_extrude(angle=90)
                                             left_half(planar=true)
                                                 zrot(-90) fwd(size.y) children();

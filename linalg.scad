@@ -34,27 +34,63 @@ _BOSL2_LINALG = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL
 
 // Section: Matrix testing and display
 
+function _im_shape(list) =
+  [for(;is_list(list) && len(list)>0;list=list[0]) len(list)];
+
+function _im_check_shape(list,shape) =
+  [for(i=0;
+       is_list(list) && len(list)>0;
+       list=list[0],i=i+1)
+    if(!is_undef(shape[i]) && len(list)!=shape[i]) 1];
+
+function _is_matrix(list,rank) =
+    rank==0 && is_num(list) ? true
+  : !is_list(list) ? false
+  : _is_matrix(list[0], rank-1) && is_consistent(list);
+
+
 // Function: is_matrix()
-// Synopsis: Check if input is a numeric matrix, optionally of specified size
+// Synopsis: Check if input is a numeric matrix or tensor, optionally of specified size
 // Topics: Matrices
 // See Also: is_matrix_symmetric(), is_rotation()
 // Usage:
 //   test = is_matrix(A, [m], [n], [square])
+//   test = is_matrix(A, [rank=], [shape=], [equal=])
 // Description:
 //   Returns true if A is a numeric matrix of height m and width n with finite entries.  If m or n
-//   are omitted or set to undef then true is returned for any positive dimension.
+//   are omitted or set to undef then returns true for any positive dimension.
+//   Alternatively, checks if A is a numerical rectangular array with `rank` levels of nesting
+//   (a tensor of the specified rank).  The `shape` parameter specifies required dimensions at each
+//   level, and may contain `undef` to leave a particular level unconstrained.  If you give `shape`
+//   then the rank is determined from its length and you cannot give `rank`.
+//   .
+//   You cannot mix `m`, `n` and `square` with `rank`, `shape`, and `equal`.  
 // Arguments:
 //   A = The matrix to test.
 //   m = If given, requires the matrix to have this height.
-//   n = Is given, requires the matrix to have this width.
+//   n = If given, requires the matrix to have this width.
 //   square = If true, matrix must have height equal to width. Default: false
-function is_matrix(A,m,n,square=false) =
-   is_list(A)
-   && (( is_undef(m) && len(A) ) || len(A)==m)
-   && (!square || len(A) == len(A[0]))
-   && is_vector(A[0],n)
-   && is_consistent(A);
+//   ---
+//   rank = Specify rank (nesting level) of A, a positive integer.  Default: 2
+//   shape = Nonempty list specifying required dimensions of A that may contain undef entries
+//   equal = If true, all dimensions of A must be equal.  Default: false
+function is_matrix(A,m,n,square,rank,shape,equal)=
+    let(
+        matrix=!is_undef(m) || !is_undef(n) || !is_undef(square),
+        tensor=!is_undef(rank) || !is_undef(shape) || !is_undef(equal)
+    )
+    assert(!(matrix && tensor),"Cannot mix m, n, and square with rank, shape and equal")    
+    let(shape = matrix? [m,n] : assert(is_undef(shape) || (is_list(shape) && len(shape)>0), "shape must be a nonempty list")shape,
+        rank = is_def(shape) ? assert(is_undef(rank),"Cannot give rank and shape") len(shape)
+             : is_def(rank) ? assert(rank>0,"Must give positive rank") rank
+             : 2
+    )
+    is_def(shape) && _im_check_shape(A,shape)!=[] ? false
+  : (equal || square)
+      && ( !is_list(A) || len(A)==0 || (let(Ashape=_im_shape(A)) max(Ashape)!=min(Ashape))) ? false      
+  : _is_matrix(A,rank);
 
+   
 
 // Function: is_matrix_symmetric()
 // Synopsis: Checks if matrix is symmetric

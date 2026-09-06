@@ -154,3 +154,29 @@ module test_sp_diameter() {
 }
 test_sp_diameter();
 '''
+
+[[test]]
+name = "test_mason_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_mason_neck() {
+    $fn = 8;
+    mason_neck(70, 400, 2);
+}
+test_mason_neck();
+'''
+
+[[test]]
+name = "test_mason_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_mason_cap() {
+    $fn = 8;
+    mason_cap(70, 450, 2);
+}
+test_mason_cap();
+'''

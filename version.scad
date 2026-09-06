@@ -14,7 +14,9 @@ _BOSL2_VERSION = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 
 
 
-BOSL_VERSION = [2,0,743];
+
+BOSL_VERSION = [2,0,754];
+
 
 
 

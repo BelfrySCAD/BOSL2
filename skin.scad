@@ -587,7 +587,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Named Anchors:
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
 //   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented DOWN.
-//   "original_top" = Keeps the original path positions in the X and Y, but at the top of the extrusion.  Oriented UP.
+//   "original_top" = Keeps the original path positions in the X and Y, but at the top height of the extrusion.  Oriented UP.
 //   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
 //   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
 //   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top). Can access with EDGE(TOP,i)
@@ -785,61 +785,102 @@ module linear_sweep(
 }
 
 
-function _make_all_prism_anchors(bot, top, startind=0) =
-  let(
-        facenormal= [
-                     for(i=idx(bot))
-                        let(
-                            edge0 = [top[i],bot[i]],                   // vertical edge at i
-                            edge1 = [select(top,i+1),select(bot,i+1)], // vertical edge at i+1
-                            facenormal = unit(unit(cross(edge1[1]-edge0[0], edge0[1]-edge0[0]))+
-                                              unit(cross(edge0[0]-edge1[1], edge1[0]-edge1[1])))
-                        )
-                        facenormal
-                    ],
-        anchors = [for(i=idx(bot))
-                      let(
 
-                           edge1 = [top[i],bot[i]],                   // vertical edge at i
-                           edge2 = [select(top,i+1),select(bot,i+1)], // vertical edge at i+1
+function _lsw_sweep_tangent(p, u, h, shift=[0,0], scale=[1,1], twist=0) =
+    let(
+        sc  = lerp([1,1], scale, u),
+        dsc = scale - [1,1],
+        q   = zrot(-twist*u, p),
+        k   = -twist*PI/180
+    )
+    [
+        dsc.x*q.x - sc.x*k*q.y + shift.x,
+        dsc.y*q.y + sc.y*k*q.x + shift.y,
+        h
+    ];
 
-                           facecenter = mean(concat(edge1,edge2)),
-                           facespin = _compute_spin(facenormal[i], UP),
+function _lsw_face_normal(path, layer, i, u, h, shift=[0,0], scale=[1,1], twist=0, p=undef) =
+    let(
+        p0  = select(path, i),
+        p1  = select(path, i+1),
+        ps  = is_undef(p)? (p0+p1)/2 : p,
+        eh  = select(layer, i+1) - select(layer, i),
+        vs  = _lsw_sweep_tangent(ps, u, h, shift=shift, scale=scale, twist=twist),
+        raw = cross(vs, eh),
+        fb  = cross(UP, eh)
+    )
+    unit(raw, error=unit(fb, error=RIGHT));
 
-                           side_edge_center = mean(edge1),
-                           side_edge_dir = top[i]-bot[i],
-                           side_edge_normal = unit(vector_bisect(facenormal[i],select(facenormal,i-1))),
-                           side_edge_spin = _compute_spin(side_edge_normal, side_edge_dir),
-                           side_edge_angle = 180-vector_angle(facenormal[i], select(facenormal,i-1)),
-                           side_edge_len = norm(side_edge_dir),
+function _lsw_seam_normal(path, layer, i, u, h, shift=[0,0], scale=[1,1], twist=0) =
+    let(
+        p  = select(path, i),
+        n0 = _lsw_face_normal(path, layer, i-1, u, h, shift=shift, scale=scale, twist=twist, p=p),
+        n1 = _lsw_face_normal(path, layer, i,   u, h, shift=shift, scale=scale, twist=twist, p=p)
+    )
+    unit(vector_bisect(n1, n0), error=unit(n1+n0, error=n1));
 
-                           top_edge_center = (edge2[0]+edge1[0])/2,
-                           top_edge_dir = edge2[0]-edge1[0],
-                           bot_edge_center = (edge1[1]+edge2[1])/2,
-                           bot_edge_dir = edge1[1]-edge2[1],
-                           topnormal = unit(facenormal[i]+UP),
-                           botnormal = unit(facenormal[i]+DOWN),
-                           topedgespin = _compute_spin(topnormal, top_edge_dir),
-                           botedgespin = _compute_spin(botnormal, bot_edge_dir),
-                           topedgeangle = 180-vector_angle(UP,facenormal[i])
-                      )
-                      each [
-                          named_anchor(str("face",i+startind), facecenter, facenormal[i], facespin),
-                          named_anchor(str("edge",i+startind), side_edge_center, side_edge_normal, side_edge_spin,
-                                       info=[["edge_angle",side_edge_angle], ["edge_length",side_edge_len]]),
-                          named_anchor(str("top_edge",i+startind), top_edge_center, topnormal, topedgespin,
-                                       info=[["edge_angle",topedgeangle],["edge_length",norm(top_edge_dir)]]),
-                          named_anchor(str("bot_edge",i+startind), bot_edge_center, botnormal, botedgespin,
-                                       info=[["edge_angle",180-topedgeangle],["edge_length",norm(bot_edge_dir)]]),
-                          named_anchor(str("top_corner",i+startind), top[i], unit(side_edge_normal+UP),
-                                       _compute_spin(unit(side_edge_normal+UP),side_edge_dir)),
-                          named_anchor(str("bot_corner",i+startind), bot[i], unit(side_edge_normal+DOWN),
-                                       _compute_spin(unit(side_edge_normal+DOWN),side_edge_dir))
-                      ]
-                  ]
-  )
-  anchors;
 
+function _make_all_linear_sweep_anchors(path, midpath, toppath, h, shift=[0,0], scale=[1,1], twist=0, startind=0) =
+    let(
+        bot = path3d(path, -h/2),
+        mid = path3d(midpath, 0),
+        top = path3d(toppath, h/2)
+    )
+    [
+        for (i=idx(path))
+            let(
+                p0 = path[i],
+
+                mid_face_normal = _lsw_face_normal(path, mid, i, 1/2, h, shift=shift, scale=scale, twist=twist),
+                top_face_normal = _lsw_face_normal(path, top, i, 1,   h, shift=shift, scale=scale, twist=twist),
+                bot_face_normal = _lsw_face_normal(path, bot, i, 0,   h, shift=shift, scale=scale, twist=twist),
+
+                facecenter = (mid[i] + select(mid, i+1)) / 2,
+                faceref = unit(point3d(shift,h)),
+                facespin   = _compute_spin(mid_face_normal, faceref),
+
+                side_edge_center = mid[i],
+                side_edge_dir    = _lsw_sweep_tangent(p0, 1/2, h, shift=shift, scale=scale, twist=twist),
+                side_edge_normal = _lsw_seam_normal(path, mid, i, 1/2, h, shift=shift, scale=scale, twist=twist),
+                side_edge_spin   = _compute_spin(side_edge_normal, side_edge_dir),
+                side_edge_angle  = 180 - vector_angle(
+                    _lsw_face_normal(path, mid, i,   1/2, h, shift=shift, scale=scale, twist=twist, p=p0),
+                    _lsw_face_normal(path, mid, i-1, 1/2, h, shift=shift, scale=scale, twist=twist, p=p0)
+                ),
+                side_edge_len = norm(top[i]-bot[i]),
+
+                top_edge_center = (top[i] + select(top, i+1)) / 2,
+                top_edge_dir    = select(top, i+1) - top[i],
+                topnormal       = unit(top_face_normal + UP, error=UP),
+                topedgespin     = _compute_spin(topnormal, top_edge_dir),
+                topedgeangle    = 180 - vector_angle(UP, top_face_normal),
+
+                bot_edge_center = (bot[i] + select(bot, i+1)) / 2,
+                bot_edge_dir    = bot[i] - select(bot, i+1),
+                botnormal       = unit(bot_face_normal + DOWN, error=DOWN),
+                botedgespin     = _compute_spin(botnormal, bot_edge_dir),
+                botedgeangle    = 180 - vector_angle(DOWN, bot_face_normal),
+
+                top_corner_pos  = top[i],
+                top_corner_norm = unit(_lsw_seam_normal(path, top, i, 1, h, shift=shift, scale=scale, twist=twist) + UP, error=UP),
+
+                bot_corner_pos  = select(bot, i),
+                bot_corner_norm = unit(_lsw_seam_normal(path, bot, i, 0, h, shift=shift, scale=scale, twist=twist) + DOWN, error=DOWN)
+            )
+            each [
+                named_anchor(str("face", i+startind), facecenter, mid_face_normal, facespin),
+                named_anchor(str("edge", i+startind), side_edge_center, side_edge_normal, side_edge_spin,
+                             info=[["edge_angle", side_edge_angle], ["edge_length", side_edge_len]]),
+                named_anchor(str("top_edge", i+startind), top_edge_center, topnormal, topedgespin,
+                             info=[["edge_angle", topedgeangle], ["edge_length", norm(top_edge_dir)]]),
+                named_anchor(str("bot_edge", i+startind), bot_edge_center, botnormal, botedgespin,
+                             info=[["edge_angle", botedgeangle], ["edge_length", norm(bot_edge_dir)]]),
+                named_anchor(str("top_corner", i+startind), top_corner_pos, top_corner_norm,
+                             _compute_spin(top_corner_norm, side_edge_dir)),
+                named_anchor(str("bot_corner", i+startind), bot_corner_pos, bot_corner_norm,
+                             _compute_spin(bot_corner_norm, side_edge_dir))
+            ]
+    ];
 
 
 function linear_sweep(
@@ -866,8 +907,11 @@ function linear_sweep(
     assert(is_vector(shift, 2), str(shift))
     assert(is_bool(caps) || is_bool_list(caps,2), "\ncaps must be boolean or a list of two booleans.")
     let(
+        scale = is_num(scale) ? [scale, scale] : point2d(scale), 
         h = one_defined([h, height,l,length],"h,height,l,length",dflt=1),
         regions = region_parts(region),
+        topmat = move(shift) * scale(scale) * rot(-twist),                       // needed for anchoring even in texture case
+        midmat = move(shift/2) * scale(lerp([1,1],scale,1/2)) * rot(-twist/2),   // needed for anchoring even in texture case        
         vnf = !is_undef(texture)?
                         _textured_linear_sweep(
                                                region, h=h, caps=caps, 
@@ -882,8 +926,6 @@ function linear_sweep(
                       center == false? "original_base" :
                       default(anchor, "original_base"),
                   slices = default(slices, max(1,ceil(abs(twist)/5))),
-                  scale = is_num(scale)? [scale,scale] : point2d(scale),
-                  topmat = move(shift) * scale(scale) * rot(-twist),
                   trgns = [
                       for (rgn = regions) [
                           for (path = rgn) let(
@@ -922,14 +964,19 @@ function linear_sweep(
               vnf,
         regparts = flatten(regions),
         sizes = [0,each cumsum([for(entry=regparts) len(entry)])],
-        ganchors = [
-          for(i=idx(regparts))
-            let(
-                bot = path3d(regparts[i],-h/2),
-                top = path3d(move(shift,scale(scale, zrot(-twist, regparts[i]))),h/2)
-            )
-            each _make_all_prism_anchors(bot,top, startind=sizes[i])
-        ],    
+ganchors = [
+    for (i=idx(regparts))
+        each _make_all_linear_sweep_anchors(
+            regparts[i],
+            apply(midmat,regparts[i]),
+            apply(topmat,regparts[i]),
+            h=h,
+            shift=shift,
+            scale=scale,
+            twist=twist,
+            startind=sizes[i]
+        )
+],
         anchors = [
             named_anchor("original_base", [0,0,-h/2], DOWN),
             named_anchor("original_top", [0,0,h/2], UP),
@@ -4545,8 +4592,7 @@ function _textured_linear_sweep(
         inset = is_num(inset)? inset : inset? 1 : 0,
         twist = default(twist, 0),
         shift = default(shift, [0,0]),
-        scale = scale==undef? [1,1,1] :
-            is_num(scale)? [scale,scale,1] : scale,
+        scale = scale==undef? [1,1,1] : point3d(scale,1),
         samples = !is_vnf(texture)? len(texture[0]) :
             is_num(samples)? samples : 8,
         vnf_tile =

@@ -2482,6 +2482,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
 //   language = The language the text is in.  Default: `"en"`
 //   script = The script the text is in.  Default: `"latin"`
+//   em = Set the standard font size (the em) to this value without scaling by 0.72  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Named Anchors:
@@ -2500,36 +2501,36 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   txt = "This is the string";
 //   arc_copies(r=50, n=len(txt), sa=0, ea=180)
 //       text(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
+module text(text, size, font, direction="ltr", language="en", script="latin", halign, valign, spacing=1.0,em,anchor="baseline", spin=0) {
     no_children($children);
+    pass_em = version_num() >= 20260314;
+    if (!pass_em && num_defined([size,em])==2)
+       echo("WARNING: text: \"size\" ignored when \"em\" is set");
+    size = pass_em ? size
+         : first_defined([size, u_mul(em,0.72),10]);
     dummy1 =
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
         assert(is_finite(spin), str("Invalid spin: ",spin));
     anchor = default(anchor, CENTER);
-    geom = attach_geom(size=[size,size],two_d=true);
+    geom = attach_geom(size=[1,1],two_d=true);    
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(
             parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
             vec = [for (p=parts) parse_float(str_strip(p," ",start=true))]
         ) vec;
-    ha = halign!=undef? halign :
-        anchor=="baseline"? "left" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.x<0? "left" :
-        anch.x>0? "right" :
-        "center";
-    va = valign != undef? valign :
-        starts_with(anchor,"baseline")? "baseline" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.y<0? "bottom" :
-        anch.y>0? "top" :
-        "center";
-    base = anchor=="baseline"? CENTER :
-        anchor==anch && is_string(anchor)? CENTER :
-        anch.z<0? BOTTOM :
-        anch.z>0? TOP :
-        CENTER;
-    m = _attach_transform(base,spin,undef,geom);
+    ha = halign!=undef? halign
+       : anchor=="baseline"? "left"
+       : anchor==anch && is_string(anchor)? "center"
+       : anch.x<0? "left"
+       : anch.x>0? "right" 
+       : "center";
+    va = valign != undef? valign
+       : starts_with(anchor,"baseline")? "baseline"
+       : anchor==anch && is_string(anchor)? "center"
+       : anch.y<0 || (anch.z<0 && anch.y==0)? "bottom"
+       : anch.y>0 || (anch.z>0 && anch.y==0) ? "top"
+       : "center";
+    m = _attach_transform(CENTER,spin,undef,geom);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
@@ -2539,6 +2540,13 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
         $attach_to   = undef;
         if (_is_shown()){
             _color($color) _show_ghost() {
+               if(pass_em)
+                  _text(
+                    text=text, size=size, font=font,
+                    halign=ha, valign=va, spacing=spacing,
+                    direction=direction, language=language,
+                    script=script, em=em);
+               else
                 _text(
                     text=text, size=size, font=font,
                     halign=ha, valign=va, spacing=spacing,

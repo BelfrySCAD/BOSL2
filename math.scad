@@ -208,11 +208,11 @@ function slerp(v1, v2, u) =
         theta = acos(max(-1, min(1, a*b))),
         err = assert(abs(theta-180)>_EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
         sin_theta = sin(theta)
-    ) sin_theta < _EPSILON ? unit(a+b) // fallback
-    : is_finite(u) ? (sin_theta < _EPSILON ? unit(a+b)
-        : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta)
-    : [for(t=u) sin_theta < _EPSILON ? unit(a+b)
-        : (a * sin((1 - t) * theta) + b * sin(t * theta)) / sin_theta];
+    )
+    is_finite(u) ? (sin_theta < _EPSILON ? unit(a+b)
+                                         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta)
+  : [for(t=u) sin_theta < _EPSILON ? unit(a+b)
+                                   : (a * sin((1 - t) * theta) + b * sin(t * theta)) / sin_theta];
 
 
 // Function: slerpn()
@@ -385,7 +385,7 @@ function binomial_coefficient(n,k) =
 // Function: gcd()
 // Synopsis: Returns the Greatest Common Divisor/Factor of two integers.
 // Topics: Math
-// See Also: hypot(), sqr(), log2(), factorial(), binomial(), gcd(), lcm()
+// See Also: hypot(), sqr(), log2(), factorial(), binomial(), lcm()
 // Usage:
 //   x = gcd(a,b)
 // Description:
@@ -411,7 +411,7 @@ function _lcmlist(a) =
 // Function: lcm()
 // Synopsis: Returns the Least Common Multiple of two or more integers.
 // Topics: Math
-// See Also: hypot(), sqr(), log2(), factorial(), binomial(), gcd(), lcm()
+// See Also: hypot(), sqr(), log2(), factorial(), binomial(), gcd()
 // Usage:
 //   div = lcm(a, b);
 //   divs = lcm(list);
@@ -805,7 +805,6 @@ function fit_to_range(M, minval, maxval) =
     let(
         is_vec = is_vector(M),
         dum = assert(is_vec || (is_list(M) && is_vector(M[0])), "\nParameter M must be a vector or list of vectors."),
-        rowlen = len(is_vec ? M : M[0]),
         v = is_vec ? M : flatten(M),
         a = min(v),
         b = max(v)
@@ -849,7 +848,7 @@ function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 // Function: mean()
 // Synopsis: Returns the mean value of a list of values.
 // Topics: Math, Statistics
-// See Also: sum(), mean(), median(), product()
+// See Also: sum(), median(), product()
 // Usage:
 //   x = mean(v);
 // Description:
@@ -869,7 +868,7 @@ function mean(v) =
 // Function: median()
 // Synopsis: Returns the median value of a list of values.
 // Topics: Math, Statistics
-// See Also: sum(), mean(), median(), product()
+// See Also: sum(), mean(), product()
 // Usage:
 //   middle = median(v)
 // Description:
@@ -949,7 +948,7 @@ function cumsum(v) =
 // Example:
 //   product([2,3,4]);  // returns 24.
 //   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
-function product(list,right=true) =
+function product(list) =
     list==[] ? [] :
     is_matrix(list) ?
                 [for (a = list[0], 
@@ -1374,7 +1373,7 @@ function deriv2(data, h=1, closed=false) =
             (35*data[0] - 104*data[1] + 114*data[2] - 56*data[3] + 11*data[4])/12, 
         last = 
             L==3? data[L-1] - 2*data[L-2] + data[L-3] :
-            L==4? -2*data[L-1] + 5*data[L-2] - 4*data[L-3] + data[L-4] :
+            L==4? 2*data[L-1] - 5*data[L-2] + 4*data[L-3] - data[L-4] :        
             (35*data[L-1] - 104*data[L-2] + 114*data[L-3] - 56*data[L-4] + 11*data[L-5])/12
     ) [
         first/h/h,
@@ -1497,7 +1496,7 @@ function _c_mul(z1,z2) =
 //   z1 = First complex number, given as a 2D vector [REAL, IMAGINARY]
 //   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
 function c_div(z1,z2) = 
-    assert( is_vector(z1,2) && is_vector(z2), "\nComplex numbers should be represented by 2D vectors.")
+    assert( is_vector(z1,2) && is_vector(z2,2), "\nComplex numbers should be represented by 2D vectors.")
     assert( !approx(z2,0), "\nThe divisor `z2` cannot be zero.") 
     let(den = z2.x*z2.x + z2.y*z2.y)
     [(z1.x*z2.x + z1.y*z2.y)/den, (z1.y*z2.x - z1.x*z2.y)/den];
@@ -1634,8 +1633,8 @@ function polynomial(p,z,k,total) =
 // Topics: Math
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
-//   x = polymult(p,q)
-//   x = polymult([p1,p2,p3,...])
+//   x = poly_mult(p,q)
+//   x = poly_mult([p1,p2,p3,...])
 // Description:
 //   Given a list of polynomials represented as real algebraic coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  

@@ -1,0 +1,88 @@
+# Rebuilds every image in the wiki from scratch, rendered by BelfrySCAD's
+# own evaluator rather than by launching the OpenSCAD binary once per image.
+#
+# The forced counterpart to Update Docs Wiki, which re-renders only the
+# sources whose hash changed. Reach for this when the images must be rebuilt
+# for a reason the source hashes cannot see: a change in BelfrySCAD's
+# renderer or evaluator, a colour-scheme change, or a wiki that has drifted
+# and needs to be made consistent again. Costs a full ~35 minutes every time.
+#
+# Never triggered by a release -- a release publishes the library, and
+# Update Docs Wiki is enough to describe it.
+name: Regenerate Docs Wiki
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_to_wiki:
+        description: "Push the generated docs to the live wiki (overwrites it)"
+        type: boolean
+        default: true
+
+jobs:
+  RegenerateDocsWiki:
+    # macOS for a real GL implementation. This job actually renders; on
+    # Linux the offscreen renderer falls back to EGL against software Mesa,
+    # which is slower and one more way for CI output to differ from what a
+    # developer sees locally. CheckDocs stays on ubuntu because -T renders
+    # nothing at all.
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Clone Wiki
+      uses: actions/checkout@v5
+      with:
+        repository: BelfrySCAD/BOSL2.wiki
+        path: BOSL2.wiki
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    # BelfrySCAD replaces openscad-docsgen AND the OpenSCAD binary. Gone
+    # with them: the AppImage download, libfuse2, imageio, python3-pil, and
+    # xvfb -- the renderer is offscreen, so there is no X server for a
+    # virtual display to stand in for. gifsicle went too; APNG is always
+    # used, so no GIF is ever written to optimise.
+    - name: Install BelfrySCAD
+      run: pip install belfryscad
+
+    - name: Generate Docs
+      env:
+        OPENSCADPATH: ${{ github.workspace }}/..
+      run: belfryscad --docsgen -f
+
+    # Uploaded whether or not the wiki gets published, and on failure too,
+    # so a partial or unpublished run can still be inspected.
+    - name: Upload generated docs
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: bosl2-wiki
+        path: BOSL2.wiki
+
+  PublishToWiki:
+    needs: RegenerateDocsWiki
+    if: ${{ inputs.publish_to_wiki }}
+    # Linux, not macOS: SwiftDocOrg/github-wiki-publish-action is a Docker
+    # action, and GitHub runs container actions on Linux runners only --
+    # "Container action is only supported on Linux". The render job stays on
+    # macOS for its GL; this job only moves files, so the runner is free.
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fetch the generated docs
+      uses: actions/download-artifact@v7
+      with:
+        name: bosl2-wiki
+        path: BOSL2.wiki
+
+    - name: Upload Docs to Wiki
+      uses: SwiftDocOrg/github-wiki-publish-action@v1
+      with:
+        path: "BOSL2.wiki"
+      env:
+        GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PAT }}

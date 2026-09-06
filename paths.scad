@@ -43,7 +43,7 @@ _BOSL2_PATHS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   bool2 = is_path([[3,4]]);          // Returns false
 //   bool3 = is_path([[3,4],[4,5]],2);  // Returns true
 //   bool4 = is_path([[3,4,3],[5,4,5]],2);  // Returns false
-//   bool5 = is_path([[3,4,3],[5,4,5]],2);  // Returns false
+//   bool5 = is_path([[3,4,3],[5,4,5]],3);  // Returns true
 //   bool6 = is_path([[3,4,5],undef,[4,5,6]]);  // Returns false
 //   bool7 = is_path([[3,5],[undef,undef],[4,5]]);  // Returns false
 //   bool8 = is_path([[3,4],[5,6],[5,3]]);     // Returns true
@@ -223,8 +223,9 @@ function path_merge_collinear_indexed(path, indices, closed, eps=_EPSILON) =
 //   path = Path of any dimension or 1-region. 
 //   closed = true if the path is closed.  Default: false for paths, true for 1-regions
 // Example:
-//   path = [[0,0], [5,35], [60,-25], [80,0]];
-//   echo(path_length(path));
+//   path = rect(10);
+//   echo(path_length(path));              // Displays 30
+//   echo(path_length(path,closed=true));  // Displays 40
 function path_length(path,closed) =
     is_1region(path) ? path_length(path[0], default(closed,true)) :
     assert(is_path(path,undef), "\nInvalid path in path_length.")
@@ -400,7 +401,7 @@ function _sum_preserving_round(data, index=0) =
 //   points than you requested, but the sampling is still uniform.  In our example of the
 //   square with `n=13`, you get only 12 points output, with the same number of points on each edge.
 //   .
-//   The points are always distributed uniformly on each segment.  The `method="length"` option does
+//   The points are always distributed uniformly on each segment.  The `method="length"` option
 //   means that the number of points on a segment is based on its length, but the points are still
 //   distributed uniformly on each segment, independent of the other segments.  
 //   With the `"segment"` method you can also give `n` as a vector of counts.  This 
@@ -523,7 +524,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 // Topics: Paths
 // See Also: simplify_path(), subdivide_path()
 // Usage:
-//   newpath = resample_path(path, n|spacing=, [closed=]);
+//   newpath = resample_path(path, n|spacing=, [keep_corners=], [closed=]);
 // Description:
 //   Compute a uniform resampling of the input {{path}}.
 //   By default the path is assumed to describe a closed polygon (`closed=true`).
@@ -591,7 +592,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
         subpaths = [ for (p = pair(corners)) [for(i = [p.x:1:p.y]) path[i%pcnt]] ],
         n = is_undef(n)? undef : closed? n+1 : n
     )
-    assert(n==undef || n >= len(corners), "\nThere are nore than `n=` corners whose angle is greater than `keep_corners=`.")
+    assert(n==undef || n >= len(corners), "\nThere are more than `n=` corners whose angle is greater than `keep_corners=`.")
     let(
         lens = [for (subpath = subpaths) path_length(subpath)],
         part_ns = is_undef(n)
@@ -1034,7 +1035,7 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   Cuts a {{path}} at a list of distances from the first {{point}} in the path.  Returns a list of the cut
 //   points and indices of the next point in the path after that point.  So for example, a return
 //   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
-//   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
+//   this point is path[5].  If the path is too short then path_cut_points asserts an error.  If you set
 //   `direction` to true then `path_cut_points` also returns the tangent vector to the path and a normal
 //   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
 //   point.  If this fails, it returns a normal vector parallel to the xy plane.  The output with

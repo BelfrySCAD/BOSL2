@@ -29,7 +29,6 @@ _BOSL2_LISTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   bool = is_homogeneous(list, [depth]);
 // Description:
 //   Returns true when the list has elements of same type up to the depth `depth`.
-//   Booleans and numbers are not distinguinshed as of distinct types. 
 // Arguments:
 //   l = the list to check
 //   depth = the lowest level the check is done.  Default: 10
@@ -38,7 +37,7 @@ _BOSL2_LISTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   b = is_homogeneous([[1,["a"]], [2,[true]]]);    // Returns false
 //   c = is_homogeneous([[1,["a"]], [2,[true]]], 1); // Returns true
 //   d = is_homogeneous([[1,["a"]], [2,[true]]], 2); // Returns false
-//   e = is_homogeneous([[1,["a"]], [true,["b"]]]);  // Returns true
+//   e = is_homogeneous([[1,["a"]], [true,["b"]]]);  // Returns false
 function is_homogeneous(l, depth=10) =
     !is_list(l) || l==[] ? false :
     let( l0=l[0] )
@@ -90,21 +89,6 @@ function max_length(list) =
     assert(is_list(list), "Invalid input." )
     max([for (v = list) len(v)]);
 
-
-
-
-// Internal.  Not exposed.
-function _list_shape_recurse(v) =
-    !is_list(v[0])
-    ?   len( [for(entry=v) if(!is_list(entry)) 0] ) == 0 ? [] : [undef]
-    :   let(
-          firstlen = is_list(v[0]) ? len(v[0]): undef,
-          first = len( [for(entry = v) if(! is_list(entry) || (len(entry) != firstlen)) 0  ]   ) == 0 ? firstlen : undef,
-          leveldown = flatten(v)
-        ) 
-        is_list(leveldown[0])
-        ?  concat([first],_list_shape_recurse(leveldown))
-        : [first];
 
 function _list_shape_recurse(v) =
     let( alen = [for(vi=v) is_list(vi) ? len(vi): -1] )
@@ -257,8 +241,8 @@ function select(list, start, end) =
 //   c = slice([3,4,5,6,7,8,9], 1, 1);   // Returns [4]
 //   d = slice([3,4,5,6,7,8,9], 5);      // Returns [8,9]
 //   e = slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
-//   f = slice([3,4,5,6,7,8,9], 4, 3;    // Returns []
-//   g = slice([3,4,5], 1, 5;            // Returns [4,5]
+//   f = slice([3,4,5,6,7,8,9], 4, 3);   // Returns []
+//   g = slice([3,4,5], 1, 5);           // Returns [4,5]
 //   h = slice([3,4,5], 5, 7);           // Returns []
 function slice(list,start=0,end=-1) =
     assert(is_list(list))

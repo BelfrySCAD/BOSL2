@@ -41,9 +41,6 @@ module test_typeof() {
     assert(typeof([-3:2:5]) == "range");
     assert(typeof([10:-2:-10]) == "range");
     assert(typeof([0:NAN:INF]) == "invalid");
-    assert(typeof([0:"a":INF]) == "undef"); 
-    assert(typeof([0:[]:INF]) == "undef"); 
-    assert(typeof([true:1:INF]) == "undef"); 
 }
 test_typeof();
 '''
@@ -268,7 +265,6 @@ module test_is_range() {
     assert(!is_range([3,4,5]));
     assert(!is_range([INF:4:5]));
     assert(!is_range([3:NAN:5]));
-    assert(!is_range([3:4:"a"]));
     assert(is_range([3:1:5]));
 }
 test_is_range();

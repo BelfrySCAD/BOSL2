@@ -934,8 +934,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   )
   assert(d_first>=0 && d_next>=0, str("Joint value negative when adding path ",i+1))
   
-  assert(d_first<path_length(revresult),str("Path ",i," is too short for specified cut distance ",d_first))
-  assert(d_next<path_length(nextpath), str("Path ",i+1," is too short for specified cut distance ",d_next))
+  assert(d_first<path_length(revresult),str("paths[",i,"] is too short for specified cut distance ",d_first))
+  assert(d_next<path_length(nextpath), str("paths[",i+1,"] is too short for specified cut distance ",d_next))
   let(
       firstcut = path_cut_points(revresult, d_first, direction=true),
       nextcut = path_cut_points(nextpath, d_next, direction=true)
@@ -1198,8 +1198,8 @@ function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true
                  reorient(anchor=anchor, spin=spin, two_d=true, region=pts, extent=atype=="hull", cp=cp, p=pts)
          :
          let(
-             startpath = _stroke_end(width,left_path, right_path, start),
-             endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
+             startpath = _stroke_end(width,left_path, right_path, start,"start"),
+             endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end,"end"),
              clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
          )
          assert(clipping_ok, "End treatment removed the whole stroke")
@@ -1276,7 +1276,7 @@ function _parse_stroke_end(spec,name) =
           struct_set([], spec);
 
 
-function _stroke_end(width,left, right, spec) =
+function _stroke_end(width,left, right, spec, location) =
         let(
                 type = struct_val(spec, "type"),
                 user_angle = default(struct_val(spec, "angle"), 0),
@@ -1331,6 +1331,8 @@ function _stroke_end(width,left, right, spec) =
                                 90-vector_angle([newright[1],newright[0],newleft[0]])/2,
                         jointleft = 8*cutleft/cos(leftangle)/(1+4*bez_k),
                         jointright = 8*cutright/cos(rightangle)/(1+4*bez_k),
+                        dum=assert(abs(jointleft)<=path_length(newleft) && abs(jointright)<=path_length(newright),
+                                   str("Roundover is too big to fit on the path at the ",location)),
                         pathcutleft = path_cut_points(newleft,abs(jointleft)),
                         pathcutright = path_cut_points(newright,abs(jointright)),
                         leftdelete = intright? pathcutleft[1] : pathcutleft[1] + pathclip[1] -1,
@@ -1340,7 +1342,7 @@ function _stroke_end(width,left, right, spec) =
                         roundover_fits = is_def(rightcorner) && is_def(leftcorner) &&
                                          jointleft+jointright < norm(rightcorner-leftcorner)
                 )
-                assert(roundover_fits,"Roundover too large to fit")
+                assert(roundover_fits,str("Roundovers are too big: they overlap each other at the ",location))
                 let(
                         angled_dir = unit(newleft[0]-newright[0]),
                         nPleft = [
@@ -2348,7 +2350,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   "prismoid" = For four sided prisms only, defined standard prismsoid anchors, with RIGHT set to the face closest to the RIGHT direction.  
 // Example: Uniformly rounded pentagonal prism
 //   rounded_prism(pentagon(3), height=3,
-//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5) position(FWD) cube(1);
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: Maximum possible rounding.
 //   rounded_prism(pentagon(3), height=3,
 //                 joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
@@ -2429,15 +2431,19 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   dummy1 = assert(in_list(atype, ["intersect","hull","surf_intersect","surf_hull","prismoid"]),
                   "Anchor type must be one of: \"hull\", \"intersect\", \"surf_hull\", \"surf_intersect\" or \"prismoid\"")
            assert(atype!="prismoid" || len(bottom)==4, "Anchor type \"prismoid\" requires that len(bottom)=4");
+
+  top_path = force_path(top,"top");
+  bot_path = force_path(bottom,"bottom");
   
-  result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
+  result = rounded_prism(bottom=bot_path, top=top_path, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
                          k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,
                          debug=debug, _full_info=true);
   height = one_defined([l,h,height,length], "l,h,height,length", dflt=undef);
-  top = is_undef(top) ? path3d(bottom,height/2) :
-        len(top[0])==2 ? path3d(top,height/2) :
-        top;
-  bottom = len(bottom[0])==2 ? path3d(bottom,-height/2) : bottom;
+  top = is_undef(top_path) ? path3d(bot_path,height/2) :
+        len(top_path[0])==2 ? path3d(top_path,height/2) :
+        top_path;
+  bottom = len(bot_path[0])==2 ? path3d(bot_path,-height/2) : bot_path;
+  
   unrounded = vnf_vertex_array([top,bottom],caps=true, col_wrap=true,reverse=true);
 
   vnf = result[1];
