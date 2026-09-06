@@ -93,15 +93,25 @@ jobs:
         belfryscad --mdimggen -T
 
   CheckDocs:
-    # Back on ubuntu, so this is directly comparable with the ~41 minutes
-    # openscad-docsgen held here for years. The first swapped run wanted ~69
-    # (cancelled at 60, having reached 87%); two fixes since then account for
-    # ~36% of that: belfryscad no longer parses each example twice (~33%,
-    # BelfrySCAD #345) and -T no longer builds geometry it throws away (~3%,
-    # evaluator 1.1.0). Timed green at 45m44s, so 75 keeps roughly the
-    # proportional slack the old 60-minute limit gave that ~41 -- enough for
-    # a slow runner, short enough that a hang is caught not sat through.
-    runs-on: ubuntu-latest
+    # macOS for speed, not for GL: -T renders nothing, so this job needs no
+    # display libraries and the runner is a free choice. Free for
+    # correctness, that is -- it is not free for time, which is what the
+    # numbers say:
+    #
+    #   ubuntu, -Tmf, no images:  30, 36, 45, 45, 46, 47 minutes
+    #   macOS,  -f,   ALL images: 35, 38, 40 minutes
+    #
+    # The mac does MORE work and still finishes sooner. Rendering the images
+    # costs about 11% (34.9s -> 38.9s on one file, one machine); the runner
+    # gap is larger than that. The dominant cost in both is parsing every
+    # script and evaluating every example, which -T does not avoid.
+    #
+    # The spread matters as much as the median: ubuntu ranged 30-47 minutes
+    # for identical work, macOS 35-40. Shared Linux VMs against near-dedicated
+    # mac hardware.
+    #
+    # 75 minutes stays until a few mac runs have been timed here.
+    runs-on: macos-latest
     timeout-minutes: 75
     steps:
     - name: Checkout
