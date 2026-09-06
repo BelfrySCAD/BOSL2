@@ -179,4 +179,38 @@ function version_cmp(a,b) =
     ) cmps==[]? 0 : cmps[0];
 
 
+// Function: supports()
+// Synopsis: Checks if a language extension feature is supported.
+// Topics: versioning
+// See Also: version_to_num(), version_to_str(), version_to_list(), version_cmp(), bosl_required()
+// Usage:
+//   is_supported = supports(feature, [minlev]);
+// Description:
+//   Checks if a feature is supported by the running OpenSCAD interpreter, at a given level.
+//   Returns true if the feature is supported at the given level, false otherwise.
+// Arguments:
+//   feature = name of the feature to check
+//   minlev = minimum level of support required (default: 1)
+// Example:
+//   assert(supports("simplify-op"), "simplify() not supported in this OpenSCAD interpreter");
+function supports(feature, minlev=1) =
+    !is_undef($_SUPPORTED_FEATURE) && supported_feature(feature) > minlev;
+
+
+// Function: assert_supported()
+// Synopsis: Asserts that a language extension feature is supported.
+// Topics: Versioning
+// See Also: version_to_num(), version_to_str(), version_to_list(), version_cmp(), bosl_required()
+// Usage:
+//   assert_supported(feature, [minlev]);
+// Description:
+//   Asserts that a feature is supported by the running OpenSCAD interpreter, at a
+//   given level.  If the feature is not supported, an error is raised.
+// Arguments:
+//   feature = name of the feature to check
+function assert_supported(feature, minlev=1) =
+    assert(supports(feature, minlev), str("Feature '", feature, "' not supported in this OpenSCAD interpreter"));
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

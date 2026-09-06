@@ -150,3 +150,43 @@ module test_version_cmp() {
 }
 test_version_cmp();
 '''
+
+[[test]]
+name = "test_supports"
+script = '''
+include <../std.scad>
+
+module test_supports() {
+    // Unknown features are never supported, at any level.
+    assert(supports("no-such-feature-xyzzy") == false);
+    assert(supports("no-such-feature-xyzzy", 0) == false);
+    assert(supports("no-such-feature-xyzzy", 99) == false);
+    // Always returns a bool, never undef.
+    assert(is_bool(supports("separate-children")));
+    assert(is_bool(supports("separate-children", 2)));
+    // Support is monotonic: supported at a level implies supported at every lower one.
+    for (feat = ["separate-children", "simplify-op", "no-such-feature-xyzzy"])
+        for (lev = [1:1:4])
+            assert(!supports(feat, lev) || supports(feat, lev-1),
+                   str("supports(", feat, ",", lev, ") but not at ", lev-1));
+    // A high enough level is always unsupported.
+    assert(supports("separate-children", 1e6) == false);
+}
+test_supports();
+'''
+
+[[test]]
+name = "test_assert_supported"
+script = '''
+include <../std.scad>
+
+module test_assert_supported() {
+    // ponytail: only the passing path is testable; OpenSCAD cannot catch a failed assert().
+    for (feat = ["separate-children", "simplify-op"])
+        if (supports(feat)) {
+            assert(is_undef(assert_supported(feat)));
+            assert(is_undef(assert_supported(feat, 0)));
+        }
+}
+test_assert_supported();
+'''
