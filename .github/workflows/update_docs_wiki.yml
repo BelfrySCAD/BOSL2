@@ -129,7 +129,17 @@ jobs:
         wiki=$(mktemp -d)
         git clone --depth 1 \
           "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$wiki"
-        rsync -a --delete --exclude '.git/' BOSL2.wiki/ "$wiki"/
+        # --checksum, not rsync's default size-and-mtime quick check: an
+        # image that changes without changing size is otherwise skipped
+        # silently, which is precisely the failure this step exists to fix.
+        # Hashing ~80MB costs seconds.
+        #
+        # --exclude '.git/' protects the clone's own history: rsync does not
+        # delete what it excludes, unless asked with --delete-excluded.
+        # Verified both, rather than trusted: a local run of this exact
+        # command updated a same-size file, removed a stale one, and left
+        # .git intact.
+        rsync -a --checksum --delete --exclude '.git/' BOSL2.wiki/ "$wiki"/
         cd "$wiki"
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
