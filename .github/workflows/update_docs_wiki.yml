@@ -15,15 +15,23 @@ on:
         description: "Push the generated docs to the live wiki (overwrites it)"
         type: boolean
         default: true
-  # A release ships the library; the wiki should describe what shipped.
+  # Called by weekly_release.yml, and only when it actually creates a
+  # release -- most weeks it finds one already exists for the latest tag and
+  # does nothing.
   #
-  # CAVEAT: this fires for a release published by hand, or by anything using
-  # a PAT -- but NOT for the weekly one. GitHub deliberately raises no event
-  # for actions taken with the default GITHUB_TOKEN, to stop workflows
-  # triggering each other in a loop, and weekly_release.yml creates its
-  # release with `GH_TOKEN: ${{ github.token }}`. To make the weekly release
-  # reach this workflow, that job has to create the release with a PAT
-  # (secrets.GH_PAT) instead.
+  # A call, not an event, on purpose. GitHub raises no event for anything
+  # done with the default GITHUB_TOKEN, to stop workflows setting each other
+  # off in a loop, and that job creates its release with exactly that token.
+  # So `release: published` below never sees the weekly one. A workflow_call
+  # runs inside the caller's own run, raises no event, and needs no PAT.
+  workflow_call:
+    inputs:
+      publish_to_wiki:
+        type: boolean
+        default: true
+
+  # Still useful for a release published by hand or by anything holding a
+  # PAT; the weekly path comes through workflow_call above.
   release:
     types: [published]
 

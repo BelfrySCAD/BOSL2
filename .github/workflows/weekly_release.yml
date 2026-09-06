@@ -11,6 +11,11 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    outputs:
+      # Whether this run actually cut a release, so the wiki is only rebuilt
+      # when there is something new to describe. Most weeks the latest tag
+      # already has one and nothing happens.
+      created: ${{ steps.create_release.outputs.created }}
     steps:
     - name: Checkout
       uses: actions/checkout@v5
@@ -47,11 +52,23 @@ jobs:
         GH_TOKEN: ${{ github.token }}
 
     - name: Create release
+      id: create_release
       if: steps.find_tag.outputs.has_tag == 'true' && steps.check_release.outputs.exists == 'false'
       run: |
         TAG="${{ steps.find_tag.outputs.tag }}"
         # Try with auto-generated notes; fall back to simple notes if body is too long
         gh release create "$TAG" --title "$TAG" --generate-notes || \
           gh release create "$TAG" --title "$TAG" --notes "Release ${TAG}"
+        echo "created=true" >> "$GITHUB_OUTPUT"
       env:
         GH_TOKEN: ${{ github.token }}
+
+  # Refresh the wiki for what just shipped. Called rather than triggered:
+  # GitHub raises no event for a release created with the default
+  # GITHUB_TOKEN, so `release: published` would never fire for the release
+  # made above. A workflow_call runs inside this run and needs no PAT.
+  UpdateWiki:
+    needs: release
+    if: needs.release.outputs.created == 'true'
+    uses: ./.github/workflows/update_docs_wiki.yml
+    secrets: inherit
