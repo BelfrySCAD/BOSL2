@@ -55,7 +55,18 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: bosl2-wiki-tutorials
-        path: BOSL2.wiki
+        # Hidden files included deliberately. The publish step mirrors this
+        # artifact over the wiki with rsync --delete, and .source_hashes --
+        # docsgen's record of what it has already rendered -- is a dotfile.
+        # Left out, every publish would delete it and the next incremental
+        # run would have to render the whole library again. .gitignore too.
+        # .git is excluded: the wiki clone's history is not ours to ship,
+        # and the publish step clones the wiki itself.
+        include-hidden-files: true
+        path: |
+          BOSL2.wiki
+          !BOSL2.wiki/.git
+          !BOSL2.wiki/.git/**
 
   PublishToWiki:
     needs: RegenerateTutorials
@@ -73,8 +84,35 @@ jobs:
         path: BOSL2.wiki
 
     - name: Upload Tutorials to Wiki
-      uses: SwiftDocOrg/github-wiki-publish-action@v1
-      with:
-        path: "BOSL2.wiki"
       env:
-        GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PAT }}
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        # Not SwiftDocOrg/github-wiki-publish-action: its entrypoint copies
+        # only `find "$path" -maxdepth 1 -type f -name '*.md'`, so it has
+        # never published an image or anything in a subdirectory. Every run
+        # looked successful and pushed markdown alone, which is why the
+        # wiki's images were still the ones from before BelfrySCAD rendered
+        # them.
+        #
+        # A wiki is an ordinary git repo, so this just is one: clone, mirror
+        # the generated tree over it, commit, push. rsync --delete makes the
+        # wiki match what was generated, which also retires an image whose
+        # example was removed or marked NORENDER -- the action could not do
+        # that either.
+        set -euo pipefail
+        wiki=$(mktemp -d)
+        git clone --depth 1 \
+          "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$wiki"
+        rsync -a --delete --exclude '.git/' BOSL2.wiki/ "$wiki"/
+        cd "$wiki"
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A
+        if git diff --cached --quiet; then
+          echo "Wiki already matches the generated docs; nothing to publish."
+          exit 0
+        fi
+        git commit -m "Update tutorials from ${GITHUB_SHA:0:8}"
+        git push origin HEAD:master
+        echo "Published:"
+        git show --stat --oneline HEAD | tail -5
