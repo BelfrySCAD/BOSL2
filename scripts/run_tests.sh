@@ -14,7 +14,10 @@ if (( ${#INFILES[@]} == 0 )); then
     INFILES=(tests/test_*.scadtest)
 fi
 
-if command -v belfryscad > /dev/null 2>&1; then
+# `--test` needs belfryscad 1.2.0 or newer. An older one ignores the flag
+# rather than rejecting it and tries to open the .scadtest files in the GUI,
+# so check for the subcommand rather than just the binary.
+if command -v belfryscad > /dev/null 2>&1 && belfryscad --test --help > /dev/null 2>&1; then
     belfryscad --test "${INFILES[@]}"
 else
     echo "belfryscad not found; falling back to openscad-test." >&2

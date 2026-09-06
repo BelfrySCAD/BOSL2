@@ -21,8 +21,17 @@ jobs:
     # 909 tests pass on BelfrySCAD's evaluator, and run several times faster
     # in-process than openscad-test's process-per-test. No GL libraries: the
     # tests execute scripts and check echoes, and nothing renders.
+    # Version-pinned deliberately. `--test` arrived in 1.2.0, and an older
+    # belfryscad does not reject the flag -- it parses the command line with
+    # parse_known_args, ignores what it does not know, and treats the
+    # .scadtest files as a model to open, launching the GUI. That is exactly
+    # what happened the first time this job ran: pip picked up 1.0.7 because
+    # 1.2.0 was minutes old and had not reached that runner's index yet, and
+    # the failure surfaced as an unrelated `libEGL.so.1: cannot open shared
+    # object file` from Qt. Pinning turns that into a resolver error naming
+    # the real problem.
     - name: Install BelfrySCAD
-      run: pip install belfryscad
+      run: pip install 'belfryscad>=1.2.0'
 
     - name: Run Regression Tests
       run: |
