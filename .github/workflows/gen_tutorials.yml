@@ -57,8 +57,22 @@ jobs:
         name: bosl2-wiki-tutorials
         path: BOSL2.wiki
 
+  PublishToWiki:
+    needs: RegenerateTutorials
+    if: ${{ inputs.publish_to_wiki }}
+    # Linux, not macOS: SwiftDocOrg/github-wiki-publish-action is a Docker
+    # action, and GitHub runs container actions on Linux runners only --
+    # "Container action is only supported on Linux". The render job stays on
+    # macOS for its GL; this job only moves files, so the runner is free.
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fetch the generated docs
+      uses: actions/download-artifact@v7
+      with:
+        name: bosl2-wiki-tutorials
+        path: BOSL2.wiki
+
     - name: Upload Tutorials to Wiki
-      if: ${{ inputs.publish_to_wiki }}
       uses: SwiftDocOrg/github-wiki-publish-action@v1
       with:
         path: "BOSL2.wiki"
