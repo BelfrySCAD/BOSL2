@@ -31,7 +31,7 @@ jobs:
     # object file` from Qt. Pinning turns that into a resolver error naming
     # the real problem.
     - name: Install BelfrySCAD
-      run: pip install 'belfryscad>=1.2.0'
+      run: pip install 'belfryscad>=1.2.1'
 
     - name: Run Regression Tests
       run: |
