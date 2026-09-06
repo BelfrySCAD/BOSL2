@@ -1,10 +1,15 @@
-# Full documentation build, rendered by BelfrySCAD's own evaluator rather
-# than by launching the OpenSCAD binary once per image.
+# Rebuilds every image in the wiki from scratch, rendered by BelfrySCAD's
+# own evaluator rather than by launching the OpenSCAD binary once per image.
 #
-# This is the render-everything counterpart to the Checks workflow's
-# CheckDocs job, which runs the same tool with -T (execute every script,
-# generate no images).
-name: Regenerate Docs
+# The forced counterpart to Update Docs Wiki, which re-renders only the
+# sources whose hash changed. Reach for this when the images must be rebuilt
+# for a reason the source hashes cannot see: a change in BelfrySCAD's
+# renderer or evaluator, a colour-scheme change, or a wiki that has drifted
+# and needs to be made consistent again. Costs a full ~35 minutes every time.
+#
+# Never triggered by a release -- a release publishes the library, and
+# Update Docs Wiki is enough to describe it.
+name: Regenerate Docs Wiki
 
 on:
   workflow_dispatch:
@@ -15,7 +20,7 @@ on:
         default: true
 
 jobs:
-  RegenerateDocs:
+  RegenerateDocsWiki:
     # macOS for a real GL implementation. This job actually renders; on
     # Linux the offscreen renderer falls back to EGL against software Mesa,
     # which is slower and one more way for CI output to differ from what a
@@ -61,7 +66,7 @@ jobs:
         path: BOSL2.wiki
 
   PublishToWiki:
-    needs: RegenerateDocs
+    needs: RegenerateDocsWiki
     if: ${{ inputs.publish_to_wiki }}
     # Linux, not macOS: SwiftDocOrg/github-wiki-publish-action is a Docker
     # action, and GitHub runs container actions on Linux runners only --
