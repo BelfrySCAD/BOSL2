@@ -137,7 +137,7 @@ function _str_find_all(str, pattern) =
     : m==1 ? candidates
     : [ for(p = candidates)
         if (str[p+m-1] == pattern[m-1]) // test last char in pattern before rest of pattern
-            if(m==2 || _substr_match_recurse(str,p,pattern,m-2,1)) p ];
+            if(m==2 || _substr_match_recurse(str,p+1,pattern,m-2,1)) p ];
 
 
 
@@ -380,8 +380,6 @@ function str_pad(str,length,char=" ",left=false) =
 //   Replace every occurence of `search` in the input string
 //   with the string `replace`, which can be any string.
 //   .
-//   If replacing all occurrences of one character, it is much more efficient
-//   to use {{str_replace_char()}}, which can be an order of magnitude faster.
 // Arguments:
 //   str = string to process
 //   search = single character string to search for
@@ -389,13 +387,37 @@ function str_pad(str,length,char=" ",left=false) =
 // Example:
 //   s1 = str_replace_char("abcdefgabcdefg","bc","XYZ");     // Returns: "aXYZdefgaXYZdefg"
 
+/// Tested to be 2 orders of magnitude faster than using a version with substr().
 function str_replace(str, search, replace) =
-    assert(is_string(str) && is_string(search) && is_string(replace), "\nAll arguments of str_replace() must be strings.")
-    len(search) == 0 ? str
-     : let(pos = str_find(str, search))
-        pos == undef ? str : str(substr(str, 0, pos), replace,
-            str_replace(substr(str, pos + len(search)), search, replace));
-
+    assert(is_string(str) && is_string(search) && is_string(replace),
+        "\nAll arguments of str_replace() must be strings.")
+    let(sn = len(search))
+    sn == 0 ? str
+    : let(
+        n       = len(str),
+        pos_all = str_find(str, search, all=true), // all=true forces use of internal OpenSCAD search() for efficiency
+        np1 = len(pos_all)
+    ) np1 == 0 ? str
+    : let(
+        pos = [
+            for (j = 0, last_end = 0;
+                 j < np1;
+                 last_end = (pos_all[j] >= last_end) ? pos_all[j] + sn : last_end,
+                 j = j + 1)
+                if (pos_all[j] >= last_end) pos_all[j]
+        ],
+        np = len(pos),
+        rcodes = [for (c = replace) ord(c)], // manipulate a list rather than a string
+        codes = [ // build out a list
+            for (i = 0, mi = 0, matched = (0 < np && pos[0] == 0);
+                 i < n;
+                 mi      = matched ? mi + 1 : mi,
+                 i       = matched ? i + sn  : i + 1,
+                 matched = (mi < np && pos[mi] == i))   // uses the just-updated mi, i
+                if (matched) each rcodes
+                else ord(str[i])
+        ]
+    ) chr(codes); // quick conversion of unicode list back to a string
 
 
 // Function: str_replace_char()
