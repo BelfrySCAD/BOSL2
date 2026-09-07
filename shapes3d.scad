@@ -1024,7 +1024,7 @@ function regular_prism(n,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
     tex_inset=false, tex_rot=0,
-    tex_depth, tex_samples, length, height, 
+    tex_depth, tex_samples,
     tex_taper, style,
     anchor, spin=0, orient=UP,_return_anchors=false
 ) = 
