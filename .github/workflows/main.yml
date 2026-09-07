@@ -10,20 +10,28 @@ jobs:
     timeout-minutes: 20
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Install Required Libraries
-      run: sudo apt-get install libfuse2
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
 
-    - name: Install OpenSCAD
-      run: |
-        cd $GITHUB_WORKSPACE
-        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
-        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
-        sudo chmod +x /usr/local/bin/openscad
-
-    - name: Install openscad-test
-      run: pip install openscad-test
+    # The last job in this repo that downloaded the OpenSCAD AppImage. All
+    # 909 tests pass on BelfrySCAD's evaluator, and run several times faster
+    # in-process than openscad-test's process-per-test. No GL libraries: the
+    # tests execute scripts and check echoes, and nothing renders.
+    # Version-pinned deliberately. `--test` arrived in 1.2.0, and an older
+    # belfryscad does not reject the flag -- it parses the command line with
+    # parse_known_args, ignores what it does not know, and treats the
+    # .scadtest files as a model to open, launching the GUI. That is exactly
+    # what happened the first time this job ran: pip picked up 1.0.7 because
+    # 1.2.0 was minutes old and had not reached that runner's index yet, and
+    # the failure surfaced as an unrelated `libEGL.so.1: cannot open shared
+    # object file` from Qt. Pinning turns that into a resolver error naming
+    # the real problem.
+    - name: Install BelfrySCAD
+      run: pip install 'belfryscad>=1.2.1'
 
     - name: Run Regression Tests
       run: |
@@ -35,7 +43,7 @@ jobs:
     timeout-minutes: 5
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Check Function Test Coverage
       run: |
@@ -60,29 +68,24 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Clone Wiki
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
-    - name: Apt Update
-      run: sudo apt update
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
 
-    - name: Install Required Libraries
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil libfuse2
-
-    - name: Install OpenSCAD-DocsGen package.
-      run: sudo pip3 install openscad-docsgen imageio
-
-    - name: Install OpenSCAD
-      run: |
-        cd $GITHUB_WORKSPACE
-        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
-        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
-        sudo chmod +x /usr/local/bin/openscad
+    # Same swap as CheckDocs below, and same reason there are no GL
+    # libraries: --mdimggen -T executes every code block but writes no
+    # images, so the renderer is never imported.
+    - name: Install BelfrySCAD
+      run: pip install belfryscad
 
     - name: Tabs Check
       run: |
@@ -95,40 +98,59 @@ jobs:
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-mdimggen -T
+        belfryscad --mdimggen -T
 
   CheckDocs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # macOS for speed, not for GL: -T renders nothing, so this job needs no
+    # display libraries and the runner is a free choice. Free for
+    # correctness, that is -- it is not free for time, which is what the
+    # numbers say:
+    #
+    #   ubuntu, -Tmf, no images:  30, 36, 45, 45, 46, 47 minutes
+    #   macOS,  -f,   ALL images: 35, 38, 40 minutes
+    #
+    # The mac does MORE work and still finishes sooner. Rendering the images
+    # costs about 11% (34.9s -> 38.9s on one file, one machine); the runner
+    # gap is larger than that. The dominant cost in both is parsing every
+    # script and evaluating every example, which -T does not avoid.
+    #
+    # The spread matters as much as the median: ubuntu ranged 30-47 minutes
+    # for identical work, macOS 35-40. Shared Linux VMs against near-dedicated
+    # mac hardware.
+    #
+    # 75 minutes stays until a few mac runs have been timed here.
+    runs-on: macos-latest
+    timeout-minutes: 75
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Clone Wiki
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
-    - name: Apt Update
-      run: sudo apt update
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
 
-    - name: Install Required Libraries
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil libfuse2
-
-    - name: Install OpenSCAD-DocsGen package.
-      run: sudo pip3 install openscad-docsgen imageio
-
-    - name: Install OpenSCAD
-      run: |
-        cd $GITHUB_WORKSPACE
-        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
-        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
-        sudo chmod +x /usr/local/bin/openscad
+    # BelfrySCAD replaces openscad-docsgen AND the OpenSCAD binary: it
+    # takes the same options and emits the same markdown, but runs
+    # Examples and Figures through its own evaluator. So no AppImage and
+    # no libfuse2.
+    #
+    # No GL libraries either. -T executes every script but generates no
+    # images, and the renderer is imported lazily at the point an image
+    # would be written, so a test-only run loads neither moderngl nor
+    # PySide6. The full-render workflow does need them.
+    - name: Install BelfrySCAD
+      run: pip install belfryscad
 
     - name: Checking Docs
       run: |
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-docsgen -Tmf
+        belfryscad --docsgen -Tmf
