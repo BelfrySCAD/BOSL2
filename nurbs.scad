@@ -1878,8 +1878,8 @@ function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knot
                 : abs(dist)
     )
     total <= eps ? assert(abs(dist) <= eps, "nurbs_find_u: curve has zero length") start_u
-  : target <= eps ? start_u
-  : type!="closed" && target >= total - eps ? (forward ? 1 : 0)
+  : approx(target,0,eps) ? start_u
+  : type!="closed" && approx(target, total, eps) ? (forward ? 1 : 0)
   : assert(type=="closed" || target <= total + eps,
            str("nurbs_find_u: requested distance ",dist," exceeds the available curve length ",total," from start_u=",start_u))
     let(
