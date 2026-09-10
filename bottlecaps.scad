@@ -551,6 +551,10 @@ function generic_bottle_neck(
 // Description:
 //   Creates a basic threaded cap given specifications. You must give exactly two of `thread_od`, `neck_od` and `thread_depth` to
 //   specify the thread geometry. Most glass bottles conform to the SPI standard and caps for them may be more easily produced using {{sp_cap()}}.
+//   .
+//   Plastic bottle necks often use multi-start threads, which you can create by setting `starts` to the number of
+//   thread starts. The starts are spaced evenly around the cap, and `pitch` remains the axial distance between
+//   adjacent threads, so the lead (the axial travel of one revolution) is `pitch * starts`.
 // Arguments:
 //   wall = Wall thickness.  Default: 2
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
@@ -562,6 +566,7 @@ function generic_bottle_neck(
 //   tolerance = Extra space to add to the outer diameter of threads and neck. Applied to radius. Default: 0.2
 //   flank_angle = Angle of taper on threads. Default: 15
 //   pitch = Thread pitch. Default: 2.7
+//   starts = Number of thread starts. Default: 1
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -571,6 +576,7 @@ function generic_bottle_neck(
 //   generic_bottle_cap(thread_depth=2,neck_od=INCH,height=INCH/2);
 //   generic_bottle_cap(texture="knurled",neck_od=25,thread_od=30,height=10);
 //   generic_bottle_cap(texture="ribbed",thread_depth=3,thread_od=25,height=13);
+//   generic_bottle_cap(texture="knurled",neck_od=34.7,thread_od=37.1,height=9,pitch=3.14,starts=2);
 module generic_bottle_cap(
     wall = 2,
     texture = "none",
@@ -581,6 +587,7 @@ module generic_bottle_cap(
     neck_od,
     flank_angle = 15,
     pitch = 2.7,
+    starts = 1,
     anchor = BOTTOM,
     spin = 0,
     orient = UP
@@ -611,7 +618,8 @@ module generic_bottle_cap(
             }
             up(wall + pitch / 2) {
                 thread_helix(d = neckOuterDTol+.02, pitch = pitch, thread_depth = thread_depth+.01, flank_angle = flank_angle,
-                    turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
+                    starts = starts, turns = ((height - pitch) / (pitch * starts)), lead_in = -thread_depth,
+                    internal = true, anchor = BOTTOM);
             }
         }
         children();
@@ -621,7 +629,7 @@ module generic_bottle_cap(
 function generic_bottle_cap(
     wall, texture, height,
     thread_od, tolerance,
-    neck_od, flank_angle, pitch,
+    neck_od, flank_angle, pitch, starts,
     anchor, spin, orient
 ) = no_function("generic_bottle_cap");
 
