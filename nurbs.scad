@@ -20,6 +20,131 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 
 // Section: NURBS Curves
 
+// Private helper: compute the internal control list, multiplicities,
+// expanded knot vector, and public-u domain mapping used by nurbs_curve().
+// Returns [control2, mult2, knot2, bound].
+function _nurbs_param_info(control, degree, mult, type="clamped", knots) =
+    let(
+        uniform = is_undef(knots),
+        dum = assert(in_list(type, ["closed","open","clamped"]), str("Unknown nurbs spline type: ", type))
+              assert(type=="closed" || len(control)>=degree+1, str(type," nurbs requires at least degree+1 control points"))
+              assert(is_undef(mult) || is_vector(mult), "mult must be a vector")
+              0,
+        badmult = is_undef(mult) ? []
+                : [for(i=idx(mult)) if (!(
+                                            is_int(mult[i])
+                                              && mult[i]>0
+                                              && (mult[i]<=degree
+                                                   || (type!="closed"
+                                                       && mult[i]==degree+1
+                                                       && (i==0 || i==len(mult)-1)
+                                                      )
+                                                 )
+                                           )) i],
+        dummy0 = assert(badmult==[], str("mult vector should contain positive integers no larger than the degree, except at ends of open splines, ",
+                                         "where degree+1 is allowed.  The mult vector has bad values at indices: ",badmult))
+                 assert(is_undef(knots) || is_undef(mult) || len(mult)==len(knots), "If both mult and knots are given they must be vectors of the same length")
+                 assert(is_undef(mult) || type!="clamped" || sum(mult)==len(control)-degree+1,
+                        str("For clamped spline knot count (sum of multiplicity vector) must be ",len(control)-degree+1," but is instead ",
+                            is_undef(mult)?0:sum(mult)))
+                 assert(is_undef(mult) || type!="closed" || sum(mult)==len(control)+1,
+                        str("For closed spline knot count (sum of multiplicity vector) must be ",len(control)+1," but is instead ",
+                            is_undef(mult)?0:sum(mult)))
+                 assert(is_undef(mult) || type!="open" || sum(mult)==len(control)+degree+1,
+                        str("For open spline knot count (sum of multiplicity vector) must be ",len(control)+degree+1," but is instead ",
+                            is_undef(mult)?0:sum(mult)))
+                 assert(uniform || is_increasing(knots), "Knot vector must be increasing")
+                 0,
+        control2 = type=="open" ? control
+                 : type=="clamped" ? control
+                 : concat(control, select(control,count(degree))),
+        mult2 = !uniform ? mult
+              : type=="clamped" ? assert(is_undef(mult) || mult[0]==1 && last(mult)==1,"For clamped b-splines, first and last multiplicity must be 1")
+                                  [degree+1,each slice(default(mult, repeat(1,len(control2)-degree+1)),1,-2),degree+1]
+              : is_undef(mult) ? repeat(1,len(control2)+degree+1)
+              : type=="open" ? mult
+              : let(
+                    lastmult = last(mult)+mult[0]-1,
+                    dummy=assert(lastmult<=degree, "For closed spline, first and last knot multiplicity cannot total more than the degree+1"),
+                    adjlast = [each select(mult,0,-2), lastmult]
+                )
+                _extend_knot_mult(adjlast,1,len(control2)+degree+1),
+        // IMPORTANT: this must use mult2, not the raw input mult.
+        knot2 = uniform && is_undef(mult2) ? lerpn(0,1,len(control2)+degree+1)
+              : uniform ? [for(i=idx(mult2)) each repeat(i/(len(mult2)-1),mult2[i])]
+              : let(
+                    xknots = is_undef(mult2)? knots
+                           : assert(len(mult2) == len(knots), "Knot vector and mult vector must be the same length")
+                             [for(i=idx(mult2)) each repeat(knots[i], mult2[i])]
+                )
+                type=="open" ? assert(len(xknots)==len(control2)+degree+1, str("For open spline, knot vector with multiplicity must have length ",
+                                                                        len(control2)+degree+1," but has length ", len(xknots)))
+                               xknots
+              : type=="clamped" ? assert(len(xknots) == len(control2)+1-degree, str("For clamped spline of degree ",degree,", knot vector with multiplicity must have length ",
+                                                                        len(control2)+1-degree," but has length ", len(xknots)))
+                                  assert(xknots[0]!=xknots[1] && last(xknots)!=select(xknots,-2),
+                                         "For clamped spline, first and last knots cannot repeat (must have multiplicity one)")
+                                  concat(repeat(xknots[0],degree), xknots, repeat(last(xknots),degree))
+              : assert(len(xknots) == len(control2)+1-degree,  str("For closed spline, knot vector (including multiplicity) must have length ",
+                                                                    len(control2)+1-degree," but has length ", len(xknots),control2))
+                let(gmult=_calc_mult(xknots))
+                assert(gmult[0]+last(gmult)<=degree+1, "For closed spline, first and last knot multiplicity together cannot total more than the degree+1")
+                _extend_knot_vector(xknots,0,len(control2)+degree+1),
+        bound = type=="clamped" ? undef
+              : [knot2[degree], knot2[len(control2)]]
+    )
+    [control2, mult2, knot2, bound];
+
+
+
+
+// Private helper: return the public-u breakpoints from _nurbs_param_info().
+function _nurbs_breaks(degree, pinfo) =
+    let(
+        control = pinfo[0],
+        knot    = pinfo[2],
+        bound   = pinfo[3],
+        tvals   = [
+            for (i=[degree:1:len(control)-1])
+                if (!approx(knot[i],knot[i+1])) knot[i],
+            knot[len(control)]
+        ]
+    )
+    is_undef(bound) ? tvals
+  : [for (t=tvals) (t-bound[0])/(bound[1]-bound[0])];
+
+
+// Function: nurbs_curve_breaks()
+// Synopsis: Returns the parameter-space breakpoints of a NURBS curve.
+// Topics: NURBS Curves
+// See Also: nurbs_curve(), nurbs_length()
+// Usage:
+//   breaks = nurbs_curve_breaks(control, degree, [mult=], [type=], [knots=]);
+//   breaks = nurbs_curve_breaks(nurbs_param_list);
+// Description:
+//   Returns the breakpoints of the curve in the public `u` parameter space `[0,1]`.
+//   These are the parameter values where knot spans meet.  For `type="closed"` both
+//   `0` and `1` are returned; they represent the same geometric point at the seam.
+// Arguments:
+//   control = list of control points in any dimension or a NURBS parameter list
+//   degree = degree of NURBS
+//   ---
+//   mult = list of multiplicities of the knots.  Default: all 1
+//   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
+//   knots = List of knot values.  Default: uniform
+// Example(2D,NoAxes): Show the breakpoints of a curve in parameter space
+//   pts = [[13,43],[30,52],[49,22],[24,3]];
+//   echo(nurbs_curve_breaks(pts, 2));
+function nurbs_curve_breaks(control, degree, mult, type="clamped", knots) =
+    is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
+       assert(len(control)>=6, "Invalid NURBS parameter list")
+       assert(num_defined([degree,mult,knots])==0,
+              "Cannot give degree, mult or knots when you provide a NURBS parameter list")
+       nurbs_curve_breaks(control[2], control[1], mult=control[4], type=control[0], knots=control[3])
+  : _nurbs_breaks(degree, _nurbs_param_info(control, degree, mult, type, knots));
+
+
+
 // Function: nurbs_curve()
 // Synopsis: Computes one or more points (or derivatives) on a NURBS curve.
 // SynTags: Path
@@ -242,7 +367,7 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   tang = nurbs_curve(pts,2,mult=mult,u=3/7,deriv=1,two_sided=true);
 //   color("red") stroke([corner-15*unit(tang[0]), corner], endcap2="arrow2", width=1);
 //   color("blue") stroke([corner, corner+15*unit(tang[1])], endcap2="arrow2", width=1);
-
+                     
 function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots,deriv=0,two_sided=false,close_loop=false) =
     let(
         splinesteps = !any_defined([splinesteps,u]) ? 16 : splinesteps
@@ -274,10 +399,6 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                  str("Derivative order exceeds curve degree ",degree))
                           let(
                                max_d   = is_list(deriv) ? max(deriv) : deriv,
-                               // Request both one-sided homogeneous derivatives so the geometric
-                               // left/right derivatives can be formed at points where the curve
-                               // may not be differentiable.  Entries of hderivs[k] for k>=1 are
-                               // singletons [v] or pairs [left,right]; hderivs[0] is plain points.
                                hderivs = nurbs_curve(hctrl, degree, u=u, splinesteps=splinesteps,
                                                      mult=mult, knots=knots, type=type,
                                                      deriv=[for(k=[0:1:max_d]) k], two_sided=true, close_loop=close_loop),
@@ -302,31 +423,12 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                               [for(i=[0:1:n_u-1]) _sided_out(geo_lr[i][0][deriv], geo_lr[i][1][deriv], deriv, two_sided)]
   :
     let(
-         uniform = is_undef(knots), 
-         dum=assert(in_list(type, ["closed","open","clamped"]), str("Unknown nurbs spline type: ", type))
-             assert(type=="closed" || len(control)>=degree+1, str(type," nurbs requires at least degree+1 control points"))
-             assert(is_undef(mult) || is_vector(mult), "mult must be a vector"),
-         badmult = is_undef(mult) ? []
-                 : [for(i=idx(mult)) if (!(
-                                            is_int(mult[i])
-                                              && mult[i]>0
-                                              && (mult[i]<=degree
-                                                   || (type!="closed"
-                                                       && mult[i]==degree+1
-                                                       && (i==0 || i==len(mult)-1)
-                                                      )
-                                                 )
-                                           )) i],
-         dummy0 = assert(badmult==[], str("mult vector should contain positive integers no larger than the degree, except at ends of open splines, ",
-                                          "where degree+1 is allowed.  The mult vector has bad values at indices: ",badmult))
-                  assert(is_undef(knots) || is_undef(mult) || len(mult)==len(knots), "If both mult and knots are given they must be vectors of the same length")
-                  assert(is_undef(mult) || type!="clamped" || sum(mult)==len(control)-degree+1,
-                         str("For clamped spline knot count (sum of multiplicity vector) must be ",len(control)-degree+1," but is instead ",mult?sum(mult):0))
-                  assert(is_undef(mult) || type!="closed" || sum(mult)==len(control)+1,
-                         str("For closed spline knot count (sum of multiplicity vector) must be ",len(control)+1," but is instead ",mult?sum(mult):0))
-                  assert(is_undef(mult) || type!="open" || sum(mult)==len(control)+degree+1,
-                         str("For open spline knot count (sum of multiplicity vector) must be ",len(control)+degree+1," but is instead ",mult?sum(mult):0))
-                  assert(uniform || is_increasing(knots), "Knot vector must be increasing"),
+         uniform = is_undef(knots),
+         pinfo   = _nurbs_param_info(control, degree, mult, type, knots),
+         control = pinfo[0],
+         mult    = pinfo[1],
+         knot    = pinfo[2],
+         bound   = pinfo[3],
          dummy_deriv = is_list(deriv) ?
              assert(min(deriv)>=0, "Derivative orders must be non-negative")
              assert(max(deriv)<=degree, str("Maximum derivative order ",max(deriv)," exceeds curve degree ",degree))
@@ -335,48 +437,6 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
              assert(deriv>=0, "Derivative order must be non-negative")
              assert(deriv<=degree, str("Derivative order ",deriv," exceeds curve degree ",degree))
              0 : 0,
-         control = type=="open" ? control
-                 : type=="clamped" ? control  //concat(repeat(control[0], degree),control, repeat(last(control),degree))
-                 : /*type=="closed"*/ concat(control, select(control,count(degree))),
-         mult = !uniform ? mult
-              : type=="clamped" ? assert(is_undef(mult) || mult[0]==1 && last(mult)==1,"For clamped b-splines, first and last multiplicity must be 1")
-                                  [degree+1,each slice(default(mult, repeat(1,len(control)-degree+1)),1,-2),degree+1]
-              : is_undef(mult) ? repeat(1,len(control)+degree+1)
-              : type=="open" ? mult
-              : /* type=="closed" */
-                let(   // Closed spline requires that we identify first and last knots and then step at same
-                       // interval spacing periodically through the knot vector.  This means we pick up the first
-                       // multiplicity minus 1 and have to add it to the last multiplicity.  
-                     lastmult = last(mult)+mult[0]-1,
-                     dummy=assert(lastmult<=degree, "For closed spline, first and last knot multiplicity cannot total more than the degree+1"),
-                     adjlast = [
-                                 each select(mult,0,-2),
-                                 lastmult
-                               ]
-                )
-                _extend_knot_mult(adjlast,1,len(control)+degree+1),
-         knot = uniform && is_undef(mult) ? lerpn(0,1,len(control)+degree+1)
-              : uniform ? [for(i=idx(mult)) each repeat(i/(len(mult)-1),mult[i])]
-              : let(
-                    xknots = is_undef(mult)? knots
-                           : assert(len(mult) == len(knots), "Knot vector and mult vector must be the same length")
-                             [for(i=idx(mult)) each repeat(knots[i], mult[i])]
-                )
-                type=="open" ? assert(len(xknots)==len(control)+degree+1, str("For open spline, knot vector with multiplicity must have length ",
-                                                                        len(control)+degree+1," but has length ", len(xknots)))
-                               xknots
-              : type=="clamped" ? assert(len(xknots) == len(control)+1-degree, str("For clamped spline of degree ",degree,", knot vector with multiplicity must have length ",
-                                                                        len(control)+1-degree," but has length ", len(xknots)))
-                                  assert(xknots[0]!=xknots[1] && last(xknots)!=select(xknots,-2),
-                                         "For clamped spline, first and last knots cannot repeat (must have multiplicity one)")
-                                  concat(repeat(xknots[0],degree), xknots, repeat(last(xknots),degree))
-              : /*type=="closed"*/ assert(len(xknots) == len(control)+1-degree,  str("For closed spline, knot vector (including multiplicity) must have length ",
-                                                                        len(control)+1-degree," but has length ", len(xknots),control))
-                                 let(gmult=_calc_mult(xknots))
-                                 assert(gmult[0]+last(gmult)<=degree+1, "For closed spline, first and last knot multiplicity together cannot total more than the degree+1")
-                                 _extend_knot_vector(xknots,0,len(control)+degree+1),
-         bound = type=="clamped" ? undef
-               : [knot[degree], knot[len(control)]],
          adjusted_u_orig = !is_undef(splinesteps) ?
                               [for(i=[degree:1:len(control)-1])
                                 each
@@ -390,7 +450,6 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                       let(ind = sortidx(adjusted_u_orig))
                       [ind,sortidx(ind)]
                  : false,
-         // The u list needs to be sorted for the algorithm to identify the knot spans, so sort it if necessary
          adjusted_u = reorder ? select(adjusted_u_orig,reorder[0]) : adjusted_u_orig,
          nurbs_pts =
                    deriv != 0 ?
@@ -424,13 +483,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                               )
                               if (is_def(output)) output]
                        )
-                       // Chain rule: t = bound[0] + (bound[1]-bound[0])*u, so
-                       // d^k/du^k = (bound[1]-bound[0])^k * d^k/dt^k.
-                       // For clamped, bound=undef and the mapping is identity (no scaling needed).
                        let(
-                           // Knot-run info for every evaluation point: [first_index, multiplicity]
-                           // when the point lies (approx) on a knot, undef otherwise.  Used to
-                           // detect points where the requested derivative order may not exist.
                            runinfo = [for(uval=adjusted_u) _knot_run_info(knot, uval)]
                        )
                        is_list(deriv) ?
@@ -445,7 +498,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                                   degree, type, scale, two_sided)
                                ]
                            ]
-                       : // integer deriv > 0: flat list of derivative entries
+                       :
                          let(scale = is_undef(bound) ? 1 : pow(bound[1]-bound[0], deriv))
                          [for(i=idx(adjusted_u))
                              let(base = scale * _nurbs_eval_deriv(knot,
@@ -499,8 +552,6 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
          !reorder ? nurbs_pts
          : !is_list(deriv) ? select(nurbs_pts,reorder[1])
          : [for(dr=nurbs_pts) select(dr,reorder[1])];
-
-
        
 
 function _nurbs_pt(knot, control, u, r, p, k) = 
@@ -1531,6 +1582,311 @@ function nurbs_elevate_degree(control, degree, knots=undef,
     times == 1
     ? [type, r[2], r[0], new_knots, undef, undef]
     : nurbs_elevate_degree(r[0], r[2], new_knots, type=type, times=times-1);
+
+
+// Length is the integral of speed ||C'(u)|| over the public u-domain.
+// We first split the requested interval at knot-span boundaries so each
+// integration interval is smooth and quadrature never samples exactly at a knot.
+// On each subinterval we compare 3-point and 5-point Gauss-Legendre rules
+// and subdivide only where the two estimates differ beyond tolerance.
+
+function _nurbs_speed_at_u(degree, pinfo, u, dim=undef) =
+    let(
+        control = pinfo[0],
+        knot    = pinfo[2],
+        bound   = pinfo[3],
+        t       = is_undef(bound) ? u : bound[0] + (bound[1]-bound[0]) * u,
+        scale   = is_undef(bound) ? 1 : (bound[1]-bound[0]),
+        k       = _find_span(t, knot),
+        dummy   = assert(!is_undef(k), "nurbs_length: u is outside the valid parameter domain"),
+        local   = select(control, k-degree, k)
+    )
+    is_undef(dim) ?
+        norm(scale * _nurbs_eval_deriv(knot, local, t, k, degree, 1))
+  : let(
+        Aw0   = _nurbs_eval_deriv(knot, local, t, k, degree, 0),
+        Aw1   = scale * _nurbs_eval_deriv(knot, local, t, k, degree, 1),
+        Cders = _rational_derivs_at_u([Aw0, Aw1], dim, 1)
+    )
+    norm(Cders[1]);
+
+
+function _nurbs_length_gl3(degree, pinfo, a, b, dim=undef) =
+    let(
+        m  = (a+b)/2,
+        h  = (b-a)/2,
+        x1 = 0.7745966692414834,
+        w1 = 0.5555555555555556,
+        w0 = 0.8888888888888888
+    )
+    h * (
+        w1 * (
+            _nurbs_speed_at_u(degree, pinfo, m-h*x1, dim) +
+            _nurbs_speed_at_u(degree, pinfo, m+h*x1, dim)
+        ) +
+        w0 * _nurbs_speed_at_u(degree, pinfo, m, dim)
+    );
+
+
+function _nurbs_length_gl5(degree, pinfo, a, b, dim=undef) =
+    let(
+        m  = (a+b)/2,
+        h  = (b-a)/2,
+        x1 = 0.9061798459386640,
+        x2 = 0.5384693101056831,
+        w1 = 0.2369268850561891,
+        w2 = 0.4786286704993665,
+        w0 = 0.5688888888888889
+    )
+    h * (
+        w1 * (
+            _nurbs_speed_at_u(degree, pinfo, m-h*x1, dim) +
+            _nurbs_speed_at_u(degree, pinfo, m+h*x1, dim)
+        ) +
+        w2 * (
+            _nurbs_speed_at_u(degree, pinfo, m-h*x2, dim) +
+            _nurbs_speed_at_u(degree, pinfo, m+h*x2, dim)
+        ) +
+        w0 * _nurbs_speed_at_u(degree, pinfo, m, dim)
+    );
+
+
+function _nurbs_length_adapt(degree, pinfo, a, b, tol, maxdepth, dim=undef) =
+    a >= b ? 0
+  : let(
+        i3  = _nurbs_length_gl3(degree, pinfo, a, b, dim),
+        i5  = _nurbs_length_gl5(degree, pinfo, a, b, dim),
+        err = abs(i5 - i3),
+        m   = (a+b)/2
+    )
+    (maxdepth <= 0 || err <= tol * (1 + abs(i5)))
+      ? i5
+      : _nurbs_length_adapt(degree, pinfo, a, m, tol/2, maxdepth-1, dim)
+      + _nurbs_length_adapt(degree, pinfo, m, b, tol/2, maxdepth-1, dim);
+
+
+function _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim=undef) =
+    let(
+        breaks   = _nurbs_breaks(degree, pinfo),
+        cuts     = [start_u,
+                    each [for (b=breaks) if (b>start_u && b<end_u) b],
+                    end_u],
+        npieces  = len(cuts)-1,
+        piece_tol = tol / max(1, npieces)
+    )
+    npieces <= 0 ? 0
+  : sum([
+        for (i=[0:1:npieces-1])
+            _nurbs_length_adapt(degree, pinfo, cuts[i], cuts[i+1], piece_tol, maxdepth, dim)
+    ]);
+
+
+// Function: nurbs_length()
+// Synopsis: Approximates the arc length of a NURBS curve.
+// Topics: NURBS Curves
+// See Also: nurbs_curve(), nurbs_curve_breaks()
+// Usage:
+//   len = nurbs_length(control, degree, [mult=], [weights=], [type=], [knots=], [start_u=], [end_u=], [tol=], [maxdepth=]);
+//   len = nurbs_length(nurbs_param_list, [start_u=], [end_u=], [tol=], [maxdepth=]);
+// Description:
+//   Approximates the length of the curve between `start_u` and `end_u`.
+//   For closed curves, if `end_u < start_u` the length wraps across the seam.
+// Arguments:
+//   control = list of control points in any dimension or a NURBS parameter list
+//   degree = degree of NURBS
+//   ---
+//   mult = list of multiplicities of the knots.  Default: all 1
+//   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
+//   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
+//   knots = List of knot values.  Default: uniform
+//   start_u = start of the interval in [0,1].  Default: 0
+//   end_u = end of the interval in [0,1].  Default: 1
+//   tol = requested numerical tolerance controlling adaptive refinement.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final arc-length error.  Default: 1e-6
+//   maxdepth = maximum adaptive subdivision depth.  Default: 10
+// Example(2D,NoAxes): Compute the length of a curve
+//   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   echo(nurbs_length(control, 2));
+// Example(2D,NoAxes): Partial length on a closed curve
+//   pts = [[13,43],[30,52],[49,22],[24,3]];
+//   echo(nurbs_length(pts, 2, type="closed", start_u=0.75, end_u=0.25));
+function nurbs_length(control, degree, mult, weights, type="clamped", knots,
+                      start_u=0, end_u=1, tol=1e-6, maxdepth=10) =
+    is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
+       assert(len(control)>=6, "Invalid NURBS parameter list")
+       assert(num_defined([degree,mult,weights,knots])==0,
+              "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
+       nurbs_length(control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
+                    start_u=start_u, end_u=end_u, tol=tol, maxdepth=maxdepth)
+  : assert(is_num(start_u) && is_num(end_u) && start_u>=0 && start_u<=1 && end_u>=0 && end_u<=1,
+           "start_u and end_u must be numbers in the interval [0,1]")
+    assert(is_num(tol) && tol > 0, "tol must be a positive number")
+    assert(is_int(maxdepth) && maxdepth >= 0, "maxdepth must be a non-negative integer")
+    assert(is_undef(weights) || is_vector(weights, len(control)),
+           "Weights should be a vector whose length is the number of control points")
+    let(
+        dim = is_undef(weights) ? undef : len(control[0]),
+        eval_control = is_undef(weights)
+                     ? control
+                     : [for(i=idx(control)) [each control[i]*weights[i], weights[i]]],
+        pinfo = _nurbs_param_info(eval_control, degree, mult, type, knots)
+    )
+    type=="closed" && end_u < start_u
+      ? _nurbs_length_range(degree, pinfo, start_u, 1, tol/2, maxdepth, dim)
+      + _nurbs_length_range(degree, pinfo, 0, end_u, tol/2, maxdepth, dim)
+      : assert(end_u >= start_u, "end_u must be >= start_u unless type=\"closed\"")
+        _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim);
+
+
+// Build piece lengths for a directional sequence of u-cuts.
+// Each entry is [u0, u1, piece_length], where u0->u1 is the travel direction.
+// The length is always computed on the corresponding monotone interval.
+function _nurbs_length_pieces_dir(degree, pinfo, cuts, tol, maxdepth, dim=undef) =
+    let(
+        npieces = max(0, len(cuts)-1),
+        ptol    = tol / max(1, npieces)
+    )
+    [for (i=[0:1:npieces-1])
+        let(
+            u0 = cuts[i],
+            u1 = cuts[i+1]
+        )
+        [u0, u1, _nurbs_length_range(degree, pinfo, min(u0,u1), max(u0,u1), ptol, maxdepth, dim)]
+    ];
+
+
+// Find which length piece contains the target travel distance.
+// Returns [u0, u1, local_target] where local_target is measured from u0
+// along the piece direction.
+function _nurbs_find_piece(pieces, target, eps, i=0, accum=0) =
+    i >= len(pieces) ? undef
+  : target <= accum + pieces[i][2] + eps
+    ? [pieces[i][0], pieces[i][1], max(0, target-accum)]
+    : _nurbs_find_piece(pieces, target, eps, i+1, accum + pieces[i][2]);
+
+
+// Bisection on a single directional piece [u0,u1], where travel starts at u0
+// and proceeds monotonically to u1.  The target length is measured from u0.
+function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, maxdepth, maxiter, dim=undef) =
+    target <= 0 ? u0
+  : maxiter <= 0 || abs(u1-u0) <= u_tol ? (u0+u1)/2
+  : let(
+        m   = (u0+u1)/2,
+        sm  = u1 >= u0
+            ? _nurbs_length_range(degree, pinfo, u0, m, tol, maxdepth, dim)
+            : _nurbs_length_range(degree, pinfo, m, u0, tol, maxdepth, dim),
+        err = abs(sm-target)
+    )
+    err <= tol * (1 + abs(target)) ? m
+  : sm < target
+    ? _nurbs_find_u_bisect_dir(degree, pinfo, m, u1, target-sm, tol, u_tol, maxdepth, maxiter-1, dim)
+    : _nurbs_find_u_bisect_dir(degree, pinfo, u0, m, target,    tol, u_tol, maxdepth, maxiter-1, dim);
+
+
+// Function: nurbs_find_u()
+// Synopsis: Finds the parameter value at a given arc length along a NURBS curve.
+// Topics: NURBS Curves
+// See Also: nurbs_length(), nurbs_curve(), nurbs_curve_breaks()
+// Usage:
+//   u = nurbs_find_u(dist, control, degree, [mult=], [weights=], [type=], [knots=], [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+//   u = nurbs_find_u(dist, nurbs_param_list, [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+// Description:
+//   Finds the parameter value `u` reached by traveling a signed distance `dist`
+//   along the curve starting from `start_u`.  Positive distances move forward
+//   in increasing curve parameter; negative distances move backward.  For
+//   closed curves, the search wraps around the seam as needed in either
+//   direction.  For clamped or open curves, an error is raised if the
+//   requested distance exceeds the available curve length in the chosen direction.
+// Arguments:
+//   dist = signed distance to travel along the curve
+//   control = list of control points in any dimension or a NURBS parameter list
+//   degree = degree of NURBS
+//   ---
+//   mult = list of multiplicities of the knots.  Default: all 1
+//   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
+//   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
+//   knots = List of knot values.  Default: uniform
+//   start_u = start of the search interval in [0,1].  Default: 0
+//   tol = requested numerical tolerance controlling the internal arc-length calculations.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final error in `u`.  Default: 1e-6
+//   u_tol = stopping tolerance in parameter space for the inverse search.  Default: 1e-8
+//   maxdepth = maximum adaptive subdivision depth used by the length calculations.  Default: 10
+//   maxiter = maximum number of bisection steps in the inverse search.  Default: 50
+// Example(2D,NoAxes): Find the point 50 units forward along a curve
+//   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   u = nurbs_find_u(50, control, 2);
+//   pt = nurbs_curve(control, 2, u=u);
+//   stroke(nurbs_curve(control, 2, splinesteps=16));
+//   color("red") move(pt) circle(r=1.5, $fn=16);
+// Example(2D,NoAxes): Go backward from a starting point
+//   pts = [[13,43],[30,52],[49,22],[24,3]];
+//   u = nurbs_find_u(-20, pts, 2, start_u=0.6, type="closed");
+//   pt = nurbs_curve(pts, 2, u=u, type="closed");
+//   stroke(nurbs_curve(pts, 2, splinesteps=16, type="closed"));
+//   color("red") move(pt) circle(r=1.5, $fn=16);
+function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knots,
+                      start_u=0, tol=1e-6, u_tol=1e-8, maxdepth=10, maxiter=50) =
+    is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
+       assert(len(control)>=6, "Invalid NURBS parameter list")
+       assert(num_defined([degree,mult,weights,knots])==0,
+              "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
+       nurbs_find_u(dist, control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
+                    start_u=start_u, tol=tol, u_tol=u_tol, maxdepth=maxdepth, maxiter=maxiter)
+  : assert(is_num(dist), "dist must be a number")
+    assert(is_num(start_u) && start_u>=0 && start_u<=1, "start_u must be in the interval [0,1]")
+    assert(is_num(tol) && tol > 0, "tol must be a positive number")
+    assert(is_num(u_tol) && u_tol > 0, "u_tol must be a positive number")
+    assert(is_int(maxdepth) && maxdepth >= 0, "maxdepth must be a non-negative integer")
+    assert(is_int(maxiter) && maxiter >= 0, "maxiter must be a non-negative integer")
+    assert(is_undef(weights) || is_vector(weights, len(control)),
+           "Weights should be a vector whose length is the number of control points")
+    let(
+        dim = is_undef(weights) ? undef : len(control[0]),
+        eval_control = is_undef(weights)
+                     ? control
+                     : [for(i=idx(control)) [each control[i]*weights[i], weights[i]]],
+        pinfo   = _nurbs_param_info(eval_control, degree, mult, type, knots),
+        breaks  = _nurbs_breaks(degree, pinfo),
+        forward = dist >= 0,
+
+        mids1 = forward
+              ? [for (b=breaks) if (b>start_u && b<1) b]
+              : [for (b=breaks) if (b>0 && b<start_u) b],
+        mids2 = type!="closed" ? []
+              : forward
+                ? [for (b=breaks) if (b>0 && b<start_u) b]
+                : [for (b=breaks) if (b>start_u && b<1) b],
+
+        rev1 = [for (i=[1:1:len(mids1)]) mids1[len(mids1)-i]],
+        rev2 = [for (i=[1:1:len(mids2)]) mids2[len(mids2)-i]],
+
+        cuts1 = forward
+              ? [start_u, each mids1, 1]
+              : [start_u, each rev1, 0],
+        cuts2 = type!="closed" ? []
+              : forward
+                ? [0, each mids2, start_u]
+                : [1, each rev2, start_u],
+
+        pieces1 = _nurbs_length_pieces_dir(degree, pinfo, cuts1, tol, maxdepth, dim),
+        pieces2 = type!="closed" ? []
+                : _nurbs_length_pieces_dir(degree, pinfo, cuts2, tol, maxdepth, dim),
+        pieces  = concat(pieces1, pieces2),
+
+        total   = sum([for (p=pieces) p[2]]),
+        eps     = tol * (1 + abs(total)),
+        target  = type=="closed" && total > 0
+                ? abs(dist) - floor(abs(dist)/total) * total
+                : abs(dist)
+    )
+    total <= eps ? assert(abs(dist) <= eps, "nurbs_find_u: curve has zero length") start_u
+  : approx(target,0,eps) ? start_u
+  : type!="closed" && approx(target, total, eps) ? (forward ? 1 : 0)
+  : assert(type=="closed" || target <= total + eps,
+           str("nurbs_find_u: requested distance ",dist," exceeds the available curve length ",total," from start_u=",start_u))
+    let(
+        loc = _nurbs_find_piece(pieces, target, eps)
+    )
+    assert(!is_undef(loc), "nurbs_find_u: failed to bracket the requested distance")
+    _nurbs_find_u_bisect_dir(degree, pinfo, loc[0], loc[1], loc[2], tol, u_tol, maxdepth, maxiter, dim);
 
 
 
