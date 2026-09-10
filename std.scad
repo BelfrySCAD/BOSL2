@@ -20,6 +20,7 @@ include <attachments.scad>
 include <beziers.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
+include <text.scad>
 include <drawing.scad>
 include <masks.scad>
 include <math.scad>
