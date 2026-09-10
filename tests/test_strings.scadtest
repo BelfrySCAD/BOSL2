@@ -514,6 +514,18 @@ test_str_pad();
 '''
 
 [[test]]
+name = "test_str_replace"
+script = '''
+include <../std.scad>
+
+module test_str_replace() {
+   assert_equal(str_replace("aaaabcdababcabcdabcdcdabbc", "abcd", "*"), "aaa*ababc**cdabbc");
+   assert_equal(str_replace("abcdefgabcdefg","bc","XYZ"), "aXYZdefgaXYZdefg");
+}
+test_str_replace();
+'''
+
+[[test]]
 name = "test_str_replace_char"
 script = '''
 include <../std.scad>
