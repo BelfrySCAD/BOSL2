@@ -697,7 +697,7 @@ test_nurbs_curve_breaks_open_type_domain();
 # ---------------------------------------------------------------------
 
 [[test]]
-name = "test_nurbs_length_degree1_polyline_is_exact"
+name = "test_nurbs_length"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
@@ -930,7 +930,7 @@ test_nurbs_length_param_list_too_short_errors();
 # ---------------------------------------------------------------------
 
 [[test]]
-name = "test_nurbs_find_u_degree1_forward_exact"
+name = "test_nurbs_find_u"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
