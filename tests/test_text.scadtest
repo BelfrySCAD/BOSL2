@@ -17,7 +17,7 @@ include <../std.scad>
 
 module test_TEXTLINE() {
     assert_equal(TEXTLINE(2,TOP+RIGHT), "text2_tight[1, 0, 1]");
-    assert_equal(TEXTLINE("end",pos=BOT,tight=false)), "text-1_box[1, 0, -1]");
+    assert_equal(TEXTLINE("end",pos=BOT,tight=false), "text-1_box[1, 0, -1]");
 }
 test_TEXTLINE();
 '''
