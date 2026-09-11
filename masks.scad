@@ -1172,10 +1172,17 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
     r = get_radius(r=r, d=d, dflt=undef);
     assert(is_num(r) && r>=0);
+    axis = let(
+        nx = [for (f=faces) if (!approx(f.x,0)) true],
+        ny = [for (f=faces) if (!approx(f.y,0)) true],
+        nz = [for (f=faces) if (!approx(f.z,0)) true]
+    ) len(nx)==0 && len(ny)==0 ? "Z"
+      : len(ny)==0 && len(nz)==0 ? "X"
+      : len(nx)==0 && len(nz)==0 ? "Y"
+      : "Z";
     edge_profile(faces, excess=excess) children();
-    corner_profile(faces, convexity=convexity, r=r) children();
+    corner_profile(faces, convexity=convexity, r=r, axis=axis) children();
 }
-
 
 // Module: edge_profile()
 // Synopsis: Extrudes a 2d edge profile into a mask on edges of the parent cuboid, prismoid or cone.
