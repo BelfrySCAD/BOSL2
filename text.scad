@@ -293,7 +293,7 @@ _writeob() returns a write object, which includes everything needed to render th
 //       align="center", wrap_optimize=false, show_bounds=true);
 //   fwd(20)  write("Heavy: 1000{ }kg", size=10, max_width=90,
 //       align="center", wrap_optimize=false, show_bounds=true);
-// Example(2D,VPD=230): `write() normally collapses consecutive spaces (because `collapse_space=true` by default). If you want to insert multiple spaces while collapsing others, you can use the nonbreaking space code `{ }` for this purpose. Here 5 spaces are inserted between two words by alternating normal and nonbreaking spaces, but you could also use all nonbreaking spaces.
+// Example(2D,VPD=230): `write()` normally collapses consecutive spaces (because `collapse_space=true` by default). If you want to insert multiple spaces while collapsing others, you can use the nonbreaking space code `{ }` for this purpose. Here 5 spaces are inserted between two words by alternating normal and nonbreaking spaces, but you could also use all nonbreaking spaces.
 //   write("Five { } { } spaces", size=10);
 // Example(2D,VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
 //   write("Hello,\nworld!", max_width=80, show_bounds=true);
@@ -784,16 +784,16 @@ function get_font_size(font="Liberation Sans:style=Bold", size, cap_height, nom_
 //   
 //   // returns 9.001
 //   size1 = fit_font_size("Fitting to a width", max_width=100);
-//   
+//   //
 //   // returns 9.276
 //   size2 = fit_font_size("Fitting multi-line\ntext to a width", max_width=100);
-//   
+//   //
 //   // returns 12.888
 //   size3 = fit_font_size("Fitting to a height", max_height=20);
-//   
+//   //
 //   // returns 6.3511
 //   size4 = fit_font_size("Fitting multi-line\ntext to a height", max_height=20);
-//   
+//   //
 //   // returns 5.592
 //   size5 = fit_font_size("Fitting multi-line\ntext to a width and height", box=[100,40]);
 function fit_font_size(text, max_width=INF, max_height=INF, box,
