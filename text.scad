@@ -703,7 +703,7 @@ function _line_anchors(baseline_pos, boxsize) =
 //   size = get_font_size("Liberation Mono",
 //                        cap_height=20);     // returns 21.8531
 //   size = get_font_size(nom_height=20);     // returns 12.8894
-//   size = get_font_size(full_height=20);     // returns 10.2151
+//   size = get_font_size(full_height=20);    // returns 10.2151
 //   size = get_font_size("Liberation Serif",
 //                        iline_height=20);   // returns 12.5228
 //   size = get_font_size(em = 20);           // returns 13.8889
@@ -755,16 +755,16 @@ function get_font_size(font="Liberation Sans:style=Bold", size, cap_height, nom_
 // Example: Various ways to find a font that causes the text to fit within the given constraint. The default font is "Liberation Sans:style=Bold" if not specified.
 //   
 //   // returns 9.001
-//   size1 = fit_font_size("Fitting to a width", 100);
+//   size1 = fit_font_size("Fitting to a width", max_width=100);
 //   
 //   // returns 9.276
-//   size2 = fit_font_size("Fitting multi-line\ntext to a width", 100);
+//   size2 = fit_font_size("Fitting multi-line\ntext to a width", max_width=100);
 //   
 //   // returns 12.888
-//   size3 = fit_font_size("Fitting to a height", height=20);
+//   size3 = fit_font_size("Fitting to a height", max_height=20);
 //   
 //   // returns 6.3511
-//   size4 = fit_font_size("Fitting multi-line\ntext to a height", height=20);
+//   size4 = fit_font_size("Fitting multi-line\ntext to a height", max_height=20);
 //   
 //   // returns 5.592
 //   size5 = fit_font_size("Fitting multi-line\ntext to a width and height", box=[100,40]);
