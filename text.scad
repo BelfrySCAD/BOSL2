@@ -386,10 +386,6 @@ module write(text, max_width=INF, max_height=INF, box,
 //               write3d("BRAID", thickness=4, size=14);
 //   }
 
-$vpd=405;
-$vpr=[56,0,40];
-$vpt=[2,0,2];
-
 module write3d(text, thickness, max_width=INF, max_height=INF, box, 
  size, cap_height, nom_height, full_height, iline_height, em,
  font="Liberation Sans:style=bold",
