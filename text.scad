@@ -753,19 +753,19 @@ function get_font_size(font="Liberation Sans:style=Bold", size, cap_height, nom_
 //   line_spacing = Proportion of font's interline height for vertical spacing between lines in a paragraph. Default: 1.0
 //   para_spacing = Proportion of font's interline height for vertical spacing between paragraphs. Each line in the text is considered to be a paragraph. Because there is no word-wrapping when fitting text into the given bounds, line spacing is assumed to be the same as paragraph spacing. Default: 1.0
 // Example: Various ways to find a font that causes the text to fit within the given constraint. The default font is "Liberation Sans:style=Bold" if not specified.
-//   
+//   //
 //   // returns 9.001
 //   size1 = fit_font_size("Fitting to a width", max_width=100);
-//   
+//   //
 //   // returns 9.276
 //   size2 = fit_font_size("Fitting multi-line\ntext to a width", max_width=100);
-//   
+//   //
 //   // returns 12.888
 //   size3 = fit_font_size("Fitting to a height", max_height=20);
-//   
+//   //
 //   // returns 6.3511
 //   size4 = fit_font_size("Fitting multi-line\ntext to a height", max_height=20);
-//   
+//   //
 //   // returns 5.592
 //   size5 = fit_font_size("Fitting multi-line\ntext to a width and height", box=[100,40]);
 function fit_font_size(text, max_width=INF, max_height=INF, box,
@@ -935,7 +935,7 @@ function _fontdata(font="Liberation Sans:style=Bold", osize, cap_height, nom_hei
 
 function _textwrap(texts, width=INF, optimize=true, indent=0, fontdata=undef, rtl=false) =
     let(
-        strings = strings_to_array(texts),
+        strings = _strings_to_array(texts),
         lines = [
             for(line = strings)
                 let(tx = str(line, " ")) // make last word end in a space
@@ -979,12 +979,12 @@ let(
 
 
 
-/// Function: strings_to_array()
+/// Internal function: _strings_to_array()
 /// Synopsis: Converts a string or paragraph array to a flat string array, splitting at newlines.
 /// Topics: Text
 /// See Also: write()
 /// Usage:
-///   text_array = strings_to_array(string);
+///   text_array = _strings_to_array(string);
 /// Description:
 //   Given a simple string, a string containing `\n` characters, an array of either of those two kinds of strings,
 //   or an array that includes strings and other embedded string arrays,
@@ -992,13 +992,13 @@ let(
 //   Any leading or trailing white space is stripped out from each string in the returned array.
 /// Arguments:
 //   string = Input string or string array, which may contain embedded newlines.
-function strings_to_array(strings) = let(
+function _strings_to_array(strings) = let(
     list = is_string(strings) ? [strings] : is_list(strings) ? full_flatten(strings) : undef,
     err = assert(is_string(list[0]), "\nNot a string or list of strings.")
 ) [
     for(s=list) each [
         for(p = str_split(s, "\n", false))
-            str_strip(p, " \t\r\n")
+                str_strip(p, " \t\r\n")
     ]
 ];
 
@@ -1056,20 +1056,21 @@ function _wrap_optimize(maxlines, minwid, spacepos, breaks, reqwid, spc, indent,
 
 
 
-/// Function: str_replace_edges()
-/// Synopsis: Returns a string with the specified leading and trailing characters replaced with a character
-/// Topics: Strings
-/// See Also: str_join(), str_strip(), repeat()
-/// Usage:
-///    result = str_replace_edges(string, edge_chars, replacement);
-/// Description:
-///   Returns a string with any leading or trailing characters specified in the string `edge_chars` replaced by the character specified in `replacement`.
-///   This can be used, for example, to replace leading and trailing spaces with the nonbreaking space `\u00a0`.
-/// Arguments:
-///   string = The string to search
-///   edge_chars = A single characcter or a string specifying the characters to search for in the head and tail of `string`
-///   replacement = Character to replace any edge characters found
-/// Examples
+/* (no longer used)
+// Function: str_replace_edges()
+// Synopsis: Returns a string with the specified leading and trailing characters replaced with a character
+// Topics: Strings
+// See Also: str_join(), str_strip(), repeat()
+// Usage:
+//    result = str_replace_edges(string, edge_chars, replacement);
+// Description:
+//   Returns a string with any leading or trailing characters specified in the string `edge_chars` replaced by the character specified in `replacement`.
+//   This can be used, for example, to replace leading and trailing spaces with the nonbreaking space `\u00a0`.
+// Arguments:
+//   string = The string to search
+//   edge_chars = A single character or a string specifying the characters to search for in the head and tail of `string`
+//   replacement = Character to replace any edge characters found
+// Examples
 //   s1 = str_replace_edges("  hello  ", " ", "\u00A0"); // returns "\u00A0\u00A0hello\u00A0\u00A0"
 //   s2 = str_replace_edges("\t hello \t", " \t", "-");  // returns "--hello--"
 //   s3 = str_replace_edges("ab-cd-", "ab-", "?");       // returns "???cd?"
@@ -1092,6 +1093,7 @@ function str_replace_edges(string, edge_chars, replacement) =
     : str(str_join(repeat(replacement, h)),
           substr(string, h, len(string) - total),
           str_join(repeat(replacement, t)));
+*/
 
 
 
