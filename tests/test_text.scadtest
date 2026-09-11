@@ -10,7 +10,7 @@ module test_BASELINE() {
 test_BASELINE();
 '''
 
-[test]
+[[test]]
 name = "test_TEXTLINE"
 script = '''
 include <../std.scad>
@@ -22,7 +22,7 @@ module test_TEXTLINE() {
 test_TEXTLINE();
 '''
 
-[test]
+[[test]]
 name = "test_get_font_size"
 script = '''
 include <../std.scad>
