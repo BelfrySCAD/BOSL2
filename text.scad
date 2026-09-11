@@ -177,16 +177,31 @@ _writeob() returns a write object, which includes everything needed to render th
 //   Multiple `write()` calls may be concatenated in a parent-child fashion, to concatenate multiple instances along a
 //   common baseline. The beginning of each child's baseline connects to the end of the parent's baseline. For example:
 //   ````
-//     write("Hello{ }", size=12)
-//         write("there{ }", size=8)
+//     write("Hello ", size=12)
+//         write("there ", size=8)
 //             write("world", size=12);
 //   ````
-//   This displays "Hello there world" with a smaller size for "there". The nonbreaking space code `{ }` is needed to
-//   retain spaces between each instance because `write()` strips out leading and trailing spaces by default.
+//   This displays "Hello there world" with a smaller size for "there". Spaces should be included if spaces are needed.
 //   Only the first instance of `write()` may have an anchor specified, and the position of each successive child
 //   depends on its parent. If you need to do something with a chain of `write()` calls other than concatenate them,
 //   you can use {{align()}}, {{attach()}}, or {{position()}} as usual in front of the child, causing the parent's
 //   end-of-line offset for concatenation to be disregarded.
+//   .
+//   **Paragraphs**
+//   .
+//   The input text may be a string or a list of strings.
+//   If the input text includes newline `\n` characters, the text is split at each newline into a list of simple strings.
+//   Any `\n` characters that may be present in a list of strings also cause those strings to be split, expanding the list.
+//   .
+//   Once the input text has been processed into a list of simple strings without newlines, each string in the list is
+//   considered to be a "paragraph" for the purposes of wordwrapping and positioning.
+//   .
+//   A paragraph may have its first line indented if `indent` is positive, or subsequent lines are indented if `indent`
+//   is negative (effectively outdenting the first line). Spacing between paragraphs is controlled by `para_spacing`,
+//   so there is no need to include consecutive newlines to achieve a blank vertical space between paragraphs, you can
+//   simply adjust `para_spacing`, which defaults to 1 (multiple of `line_spacing`). If you really want to insert a
+//   blank line in your text, make sure it consists of a space character; e.g. the space between the newlines in
+//   `"line1\n \nline2"` would appear as a blank line between `"line1"` and `"line2"`.
 // Arguments:
 //   text = The text to display. May be a simple string, string with newline (`\n`) characters, or a list of strings (which can also contain newline characters). The alias `{ }` may be used for the nonbreaking space character `\u00a0`.
 //   max_width = Constrains text to fit within a maximum horizontal width. If no font size is given then the size is chosen for the line of text (or longest line in an array) to span this width. If a font size is given, the text is wrapped to fit within this constraint. Default: `INF`
@@ -232,10 +247,10 @@ _writeob() returns a write object, which includes everything needed to render th
 //   right(50)     write(["Hello\nthere,", "world!"], size=10);
 // Example(2D,VPT=[0,0,0],VPD=270): If your text is just uppercase characters, you can use `cap_height` for the font size to specify the uppercase ascender height only. The character `H` for your font is used as the reference character, which you may reset by changing `$refchar_cap`. The text height spans exactly -20 to 20.
 //   write("THIS", cap_height=40);
-// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by making each subsequent `write()` as a child of the parent. Use the nonbreaking space code `{ }` to prevent `write()` from stripping the trailing space from each instance.
+// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by making each subsequent `write()` as a child of the parent. Use spaces if needed to keep the words separate.
 //   write("The", size=8, font="Liberation Sans", anchor=LEFT+FWD) // position the first one
-//     write("{ }right", size=14, font="Liberation Serif:style=Bold Italic")
-//       write("{ }stuff", size=11, font="Liberation Sans:style=Bold");
+//     write(" right ", size=14, font="Liberation Serif:style=Bold Italic")
+//       write("stuff", size=11, font="Liberation Sans:style=Bold");
 // Example(2D,Med,NoAxes,VPT=[27,6,0],VPD=320): As described above, OpenSCAD's `text()` creates unevenly-spaced text with proportional typefaces when `spacing` is not 1.0. This is solved by `write()`, letting you use one of three different options for setting character spacing. Here we use `letterspacing_ref=2`, which uses `$refchar_width` (default `"0"`) to calculate a constant amount of space to insert between each character.
 //   font = "Liberation Sans:style=Bold";
 //   string = "Animals";
@@ -273,8 +288,15 @@ _writeob() returns a write object, which includes everything needed to render th
 //   write(string, size=10, box=[130,90], font=fontname,
 //        align="justify", justify_last="right",
 //        wrap_optimize=false, show_bounds=true);
-// Example(2D, VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
-//   write("Hello,\nworld!", max_width=80, show_bounds=true); 
+// Example(2D,NoAxes,VPD=230): There may be a situation where you need a nonbreaking space. The code `{ }` (a space between two curly braces) is used for this purpose. In this example, the string `"1000 kg"` should be treated as a single word with a nonbreaking space, to prevent wordwrapping the "kg" to a separate line.
+//   back(20) write("Heavy: 1000 kg", size=10, max_width=90,
+//       align="center", wrap_optimize=false, show_bounds=true);
+//   fwd(20)  write("Heavy: 1000{ }kg", size=10, max_width=90,
+//       align="center", wrap_optimize=false, show_bounds=true);
+// Example(2D,VPD=230): `write() normally collapses consecutive spaces (because `collapse_space=true` by default). If you want to insert multiple spaces while collapsing others, you can use the nonbreaking space code `{ }` for this purpose. Here 5 spaces are inserted between two words by alternating normal and nonbreaking spaces, but you could also use all nonbreaking spaces.
+//   write("Five { } { } spaces", size=10);
+// Example(2D,VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
+//   write("Hello,\nworld!", max_width=80, show_bounds=true);
 // Example(2D, VPT=[0,0,0],VPD=200): Likewise, if only `max_height` is set with no font size, then the font size is automatically adjusted so the text spans the specified vertical height. We set `vfit="tight` to maximize the vertical space used within the `max_height` constraint.
 //   write("Hello,\nworld!", max_height=40, vfit="tight",
 //       show_bounds=true); 
@@ -434,7 +456,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
 
 
 
-/// Private function: _writeobj() - called by write(), write3d(), path_write()
+/// Internal function: _writeobj() - called by write(), write3d(), path_write()
 /// Return a 2D write object with all information required to render wrapped text at the correct posotions.
 /// Arguments are the same as for write() but without the anchor-related ones.
 
@@ -468,11 +490,7 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF, box,
 
     numfontsizes = err7 ? 1 : fontsizes,
     err8=assert(numfontsizes<=1, str("\n",caller,"(): No more than one font size can be specified: size, cap_height, nom_height, full_height, iline_height, or em).")),
-    txtpass1 = is_string(text) ? str_replace(text, "{ }", "\u00A0")
-        : is_list(text) && is_string(text[0]) ? [for(t=text) str_replace(t, "{ }", "\u00A0")]
-        : assert(false, "\nwrite(): 'text' must be a string or list of strings.") "",
-    txt = collapse_space ? (is_string(txtpass1) ? str_collapse_char(txtpass1, " ") : [for(t=txtpass1) str_collapse_char(t, " ")])
-        : txtpass1,
+    txt = _preprocess_text(text, collapse_space, caller),
     fd = numfontsizes == 1 ?
         _fontdata(font, size,cap_height,nom_height,full_height,iline_height,em, letterspacing, letterspacing_em, letterspacing_ref, direction, language, script)
         : let(siz = fit_font_size(txt, wid, ht, font=font, letterspacing_ref, vfit=vfit, direction=direction))
@@ -576,7 +594,21 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF, box,
 
 
 
-/// Private function: _baselines() - called by write()
+/// Internal function: _preprocess_text() - called by _writeob()
+function _preprocess_text(text, collapse_space, caller="write") =
+    is_string(text) ? let(
+        txtpass1 = str_replace(text, "{ }", "\u00A0"), // replace nonbreaking space codes
+        txtpass2 = collapse_space ? str_collapse_char(txtpass1, " ") : txtpass1 // optionally collapse spaces
+    ) collapse_space ? str_replace(txtpass2, "\n ", "\n") : txtpass2 // remove any remaining leading collapsed spaces after \n
+    : is_list(text) && is_string(text[0]) ? let(
+        txtpass1 = [for(t=text) str_replace(t, "{ }", "\u00A0")],
+        txtpass2 = collapse_space ? [for(t=txtpass1) str_collapse_char(t, " ")] : txtpass1
+    ) collapse_space ? [for(t=txtpass2) str_replace(t, "\n ", "\n")] : txtpass2
+    : assert(false, str("\n",caller,"(): 'text' must be a string or list of strings.")) "";
+
+
+
+/// Internal function: _baselines() - called by _writeobj()
 /// Return baseline positions for multi-line text, starting at 0 and going negative from there.
 /// Arguments:
 ///    wrapobj = return from _textwrap(), regardless if text is wrapped
@@ -590,7 +622,7 @@ function _baselines(wrapobj, lheight, pheight, interline) =
 
     
 
-/// Private function _justify_pos() - called by write()
+/// Internal function _justify_pos() - called by _writeobj()
 /// Given a line of output from _textwrap(), adjust the charpos values so that the text is
 /// full-justified within the given width.
 /// Aguments:
@@ -625,7 +657,7 @@ function TEXTLINE(n, pos=CENTER, tight=true, rtl=false) =
 
  
 
-/// Private function: _line_anchors() - called by write()
+/// Internal function: _line_anchors() - called by _writeobj()
 /// Named anchor generator to pass to attachable() - anchors can be 2D or 3D
 /// boxsize is the tight bounding box [xsize,ysize] or [xsize,ysize,zsize]
 function _line_anchors(baseline_pos, boxsize) =
@@ -749,19 +781,19 @@ function get_font_size(font="Liberation Sans:style=Bold", size, cap_height, nom_
 //   line_spacing = Proportion of font's interline height for vertical spacing between lines in a paragraph. Default: 1.0
 //   para_spacing = Proportion of font's interline height for vertical spacing between paragraphs. Each line in the text is considered to be a paragraph. Because there is no word-wrapping when fitting text into the given bounds, line spacing is assumed to be the same as paragraph spacing. Default: 1.0
 // Example: Various ways to find a font that causes the text to fit within the given constraint. The default font is "Liberation Sans:style=Bold" if not specified.
-//   //
+//   
 //   // returns 9.001
 //   size1 = fit_font_size("Fitting to a width", max_width=100);
-//   //
+//   
 //   // returns 9.276
 //   size2 = fit_font_size("Fitting multi-line\ntext to a width", max_width=100);
-//   //
+//   
 //   // returns 12.888
 //   size3 = fit_font_size("Fitting to a height", max_height=20);
-//   //
+//   
 //   // returns 6.3511
 //   size4 = fit_font_size("Fitting multi-line\ntext to a height", max_height=20);
-//   //
+//   
 //   // returns 5.592
 //   size5 = fit_font_size("Fitting multi-line\ntext to a width and height", box=[100,40]);
 function fit_font_size(text, max_width=INF, max_height=INF, box,
@@ -790,7 +822,7 @@ let(
 
 
 
-/// Private Function: _textobj()
+/// Internal function: _textobj()
 ///   Given a simple string without newlines, a font spec, and letter spacing spec, return an object
 //    containing font metrics and character positions.
 ///   The object returned has these properties:
@@ -839,7 +871,7 @@ let(
 
 
 
-/// Private function: _fontdata()
+/// Internal function: _fontdata()
 /// Get information about a font, given a size and a spacing.
 /// Returns a fontmetrics object, with the `font` property containing the properties:
 ///    osize = OpenSCAD font size calculated from one of the size inputs
@@ -908,7 +940,7 @@ function _fontdata(font="Liberation Sans:style=Bold", osize, cap_height, nom_hei
 
 
 
-/// Private Function: _textwrap()
+/// Internal function: _textwrap()
 /// Usage:
 //   text_array = _textwrap(string, width, [optimize=], [indent=], [fontdata=], [rtl=]);
 /// Description:
@@ -921,7 +953,7 @@ function _fontdata(font="Liberation Sans:style=Bold", osize, cap_height, nom_hei
 //   Multple paragraphs are returned if the `string` argument contains newline (`\n`) characters that
 //   split the string. To insert a blank line, use two newlines with a space in between (`\n \n`).
 /// Arguments:
-//   string = The text to render. May be a simple string, a string with `\n` newlines, or an array of both kinds of strings. Any leading whitespace, trailing whitespace, and consecutive spaces are stripped before word-wrapping. Use `\u00a0` for a non-breaking space.
+//   string = The text to render. May be a simple string, a string with `\n` newlines, or an array of both kinds of strings. Any leading or trailing non-space whitespace are stripped before word-wrapping. Use `\u00a0` for a non-breaking space.
 //   width = the maximum width of a line of text in display units.
 //   ---
 //   optimize = When false, tries to fit as many words as possible on each successive line, which may result in a "widow" (a word all by itself) on the last line. When true, attempts to make the wrapped lines more equal in length.  Default: `true`
@@ -985,7 +1017,7 @@ let(
 //   Given a simple string, a string containing `\n` characters, an array of either of those two kinds of strings,
 //   or an array that includes strings and other embedded string arrays,
 //   returns a flat array of simple strings, split appropriately on newline characters.
-//   Any leading or trailing white space is stripped out from each string in the returned array.
+//   Any leading or trailing non-space-character white space is stripped out from each string in the returned array.
 /// Arguments:
 //   string = Input string or string array, which may contain embedded newlines.
 function _strings_to_array(strings) = let(
@@ -994,7 +1026,7 @@ function _strings_to_array(strings) = let(
 ) [
     for(s=list) each [
         for(p = str_split(s, "\n", false))
-                str_strip(p, " \t\r\n")
+                str_strip(p, "\t\r\n")
     ]
 ];
 
@@ -1052,24 +1084,23 @@ function _wrap_optimize(maxlines, minwid, spacepos, breaks, reqwid, spc, indent,
 
 
 
-/* (no longer used)
-// Function: str_replace_edges()
-// Synopsis: Returns a string with the specified leading and trailing characters replaced with a character
-// Topics: Strings
-// See Also: str_join(), str_strip(), repeat()
-// Usage:
-//    result = str_replace_edges(string, edge_chars, replacement);
-// Description:
-//   Returns a string with any leading or trailing characters specified in the string `edge_chars` replaced by the character specified in `replacement`.
-//   This can be used, for example, to replace leading and trailing spaces with the nonbreaking space `\u00a0`.
-// Arguments:
-//   string = The string to search
-//   edge_chars = A single character or a string specifying the characters to search for in the head and tail of `string`
-//   replacement = Character to replace any edge characters found
-// Examples
-//   s1 = str_replace_edges("  hello  ", " ", "\u00A0"); // returns "\u00A0\u00A0hello\u00A0\u00A0"
-//   s2 = str_replace_edges("\t hello \t", " \t", "-");  // returns "--hello--"
-//   s3 = str_replace_edges("ab-cd-", "ab-", "?");       // returns "???cd?"
+/// Function: _str_replace_edges()
+/// Synopsis: Returns a string with the specified leading and trailing characters replaced with a character
+/// Topics: Strings
+/// See Also: str_join(), str_strip(), repeat()
+/// Usage:
+///    result = str_replace_edges(string, edge_chars, replacement);
+/// Description:
+///   Returns a string with any leading or trailing characters specified in the string `edge_chars` replaced by the character specified in `replacement`.
+///   This can be used, for example, to replace leading and trailing spaces with the nonbreaking space `\u00a0`.
+/// Arguments:
+///   string = The string to search
+///   edge_chars = A single character or a string specifying the characters to search for in the head and tail of `string`
+///   replacement = Character to replace any edge characters found
+/// Examples
+///   s1 = str_replace_edges("  hello  ", " ", "\u00A0"); // returns "\u00A0\u00A0hello\u00A0\u00A0"
+///   s2 = str_replace_edges("\t hello \t", " \t", "-");  // returns "--hello--"
+///   s3 = str_replace_edges("ab-cd-", "ab-", "?");       // returns "???cd?"
 
 function _edgecount(s, edge_chars, i=0, from_start=true) = // Count consecutive chars in s that are in edge_chars
   let (
@@ -1078,7 +1109,7 @@ function _edgecount(s, edge_chars, i=0, from_start=true) = // Count consecutive 
   )
   done || str_find(edge_chars, s[idx]) == undef ? i : _edgecount(s, edge_chars, i + 1, from_start);
 
-function str_replace_edges(string, edge_chars, replacement) =
+function _str_replace_edges(string, edge_chars, replacement) =
   let (
     h = _edgecount(string, edge_chars),
     t = _edgecount(string, edge_chars, from_start=false),
@@ -1089,7 +1120,6 @@ function str_replace_edges(string, edge_chars, replacement) =
     : str(str_join(repeat(replacement, h)),
           substr(string, h, len(string) - total),
           str_join(repeat(replacement, t)));
-*/
 
 
 
