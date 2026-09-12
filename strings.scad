@@ -135,9 +135,9 @@ function _str_find_all(str, pattern) =
         candidates = search(pattern[0], str, num_returns_per_match=0)[0]
     ) is_undef(candidates) ? []
     : m==1 ? candidates
-    : [ for(p = candidates)
-        if (str[p+m-1] == pattern[m-1]) // test last char in pattern before rest of pattern
-            if(m==2 || _substr_match_recurse(str,p+1,pattern,m-2,1)) p ];
+    : let(m1=m-1) [ for(p = candidates)
+        if (str[p+m1] == pattern[m1]) // test last char in pattern before rest of pattern
+            if(m==2 || _substr_match_recurse(str,p+1,pattern,m-1,1)) p ];
 
 
 
