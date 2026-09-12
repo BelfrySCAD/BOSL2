@@ -1387,6 +1387,65 @@ module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
 }
 
 
+// Function: nurbs_length()
+// Synopsis: Computes the arc length of a NURBS curve.
+// Topics: NURBS Curves
+// See Also: nurbs_curve()
+//
+// Usage:
+//   length = nurbs_length(control, degree, [u=], [mult=], [weights=], [type=], [knots=]);
+//
+// Description:
+//   Computes the arc length of a NURBS curve between two parameter values using Gauss-Legendre
+//   quadrature integration. The `u` parameter specifies the parameter interval as a 2-vector [u0, u1]
+//   where u0 and u1 are in [0,1]. The curve is integrated with max(2, degree-1) quadrature points
+//   per knot span for accuracy up to degree 6.
+//
+// Arguments:
+//   control = list of control points in any dimension or a NURBS parameter list
+//   degree = degree of NURBS
+//
+// By Name:
+//   u = [u0, u1] specifying the parameter interval. Default: [0, 1]
+//   mult = list of knot multiplicities. Default: all 1
+//   weights = vector of control point weights. Default: all 1
+//   type = one of "clamped", "open" or "closed". Default: "clamped"
+//   knots = list of knot values. Default: uniform
+
+function nurbs_length(control, degree, u=[0,1], mult, weights, type="clamped", knots) =
+    is_list(control) && _valid_curve_type(control[0]) ?
+        assert(len(control) >= 6, "NURBS parameter list is invalid")
+        nurbs_length(control[2], control[1], u=u, weights=control[4], type=control[0], mult=control[3], knots=control[5])
+    : let(
+        U = _build_knot_vector(len(control), degree, type=type, knots=knots, mult=mult),
+        u0 = u[0], u1 = u[1],
+        u0_clamped = max(0, min(1, u0)),
+        u1_clamped = max(0, min(1, u1)),
+        domain_lo = U[degree],
+        domain_hi = U[len(U) - degree - 1],
+        u0_param = domain_lo + u0_clamped * (domain_hi - domain_lo),
+        u1_param = domain_lo + u1_clamped * (domain_hi - domain_lo),
+        p = degree,
+        n_gauss = max(2, p - 1),
+        gl = _gauss_legendre(n_gauss),
+        gl_nodes = gl[0],
+        gl_wts = gl[1],
+        knot_spans = [for (i = [0:1:len(U)-2])
+                          if (U[i+1] - U[i] > 1e-15 && U[i] >= u0_param && U[i+1] <= u1_param)
+                          [U[i], U[i+1]]],
+        arc_length = sum([for (span = knot_spans)
+                              let(a = span[0], b = span[1],
+                                  hw = (b - a) / 2, mid = (a + b) / 2)
+                              sum([for (g = [0:1:n_gauss-1])
+                                       let(t = mid + hw * gl_nodes[g],
+                                           w = gl_wts[g] * hw,
+                                           deriv = nurbs_curve(control, degree, u=t, weights=weights, type=type, knots=knots, mult=mult, deriv=1))
+                                       w * norm(deriv)
+                                  ])
+                         ])
+    )
+    arc_length;
+
 
 // Function: nurbs_elevate_degree()
 // Synopsis: Raises the degree of a clamped or open NURBS.
@@ -1998,7 +2057,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 // Topics: NURBS Patches
 // See Also: nurbs_normals(), nurbs_patch_points(), nurbs_vnf(), vnf_sheet()
 // Usage:
-//   vnf = nurbs_sheet(patch, degree, delta, [splinesteps=], [edge=], [roundsteps=], [style=], [weights=], [type=], [mult=], [knots=]);
+//   vnf = nurbs_sheet(delta, patch, degree, [splinesteps=], [edge=], [roundsteps=], [style=], [weights=], [type=], [mult=], [knots=]);
 // Description:
 //   Constructs a thin sheet from a NURBS patch by offsetting the patch along its normal vectors, similar
 //   to bezier_sheet() for bezier patches.  The `delta` parameter is a 2-vector specifying the two offset
@@ -2044,12 +2103,12 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   then manually add boundary caps by extracting the boundary points with {{nurbs_patch_points()}} at `u=[0]` or `u=[1]`, forming
 //   them into faces with {{vnf_vertex_array()}}, and joining them using {{vnf_join()}}. See the "Creating a capped sheet" example below.
 // Arguments:
+//   delta = a 2-vector specifying two different offsets from the patch, in any order.  Positive values offset toward the patch "exterior" side, negative values toward the "interior" side.
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
 //   degree = a scalar or 2-vector giving the degree of the NURBS in the two directions
-//   delta = a 2-vector specifying two different offsets from the patch, in any order.  Positive values offset toward the patch "exterior" side, negative values toward the "interior" side.
 //   ---
 //   splinesteps = a scalar or 2-vector giving the number of segments between each knot in the two directions.  Default: 16
-//   edge = crease treatment, one of "sharp", "chamfer" or "round".  Default: "sharp"
+//   edge = crease treatment, one of "sharp", "chamfer" or "round".  Default: "chamfer"
 //   roundsteps = number of segments in the rounded arc across a crease when `edge="round"`.  Default: 4
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
 //   weights = a matrix whose size corresponds to `patch` giving the weight at each control point.  Default: all 1
@@ -2064,8 +2123,8 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]],
 //   ];
 //   color("lime") nurbs_vnf(patch, 3);
-//   vnf_polyhedron(nurbs_sheet(patch, 3, [0,-10]));
-// Example(3D,Big,VPT=[0,0,25],VPR=[90,0,25],VPD=700): The three crease treatments on a surface with creases in both directions: sharp (left), chamfer (center), round (right).  The sheet is offset upward, toward the convex side of the ridges, so the crease treatment is visible along the offset ridge lines.
+//   vnf_polyhedron(nurbs_sheet([0,-10], patch, 3));
+// Example(3D): A sheet with sharp crease treatment.  The surface has creases in both directions and the sheet is offset upward, toward the convex side of the ridges, so the sharp crease treatment is visible along the offset ridge lines.
 //   surface = [
 //     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
 //     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
@@ -2074,24 +2133,40 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
 //   ];
 //   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
-//   xdistribute(120) {
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="sharp"));
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="chamfer"));
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="round"));
-//   }
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="sharp"));
+// Example(3D): A sheet with chamfer crease treatment.  The two one-sided offset surfaces along creases are connected with a flat strip, beveling the offset edge.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="chamfer"));
+// Example(3D): A sheet with round crease treatment.  The gap along a crease is filled with a circular arc, creating smooth rounded ridges.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="round"));
 // Example(3D): A cylindrical sheet closed in one direction (the u-direction).  No boundary walls are created at the u ends because the surface wraps around continuously.  The v-direction remains clamped, so walls appear at the v ends.
 //   patch = [
 //       [[30, 0, -25], [21, 21, -25], [0, 30, -25], [-21, 21, -25], [-30, 0, -25], [30, 0, -25]],
 //       [[30, 0, 0], [21, 21, 0], [0, 30, 0], [-21, 21, 0], [-30, 0, 0], [30, 0, 0]],
 //       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
 //   ];
-//   vnf_polyhedron(nurbs_sheet(patch, 2, [0, -3], type=["closed", "clamped"]));
-// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).  
+//   vnf_polyhedron(nurbs_sheet([0, -3], patch, 2, type=["closed", "clamped"]));
+// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).
 //   thickness = 3;
 //   star_pts = star(or=25, ir=21, n=7);
 //   surface = [ for(i=[0:4]) zrot(i*10,path3d(star_pts,i*5)), ];
 //   S = nurbs_interp_surface(surface, 3, col_wrap=true);
-//   sheet = nurbs_sheet(S, delta=[0, -thickness]);
+//   sheet = nurbs_sheet([0, -thickness], S);
 //   star_region = [nurbs_curve(nurbs_interp(star_pts, 3, closed=true))];
 //   cap = linear_sweep(star_region, thickness, anchor=BOT);
 //   vnf_polyhedron(vnf_join([sheet, cap]));
@@ -3077,13 +3152,13 @@ module nurbs_interp_surface(points, degree, splinesteps=16,
                     translate(pt) sphere(r=data_size, $fn=16);
 }
 
-function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
+function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", roundsteps=4, style="default",
                      weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
     is_list(patch) && _valid_surface_type(patch[0]) ?
        assert(len(patch)>=6, "NURBS parameter list is invalid")
        assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_sheet(patch[2], patch[1], delta, splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
+       nurbs_sheet(delta, patch[2], patch[1], splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
                    style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3])
   : assert(is_vector(delta,2) && delta[0]!=delta[1],
            "delta must be a 2-vector designating two different offset distances")
@@ -3139,6 +3214,9 @@ function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundst
                  vnf_vertex_array([for (i=idx(offsurf[0])) concat(offsurf[0][i], reverse(offsurf[1][i]))],
                                   col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style)
     )
+    // If delta[0] > delta[1], reverse all faces to ensure consistent face orientation.
+    // This allows delta order to be arbitrary while maintaining equivalent geometry with
+    // proper normal direction for rendering and 3D printing.
     delta[0] > delta[1] ? vnf_reverse_faces(vnf) : vnf;
 
 
@@ -3798,6 +3876,31 @@ function _gauss_legendre(n) =
        0.5384693101056831,  0.9061798459386640],
      [0.2369268850561891, 0.4786286704993665, 0.5688888888888889,
       0.4786286704993665, 0.2369268850561891]];
+
+
+// Gauss-Legendre quadrature integration over intervals within a knot vector.
+// Integrates a function func(t, span_data) over all non-zero knot spans.
+// span_data is a closure-captured value passed to func for each span.
+// Returns sum of integrated values over all spans.
+// n_gauss: number of quadrature points (2-5); higher n is more accurate.
+
+function _gauss_integrate_spans(func, intervals, n_gauss) =
+    let(
+        gl = _gauss_legendre(n_gauss),
+        gl_nodes = gl[0],
+        gl_wts = gl[1],
+        quad_sum = sum([for (iv = intervals)
+                            let(a = iv[0], b = iv[1])
+                            if (b - a > 1e-15)
+                            let(hw = (b - a) / 2, mid = (a + b) / 2)
+                            sum([for (g = [0:1:n_gauss-1])
+                                     let(t = mid + hw * gl_nodes[g],
+                                         w = gl_wts[g] * hw)
+                                     w * func(t)
+                                ])
+                       ])
+    )
+    quad_sum;
 
 
 // One step of the de Boor recurrence: lifts degree-(k-1) to degree-k basis values
