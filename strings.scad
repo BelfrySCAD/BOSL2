@@ -102,6 +102,7 @@ function suffix(str,len) =
 //   l=str_find("abc123def123abc","b",all=true);     // Returns [1,13]
 //   m=str_find("abc123def123abc","1234",all=true);  // Returns []
 //   n=str_find("abc","",all=true);                  // Returns [0,1,2]
+//   o=str_find("abd{{bz}}fij", "{{b}}", all=true);  // returns []
 
 function str_find(str,pattern,start=undef,last=false,all=false) =
     assert(_is_liststr(str), "\nstr must be a string or list.")
@@ -137,7 +138,7 @@ function _str_find_all(str, pattern) =
     : m==1 ? candidates
     : let(m1=m-1) [ for(p = candidates)
         if (str[p+m1] == pattern[m1]) // test last char in pattern before rest of pattern
-            if(m==2 || _substr_match_recurse(str,p+1,pattern,m-1,1)) p ];
+            if(m==2 || _substr_match_recurse(str,p+1,pattern,m1,1)) p ];
 
 
 
