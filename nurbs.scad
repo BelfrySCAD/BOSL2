@@ -1741,8 +1741,8 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   surface that is geometrically smooth across a parametric crease (for example, a surface built from
 //   rational circle arcs, where the tangent speed jumps but its direction does not) reports a unique
 //   normal there.  At clamped or open patch boundaries only one side of the surface exists and the
-//   one-sided normal is reported as the normal; directions of type "closed" are periodic, so both sides
-//   exist everywhere including the seam, and a clamped direction whose first and last control points
+//   one-sided normal is reported as the normal; surfaces are periodic in the closed direction, so both sides
+//   exist everywhere including the seam, and a clamped surface whose first and last control points
 //   coincide row-by-row is likewise treated as periodic at its boundary (see {{nurbs_curve()}}).
 // Arguments:
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
@@ -2057,7 +2057,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 // Topics: NURBS Patches
 // See Also: nurbs_normals(), nurbs_patch_points(), nurbs_vnf(), vnf_sheet()
 // Usage:
-//   vnf = nurbs_sheet(delta, patch, degree, [splinesteps=], [edge=], [roundsteps=], [style=], [weights=], [type=], [mult=], [knots=]);
+//   vnf = nurbs_sheet(delta, patch, degree, [splinesteps=], [edge=], [style=], [weights=], [type=], [mult=], [knots=]);
 // Description:
 //   Constructs a thin sheet from a NURBS patch by offsetting the patch along its normal vectors, similar
 //   to bezier_sheet() for bezier patches.  The `delta` parameter is a 2-vector specifying the two offset
@@ -2072,17 +2072,18 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   degree, including those produced by `row_edges=`/`col_edges=` in {{nurbs_interp_surface()}}), where
 //   the surface normal is not unique and a plain normal offset would leave a gap (or an overlap) along
 //   the crease.  The `edge` parameter selects how the offset surface is joined across creases:
-//   - `edge="sharp"` (default) — the offset preserves the sharp crease, like `delta=` with sharp corners
+//   - `edge="chamfer"` (default) — the two one-sided offset surfaces along a crease are connected with a flat
+//     strip, beveling the offset edge.  This is the simplest and most robust treatment.  Where two
+//     creases cross, the corner is closed with a single flat facet.
+//   - `edge="sharp"` — the offset preserves the sharp crease, like `delta=` with sharp corners
 //     in {{offset()}}: each point on a crease is offset along the miter direction that keeps it at the
 //     correct offset distance from the surface on every side of the crease.  Where two creases cross,
 //     the corner point is placed at the best-fit (least-squares) miter of all sector normals.  Note that
 //     just as with sharp corners in offset(), the miter distance grows without bound as a crease
 //     approaches a fold-back, so very sharp creases produce long spikes.
-//   - `edge="chamfer"` — the two one-sided offset surfaces along a crease are connected with a flat
-//     strip, beveling the offset edge.  This is the simplest and most robust treatment.  Where two
-//     creases cross, the corner is closed with a single flat facet.
 //   - `edge="round"` — the gap along a crease is filled with a circular arc of radius equal to the
-//     offset distance, centered on the crease, using `roundsteps` segments; crease crossings are closed
+//     offset distance, centered on the crease; the number of segments is determined by $fn (if set)
+//     or calculated from $fa (similar to how OpenSCAD generates circle segments); crease crossings are closed
 //     with a spherically blended corner patch.
 //   .
 //   Creases are detected from the computed sector normals of {{nurbs_normals()}}, not from the knot
@@ -2093,8 +2094,8 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   to avoid self-intersection there.
 //   .
 //   The patch may be given as a control-point grid with the usual NURBS parameters, or as a NURBS
-//   parameter list such as the output of {{nurbs_interp_surface()}}.  Directions of type "closed" are
-//   supported: the sheet wraps around closed directions and boundary walls are created only along
+//   parameter list such as the output of {{nurbs_interp_surface()}}.  Closed surfaces are
+//   supported: the sheet wraps around closed directions and flat edges are created only along
 //   clamped or open edges.  Surfaces with degenerate points (zero tangents, e.g. an edge collapsed to a
 //   point) cannot be offset and produce an error.
 //   .
@@ -2109,13 +2110,15 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ---
 //   splinesteps = a scalar or 2-vector giving the number of segments between each knot in the two directions.  Default: 16
 //   edge = crease treatment, one of "sharp", "chamfer" or "round".  Default: "chamfer"
-//   roundsteps = number of segments in the rounded arc across a crease when `edge="round"`.  Default: 4
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
 //   weights = a matrix whose size corresponds to `patch` giving the weight at each control point.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
 //   mult = a single list or pair of lists giving the knot multiplicity in the two directions.  Default: all 1
 //   knots = a single list or pair of lists giving the knot vector in each of the two directions.  Default: uniform
-// Example(3D): A sheet from a smooth patch.  With `delta=[0,-10]` the original surface (green) is unchanged on top.
+//   caps = If true, create offset caps at both clamped ends using delta offset thickness.  Default: false
+//   cap1 = If true, create an offset cap at the first clamped end.  Default: false
+//   cap2 = If true, create an offset cap at the second clamped end.  Default: false
+// Example(3D): A sheet from a smooth patch.  With `delta=[0,-10]` the original surface is unchanged on top.
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -2124,6 +2127,16 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   color("lime") nurbs_vnf(patch, 3);
 //   vnf_polyhedron(nurbs_sheet([0,-10], patch, 3));
+// Example(3D): A sheet with chamfer crease treatment (the default).  The two one-sided offset surfaces along creases are connected with a flat strip, beveling the offset edge.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="chamfer"));
 // Example(3D): A sheet with sharp crease treatment.  The surface has creases in both directions and the sheet is offset upward, toward the convex side of the ridges, so the sharp crease treatment is visible along the offset ridge lines.
 //   surface = [
 //     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
@@ -2134,16 +2147,6 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
 //   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="sharp"));
-// Example(3D): A sheet with chamfer crease treatment.  The two one-sided offset surfaces along creases are connected with a flat strip, beveling the offset edge.
-//   surface = [
-//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
-//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
-//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
-//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
-//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
-//   ];
-//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
-//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="chamfer"));
 // Example(3D): A sheet with round crease treatment.  The gap along a crease is filled with a circular arc, creating smooth rounded ridges.
 //   surface = [
 //     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
@@ -2154,14 +2157,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
 //   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="round"));
-// Example(3D): A cylindrical sheet closed in one direction (the u-direction).  No boundary walls are created at the u ends because the surface wraps around continuously.  The v-direction remains clamped, so walls appear at the v ends.
-//   patch = [
-//       [[30, 0, -25], [21, 21, -25], [0, 30, -25], [-21, 21, -25], [-30, 0, -25], [30, 0, -25]],
-//       [[30, 0, 0], [21, 21, 0], [0, 30, 0], [-21, 21, 0], [-30, 0, 0], [30, 0, 0]],
-//       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
-//   ];
-//   vnf_polyhedron(nurbs_sheet([0, -3], patch, 2, type=["closed", "clamped"]));
-// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).
+// Example(3D,Med,VPR=[60,0,12],VPT=[0,10,3],VPD=175): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).
 //   thickness = 3;
 //   star_pts = star(or=25, ir=21, n=7);
 //   surface = [ for(i=[0:4]) zrot(i*10,path3d(star_pts,i*5)), ];
@@ -3152,19 +3148,18 @@ module nurbs_interp_surface(points, degree, splinesteps=16,
                     translate(pt) sphere(r=data_size, $fn=16);
 }
 
-function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", roundsteps=4, style="default",
-                     weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
+function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", style="default",
+                     weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef], caps, cap1, cap2) =
     is_list(patch) && _valid_surface_type(patch[0]) ?
        assert(len(patch)>=6, "NURBS parameter list is invalid")
        assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_sheet(delta, patch[2], patch[1], splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
-                   style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3])
+       nurbs_sheet(delta, patch[2], patch[1], splinesteps=splinesteps, edge=edge,
+                   style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3], caps=caps, cap1=cap1, cap2=cap2)
   : assert(is_vector(delta,2) && delta[0]!=delta[1],
            "delta must be a 2-vector designating two different offset distances")
     assert(in_list(edge, ["sharp","chamfer","round"]),
            "edge must be one of \"sharp\", \"chamfer\" or \"round\"")
-    assert(is_int(roundsteps) && roundsteps>=1, "roundsteps must be a positive integer")
     let(
         type = force_list(type,2),
         pts = nurbs_patch_points(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots),
@@ -3186,7 +3181,8 @@ function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", round
         // expanded sample lists: [original_index, side_parameter]; crease rows/columns
         // are replicated so the join geometry (chamfer strip or rounding arc) appears
         // between the copies.  edge="sharp" needs no replication (pointwise miter).
-        K = edge=="round" ? roundsteps : 1,
+        // For edge="round", calculate segments from $fn, $fs, $fa (like circle segments)
+        K = edge=="round" ? ($fn > 0 ? $fn : max(4, ceil(360 / $fa))) : 1,
         uexp = [for (a=idx(M)) each edge=="sharp" || !usplit[a] ? [[a,0]]
                                   : [for (k=[0:1:K]) [a, k/K]]],
         vexp = [for (b=idx(M[0])) each edge=="sharp" || !vsplit[b] ? [[b,0]]
@@ -3203,16 +3199,50 @@ function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", round
         ],
         u_closed = type[0]=="closed",
         v_closed = type[1]=="closed",
-        vnf = u_closed && v_closed ?
+        vnf_base = u_closed && v_closed ?
                  // no boundary at all: two nested closed shells
                  vnf_join([vnf_vertex_array(offsurf[0], row_wrap=true, col_wrap=true, style=style),
                            vnf_reverse_faces(vnf_vertex_array(offsurf[1], row_wrap=true, col_wrap=true, style=style))])
             : v_closed ?
-                 // walls at the u ends: stack the surfaces into one closed band of rows
+                 // flat edges at the u ends: stack the surfaces into one closed band of rows
                  vnf_vertex_array(concat(offsurf[0], reverse(offsurf[1])), row_wrap=true, col_wrap=true, style=style)
-            :    // walls at the v ends; u direction closed wraps rows, clamped gets end caps
+            :    // flat edges at the v ends; u direction closed wraps rows, clamped gets end caps
                  vnf_vertex_array([for (i=idx(offsurf[0])) concat(offsurf[0][i], reverse(offsurf[1][i]))],
-                                  col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style)
+                                  col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style),
+        // Cap generation: create swept caps at clamped ends if requested
+        need_caps = num_true([caps, cap1, cap2]) > 0,
+        make_u_caps = !u_closed && need_caps,
+        make_v_caps = !v_closed && need_caps,
+        u_cap1_vnf = (make_u_caps && (caps || cap1)) ?
+            let(
+                boundary_cpts = patch[0],
+                cap_region = [nurbs_curve(nurbs_interp(boundary_cpts, degree[1], closed=v_closed))],
+                thickness = abs(delta[1] - delta[0])
+            )
+            linear_sweep(cap_region, thickness, anchor=BOT) : undef,
+        u_cap2_vnf = (make_u_caps && (caps || cap2)) ?
+            let(
+                boundary_cpts = patch[len(patch)-1],
+                cap_region = [nurbs_curve(nurbs_interp(boundary_cpts, degree[1], closed=v_closed))],
+                thickness = abs(delta[1] - delta[0])
+            )
+            linear_sweep(cap_region, thickness, anchor=BOT) : undef,
+        v_cap1_vnf = (make_v_caps && (caps || cap1)) ?
+            let(
+                boundary_cpts = [for (row=patch) row[0]],
+                cap_region = [nurbs_curve(nurbs_interp(boundary_cpts, degree[0], closed=u_closed))],
+                thickness = abs(delta[1] - delta[0])
+            )
+            linear_sweep(cap_region, thickness, anchor=BOT) : undef,
+        v_cap2_vnf = (make_v_caps && (caps || cap2)) ?
+            let(
+                boundary_cpts = [for (row=patch) row[len(row)-1]],
+                cap_region = [nurbs_curve(nurbs_interp(boundary_cpts, degree[0], closed=u_closed))],
+                thickness = abs(delta[1] - delta[0])
+            )
+            linear_sweep(cap_region, thickness, anchor=BOT) : undef,
+        cap_vnfs = [for (c=[u_cap1_vnf, u_cap2_vnf, v_cap1_vnf, v_cap2_vnf]) if (c != undef) c],
+        vnf = need_caps && len(cap_vnfs) > 0 ? vnf_join(concat([vnf_base], cap_vnfs)) : vnf_base
     )
     // If delta[0] > delta[1], reverse all faces to ensure consistent face orientation.
     // This allows delta order to be arbitrary while maintaining equivalent geometry with
