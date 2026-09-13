@@ -1404,8 +1404,7 @@ module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
 // Arguments:
 //   control = list of control points in any dimension or a NURBS parameter list
 //   degree = degree of NURBS
-//
-// By Name:
+//   --- 
 //   u = [u0, u1] specifying the parameter interval. Default: [0, 1]
 //   mult = list of knot multiplicities. Default: all 1
 //   weights = vector of control point weights. Default: all 1
