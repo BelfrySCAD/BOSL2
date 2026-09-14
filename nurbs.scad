@@ -14,12 +14,11 @@
 // FileSummary: NURBS and B-spline curves and surfaces.
 //////////////////////////////////////////////////////////////////////
 
-
 _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
        echo("Warning: nurbs.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: NURBS Curves
-
+// 
 // Function: nurbs_curve()
 // Synopsis: Computes one or more points (or derivatives) on a NURBS curve.
 // SynTags: Path
