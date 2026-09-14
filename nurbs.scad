@@ -2102,6 +2102,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   with its `caps` parameter to create automatic caps. To cap the open ends of a sheet, create the sheet without degenerate rows,
 //   then manually add boundary caps by extracting the boundary points with {{nurbs_patch_points()}} at `u=[0]` or `u=[1]`, forming
 //   them into faces with {{vnf_vertex_array()}}, and joining them using {{vnf_join()}}. See the "Creating a capped sheet" example below.
+//   .
 // Arguments:
 //   delta = a 2-vector specifying two different offsets from the patch, in any order.  Positive values offset toward the patch "exterior" side, negative values toward the "interior" side.
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
