@@ -399,6 +399,10 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                  str("Derivative order exceeds curve degree ",degree))
                           let(
                                max_d   = is_list(deriv) ? max(deriv) : deriv,
+                               // Request both one-sided homogeneous derivatives so the geometric
+                               // left/right derivatives can be formed at points where the curve
+                               // may not be differentiable.  Entries of hderivs[k] for k>=1 are
+                               // singletons [v] or pairs [left,right]; hderivs[0] is plain points.
                                hderivs = nurbs_curve(hctrl, degree, u=u, splinesteps=splinesteps,
                                                      mult=mult, knots=knots, type=type,
                                                      deriv=[for(k=[0:1:max_d]) k], two_sided=true, close_loop=close_loop),
@@ -450,6 +454,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                       let(ind = sortidx(adjusted_u_orig))
                       [ind,sortidx(ind)]
                  : false,
+         // The u list needs to be sorted for the algorithm to identify the knot spans, so sort it if necessary
          adjusted_u = reorder ? select(adjusted_u_orig,reorder[0]) : adjusted_u_orig,
          nurbs_pts =
                    deriv != 0 ?
@@ -483,7 +488,13 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                               )
                               if (is_def(output)) output]
                        )
+                       // Chain rule: t = bound[0] + (bound[1]-bound[0])*u, so
+                       // d^k/du^k = (bound[1]-bound[0])^k * d^k/dt^k.
+                       // For clamped, bound=undef and the mapping is identity (no scaling needed).
                        let(
+                           // Knot-run info for every evaluation point: [first_index, multiplicity]
+                           // when the point lies (approx) on a knot, undef otherwise.  Used to
+                           // detect points where the requested derivative order may not exist.
                            runinfo = [for(uval=adjusted_u) _knot_run_info(knot, uval)]
                        )
                        is_list(deriv) ?
@@ -498,7 +509,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                                                   degree, type, scale, two_sided)
                                ]
                            ]
-                       :
+                       : // integer deriv > 0: flat list of derivative entries
                          let(scale = is_undef(bound) ? 1 : pow(bound[1]-bound[0], deriv))
                          [for(i=idx(adjusted_u))
                              let(base = scale * _nurbs_eval_deriv(knot,
@@ -1438,7 +1449,6 @@ module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
 }
 
 
-
 // Function: nurbs_elevate_degree()
 // Synopsis: Raises the degree of a clamped or open NURBS.
 // Topics: NURBS Curves
@@ -1686,21 +1696,22 @@ function _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim=u
 // Topics: NURBS Curves
 // See Also: nurbs_curve(), nurbs_curve_breaks()
 // Usage:
-//   len = nurbs_length(control, degree, [mult=], [weights=], [type=], [knots=], [start_u=], [end_u=], [tol=], [maxdepth=]);
-//   len = nurbs_length(nurbs_param_list, [start_u=], [end_u=], [tol=], [maxdepth=]);
+//   len = nurbs_length(control, degree, [u=], [mult=], [weights=], [type=], [knots=], [tol=], [maxdepth=]);
+//   len = nurbs_length(nurbs_param_list, [u=], [tol=], [maxdepth=]);
 // Description:
-//   Approximates the length of the curve between `start_u` and `end_u`.
-//   For closed curves, if `end_u < start_u` the length wraps across the seam.
+//   Approximates the length of the curve over the parameter interval `u=[u0,u1]`, using
+//   adaptive Gauss-Legendre quadrature: each knot span in the interval is integrated with
+//   both a 3-point and a 5-point rule, and only subdivided further where the two estimates
+//   disagree beyond `tol`.  For closed curves, if `u1 < u0` the length wraps across the seam.
 // Arguments:
 //   control = list of control points in any dimension or a NURBS parameter list
 //   degree = degree of NURBS
 //   ---
+//   u = [u0, u1] specifying the parameter interval.  Default: [0, 1]
 //   mult = list of multiplicities of the knots.  Default: all 1
 //   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
 //   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
 //   knots = List of knot values.  Default: uniform
-//   start_u = start of the interval in [0,1].  Default: 0
-//   end_u = end of the interval in [0,1].  Default: 1
 //   tol = requested numerical tolerance controlling adaptive refinement.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final arc-length error.  Default: 1e-6
 //   maxdepth = maximum adaptive subdivision depth.  Default: 10
 // Example(2D,NoAxes): Compute the length of a curve
@@ -1708,22 +1719,23 @@ function _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim=u
 //   echo(nurbs_length(control, 2));
 // Example(2D,NoAxes): Partial length on a closed curve
 //   pts = [[13,43],[30,52],[49,22],[24,3]];
-//   echo(nurbs_length(pts, 2, type="closed", start_u=0.75, end_u=0.25));
-function nurbs_length(control, degree, mult, weights, type="clamped", knots,
-                      start_u=0, end_u=1, tol=1e-6, maxdepth=10) =
+//   echo(nurbs_length(pts, 2, type="closed", u=[0.75,0.25]));
+function nurbs_length(control, degree, u=[0,1], mult, weights, type="clamped", knots,
+                      tol=1e-6, maxdepth=10) =
     is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
        assert(len(control)>=6, "Invalid NURBS parameter list")
        assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_length(control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
-                    start_u=start_u, end_u=end_u, tol=tol, maxdepth=maxdepth)
-  : assert(is_num(start_u) && is_num(end_u) && start_u>=0 && start_u<=1 && end_u>=0 && end_u<=1,
-           "start_u and end_u must be numbers in the interval [0,1]")
+       nurbs_length(control[2], control[1], u=u, mult=control[4], weights=control[5], type=control[0], knots=control[3],
+                    tol=tol, maxdepth=maxdepth)
+  : assert(is_vector(u,2) && u[0]>=0 && u[0]<=1 && u[1]>=0 && u[1]<=1,
+           "u must be a 2-vector [u0,u1] with both entries in the interval [0,1]")
     assert(is_num(tol) && tol > 0, "tol must be a positive number")
     assert(is_int(maxdepth) && maxdepth >= 0, "maxdepth must be a non-negative integer")
     assert(is_undef(weights) || is_vector(weights, len(control)),
            "Weights should be a vector whose length is the number of control points")
     let(
+        start_u = u[0], end_u = u[1],
         dim = is_undef(weights) ? undef : len(control[0]),
         eval_control = is_undef(weights)
                      ? control
@@ -1733,7 +1745,7 @@ function nurbs_length(control, degree, mult, weights, type="clamped", knots,
     type=="closed" && end_u < start_u
       ? _nurbs_length_range(degree, pinfo, start_u, 1, tol/2, maxdepth, dim)
       + _nurbs_length_range(degree, pinfo, 0, end_u, tol/2, maxdepth, dim)
-      : assert(end_u >= start_u, "end_u must be >= start_u unless type=\"closed\"")
+      : assert(end_u >= start_u, "u[1] must be >= u[0] unless type=\"closed\"")
         _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim);
 
 
@@ -1766,7 +1778,7 @@ function _nurbs_find_piece(pieces, target, eps, i=0, accum=0) =
 
 // Bisection on a single directional piece [u0,u1], where travel starts at u0
 // and proceeds monotonically to u1.  The target length is measured from u0.
-function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, maxdepth, maxiter, dim=undef) =
+function _nurbs_cut_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, maxdepth, maxiter, dim=undef) =
     target <= 0 ? u0
   : maxiter <= 0 || abs(u1-u0) <= u_tol ? (u0+u1)/2
   : let(
@@ -1778,20 +1790,20 @@ function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, max
     )
     err <= tol * (1 + abs(target)) ? m
   : sm < target
-    ? _nurbs_find_u_bisect_dir(degree, pinfo, m, u1, target-sm, tol, u_tol, maxdepth, maxiter-1, dim)
-    : _nurbs_find_u_bisect_dir(degree, pinfo, u0, m, target,    tol, u_tol, maxdepth, maxiter-1, dim);
+    ? _nurbs_cut_bisect_dir(degree, pinfo, m, u1, target-sm, tol, u_tol, maxdepth, maxiter-1, dim)
+    : _nurbs_cut_bisect_dir(degree, pinfo, u0, m, target,    tol, u_tol, maxdepth, maxiter-1, dim);
 
 
-// Function: nurbs_find_u()
+// Function: nurbs_cut()
 // Synopsis: Finds the parameter value at a given arc length along a NURBS curve.
 // Topics: NURBS Curves
 // See Also: nurbs_length(), nurbs_curve(), nurbs_curve_breaks()
 // Usage:
-//   u = nurbs_find_u(dist, control, degree, [mult=], [weights=], [type=], [knots=], [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
-//   u = nurbs_find_u(dist, nurbs_param_list, [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+//   u2 = nurbs_cut(dist, control, degree, [mult=], [weights=], [type=], [knots=], [u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+//   u2 = nurbs_cut(dist, nurbs_param_list, [u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
 // Description:
-//   Finds the parameter value `u` reached by traveling a signed distance `dist`
-//   along the curve starting from `start_u`.  Positive distances move forward
+//   Finds the parameter value reached by traveling a signed distance `dist`
+//   along the curve starting from `u`.  Positive distances move forward
 //   in increasing curve parameter; negative distances move backward.  For
 //   closed curves, the search wraps around the seam as needed in either
 //   direction.  For clamped or open curves, an error is raised if the
@@ -1805,33 +1817,33 @@ function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, max
 //   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
 //   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
 //   knots = List of knot values.  Default: uniform
-//   start_u = start of the search interval in [0,1].  Default: 0
-//   tol = requested numerical tolerance controlling the internal arc-length calculations.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final error in `u`.  Default: 1e-6
+//   u = start of the search interval in [0,1].  Default: 0
+//   tol = requested numerical tolerance controlling the internal arc-length calculations.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final error in the result.  Default: 1e-6
 //   u_tol = stopping tolerance in parameter space for the inverse search.  Default: 1e-8
 //   maxdepth = maximum adaptive subdivision depth used by the length calculations.  Default: 10
 //   maxiter = maximum number of bisection steps in the inverse search.  Default: 50
 // Example(2D,NoAxes): Find the point 50 units forward along a curve
 //   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
-//   u = nurbs_find_u(50, control, 2);
-//   pt = nurbs_curve(control, 2, u=u);
+//   u2 = nurbs_cut(50, control, 2);
+//   pt = nurbs_curve(control, 2, u=u2);
 //   stroke(nurbs_curve(control, 2, splinesteps=16));
 //   color("red") move(pt) circle(r=1.5, $fn=16);
 // Example(2D,NoAxes): Go backward from a starting point
 //   pts = [[13,43],[30,52],[49,22],[24,3]];
-//   u = nurbs_find_u(-20, pts, 2, start_u=0.6, type="closed");
-//   pt = nurbs_curve(pts, 2, u=u, type="closed");
+//   u2 = nurbs_cut(-20, pts, 2, u=0.6, type="closed");
+//   pt = nurbs_curve(pts, 2, u=u2, type="closed");
 //   stroke(nurbs_curve(pts, 2, splinesteps=16, type="closed"));
 //   color("red") move(pt) circle(r=1.5, $fn=16);
-function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knots,
-                      start_u=0, tol=1e-6, u_tol=1e-8, maxdepth=10, maxiter=50) =
+function nurbs_cut(dist, control, degree, mult, weights, type="clamped", knots,
+                   u=0, tol=1e-6, u_tol=1e-8, maxdepth=10, maxiter=50) =
     is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
        assert(len(control)>=6, "Invalid NURBS parameter list")
        assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_find_u(dist, control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
-                    start_u=start_u, tol=tol, u_tol=u_tol, maxdepth=maxdepth, maxiter=maxiter)
+       nurbs_cut(dist, control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
+                u=u, tol=tol, u_tol=u_tol, maxdepth=maxdepth, maxiter=maxiter)
   : assert(is_num(dist), "dist must be a number")
-    assert(is_num(start_u) && start_u>=0 && start_u<=1, "start_u must be in the interval [0,1]")
+    assert(is_num(u) && u>=0 && u<=1, "u must be in the interval [0,1]")
     assert(is_num(tol) && tol > 0, "tol must be a positive number")
     assert(is_num(u_tol) && u_tol > 0, "u_tol must be a positive number")
     assert(is_int(maxdepth) && maxdepth >= 0, "maxdepth must be a non-negative integer")
@@ -1848,23 +1860,23 @@ function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knot
         forward = dist >= 0,
 
         mids1 = forward
-              ? [for (b=breaks) if (b>start_u && b<1) b]
-              : [for (b=breaks) if (b>0 && b<start_u) b],
+              ? [for (b=breaks) if (b>u && b<1) b]
+              : [for (b=breaks) if (b>0 && b<u) b],
         mids2 = type!="closed" ? []
               : forward
-                ? [for (b=breaks) if (b>0 && b<start_u) b]
-                : [for (b=breaks) if (b>start_u && b<1) b],
+                ? [for (b=breaks) if (b>0 && b<u) b]
+                : [for (b=breaks) if (b>u && b<1) b],
 
         rev1 = [for (i=[1:1:len(mids1)]) mids1[len(mids1)-i]],
         rev2 = [for (i=[1:1:len(mids2)]) mids2[len(mids2)-i]],
 
         cuts1 = forward
-              ? [start_u, each mids1, 1]
-              : [start_u, each rev1, 0],
+              ? [u, each mids1, 1]
+              : [u, each rev1, 0],
         cuts2 = type!="closed" ? []
               : forward
-                ? [0, each mids2, start_u]
-                : [1, each rev2, start_u],
+                ? [0, each mids2, u]
+                : [1, each rev2, u],
 
         pieces1 = _nurbs_length_pieces_dir(degree, pinfo, cuts1, tol, maxdepth, dim),
         pieces2 = type!="closed" ? []
@@ -1877,16 +1889,16 @@ function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knot
                 ? abs(dist) - floor(abs(dist)/total) * total
                 : abs(dist)
     )
-    total <= eps ? assert(abs(dist) <= eps, "nurbs_find_u: curve has zero length") start_u
-  : approx(target,0,eps) ? start_u
+    total <= eps ? assert(abs(dist) <= eps, "nurbs_cut: curve has zero length") u
+  : approx(target,0,eps) ? u
   : type!="closed" && approx(target, total, eps) ? (forward ? 1 : 0)
   : assert(type=="closed" || target <= total + eps,
-           str("nurbs_find_u: requested distance ",dist," exceeds the available curve length ",total," from start_u=",start_u))
+           str("nurbs_cut: requested distance ",dist," exceeds the available curve length ",total," from u=",u))
     let(
         loc = _nurbs_find_piece(pieces, target, eps)
     )
-    assert(!is_undef(loc), "nurbs_find_u: failed to bracket the requested distance")
-    _nurbs_find_u_bisect_dir(degree, pinfo, loc[0], loc[1], loc[2], tol, u_tol, maxdepth, maxiter, dim);
+    assert(!is_undef(loc), "nurbs_cut: failed to bracket the requested distance")
+    _nurbs_cut_bisect_dir(degree, pinfo, loc[0], loc[1], loc[2], tol, u_tol, maxdepth, maxiter, dim);
 
 
 
@@ -2038,8 +2050,8 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   surface that is geometrically smooth across a parametric crease (for example, a surface built from
 //   rational circle arcs, where the tangent speed jumps but its direction does not) reports a unique
 //   normal there.  At clamped or open patch boundaries only one side of the surface exists and the
-//   one-sided normal is reported as the normal; directions of type "closed" are periodic, so both sides
-//   exist everywhere including the seam, and a clamped direction whose first and last control points
+//   one-sided normal is reported as the normal; surfaces are periodic in the closed direction, so both sides
+//   exist everywhere including the seam, and a clamped surface whose first and last control points
 //   coincide row-by-row is likewise treated as periodic at its boundary (see {{nurbs_curve()}}).
 // Arguments:
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
@@ -2354,7 +2366,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 // Topics: NURBS Patches
 // See Also: nurbs_normals(), nurbs_patch_points(), nurbs_vnf(), vnf_sheet()
 // Usage:
-//   vnf = nurbs_sheet(patch, degree, delta, [splinesteps=], [edge=], [roundsteps=], [style=], [weights=], [type=], [mult=], [knots=]);
+//   vnf = nurbs_sheet(delta, patch, degree, [splinesteps=], [edge=], [style=], [weights=], [type=], [mult=], [knots=]);
 // Description:
 //   Constructs a thin sheet from a NURBS patch by offsetting the patch along its normal vectors, similar
 //   to bezier_sheet() for bezier patches.  The `delta` parameter is a 2-vector specifying the two offset
@@ -2369,17 +2381,18 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   degree, including those produced by `row_edges=`/`col_edges=` in {{nurbs_interp_surface()}}), where
 //   the surface normal is not unique and a plain normal offset would leave a gap (or an overlap) along
 //   the crease.  The `edge` parameter selects how the offset surface is joined across creases:
-//   - `edge="sharp"` (default) — the offset preserves the sharp crease, like `delta=` with sharp corners
+//   - `edge="chamfer"` (default) — the two one-sided offset surfaces along a crease are connected with a flat
+//     strip, beveling the offset edge.  This is the simplest and most robust treatment.  Where two
+//     creases cross, the corner is closed with a single flat facet.
+//   - `edge="sharp"` — the offset preserves the sharp crease, like `delta=` with sharp corners
 //     in {{offset()}}: each point on a crease is offset along the miter direction that keeps it at the
 //     correct offset distance from the surface on every side of the crease.  Where two creases cross,
 //     the corner point is placed at the best-fit (least-squares) miter of all sector normals.  Note that
 //     just as with sharp corners in offset(), the miter distance grows without bound as a crease
 //     approaches a fold-back, so very sharp creases produce long spikes.
-//   - `edge="chamfer"` — the two one-sided offset surfaces along a crease are connected with a flat
-//     strip, beveling the offset edge.  This is the simplest and most robust treatment.  Where two
-//     creases cross, the corner is closed with a single flat facet.
 //   - `edge="round"` — the gap along a crease is filled with a circular arc of radius equal to the
-//     offset distance, centered on the crease, using `roundsteps` segments; crease crossings are closed
+//     offset distance, centered on the crease; the number of segments is determined by $fn (if set)
+//     or calculated from $fa (similar to how OpenSCAD generates circle segments); crease crossings are closed
 //     with a spherically blended corner patch.
 //   .
 //   Creases are detected from the computed sector normals of {{nurbs_normals()}}, not from the knot
@@ -2390,8 +2403,8 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   to avoid self-intersection there.
 //   .
 //   The patch may be given as a control-point grid with the usual NURBS parameters, or as a NURBS
-//   parameter list such as the output of {{nurbs_interp_surface()}}.  Directions of type "closed" are
-//   supported: the sheet wraps around closed directions and boundary walls are created only along
+//   parameter list such as the output of {{nurbs_interp_surface()}}.  Closed surfaces are
+//   supported: the sheet wraps around closed directions and flat edges are created only along
 //   clamped or open edges.  Surfaces with degenerate points (zero tangents, e.g. an edge collapsed to a
 //   point) cannot be offset and produce an error.
 //   .
@@ -2399,20 +2412,20 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   with its `caps` parameter to create automatic caps. To cap the open ends of a sheet, create the sheet without degenerate rows,
 //   then manually add boundary caps by extracting the boundary points with {{nurbs_patch_points()}} at `u=[0]` or `u=[1]`, forming
 //   them into faces with {{vnf_vertex_array()}}, and joining them using {{vnf_join()}}. See the "Creating a capped sheet" example below.
+//   .
 // Arguments:
+//   delta = a 2-vector specifying two different offsets from the patch, in any order.  Positive values offset toward the patch "exterior" side, negative values toward the "interior" side.
 //   patch = rectangular list of 3D control points, or a NURBS parameter list
 //   degree = a scalar or 2-vector giving the degree of the NURBS in the two directions
-//   delta = a 2-vector specifying two different offsets from the patch, in any order.  Positive values offset toward the patch "exterior" side, negative values toward the "interior" side.
 //   ---
 //   splinesteps = a scalar or 2-vector giving the number of segments between each knot in the two directions.  Default: 16
-//   edge = crease treatment, one of "sharp", "chamfer" or "round".  Default: "sharp"
-//   roundsteps = number of segments in the rounded arc across a crease when `edge="round"`.  Default: 4
+//   edge = crease treatment, one of "sharp", "chamfer" or "round".  Default: "chamfer"
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
 //   weights = a matrix whose size corresponds to `patch` giving the weight at each control point.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
 //   mult = a single list or pair of lists giving the knot multiplicity in the two directions.  Default: all 1
 //   knots = a single list or pair of lists giving the knot vector in each of the two directions.  Default: uniform
-// Example(3D): A sheet from a smooth patch.  With `delta=[0,-10]` the original surface (green) is unchanged on top.
+// Example(3D): A sheet from a smooth patch.  With `delta=[0,-10]` the original surface is unchanged on top.
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -2420,8 +2433,8 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]],
 //   ];
 //   color("lime") nurbs_vnf(patch, 3);
-//   vnf_polyhedron(nurbs_sheet(patch, 3, [0,-10]));
-// Example(3D,Big,VPT=[0,0,25],VPR=[90,0,25],VPD=700): The three crease treatments on a surface with creases in both directions: sharp (left), chamfer (center), round (right).  The sheet is offset upward, toward the convex side of the ridges, so the crease treatment is visible along the offset ridge lines.
+//   vnf_polyhedron(nurbs_sheet([0,-10], patch, 3));
+// Example(3D): A sheet with chamfer crease treatment (the default).  The two one-sided offset surfaces along creases are connected with a flat strip, beveling the offset edge.
 //   surface = [
 //     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
 //     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
@@ -2430,24 +2443,40 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
 //   ];
 //   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
-//   xdistribute(120) {
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="sharp"));
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="chamfer"));
-//       vnf_polyhedron(nurbs_sheet(S, delta=[-8,0], splinesteps=8, edge="round"));
-//   }
-// Example(3D): A cylindrical sheet closed in one direction (the u-direction).  No boundary walls are created at the u ends because the surface wraps around continuously.  The v-direction remains clamped, so walls appear at the v ends.
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="chamfer"));
+// Example(3D): A sheet with sharp crease treatment.  The surface has creases in both directions and the sheet is offset upward, toward the convex side of the ridges, so the sharp crease treatment is visible along the offset ridge lines.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="sharp"));
+// Example(3D): A sheet with round crease treatment.  The gap along a crease is filled with a circular arc, creating smooth rounded ridges.
+//   surface = [
+//     [[-50, 50, 0], [-30, 50,  0], [ 0, 50, 25], [30, 50,  0], [50, 50, 0]],
+//     [[-50, 25, 0], [-30, 25, 10], [ 0, 25, 30], [30, 25, 10], [50, 25, 0]],
+//     [[-50,  0,25], [-30,  0, 30], [ 0,  0, 50], [30,  0, 30], [50,  0,25]],
+//     [[-50,-25, 0], [-30,-25, 10], [ 0,-25, 30], [30,-25, 10], [50,-25, 0]],
+//     [[-50,-50, 0], [-30,-50,  0], [ 0,-50, 25], [30,-50,  0], [50,-50, 0]],
+//   ];
+//   S = nurbs_interp_surface(surface, 3, row_edges=2, col_edges=2);
+//   vnf_polyhedron(nurbs_sheet([-8,0], S, splinesteps=8, edge="round"));
+// Example(3D): A cylindrical sheet closed in one direction (the u-direction).  The v-direction is clamped, so flat edges appear at the v ends.
 //   patch = [
 //       [[30, 0, -25], [21, 21, -25], [0, 30, -25], [-21, 21, -25], [-30, 0, -25], [30, 0, -25]],
 //       [[30, 0, 0], [21, 21, 0], [0, 30, 0], [-21, 21, 0], [-30, 0, 0], [30, 0, 0]],
 //       [[30, 0, 25], [21, 21, 25], [0, 30, 25], [-21, 21, 25], [-30, 0, 25], [30, 0, 25]],
 //   ];
-//   vnf_polyhedron(nurbs_sheet(patch, 2, [0, -3], type=["closed", "clamped"]));
-// Example(3D,Med,VPR=[60,0,12],VPT=[3,10,3],VPD=220): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).  
+//   vnf_polyhedron(nurbs_sheet([0, -3], patch, 2, type=["closed", "clamped"]));
+// Example(3D,Med,VPR=[60,0,12],VPT=[0,10,3],VPD=175): A nurbs_sheet created from a rotated star cross-section surface closed in one direction, with the bottom capped. The cap is created by duplicating the {{nurbs_curve()}} used by {{nurbs_interp_surface()}} and sweeping it to the sheet thickness using {{linear_sweep()}}. Note: {{nurbs_sheet()}} uses the function form of {{nurbs_interp_surface()}} and therefore cannot offset surfaces with degenerate rows (where all control points are identical).
 //   thickness = 3;
 //   star_pts = star(or=25, ir=21, n=7);
 //   surface = [ for(i=[0:4]) zrot(i*10,path3d(star_pts,i*5)), ];
 //   S = nurbs_interp_surface(surface, 3, col_wrap=true);
-//   sheet = nurbs_sheet(S, delta=[0, -thickness]);
+//   sheet = nurbs_sheet([0, -thickness], S);
 //   star_region = [nurbs_curve(nurbs_interp(star_pts, 3, closed=true))];
 //   cap = linear_sweep(star_region, thickness, anchor=BOT);
 //   vnf_polyhedron(vnf_join([sheet, cap]));
@@ -3433,19 +3462,18 @@ module nurbs_interp_surface(points, degree, splinesteps=16,
                     translate(pt) sphere(r=data_size, $fn=16);
 }
 
-function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundsteps=4, style="default",
+function nurbs_sheet(delta, patch, degree, splinesteps=16, edge="chamfer", style="default",
                      weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
     is_list(patch) && _valid_surface_type(patch[0]) ?
        assert(len(patch)>=6, "NURBS parameter list is invalid")
        assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_sheet(patch[2], patch[1], delta, splinesteps=splinesteps, edge=edge, roundsteps=roundsteps,
+       nurbs_sheet(delta, patch[2], patch[1], splinesteps=splinesteps, edge=edge,
                    style=style, weights=patch[5], type=patch[0], mult=patch[4], knots=patch[3])
   : assert(is_vector(delta,2) && delta[0]!=delta[1],
            "delta must be a 2-vector designating two different offset distances")
     assert(in_list(edge, ["sharp","chamfer","round"]),
            "edge must be one of \"sharp\", \"chamfer\" or \"round\"")
-    assert(is_int(roundsteps) && roundsteps>=1, "roundsteps must be a positive integer")
     let(
         type = force_list(type,2),
         pts = nurbs_patch_points(patch, degree, splinesteps=splinesteps, weights=weights, type=type, mult=mult, knots=knots),
@@ -3467,7 +3495,8 @@ function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundst
         // expanded sample lists: [original_index, side_parameter]; crease rows/columns
         // are replicated so the join geometry (chamfer strip or rounding arc) appears
         // between the copies.  edge="sharp" needs no replication (pointwise miter).
-        K = edge=="round" ? roundsteps : 1,
+        // For edge="round", calculate segments from $fn, $fs, $fa (like circle segments)
+        K = edge=="round" ? ($fn > 0 ? $fn : max(4, ceil(360 / $fa))) : 1,
         uexp = [for (a=idx(M)) each edge=="sharp" || !usplit[a] ? [[a,0]]
                                   : [for (k=[0:1:K]) [a, k/K]]],
         vexp = [for (b=idx(M[0])) each edge=="sharp" || !vsplit[b] ? [[b,0]]
@@ -3489,12 +3518,15 @@ function nurbs_sheet(patch, degree, delta, splinesteps=16, edge="sharp", roundst
                  vnf_join([vnf_vertex_array(offsurf[0], row_wrap=true, col_wrap=true, style=style),
                            vnf_reverse_faces(vnf_vertex_array(offsurf[1], row_wrap=true, col_wrap=true, style=style))])
             : v_closed ?
-                 // walls at the u ends: stack the surfaces into one closed band of rows
+                 // flat edges at the u ends: stack the surfaces into one closed band of rows
                  vnf_vertex_array(concat(offsurf[0], reverse(offsurf[1])), row_wrap=true, col_wrap=true, style=style)
-            :    // walls at the v ends; u direction closed wraps rows, clamped gets end caps
+            :    // flat edges at the v ends; u direction closed wraps rows, clamped gets end caps
                  vnf_vertex_array([for (i=idx(offsurf[0])) concat(offsurf[0][i], reverse(offsurf[1][i]))],
                                   col_wrap=true, row_wrap=u_closed, caps=!u_closed, style=style)
     )
+    // If delta[0] > delta[1], reverse all faces to ensure consistent face orientation.
+    // This allows delta order to be arbitrary while maintaining equivalent geometry with
+    // proper normal direction for rendering and 3D printing.
     delta[0] > delta[1] ? vnf_reverse_faces(vnf) : vnf;
 
 
@@ -4154,6 +4186,31 @@ function _gauss_legendre(n) =
        0.5384693101056831,  0.9061798459386640],
      [0.2369268850561891, 0.4786286704993665, 0.5688888888888889,
       0.4786286704993665, 0.2369268850561891]];
+
+
+// Gauss-Legendre quadrature integration over intervals within a knot vector.
+// Integrates a function func(t, span_data) over all non-zero knot spans.
+// span_data is a closure-captured value passed to func for each span.
+// Returns sum of integrated values over all spans.
+// n_gauss: number of quadrature points (2-5); higher n is more accurate.
+
+function _gauss_integrate_spans(func, intervals, n_gauss) =
+    let(
+        gl = _gauss_legendre(n_gauss),
+        gl_nodes = gl[0],
+        gl_wts = gl[1],
+        quad_sum = sum([for (iv = intervals)
+                            let(a = iv[0], b = iv[1])
+                            if (b - a > 1e-15)
+                            let(hw = (b - a) / 2, mid = (a + b) / 2)
+                            sum([for (g = [0:1:n_gauss-1])
+                                     let(t = mid + hw * gl_nodes[g],
+                                         w = gl_wts[g] * hw)
+                                     w * func(t)
+                                ])
+                       ])
+    )
+    quad_sum;
 
 
 // One step of the de Boor recurrence: lifts degree-(k-1) to degree-k basis values
