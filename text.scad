@@ -2,30 +2,42 @@
 // LibFile: text.scad
 //   Modules and functions for text rendering.
 //   .
+//   The modules here address two issues with OpenSCAD's font handling: sizing and letter spacing.
+//   They also offer capabilities for inline styling, sizing text automatically to fit within specified
+//   bounds, multiple options for uniform letter spacing, and word-wrapping,
+//   in addition to anchoring and attaching to other objects.
+//   .
+//   ### OpenSCAD font sizing
 //   Historically fonts were specified by their "body size", the height of the metal body
 //   on which the glyphs were cast.  This means the size was an upper bound on the size
-//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
-//   the metal body is replaced by an invisible box, the em square, whose side length is
-//   defined to be the font's size.  The glyphs can be contained in that square, or they
-//   can extend beyond it, depending on the choices made by the font designer.  As a
-//   result, the meaning of font size varies between fonts: two fonts at the "same" size
-//   can differ significantly in the actual size of their characters.  Typographers
-//   customarily specify the size in the units of "points". A point is 1/72 inch.  In
-//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
-//   printing), so if you want points you need to perform a suitable unit conversion.
+//   of the font glyphs, not a direct measurement of their size. In digital typesetting,
+//   the metal body is replaced by an invisible box, the **em box**, whose side length is
+//   defined to be the font's size. The glyphs can be contained in that square, or they
+//   can extend beyond it, depending on the choices made by the font designer. As a
+//   result, the meaning of "font size" varies between fonts: two fonts at the "same" size
+//   can differ significantly in the actual size of their characters. Typographers
+//   customarily specify the size in 1/72-inch units called "points".
 //   .
-//   In addition, the OpenSCAD font system has a bug: Specifying `size=s`, where `s` is the desired em size, results
-//   in text having a size of `s/0.72`. For many fonts, this causes the size of uppercase letters (not the
-//   ascender-descender range) to be approximately equal to `s` units, because fonts commonly use about 70% of their
-//   height for their ascenders. More recent versions of OpenSCAD introduced the `em` parameter in `text()` to let
-//   you specify font size the customary way, as em box size. Multiplying `em` by 100/72 converts it to the equivalent
-//   OpenSCAD size that results in the true em size. The modules here let you specify font size a number of other ways, too.
+//   
+//   In OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3D
+//   printing). If you want a size in points, you need a suitable unit conversion, which is
+//   complicated by a bug in the OpenSCAD font system: Specifying `size=s`, where `s` is the desired
+//   em size, results in text having a size of `s/0.72`. For many fonts, this causes the size of uppercase
+//   letters (not the ascender-descender range) to be approximately equal to `s` units, because uppercase
+//   characters commonly use about 70% of the actual font height above the baseline.
+//   More recent versions of OpenSCAD introduced the `em` parameter in `text()` to let
+//   you specify font size the customary way, a a proprtion of em box size. Multiplying `em` by 100/72 converts it
+//   to the equivalent OpenSCAD size that results in the true em size.
+//   The modules here let you specify font size a number of other ways, too.
 //   .
-//   Another bug in OpenSCAD involves letter spacing, in which the `spacing` parameter in `text()` results in the width
-//   of each chracter being multiplied by the `spacing` value. This works fine for monospace fonts, but causes horribly
-//   uneven spacing when using proportional fonts because wide characters like "m" or "W" end up with too much adjacent
-//   spacing compared to narrow characters like "i" or "l". This situation is fixed by offering multiple ways to
-//   achieve consistent letter spacing.
+//   ### OpenSCAD letter spacing
+//   OpenSCAD's `spacing` parameter in `text()` results in the width of each chracter being multiplied by the
+//   `spacing` value. This works fine for monospace fonts, but causes horribly uneven spacing when using proportional
+//   fonts because wide characters like "m" or "W" end up with too much adjacent spacing compared to narrow
+//   characters like "i" or "l". The `write()` and `write3d()` modules here fix this situation
+//   by offering multiple ways to achieve consistent letter spacing.
+//   .
+//   ### Usage
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Text
@@ -129,15 +141,51 @@ _writeob() returns a write object, which includes everything needed to render th
 // Usage: Concatenation
 //   write(...) write(...) write(...);
 // Description:
-//   Creates a 2D geometry of text within optional bounds, word-wrapping to multiple lines if needed.
-//   The `text` input may be a simple string, a string with embedded newline (`\n`) characters, or an array
-//   of either kind of string mixed together. The text may contain `"{ }"` or `"\u00a0"` for nonbreaking space
-//   characters. The text is parsed into an array of simple strings, each of which is treated as a paragraph to be
-//   word-wrapped if the font size is given with a finite `max_width` bound.
+//   Creates a 2D geometry of text within optional bounds, performing auto-scaling and word-wrapping to multiple
+//   lines if needed.
 //   .
-//   If a font size is given with a finite `max_width` and/or `max_height`, then the text is word-wrapped within those
-//   dimensions; otherwise, no word-wrapping occurs. This table shows the results given different combinations
-//   of font size, finite `max_width`, and finite `max_height`:
+//   #### Input text
+//   The `text` input may be a simple string, a string with embedded newline (`\n`) characters, or an array
+//   of either kind of string mixed together, and may include codes for nonbreaking spaces and inline font styles.
+//   Any string that includes newline `\n` characters is split at each newline into simple strings, expanding the 
+//   list if a list was originally given. The resulting list of text is auto-scaled or wordwrapped depending
+//   on whether font size, bounding box, or both are given, as described below.
+//   .
+//   ####  Concept of "paragraph"
+//   Once the input text has been processed into a list of simple strings without newlines, each string in the list is
+//   considered to be a **paragraph** for the purposes of wordwrapping, anchoring, and attaching.
+//   .
+//   A paragraph may have its first line indented if `indent` is positive, or subsequent lines are indented if `indent`
+//   is negative (effectively outdenting the first line). Spacing between paragraphs is controlled by `para_spacing`,
+//   so there is no need to include consecutive newlines to achieve a blank vertical space between paragraphs, you can
+//   simply adjust `para_spacing`, which defaults to 1 (multiple of `line_spacing`). If you really want to insert a
+//   blank line in your text, make sure it consists of a space character; e.g. the space between the newlines in
+//   `"line1\n \nline2"` would appear as a blank line between `"line1"` and `"line2"`.
+//   .
+//   #### Inline font styling
+//   You can change the font style on the fly using inline style codes.
+//   * `{{r}}` = switch style to regular text
+//   * `{{i}}` = switch style to *italic*
+//   * `{{b}}` = switch style to **bold**
+//   * `{{bi}}` = switch style to ***bold italic***
+//   .
+//   A string like `"one {{i}}two {{r}}three"` would be interpeted as "one" being the default font style,
+//   "two" being italic style, and "three" being regular style.
+//   When `write()` encounters one of these styles, it renders subsequent characters in that style until it encounters
+//   another style code or the end of a paragraph.
+//   **A style does not persist across paragraphs**, including `\n` line breaks in the text (which start new paragraphs).
+//   When a new paragraph starts, it starts with the font originally passed into `write()`. If you want a new paragraph to
+//   have a different style than the font you originally passed as the `font` argument, then include style at the start
+//   of the paragraph text.
+//   .
+//   Additionally, `{{ }}` works as a nonbreaking space but `{ }` is a shortcut.
+//   .
+//   #### Auto-scaling versus word wrapping
+//   If a finite `max_width` and/or `max_height` are given *without* a font size, then the text is auto-scaled to
+//   fit within the given bounds. If a font size is given with a finite `max_width` and/or `max_height`, then the
+//   text is word-wrapped within those dimensions.
+//   .
+//   This table shows the results from different combinations of font size, finite `max_width`, and finite `max_height`:
 //   .
 //   | Font size given | Finite `max_width` | Finite `max_height` | Result |
 //   | :---: | :---: | :---: | --- |
@@ -150,6 +198,7 @@ _writeob() returns a write object, which includes everything needed to render th
 //   | ✓ | ✓ | - | Wrap text if required to fit within the `max_width` |
 //   | ✓ | ✓ | ✓ | Wrap to fit within `max_width`, echo warning if `max_height` exceeded |
 //   .
+//   #### Bounding boxes
 //   When either `max_width` or `max_height` are specified, the wordwrapped text invariably doesn't span the entire dimensions
 //   of the bounding box in one or both dimensions. It is usually a bit narrower than `max_width` due to wordwrapping if
 //   `max_width` was set, or the wordwrapped lines are not as tall as `max_height` if `max_height` was set. Think of the
@@ -157,11 +206,10 @@ _writeob() returns a write object, which includes everything needed to render th
 //   margin (if any) between the tight bounds and your defined bounds depends on whether you set `max_width`, `max_height`,
 //   or both, and also on how you set `align`, `vfit`, and `hfit`. The `box_align` parameter uses the usual direction
 //   vectors `RIGHT`, `BACK`, etc., and controls the position of the tight bounding box within your defined bounds.
-//   By default, the tight bounding box horizontal alignment follows the `align` parameter (which aligns the text within the tight
-//   bounding box), and the vertical position is `CENTER`.
+//   By default, the tight bounding box horizontal alignment follows the `align` parameter (which aligns the text within the
+//   tight bounding box), and the vertical position is `CENTER`.
 //   .
-//   **Font sizes and spacing**
-//   .
+//   #### Font sizes
 //   There are several mutually-exclusive font size parameters to choose from. At most one of them can be specified.
 //   * `size` is exactly the same as the `size` parameter in OpenSCAD's `text()` module.
 //   * `cap_height` is a useful size specification for uppercase labeling, and results in capital letters sized to this height. The special variable `$refchar_cap` is used as the reference character for a capital letter, and defaults to `H`.
@@ -171,47 +219,14 @@ _writeob() returns a write object, which includes everything needed to render th
 //   * `iline_height` lets you specify a font size in terms of the font's internal interline height, which is typically, but not always, equal or greater than the maximum glyph height.
 //   * `em` is the standard em unit size in typography, the size of the design box for the glyphs. OpenSCAD's `text()` also has an `em` argument that you can specify instead of `size`.
 //   .
+//   #### Letter spacing
 //   Unlike the `spacing` parameter in OpenSCAD's `text()`, which results in non-uniform spacing of proportional fonts, three
 //   letter spacing parameters are available to maintain uniform spacing between characters while also accounting for kerning
 //   between character pairs. You can use `letterspacing` to specify a constant amount of space in CAD units to insert between
 //   characters. The other two specify proportions: `letterspacing_em` is a multiple of the font's em-size, and
 //   `letterspacing_ref` is a mutiple the width of a reference character; default is `$refchar_width=0` (zero).
 //   .
-//   **Paragraphs**
-//   .
-//   The input text may be a simple string or a list of strings.
-//   If the input text includes newline `\n` characters, the text is split at each newline into a list of simple strings.
-//   Any `\n` characters that may be present in a list of strings also cause those strings to be split, expanding the list.
-//   .
-//   Once the input text has been processed into a list of simple strings without newlines, each string in the list is
-//   considered to be a "paragraph" for the purposes of wordwrapping and positioning.
-//   .
-//   A paragraph may have its first line indented if `indent` is positive, or subsequent lines are indented if `indent`
-//   is negative (effectively outdenting the first line). Spacing between paragraphs is controlled by `para_spacing`,
-//   so there is no need to include consecutive newlines to achieve a blank vertical space between paragraphs, you can
-//   simply adjust `para_spacing`, which defaults to 1 (multiple of `line_spacing`). If you really want to insert a
-//   blank line in your text, make sure it consists of a space character; e.g. the space between the newlines in
-//   `"line1\n \nline2"` would appear as a blank line between `"line1"` and `"line2"`.
-//   .
-//   **Inline font styling**
-//   .
-//   You can change the font style on the fly using inline style codes.
-//   * `{{r}}` = switch style to regular text
-//   * `{{i}}` = switch style to *italic*
-//   * `{{b}}` = switch style to **bold**
-//   * `{{bi}}` = switch style to ***bold italic***
-//   .
-//   When `write()` encounters one of these styles, it renders subsequent characters in that style until it encounters
-//   another style code. There is no notion of "closing a tag" like in HTML, the codes simply change the style on the fly.
-//   **A style does not persist across paragraphs**, including `\n` line breaks in the text (which start new paragraphs).
-//   When a new paragraph starts, it starts with the font originally passed into `write()`. If you want a new paragraph to
-//   have a different style than the font you originally passed as the `font` argument, then include style at the start
-//   of the paragraph text.
-//   .
-//   Additionally, `{{ }}` works as a nonbreaking space but `{ }` is a shortcut.
-//   .
-//   **Concatenating**
-//   .
+//   #### Concatenating
 //   Multiple `write()` calls may be concatenated in a parent-child fashion, to concatenate multiple instances along a
 //   common baseline. The beginning of each child's baseline connects to the end of the parent's baseline. For example:
 //   ````
@@ -269,10 +284,6 @@ _writeob() returns a write object, which includes everything needed to render th
 //   right(50)     write(["Hello\nthere,", "world!"], size=10);
 // Example(2D,VPT=[0,0,0],VPD=270): If your text is just uppercase characters, you can use `cap_height` for the font size to specify the uppercase ascender height only. The character `H` for your font is used as the reference character, which you may reset by changing `$refchar_cap`. The text height spans exactly -20 to 20.
 //   write("THIS", cap_height=40);
-// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by making each subsequent `write()` as a child of the parent. Use spaces if needed to keep the words separate.
-//   write("The", size=8, font="Liberation Sans", anchor=LEFT+FWD) // position the first one
-//     write(" right ", size=14, font="Liberation Serif:style=Bold Italic")
-//       write("stuff", size=11, font="Liberation Sans:style=Bold");
 // Example(2D,Med,NoAxes,VPT=[27,6,0],VPD=320): As described above, OpenSCAD's `text()` creates unevenly-spaced text with proportional typefaces when `spacing` is not 1.0. This is solved by `write()`, letting you use one of three different options for setting character spacing. Here we use `letterspacing_ref=2`, which uses `$refchar_width` (default `"0"`) to calculate a constant amount of space to insert between each character.
 //   font = "Liberation Sans:style=Bold";
 //   string = "Animals";
@@ -285,6 +296,28 @@ _writeob() returns a write object, which includes everything needed to render th
 //       color("black") write("write():", size=10, font=font, anchor=(BASELINE(0,RIGHT)));
 //       write(string, size=10, font=font, letterspacing_ref=spacing, anchor=(BASELINE(0,LEFT)));
 //   }
+// Example(2D,NoAxes,VPT=[0,0,0],VPD=280): You can also use inline style codes to format parts of the text with different styles. Here the font is given without a style and the style codes for italic, regular, bold, and bold italic are inserted. The style changes with each code. The text is automatically word-wrapped because a font size and width were both specified. See other wordwrapping examples below.
+//   string = "Go {{i}}placidly{{r}} amid the noise and
+//       haste, and remember what {{b}}peace{{r}} there
+//       may be in {{bi}}silence.";
+//   fontname = "Liberation Serif";
+//   write(string, size=10, box=[130,90], font=fontname);
+// Example(2D,NoAxes,VPD=230): There may be a situation where you need a nonbreaking space. The code `{ }` (a space between two curly braces) is used for this purpose. In this example, the string `"1000 kg"` should be treated as a single word with a nonbreaking space, to prevent wordwrapping the "kg" to a separate line.
+//   back(20) write("Heavy: 1000 kg", size=10, max_width=90,
+//       align="center", wrap_optimize=false, show_bounds=true);
+//   fwd(20)  write("Heavy: 1000{ }kg", size=10, max_width=90,
+//       align="center", wrap_optimize=false, show_bounds=true);
+// Example(2D,VPD=230): `write()` normally collapses consecutive spaces (because `collapse_space=true` by default). If you want to insert multiple spaces while collapsing others, you can use the nonbreaking space code `{ }` for this purpose. Here 5 spaces are inserted between two words by alternating normal and nonbreaking spaces, but you could also use all nonbreaking spaces.
+//   write("Five { } { } spaces", size=10);
+// Example(2D,VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
+//   write("Hello,\nworld!", max_width=80, show_bounds=true);
+// Example(2D, VPT=[0,0,0],VPD=200): Likewise, if only `max_height` is set with no font size, then the font size is automatically adjusted so the text spans the specified vertical height. We set `vfit="tight` to maximize the vertical space used within the `max_height` constraint.
+//   write("Hello,\nworld!", max_height=40, vfit="tight",
+//       show_bounds=true); 
+// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by making each subsequent `write()` as a child of the parent. Use spaces if needed to keep the words separate.
+//   write("The", size=8, font="Liberation Sans", anchor=LEFT+FWD) // position the first one
+//     write(" right ", size=14, font="Liberation Serif:style=Bold Italic")
+//       write("stuff", size=11, font="Liberation Sans:style=Bold");
 // Example(2D,VPT=[0,0,0],VPD=280): Basic textwrap of a single long string to fit within specified bounding box. We override the default wrapping behavior by setting `wrap_optimize=false` to force `write()` to use "greedy" word-wrapping, causing each line to use as much of the allowed horizontal width as possible without exceeding it. This results in a "widow" word by itself on the last line.
 //   string = "Go placidly amid the noise and haste,
 //       and remember what peace there may be in silence.";
@@ -310,24 +343,6 @@ _writeob() returns a write object, which includes everything needed to render th
 //   write(string, size=10, box=[130,90], font=fontname,
 //        align="justify", justify_last="right",
 //        wrap_optimize=false, show_bounds=true);
-// Example(2D,NoAxes,VPT=[0,0,0],VPD=280): You can also use inline style codes to format parts of the text with different styles. Here the font is given without a style and the style codes for italic, regular, bold, and bold italic are inserted. The style changes with each code.
-//   string = "Go {{i}}placidly{{r}} amid the noise and
-//       haste, and remember what {{b}}peace{{r}} there
-//       may be in {{bi}}silence.";
-//   fontname = "Liberation Serif";
-//   write(string, size=10, box=[130,90], font=fontname);
-// Example(2D,NoAxes,VPD=230): There may be a situation where you need a nonbreaking space. The code `{ }` (a space between two curly braces) is used for this purpose. In this example, the string `"1000 kg"` should be treated as a single word with a nonbreaking space, to prevent wordwrapping the "kg" to a separate line.
-//   back(20) write("Heavy: 1000 kg", size=10, max_width=90,
-//       align="center", wrap_optimize=false, show_bounds=true);
-//   fwd(20)  write("Heavy: 1000{ }kg", size=10, max_width=90,
-//       align="center", wrap_optimize=false, show_bounds=true);
-// Example(2D,VPD=230): `write()` normally collapses consecutive spaces (because `collapse_space=true` by default). If you want to insert multiple spaces while collapsing others, you can use the nonbreaking space code `{ }` for this purpose. Here 5 spaces are inserted between two words by alternating normal and nonbreaking spaces, but you could also use all nonbreaking spaces.
-//   write("Five { } { } spaces", size=10);
-// Example(2D,VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
-//   write("Hello,\nworld!", max_width=80, show_bounds=true);
-// Example(2D, VPT=[0,0,0],VPD=200): Likewise, if only `max_height` is set with no font size, then the font size is automatically adjusted so the text spans the specified vertical height. We set `vfit="tight` to maximize the vertical space used within the `max_height` constraint.
-//   write("Hello,\nworld!", max_height=40, vfit="tight",
-//       show_bounds=true); 
 
 $refchar_cap = "H";   // Reference character for measuring the height of an uppercase character
 $refchar_width = "0"; // Reference character for the letterspacing_ref argument in write()
@@ -339,7 +354,7 @@ module write(text, max_width=INF, max_height=INF, box,
  letterspacing=undef, letterspacing_em=undef, letterspacing_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
  direction="ltr", language="en", script="latin", anchor=undef, spin=0, show_bounds=false) {
- 
+
     // get write object
 
     w = _writeobj(text, 0, max_width, max_height, box, size, cap_height, nom_height, full_height,
@@ -349,34 +364,51 @@ module write(text, max_width=INF, max_height=INF, box,
 
     // if concatenating write() calls, get the parent offset
 
-    parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef
-    : let(
+    parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef: let(
         anchors = last($parent_geom),
         found = search([BASELINE("end")], anchors, num_returns_per_match=1)[0]
-    ) found==[] ? undef : anchors[found];
-    parent_offset = is_undef(parent_end) ? [0,0,0] : parent_end[1];
-    anch = is_def(anchor) ? anchor
-        : is_undef(parent_end) ? CENTER
-        : BASELINE("start");
+    )
+        found==[] ? undef : anchors[found];
+    parent_offset = is_undef(parent_end) ? [0, 0, 0] : parent_end[1];
+    anch = is_def(anchor) ? anchor: is_undef(parent_end) ? CENTER: BASELINE("start");
 
     // display the text
 
     dir = direction == "rtl" ? -1 : 1;
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
-    translate(parent_offset) attachable(anch, spin, two_d=true, size=w.tightboxsize, anchors=_line_anchors(w.baseline_pos, w.tightboxsize)) {
-        union() {
-            if(show_bounds) {
-                stroke(square(w.userboxsize, center=true), width=0.6, color="lightgray", closed=true);
-                translate(w.tightbox_offset) stroke(square(w.tightboxsize, center=true), width=0.6, color="green", closed=true);
+    translate(parent_offset)
+        attachable(
+            anch, spin, two_d=true, size=w.tightboxsize,
+            anchors=_line_anchors(w.baseline_pos, w.tightboxsize)
+        ) {
+            union() {
+                if(show_bounds) {
+                    stroke(
+                        square(w.userboxsize, center=true), width=0.6,
+                        color="lightgray", closed=true
+                    );
+                translate(w.tightbox_offset)
+                    stroke(
+                        square(w.tightboxsize, center=true), width=0.6,
+                        color="green", closed=true
+                    );
                 ybase = w.tightboxsize.y/2 - w.vbaseline0;
                 wd = is_finite(w.wid) ? w.wid : w.tightboxsize[0];
-                translate(w.tightbox_offset) stroke([[-w.osize-wd/2, ybase], [w.osize+wd/2, ybase]], width=0.4, color="magenta");
+                translate(w.tightbox_offset)
+                    stroke(
+                        [[-w.osize-wd/2, ybase], [w.osize+wd/2, ybase]],
+                        width=0.4, color="magenta"
+                    );
             }
-            for(i=[0:ilast]) let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
-                for(p=[0:len(tx)-1])
-                    translate([w.baseline_pos[i].xstart+dir*cp[p], w.baseline_pos[i].y])
-                        text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
+            for(i=[0:ilast])
+                let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
+                    for(p=[0:len(tx)-1])
+                        translate([
+                            w.baseline_pos[i].xstart+dir*cp[p],
+                            w.baseline_pos[i].y
+                        ])
+                            text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
                                 script=script, halign=ha, valign="baseline", spacing=1);
         }
         children();
@@ -412,6 +444,19 @@ module write(text, max_width=INF, max_height=INF, box,
 //   write3d("Flying\nhigh", h=6, size=10, align="center",
 //       font="Liberation Serif:style=Bold Italic",
 //       anchor=BASELINE("start",TOP));
+// Example(3D,VPD=405,VPR=[56,0,40],VPT=[2,0,2]): Attaching 3D text to three sides of a cuboid.
+//   cuboid(100, chamfer=6) {
+//       attach(TOP,BOT,overlap=1) color("lightgreen")
+//           write3d("ETERNAL", thickness=4, size=14, spin=45);
+//       attach(FRONT,BOT,overlap=1) color("lightgreen")
+//           write3d("GOLDEN", thickness=4, size=14);
+//       attach(RIGHT,BOT,overlap=1) color("lightgreen")
+//               write3d("BRAID", thickness=4, size=14);
+//   }
+// Example(3D,VPR=[55,0,328],VPD=157): Style codes embedded in the text do not persist across newlines If you have embedded style codes, be sure to insert one at the beginning of each newline if you want a style different from the font passed into the `font` parameter. In this case `font` is a regular font with no styling. The text after the `\n` would appear as regular style without the boldface style. The style is set to regular on the last word.
+//   write3d("{{bi}}Thriller\n{{b}}Best Selling {{r}}Album",
+//       h=3, max_width=100, font="Liberation Sans", size=10,
+//       align="center", letterspacing=0.5, orient=FWD);
 // Example(3D): A message embossed onto the top of a rounded cuboid, using the default font. The text is 4 units thick and sunk 2 units into the cuboid. The message is automatically word-wrapped to fit within `max_width`. 
 //   cuboid([105,80,15], rounding=6, clip_angle=40)
 //   attach(TOP,BOT,overlap=2)
@@ -427,19 +472,6 @@ module write(text, max_width=INF, max_height=INF, box,
 //               write3d("Beware ye all who enter!",
 //                   thickness=4, size=12, max_width=90,
 //                   letterspacing=1, align="center");
-// Example(3D,VPD=405,VPR=[56,0,40],VPT=[2,0,2]): Attaching 3D text to three sides of a cuboid.
-//   cuboid(100, chamfer=6) {
-//       attach(TOP,BOT,overlap=1) color("lightgreen")
-//           write3d("ETERNAL", thickness=4, size=14, spin=45);
-//       attach(FRONT,BOT,overlap=1) color("lightgreen")
-//           write3d("GOLDEN", thickness=4, size=14);
-//       attach(RIGHT,BOT,overlap=1) color("lightgreen")
-//               write3d("BRAID", thickness=4, size=14);
-//   }
-// Example(3D,VPR=[55,0,328],VPD=157): Style codes embedded in the text do not persist across newlines If you have embedded style codes, be sure to insert one at the beginning of each newline if you want a style different from the font passed into the `font` parameter. In this case `font` is a regular font with no styling. The text after the `\n` would appear as regular style without the boldface style. The style is set to regular on the last word.
-//   write3d("{{bi}}Thriller\n{{b}}Best Selling {{r}}Album",
-//       h=3, max_width=100, font="Liberation Sans", size=10,
-//       align="center", letterspacing=0.5, orient=FWD);
 
 module write3d(text, thickness, max_width=INF, max_height=INF, box, 
  size, cap_height, nom_height, full_height, iline_height, em,
@@ -448,9 +480,12 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
  letterspacing=undef, letterspacing_em=undef, letterspacing_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
  direction="ltr", language="en", script="latin", anchor=undef, spin=0, orient=UP, h) {
-    thk = first_defined([thickness,h]);
-    er1 = assert(thk>0, "\nwrite3d(): Either thickness or h must be defined as a positive number.");
- 
+    thk = first_defined([thickness, h]);
+    er1 = assert(
+        thk>0,
+        "\nwrite3d(): Either thickness or h must be defined as a positive number."
+    );
+
     // get write object
 
     w = _writeobj(text, thk, max_width, max_height, box, size, cap_height, nom_height, full_height,
@@ -460,27 +495,35 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
 
     // if concatenating write() calls, get the parent offset
 
-    parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef
-    : let(
+    parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef: let(
         anchors = last($parent_geom),
         found = search([BASELINE("end")], anchors, num_returns_per_match=1)[0]
-    ) found==[] ? undef : anchors[found];
-    parent_offset = is_undef(parent_end) ? [0,0,0] : parent_end[1];
-    anch = is_def(anchor) ? anchor
-        : is_undef(parent_end) ? CENTER
-        : BASELINE("start");
+    )
+        found==[] ? undef : anchors[found];
+    parent_offset = is_undef(parent_end) ? [0, 0, 0] : parent_end[1];
+    anch = is_def(anchor) ? anchor: is_undef(parent_end) ? CENTER: BASELINE("start");
 
     // display the text
 
     dir = direction == "rtl" ? -1 : 1;
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
-    translate(parent_offset) attachable(anch, spin, orient, size=w.tightboxsize, anchors=_line_anchors(w.baseline_pos, w.tightboxsize)) {
-        translate([0,0,-thk/2]) linear_extrude(thk) union() {
-            for(i=[0:ilast]) let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
-                for(p=[0:len(tx)-1])
-                    translate([w.baseline_pos[i].xstart+dir*cp[p], w.baseline_pos[i].y])
-                        text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
+    translate(parent_offset)
+        attachable(
+            anch, spin, orient, size=w.tightboxsize,
+            anchors=_line_anchors(w.baseline_pos, w.tightboxsize)
+        ) {
+            translate([0, 0, -thk/2])
+                linear_extrude(thk)
+                    union() {
+                        for(i=[0:ilast])
+                            let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
+                                for(p=[0:len(tx)-1])
+                                    translate([
+                                        w.baseline_pos[i].xstart+dir*cp[p],
+                                        w.baseline_pos[i].y
+                                    ])
+                                        text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
                                 script=script, halign=ha, valign="baseline", spacing=1);
         }
         children();
@@ -719,7 +762,6 @@ function _line_anchors(baseline_pos, boxsize) =
                 ylo = bp.bot,
                 yhi = bp.top,
                 ymid = (ylo+yhi)/2,
-                
                 // container edges: real box edge if bounded, else same as text edge
                 box_lo = is_finite(boxsize.x) ? -boxsize.x/2 : xlo,
                 box_hi = is_finite(boxsize.x) ? boxsize.x/2 : xhi
