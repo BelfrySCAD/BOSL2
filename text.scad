@@ -18,7 +18,6 @@
 //   can differ significantly in the actual size of their characters. Typographers
 //   customarily specify the size in 1/72-inch units called "points".
 //   .
-//   
 //   In OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3D
 //   printing). If you want a size in points, you need a suitable unit conversion, which is
 //   complicated by a bug in the OpenSCAD font system: Specifying `size=s`, where `s` is the desired
@@ -127,6 +126,9 @@ _writeob() returns a write object, which includes everything needed to render th
 }
 */
 
+
+$refchar_cap = "H";   // Reference character for measuring the height of an uppercase character
+$refchar_width = "0"; // Reference character for the letterspacing_ref argument in write()
 
 
 // Module: write()
@@ -344,9 +346,6 @@ _writeob() returns a write object, which includes everything needed to render th
 //        align="justify", justify_last="right",
 //        wrap_optimize=false, show_bounds=true);
 
-$refchar_cap = "H";   // Reference character for measuring the height of an uppercase character
-$refchar_width = "0"; // Reference character for the letterspacing_ref argument in write()
-
 module write(text, max_width=INF, max_height=INF, box, 
  size, cap_height, nom_height, full_height, iline_height, em,
  font="Liberation Sans:style=bold",
@@ -367,8 +366,7 @@ module write(text, max_width=INF, max_height=INF, box,
     parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef: let(
         anchors = last($parent_geom),
         found = search([BASELINE("end")], anchors, num_returns_per_match=1)[0]
-    )
-        found==[] ? undef : anchors[found];
+    ) found==[] ? undef : anchors[found];
     parent_offset = is_undef(parent_end) ? [0, 0, 0] : parent_end[1];
     anch = is_def(anchor) ? anchor: is_undef(parent_end) ? CENTER: BASELINE("start");
 
@@ -378,41 +376,25 @@ module write(text, max_width=INF, max_height=INF, box,
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
     translate(parent_offset)
-        attachable(
-            anch, spin, two_d=true, size=w.tightboxsize,
-            anchors=_line_anchors(w.baseline_pos, w.tightboxsize)
-        ) {
+        attachable(anch, spin, two_d=true, size=w.tightboxsize, anchors=_line_anchors(w.baseline_pos, w.tightboxsize)) {
             union() {
                 if(show_bounds) {
-                    stroke(
-                        square(w.userboxsize, center=true), width=0.6,
-                        color="lightgray", closed=true
-                    );
-                translate(w.tightbox_offset)
-                    stroke(
-                        square(w.tightboxsize, center=true), width=0.6,
-                        color="green", closed=true
-                    );
+                    stroke(square(w.userboxsize, center=true), width=0.6, color="lightgray", closed=true);
+                    translate(w.tightbox_offset) stroke(square(w.tightboxsize, center=true), width=0.6, color="green", closed=true);
                 ybase = w.tightboxsize.y/2 - w.vbaseline0;
                 wd = is_finite(w.wid) ? w.wid : w.tightboxsize[0];
                 translate(w.tightbox_offset)
-                    stroke(
-                        [[-w.osize-wd/2, ybase], [w.osize+wd/2, ybase]],
-                        width=0.4, color="magenta"
-                    );
+                    stroke([[-w.osize-wd/2, ybase], [w.osize+wd/2, ybase]], width=0.4, color="magenta");
+                }
+                for(i=[0:ilast])
+                    let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
+                        for(p=[0:len(tx)-1])
+                            translate([w.baseline_pos[i].xstart+dir*cp[p], w.baseline_pos[i].y])
+                                text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
+                                    script=script, halign=ha, valign="baseline", spacing=1);
             }
-            for(i=[0:ilast])
-                let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
-                    for(p=[0:len(tx)-1])
-                        translate([
-                            w.baseline_pos[i].xstart+dir*cp[p],
-                            w.baseline_pos[i].y
-                        ])
-                            text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
-                                script=script, halign=ha, valign="baseline", spacing=1);
+            children();
         }
-        children();
-    }
 }
 
 
@@ -479,12 +461,9 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
  align="left", justify_last=undef, hfit="tight", vfit="nominal", box_align=undef,
  letterspacing=undef, letterspacing_em=undef, letterspacing_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
- direction="ltr", language="en", script="latin", anchor=undef, spin=0, orient=UP, h) {
+ direction="ltr", language="en", script="latin", anchor=undef, spin=0, orient=UP, show_bounds=false, h) {
     thk = first_defined([thickness, h]);
-    er1 = assert(
-        thk>0,
-        "\nwrite3d(): Either thickness or h must be defined as a positive number."
-    );
+    er1 = assert(thk>0, "\nwrite3d(): Either thickness or h must be defined as a positive number.");
 
     // get write object
 
@@ -498,8 +477,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
     parent_end = is_undef($parent_geom) || is_def(anchor) || is_def($attach_to) || is_def($attach_alignment) ? undef: let(
         anchors = last($parent_geom),
         found = search([BASELINE("end")], anchors, num_returns_per_match=1)[0]
-    )
-        found==[] ? undef : anchors[found];
+    ) found==[] ? undef : anchors[found];
     parent_offset = is_undef(parent_end) ? [0, 0, 0] : parent_end[1];
     anch = is_def(anchor) ? anchor: is_undef(parent_end) ? CENTER: BASELINE("start");
 
@@ -508,22 +486,13 @@ module write3d(text, thickness, max_width=INF, max_height=INF, box,
     dir = direction == "rtl" ? -1 : 1;
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
-    translate(parent_offset)
-        attachable(
-            anch, spin, orient, size=w.tightboxsize,
-            anchors=_line_anchors(w.baseline_pos, w.tightboxsize)
-        ) {
-            translate([0, 0, -thk/2])
-                linear_extrude(thk)
-                    union() {
-                        for(i=[0:ilast])
-                            let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
-                                for(p=[0:len(tx)-1])
-                                    translate([
-                                        w.baseline_pos[i].xstart+dir*cp[p],
-                                        w.baseline_pos[i].y
-                                    ])
-                                        text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
+    translate(parent_offset) attachable(anch, spin, orient, size=w.tightboxsize, anchors=_line_anchors(w.baseline_pos, w.tightboxsize)) {
+        translate([0, 0, -thk/2]) linear_extrude(thk) union() {
+            for(i=[0:ilast])
+                let(wo=w.baseline_pos[i].linewrapobj, tx = wo.textobj.text, cp=wo.textobj.charpos, st=wo.textobj.charstyle)
+                    for(p=[0:len(tx)-1])
+                        translate([w.baseline_pos[i].xstart+dir*cp[p], w.baseline_pos[i].y])
+                            text(tx[p], w.osize, w.allfontnames[st[p]], direction=direction, language=language,
                                 script=script, halign=ha, valign="baseline", spacing=1);
         }
         children();
