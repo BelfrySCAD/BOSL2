@@ -1778,7 +1778,7 @@ function _nurbs_find_piece(pieces, target, eps, i=0, accum=0) =
 
 // Bisection on a single directional piece [u0,u1], where travel starts at u0
 // and proceeds monotonically to u1.  The target length is measured from u0.
-function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, maxdepth, maxiter, dim=undef) =
+function _nurbs_cut_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, maxdepth, maxiter, dim=undef) =
     target <= 0 ? u0
   : maxiter <= 0 || abs(u1-u0) <= u_tol ? (u0+u1)/2
   : let(
@@ -1790,20 +1790,20 @@ function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, max
     )
     err <= tol * (1 + abs(target)) ? m
   : sm < target
-    ? _nurbs_find_u_bisect_dir(degree, pinfo, m, u1, target-sm, tol, u_tol, maxdepth, maxiter-1, dim)
-    : _nurbs_find_u_bisect_dir(degree, pinfo, u0, m, target,    tol, u_tol, maxdepth, maxiter-1, dim);
+    ? _nurbs_cut_bisect_dir(degree, pinfo, m, u1, target-sm, tol, u_tol, maxdepth, maxiter-1, dim)
+    : _nurbs_cut_bisect_dir(degree, pinfo, u0, m, target,    tol, u_tol, maxdepth, maxiter-1, dim);
 
 
-// Function: nurbs_find_u()
+// Function: nurbs_cut()
 // Synopsis: Finds the parameter value at a given arc length along a NURBS curve.
 // Topics: NURBS Curves
 // See Also: nurbs_length(), nurbs_curve(), nurbs_curve_breaks()
 // Usage:
-//   u = nurbs_find_u(dist, control, degree, [mult=], [weights=], [type=], [knots=], [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
-//   u = nurbs_find_u(dist, nurbs_param_list, [start_u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+//   u2 = nurbs_cut(dist, control, degree, [mult=], [weights=], [type=], [knots=], [u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
+//   u2 = nurbs_cut(dist, nurbs_param_list, [u=], [tol=], [u_tol=], [maxdepth=], [maxiter=]);
 // Description:
-//   Finds the parameter value `u` reached by traveling a signed distance `dist`
-//   along the curve starting from `start_u`.  Positive distances move forward
+//   Finds the parameter value reached by traveling a signed distance `dist`
+//   along the curve starting from `u`.  Positive distances move forward
 //   in increasing curve parameter; negative distances move backward.  For
 //   closed curves, the search wraps around the seam as needed in either
 //   direction.  For clamped or open curves, an error is raised if the
@@ -1817,33 +1817,33 @@ function _nurbs_find_u_bisect_dir(degree, pinfo, u0, u1, target, tol, u_tol, max
 //   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
 //   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
 //   knots = List of knot values.  Default: uniform
-//   start_u = start of the search interval in [0,1].  Default: 0
-//   tol = requested numerical tolerance controlling the internal arc-length calculations.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final error in `u`.  Default: 1e-6
+//   u = start of the search interval in [0,1].  Default: 0
+//   tol = requested numerical tolerance controlling the internal arc-length calculations.  Smaller values usually improve accuracy but increase runtime.  This is not a strict bound on the final error in the result.  Default: 1e-6
 //   u_tol = stopping tolerance in parameter space for the inverse search.  Default: 1e-8
 //   maxdepth = maximum adaptive subdivision depth used by the length calculations.  Default: 10
 //   maxiter = maximum number of bisection steps in the inverse search.  Default: 50
 // Example(2D,NoAxes): Find the point 50 units forward along a curve
 //   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
-//   u = nurbs_find_u(50, control, 2);
-//   pt = nurbs_curve(control, 2, u=u);
+//   u2 = nurbs_cut(50, control, 2);
+//   pt = nurbs_curve(control, 2, u=u2);
 //   stroke(nurbs_curve(control, 2, splinesteps=16));
 //   color("red") move(pt) circle(r=1.5, $fn=16);
 // Example(2D,NoAxes): Go backward from a starting point
 //   pts = [[13,43],[30,52],[49,22],[24,3]];
-//   u = nurbs_find_u(-20, pts, 2, start_u=0.6, type="closed");
-//   pt = nurbs_curve(pts, 2, u=u, type="closed");
+//   u2 = nurbs_cut(-20, pts, 2, u=0.6, type="closed");
+//   pt = nurbs_curve(pts, 2, u=u2, type="closed");
 //   stroke(nurbs_curve(pts, 2, splinesteps=16, type="closed"));
 //   color("red") move(pt) circle(r=1.5, $fn=16);
-function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knots,
-                      start_u=0, tol=1e-6, u_tol=1e-8, maxdepth=10, maxiter=50) =
+function nurbs_cut(dist, control, degree, mult, weights, type="clamped", knots,
+                   u=0, tol=1e-6, u_tol=1e-8, maxdepth=10, maxiter=50) =
     is_list(control) && in_list(control[0], ["closed","open","clamped"]) ?
        assert(len(control)>=6, "Invalid NURBS parameter list")
        assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
-       nurbs_find_u(dist, control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
-                    start_u=start_u, tol=tol, u_tol=u_tol, maxdepth=maxdepth, maxiter=maxiter)
+       nurbs_cut(dist, control[2], control[1], mult=control[4], weights=control[5], type=control[0], knots=control[3],
+                u=u, tol=tol, u_tol=u_tol, maxdepth=maxdepth, maxiter=maxiter)
   : assert(is_num(dist), "dist must be a number")
-    assert(is_num(start_u) && start_u>=0 && start_u<=1, "start_u must be in the interval [0,1]")
+    assert(is_num(u) && u>=0 && u<=1, "u must be in the interval [0,1]")
     assert(is_num(tol) && tol > 0, "tol must be a positive number")
     assert(is_num(u_tol) && u_tol > 0, "u_tol must be a positive number")
     assert(is_int(maxdepth) && maxdepth >= 0, "maxdepth must be a non-negative integer")
@@ -1860,23 +1860,23 @@ function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knot
         forward = dist >= 0,
 
         mids1 = forward
-              ? [for (b=breaks) if (b>start_u && b<1) b]
-              : [for (b=breaks) if (b>0 && b<start_u) b],
+              ? [for (b=breaks) if (b>u && b<1) b]
+              : [for (b=breaks) if (b>0 && b<u) b],
         mids2 = type!="closed" ? []
               : forward
-                ? [for (b=breaks) if (b>0 && b<start_u) b]
-                : [for (b=breaks) if (b>start_u && b<1) b],
+                ? [for (b=breaks) if (b>0 && b<u) b]
+                : [for (b=breaks) if (b>u && b<1) b],
 
         rev1 = [for (i=[1:1:len(mids1)]) mids1[len(mids1)-i]],
         rev2 = [for (i=[1:1:len(mids2)]) mids2[len(mids2)-i]],
 
         cuts1 = forward
-              ? [start_u, each mids1, 1]
-              : [start_u, each rev1, 0],
+              ? [u, each mids1, 1]
+              : [u, each rev1, 0],
         cuts2 = type!="closed" ? []
               : forward
-                ? [0, each mids2, start_u]
-                : [1, each rev2, start_u],
+                ? [0, each mids2, u]
+                : [1, each rev2, u],
 
         pieces1 = _nurbs_length_pieces_dir(degree, pinfo, cuts1, tol, maxdepth, dim),
         pieces2 = type!="closed" ? []
@@ -1889,16 +1889,16 @@ function nurbs_find_u(dist, control, degree, mult, weights, type="clamped", knot
                 ? abs(dist) - floor(abs(dist)/total) * total
                 : abs(dist)
     )
-    total <= eps ? assert(abs(dist) <= eps, "nurbs_find_u: curve has zero length") start_u
-  : approx(target,0,eps) ? start_u
+    total <= eps ? assert(abs(dist) <= eps, "nurbs_cut: curve has zero length") u
+  : approx(target,0,eps) ? u
   : type!="closed" && approx(target, total, eps) ? (forward ? 1 : 0)
   : assert(type=="closed" || target <= total + eps,
-           str("nurbs_find_u: requested distance ",dist," exceeds the available curve length ",total," from start_u=",start_u))
+           str("nurbs_cut: requested distance ",dist," exceeds the available curve length ",total," from u=",u))
     let(
         loc = _nurbs_find_piece(pieces, target, eps)
     )
-    assert(!is_undef(loc), "nurbs_find_u: failed to bracket the requested distance")
-    _nurbs_find_u_bisect_dir(degree, pinfo, loc[0], loc[1], loc[2], tol, u_tol, maxdepth, maxiter, dim);
+    assert(!is_undef(loc), "nurbs_cut: failed to bracket the requested distance")
+    _nurbs_cut_bisect_dir(degree, pinfo, loc[0], loc[1], loc[2], tol, u_tol, maxdepth, maxiter, dim);
 
 
 
