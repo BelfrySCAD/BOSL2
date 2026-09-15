@@ -720,29 +720,29 @@ include <../nurbs.scad>
 
 module test_nurbs_length_zero_for_degenerate_interval() {
     control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
-    assert_equal(nurbs_length(control, 2, start_u=0.3, end_u=0.3), 0);
+    assert_equal(nurbs_length(control, 2, u=[0.3,0.3]), 0);
 }
 test_nurbs_length_zero_for_degenerate_interval();
 '''
 
 [[test]]
-name = "test_nurbs_length_is_monotonic_in_end_u"
+name = "test_nurbs_length_is_monotonic_in_u1"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_length_is_monotonic_in_end_u() {
+module test_nurbs_length_is_monotonic_in_u1() {
     // Arc length is the integral of a non-negative speed, so it can only
     // grow (or stay flat) as the upper bound advances.
     control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
     degree = 2;
-    short = nurbs_length(control, degree, end_u=0.3);
-    long  = nurbs_length(control, degree, end_u=0.7);
-    full  = nurbs_length(control, degree, end_u=1);
+    short = nurbs_length(control, degree, u=[0,0.3]);
+    long  = nurbs_length(control, degree, u=[0,0.7]);
+    full  = nurbs_length(control, degree, u=[0,1]);
     assert(short < long);
     assert(long < full);
 }
-test_nurbs_length_is_monotonic_in_end_u();
+test_nurbs_length_is_monotonic_in_u1();
 '''
 
 [[test]]
@@ -802,8 +802,8 @@ module test_nurbs_length_closed_wrap_sums_to_total() {
     pts = [[13,43],[30,52],[49,22],[24,3]];
     degree = 2;
     full       = nurbs_length(pts, degree, type="closed");
-    wrap_part  = nurbs_length(pts, degree, type="closed", start_u=0.75, end_u=0.25);
-    other_part = nurbs_length(pts, degree, type="closed", start_u=0.25, end_u=0.75);
+    wrap_part  = nurbs_length(pts, degree, type="closed", u=[0.75,0.25]);
+    other_part = nurbs_length(pts, degree, type="closed", u=[0.25,0.75]);
     assert(approx(wrap_part + other_part, full, 1e-4*(1+abs(full))));
 }
 test_nurbs_length_closed_wrap_sums_to_total();
@@ -827,17 +827,17 @@ test_nurbs_length_param_list_form_matches_direct_call();
 '''
 
 [[test]]
-name = "test_nurbs_length_start_u_out_of_range_errors"
+name = "test_nurbs_length_u_out_of_range_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_length_start_u_out_of_range_errors() {
+module test_nurbs_length_u_out_of_range_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_length(control, 2, start_u=-0.1);
+    x = nurbs_length(control, 2, u=[-0.1,1]);
 }
-test_nurbs_length_start_u_out_of_range_errors();
+test_nurbs_length_u_out_of_range_errors();
 '''
 
 [[test]]
@@ -849,7 +849,7 @@ include <../nurbs.scad>
 
 module test_nurbs_length_end_before_start_non_closed_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_length(control, 2, start_u=0.7, end_u=0.3);  // only valid when type="closed"
+    x = nurbs_length(control, 2, u=[0.7,0.3]);  // only valid when type="closed"
 }
 test_nurbs_length_end_before_start_non_closed_errors();
 '''
@@ -926,239 +926,239 @@ test_nurbs_length_param_list_too_short_errors();
 '''
 
 # ---------------------------------------------------------------------
-# nurbs_find_u()
+# nurbs_cut()
 # ---------------------------------------------------------------------
 
 [[test]]
-name = "test_nurbs_find_u"
+name = "test_nurbs_cut"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_degree1_forward_exact() {
+module test_nurbs_cut_degree1_forward_exact() {
     // On a degree-1 (polyline) curve, travelling 2 units forward along the
     // first segment (length 5, from [0,0] to [3,4]) lands 2/5 of the way in.
     control = [[0,0],[3,4],[6,4],[10,4]];
     degree = 1;
-    u = nurbs_find_u(2, control, degree);
-    assert(approx(u,2/15,eps=1e-7));    
+    u = nurbs_cut(2, control, degree);
+    assert(approx(u,2/15,eps=1e-7));
     pt = nurbs_curve(control, degree, u=u);
-    assert(approx(pt, [1.2,1.6],1e-6));    
+    assert(approx(pt, [1.2,1.6],1e-6));
 }
-test_nurbs_find_u_degree1_forward_exact();
+test_nurbs_cut_degree1_forward_exact();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_degree1_backward_exact"
+name = "test_nurbs_cut_degree1_backward_exact"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_degree1_backward_exact() {
+module test_nurbs_cut_degree1_backward_exact() {
     // Starting at control point index 2 ([6,4], u=2/3) and going backward
     // exactly the length of the preceding segment (3) lands exactly on
     // control point index 1 ([3,4], u=1/3).
     control = [[0,0],[3,4],[6,4],[10,4]];
     degree = 1;
-    u = nurbs_find_u(-3, control, degree, start_u=2/3);
+    u = nurbs_cut(-3, control, degree, u=2/3);
     assert(approx(u, 1/3,1e-7));
     pt = nurbs_curve(control, degree, u=u);
-    assert(approx(pt, [3,4],1e-6));    
+    assert(approx(pt, [3,4],1e-6));
 }
-test_nurbs_find_u_degree1_backward_exact();
+test_nurbs_cut_degree1_backward_exact();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_zero_distance_returns_start_u"
+name = "test_nurbs_cut_zero_distance_returns_u"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_zero_distance_returns_start_u() {
+module test_nurbs_cut_zero_distance_returns_u() {
     control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
-    u = nurbs_find_u(0, control, 2, start_u=0.37);
+    u = nurbs_cut(0, control, 2, u=0.37);
     assert_equal(u, 0.37);
 }
-test_nurbs_find_u_zero_distance_returns_start_u();
+test_nurbs_cut_zero_distance_returns_u();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_forward_roundtrip_matches_length"
+name = "test_nurbs_cut_forward_roundtrip_matches_length"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_forward_roundtrip_matches_length() {
+module test_nurbs_cut_forward_roundtrip_matches_length() {
     control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
     degree = 2;
-    u = nurbs_find_u(50, control, degree);
-    got = nurbs_length(control, degree, end_u=u);
+    u = nurbs_cut(50, control, degree);
+    got = nurbs_length(control, degree, u=[0,u]);
     assert(approx(got, 50, 1e-3));
 }
-test_nurbs_find_u_forward_roundtrip_matches_length();
+test_nurbs_cut_forward_roundtrip_matches_length();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_backward_roundtrip_matches_length"
+name = "test_nurbs_cut_backward_roundtrip_matches_length"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_backward_roundtrip_matches_length() {
+module test_nurbs_cut_backward_roundtrip_matches_length() {
     control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
     degree = 2;
-    u = nurbs_find_u(-10, control, degree, start_u=0.5);
-    got = nurbs_length(control, degree, start_u=u, end_u=0.5);
+    u = nurbs_cut(-10, control, degree, u=0.5);
+    got = nurbs_length(control, degree, u=[u,0.5]);
     assert(approx(got, 10, 1e-3));
 }
-test_nurbs_find_u_backward_roundtrip_matches_length();
+test_nurbs_cut_backward_roundtrip_matches_length();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_full_circle_wraps_to_start_point"
+name = "test_nurbs_cut_full_circle_wraps_to_start_point"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_full_circle_wraps_to_start_point() {
+module test_nurbs_cut_full_circle_wraps_to_start_point() {
     control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2]];
     w = [1,1/3,1/3,1,1/3,1/3];
     degree = 3;
     mult = [1,3,3];
     total = nurbs_length(control, degree, weights=w, mult=mult, type="closed");
-    u = nurbs_find_u(total, control, degree, weights=w, mult=mult, type="closed", start_u=0);
+    u = nurbs_cut(total, control, degree, weights=w, mult=mult, type="closed", u=0);
     pt = nurbs_curve(control, degree, u=u, weights=w, mult=mult, type="closed");
     assert(approx(pt, [1,0], 1e-3));
 }
-test_nurbs_find_u_full_circle_wraps_to_start_point();
+test_nurbs_cut_full_circle_wraps_to_start_point();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_param_list_form_matches_direct_call"
+name = "test_nurbs_cut_param_list_form_matches_direct_call"
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_param_list_form_matches_direct_call() {
+module test_nurbs_cut_param_list_form_matches_direct_call() {
     control = [[13,43],[30,52],[49,22],[24,3]];
     degree = 2;
-    direct = nurbs_find_u(5, control, degree);
+    direct = nurbs_cut(5, control, degree);
     plist = ["clamped", degree, control, undef, undef, undef];
-    via_list = nurbs_find_u(5, plist);
+    via_list = nurbs_cut(5, plist);
     assert_approx(direct, via_list);
 }
-test_nurbs_find_u_param_list_form_matches_direct_call();
+test_nurbs_cut_param_list_form_matches_direct_call();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_exceeds_available_length_errors"
+name = "test_nurbs_cut_exceeds_available_length_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_exceeds_available_length_errors() {
+module test_nurbs_cut_exceeds_available_length_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1e6, control, 2);  // way beyond the curve's total length
+    x = nurbs_cut(1e6, control, 2);  // way beyond the curve's total length
 }
-test_nurbs_find_u_exceeds_available_length_errors();
+test_nurbs_cut_exceeds_available_length_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_start_u_out_of_range_errors"
+name = "test_nurbs_cut_u_out_of_range_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_start_u_out_of_range_errors() {
+module test_nurbs_cut_u_out_of_range_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1, control, 2, start_u=1.5);
+    x = nurbs_cut(1, control, 2, u=1.5);
 }
-test_nurbs_find_u_start_u_out_of_range_errors();
+test_nurbs_cut_u_out_of_range_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_nonpositive_tol_errors"
+name = "test_nurbs_cut_nonpositive_tol_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_nonpositive_tol_errors() {
+module test_nurbs_cut_nonpositive_tol_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1, control, 2, tol=-1e-6);
+    x = nurbs_cut(1, control, 2, tol=-1e-6);
 }
-test_nurbs_find_u_nonpositive_tol_errors();
+test_nurbs_cut_nonpositive_tol_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_nonpositive_u_tol_errors"
+name = "test_nurbs_cut_nonpositive_u_tol_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_nonpositive_u_tol_errors() {
+module test_nurbs_cut_nonpositive_u_tol_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1, control, 2, u_tol=0);
+    x = nurbs_cut(1, control, 2, u_tol=0);
 }
-test_nurbs_find_u_nonpositive_u_tol_errors();
+test_nurbs_cut_nonpositive_u_tol_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_negative_maxiter_errors"
+name = "test_nurbs_cut_negative_maxiter_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_negative_maxiter_errors() {
+module test_nurbs_cut_negative_maxiter_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1, control, 2, maxiter=-1);
+    x = nurbs_cut(1, control, 2, maxiter=-1);
 }
-test_nurbs_find_u_negative_maxiter_errors();
+test_nurbs_cut_negative_maxiter_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_weights_wrong_length_errors"
+name = "test_nurbs_cut_weights_wrong_length_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_weights_wrong_length_errors() {
+module test_nurbs_cut_weights_wrong_length_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
-    x = nurbs_find_u(1, control, 2, weights=[1,1,1]);  // needs length 4
+    x = nurbs_cut(1, control, 2, weights=[1,1,1]);  // needs length 4
 }
-test_nurbs_find_u_weights_wrong_length_errors();
+test_nurbs_cut_weights_wrong_length_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_param_list_with_extra_args_errors"
+name = "test_nurbs_cut_param_list_with_extra_args_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_param_list_with_extra_args_errors() {
+module test_nurbs_cut_param_list_with_extra_args_errors() {
     control = [[13,43],[30,52],[49,22],[24,3]];
     plist = ["clamped", 2, control, undef, undef, undef];
-    x = nurbs_find_u(1, plist, 2);  // degree must not be given alongside a param list
+    x = nurbs_cut(1, plist, 2);  // degree must not be given alongside a param list
 }
-test_nurbs_find_u_param_list_with_extra_args_errors();
+test_nurbs_cut_param_list_with_extra_args_errors();
 '''
 
 [[test]]
-name = "test_nurbs_find_u_param_list_too_short_errors"
+name = "test_nurbs_cut_param_list_too_short_errors"
 expect_success = false
 script = '''
 include <../std.scad>
 include <../nurbs.scad>
 
-module test_nurbs_find_u_param_list_too_short_errors() {
+module test_nurbs_cut_param_list_too_short_errors() {
     plist = ["clamped", 2, [[0,0],[1,1],[2,2],[3,3]]];  // too short, need >=6 elements
-    x = nurbs_find_u(1, plist);
+    x = nurbs_cut(1, plist);
 }
-test_nurbs_find_u_param_list_too_short_errors();
+test_nurbs_cut_param_list_too_short_errors();
 '''
