@@ -13,12 +13,19 @@ module _square(size,center=false) square(size,center=center);
 
 module _circle(r,d) circle(r=r,d=d);
 
-module _text(text,size,font,halign,valign,spacing,direction,language,script)
-    text(text, size=size, font=font,
-        halign=halign, valign=valign,
-        spacing=spacing, direction=direction,
-        language=language, script=script
-    );
+module _text(text,size,font,halign,valign,spacing,direction,language,script,em)
+    if (version_num() >= 20260314)
+        text(text, size=size, font=font,
+            halign=halign, valign=valign,
+            spacing=spacing, direction=direction,
+            language=language, script=script, em=em
+        );
+    else
+        text(text, size=size, font=font,
+            halign=halign, valign=valign,
+            spacing=spacing, direction=direction,
+            language=language, script=script
+        );
 
 module _color(color) if (color==undef || color=="default") children(); else color(color) children();
 

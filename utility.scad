@@ -802,7 +802,7 @@ function segs(r,angle) =
 //   as indicated by its argument.
 // Arguments:
 //   $children = number of children the module has.  
-// Example:
+// Example(NORENDER):
 //   module foo() {
 //       no_children($children);
 //   }
@@ -825,7 +825,7 @@ module no_children(count) {
 //   children are present as indicated by its argument.
 // Arguments:
 //   $children = number of children the module has.  
-// Example:
+// Example(NORENDER):
 //   module foo() {
 //       req_children($children);
 //   }
@@ -845,7 +845,7 @@ module req_children(count) {
 //   dummy = no_function(name)
 // Description:
 //   Asserts that the function, "name", only exists as a module.
-// Example:
+// Example(NORENDER):
 //   x = no_function("foo");
 function no_function(name) =
    assert(false,str("You called ",name,"() as a function, but it is available only as a module"));
@@ -859,7 +859,7 @@ function no_function(name) =
 //   no_module();
 // Description:
 //   Asserts that the called module exists only as a function.
-// Example:
+// Example(NORENDER):
 //   module foo() { no_module(); }
 module no_module() {
     assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
@@ -923,7 +923,7 @@ function _valstr(x) =
 //   got = The value actually received.
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
-// Example:
+// Example(NORENDER):
 //   assert_approx(1/3, 0.333333333333333, str("number=",1,", denom=",3));
 module assert_approx(got, expected, info) {
     no_children($children);
@@ -956,7 +956,7 @@ module assert_approx(got, expected, info) {
 //   got = The value actually received.
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
-// Example:
+// Example(NORENDER):
 //   assert_equal(3*9, 27, str("a=",3,", b=",9));
 module assert_equal(got, expected, info) {
     no_children($children);

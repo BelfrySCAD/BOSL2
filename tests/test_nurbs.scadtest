@@ -35,6 +35,528 @@ module test_nurbs_curve() {
 test_nurbs_curve();
 '''
 
+
+[[test]]
+name = "test_nurbs_curve_clamped_endpoints"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_clamped_endpoints() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    curve = nurbs_curve(control, degree, u=[0,1]);
+    assert_approx(curve[0], control[0]);
+    assert_approx(curve[1], last(control));
+}
+test_nurbs_curve_clamped_endpoints();
+'''
+
+[[test]]
+name = "test_nurbs_curve_scalar_u_returns_single_point"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_scalar_u_returns_single_point() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    pt = nurbs_curve(control, 2, u=0);
+    assert(is_vector(pt));
+    assert_approx(pt, control[0]);
+}
+test_nurbs_curve_scalar_u_returns_single_point();
+'''
+
+[[test]]
+name = "test_nurbs_curve_splinesteps_point_count"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_splinesteps_point_count() {
+    // Clamped, uniform, 4 control points, degree 2: 2 knot spans.
+    control = [[0,0],[1,2],[2,2],[3,0]];
+    degree = 2;
+    ss = 4;
+    curve = nurbs_curve(control, degree, splinesteps=ss);
+    expected_len = (len(control)-degree)*ss + 1;
+    assert_equal(len(curve), expected_len);
+    assert_approx(last(curve), last(control));
+}
+test_nurbs_curve_splinesteps_point_count();
+'''
+
+[[test]]
+name = "test_nurbs_curve_deriv_zero_matches_default"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_zero_matches_default() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    a = nurbs_curve(control, degree, splinesteps=5);
+    b = nurbs_curve(control, degree, splinesteps=5, deriv=0);
+    assert_approx(a, b);
+}
+test_nurbs_curve_deriv_zero_matches_default();
+'''
+
+[[test]]
+name = "test_nurbs_curve_open_type_misses_endpoints"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_open_type_misses_endpoints() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 2;
+    curve = nurbs_curve(control, degree, u=[0,1], type="open");
+    assert(!approx(curve[0], control[0]));
+    assert(!approx(curve[1], last(control)));
+}
+test_nurbs_curve_open_type_misses_endpoints();
+'''
+
+[[test]]
+name = "test_nurbs_curve_closed_close_loop_param"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_closed_close_loop_param() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 3;
+    ss = 5;
+    curve_open  = nurbs_curve(control, degree, splinesteps=ss, type="closed");
+    curve_close = nurbs_curve(control, degree, splinesteps=ss, type="closed", close_loop=true);
+    assert_equal(len(curve_close), len(curve_open) + 1);
+    assert_approx(curve_close[0], last(curve_close));
+    assert(!approx(curve_open[0], last(curve_open)));
+}
+test_nurbs_curve_closed_close_loop_param();
+'''
+
+[[test]]
+name = "test_nurbs_curve_rational_semicircle_is_on_unit_circle"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_rational_semicircle_is_on_unit_circle() {
+    control = [[1,0],[1,2],[-1,2],[-1,0]];
+    w = [1,1/3,1/3,1];
+    pts = nurbs_curve(control, 3, u=[0,0.25,0.5,0.75,1], weights=w);
+    for (p = pts)
+        assert(approx(norm(p), 1, 1e-6));
+    assert_approx(pts[0], [1,0]);
+    assert_approx(pts[4], [-1,0]);
+}
+test_nurbs_curve_rational_semicircle_is_on_unit_circle();
+'''
+
+[[test]]
+name = "test_nurbs_curve_glued_circle_closes_up"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_glued_circle_closes_up() {
+    // Two semicircular rational NURBS segments glued with a multiplicity-3 knot
+    // form a full circle (see nurbs_curve() docs example).
+    control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2],[1,0]];
+    w = [1,1/3,1/3,1,1/3,1/3,1];
+    pts = nurbs_curve(control, 3, u=[0,0.25,0.5,0.75,1], weights=w, mult=[1,3,1]);
+    for (p = pts)
+        assert(approx(norm(p), 1, 1e-6));
+    assert_approx(pts[0], pts[4]);
+}
+test_nurbs_curve_glued_circle_closes_up();
+'''
+
+[[test]]
+name = "test_nurbs_curve_weights_of_one_match_unweighted"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_weights_of_one_match_unweighted() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    weights = [1,1,1,1];
+    a = nurbs_curve(control, degree, splinesteps=6);
+    b = nurbs_curve(control, degree, splinesteps=6, weights=weights);
+    assert_approx(a, b);
+}
+test_nurbs_curve_weights_of_one_match_unweighted();
+'''
+
+[[test]]
+name = "test_nurbs_curve_mult_default_matches_explicit_ones"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_mult_default_matches_explicit_ones() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    default_curve = nurbs_curve(control, degree, splinesteps=5);
+    custom_curve  = nurbs_curve(control, degree, splinesteps=5, mult=[1,1,1]);
+    assert_approx(default_curve, custom_curve);
+}
+test_nurbs_curve_mult_default_matches_explicit_ones();
+'''
+
+[[test]]
+name = "test_nurbs_curve_knot_reparam_invariance"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_knot_reparam_invariance() {
+    // Explicit knots with the same *relative* spacing as the uniform default,
+    // but a different absolute range, should not change the curve's shape:
+    // u is always renormalized to the actual knot domain.
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    default_curve = nurbs_curve(control, degree, splinesteps=5);
+    custom_curve  = nurbs_curve(control, degree, splinesteps=5, knots=[0,10,20]);
+    assert_approx(default_curve, custom_curve);
+}
+test_nurbs_curve_knot_reparam_invariance();
+'''
+
+[[test]]
+name = "test_nurbs_curve_mult_creates_corner"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_mult_creates_corner() {
+    // A knot of multiplicity == degree creates a corner (C^0 only) in a
+    // quadratic curve, per the docs' worked example.
+    pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    mult = [1,1,1,2,1,1,1,1];
+    degree = 2;
+    ucorner = 3/7;
+
+    d1 = nurbs_curve(pts, degree, u=ucorner, mult=mult, deriv=1);
+    assert(is_nan(d1));
+
+    d1_two = nurbs_curve(pts, degree, u=ucorner, mult=mult, deriv=1, two_sided=true);
+    assert_equal(len(d1_two), 2);
+    assert(!approx(d1_two[0], d1_two[1]));
+
+    // the point itself (0th derivative) is always well-defined and unaffected
+    pt = nurbs_curve(pts, degree, u=ucorner, mult=mult);
+    pt_via_deriv0 = nurbs_curve(pts, degree, u=ucorner, mult=mult, deriv=0);
+    assert_approx(pt, pt_via_deriv0);
+}
+test_nurbs_curve_mult_creates_corner();
+'''
+
+[[test]]
+name = "test_nurbs_curve_deriv_list_matches_individual_calls"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_list_matches_individual_calls() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 3;
+    uvals = [0.1, 0.37, 0.6, 0.85];
+
+    combined = nurbs_curve(control, degree, u=uvals, deriv=[0,1,2]);
+    pts = nurbs_curve(control, degree, u=uvals, deriv=0);
+    d1  = nurbs_curve(control, degree, u=uvals, deriv=1);
+    d2  = nurbs_curve(control, degree, u=uvals, deriv=2);
+
+    assert_equal(len(combined), 3);
+    assert_approx(combined[0], pts);
+    assert_approx(combined[1], d1);
+    assert_approx(combined[2], d2);
+}
+test_nurbs_curve_deriv_list_matches_individual_calls();
+'''
+
+[[test]]
+name = "test_nurbs_curve_deriv_scalar_u_list_form"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_scalar_u_list_form() {
+    // With scalar u and a list of derivative orders, the result should be a
+    // flat list of single entries (one per order), not a list of lists.
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 3;
+    u0 = 0.42;
+    result = nurbs_curve(control, degree, u=u0, deriv=[0,1]);
+    assert_equal(len(result), 2);
+    assert(is_vector(result[0]));
+    assert(is_vector(result[1]));
+}
+test_nurbs_curve_deriv_scalar_u_list_form();
+'''
+
+[[test]]
+name = "test_nurbs_curve_deriv_matches_finite_difference"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_matches_finite_difference() {
+    // At a smooth, non-knot interior point the analytic first derivative
+    // should agree with a central finite difference.
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 3;
+    u0 = 0.42;
+    h = 1e-5;
+    p_minus = nurbs_curve(control, degree, u=u0-h);
+    p_plus  = nurbs_curve(control, degree, u=u0+h);
+    fd = (p_plus - p_minus)/(2*h);
+    analytic = nurbs_curve(control, degree, u=u0, deriv=1);
+    assert(approx(fd, analytic, 1e-2));
+}
+test_nurbs_curve_deriv_matches_finite_difference();
+'''
+
+[[test]]
+name = "test_nurbs_curve_deriv_endpoint_is_one_sided_not_nan"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_endpoint_is_one_sided_not_nan() {
+    // At a clamped curve's domain endpoints only one side of the curve
+    // exists; that one-sided derivative should be returned directly,
+    // never NAN, even though the endpoint sits on a full-multiplicity knot.
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    d0 = nurbs_curve(control, degree, u=0, deriv=1);
+    d1 = nurbs_curve(control, degree, u=1, deriv=1);
+    assert(!is_nan(d0));
+    assert(!is_nan(d1));
+}
+test_nurbs_curve_deriv_endpoint_is_one_sided_not_nan();
+'''
+
+[[test]]
+name = "test_nurbs_curve_param_list_form_matches_direct_call"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_param_list_form_matches_direct_call() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    direct = nurbs_curve(control, degree, splinesteps=4);
+    plist = ["clamped", degree, control, undef, undef, undef];
+    via_list = nurbs_curve(plist, splinesteps=4);
+    assert_approx(direct, via_list);
+}
+test_nurbs_curve_param_list_form_matches_direct_call();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_param_list_form_matches_direct_call() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    direct = nurbs_curve_breaks(control, degree);
+    plist = ["clamped", degree, control, undef, undef, undef];
+    via_list = nurbs_curve_breaks(plist);
+    assert_approx(direct, via_list);
+}
+test_nurbs_curve_breaks_param_list_form_matches_direct_call();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_clamped_basic"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_clamped_basic() {
+    pts = [[13,43],[30,52],[49,22],[24,3]];
+    breaks = nurbs_curve_breaks(pts, 2);
+    assert_approx(breaks, [0, 0.5, 1]);
+}
+test_nurbs_curve_breaks_clamped_basic();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_closed_includes_both_ends"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_closed_includes_both_ends() {
+    // For type="closed" both 0 and 1 should appear, representing the
+    // same geometric seam point.
+    control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2]];
+    degree = 3;
+    breaks = nurbs_curve_breaks(control, degree, mult=[1,3,3], type="closed");
+    assert_approx(breaks[0], 0);
+    assert_approx(last(breaks), 1);
+}
+test_nurbs_curve_breaks_closed_includes_both_ends();
+'''
+
+# ---------------------------------------------------------------------
+# Error-condition tests: these should fail to evaluate (assertion failure).
+# ---------------------------------------------------------------------
+
+[[test]]
+name = "test_nurbs_curve_deriv_exceeds_degree_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_deriv_exceeds_degree_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    x = nurbs_curve(control, degree, u=0.5, deriv=degree+1);  // exceeds curve degree
+}
+test_nurbs_curve_deriv_exceeds_degree_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_weights_wrong_length_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_weights_wrong_length_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    x = nurbs_curve(control, degree, u=0.5, weights=[1,1,1]);  // needs length 4
+}
+test_nurbs_curve_weights_wrong_length_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_unknown_type_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_unknown_type_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_curve(control, 2, u=0.5, type="bogus");
+}
+test_nurbs_curve_unknown_type_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_too_few_control_points_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_too_few_control_points_errors() {
+    control = [[0,0],[1,1]];   // only 2 points
+    x = nurbs_curve(control, 3, u=0.5);  // degree 3 clamped needs >= 4 points
+}
+test_nurbs_curve_too_few_control_points_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_invalid_mult_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_invalid_mult_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    x = nurbs_curve(control, degree, u=0.5, mult=[1,3,1]);  // interior mult exceeds degree
+}
+test_nurbs_curve_invalid_mult_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_both_u_and_splinesteps_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_both_u_and_splinesteps_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_curve(control, 2, splinesteps=5, u=[0,0.5,1]);  // must give exactly one
+}
+test_nurbs_curve_both_u_and_splinesteps_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_u_out_of_range_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_u_out_of_range_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_curve(control, 2, u=[0,1.5]);  // 1.5 is outside [0,1]
+}
+test_nurbs_curve_u_out_of_range_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_knots_not_increasing_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_knots_not_increasing_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    x = nurbs_curve(control, degree, u=0.5, knots=[0,5,2]);  // not increasing
+}
+test_nurbs_curve_knots_not_increasing_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_param_list_with_extra_args_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_param_list_with_extra_args_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    plist = ["clamped", 2, control, undef, undef, undef];
+    x = nurbs_curve(plist, 2);  // degree must not be given alongside a param list
+}
+test_nurbs_curve_param_list_with_extra_args_errors();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_param_list_too_short_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_param_list_too_short_errors() {
+    plist = ["clamped", 2, [[0,0],[1,1],[2,2],[3,3]]];  // too short, need >=6 elements
+    x = nurbs_curve_breaks(plist);
+}
+test_nurbs_curve_breaks_param_list_too_short_errors();
+'''
+
+
 [[test]]
 name = "test_nurbs_patch_points"
 script = '''
@@ -70,4 +592,573 @@ module test_nurbs_vnf() {
     assert(len(v[1]) > 0);  // has faces
 }
 test_nurbs_vnf();
+'''
+
+
+
+# ---------------------------------------------------------------------
+# nurbs_curve_breaks() -- additional coverage beyond the basic clamped case
+# ---------------------------------------------------------------------
+
+[[test]]
+name = "test_nurbs_curve_breaks_match_curve_evaluation"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_match_curve_evaluation() {
+    // splinesteps=1 samples exactly one point per knot span (plus the final
+    // knot), which should land on exactly the same u-values as the public
+    // breakpoints -- and thus the same curve points.
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    breaks = nurbs_curve_breaks(control, degree);
+    via_breaks      = nurbs_curve(control, degree, u=breaks);
+    via_splinesteps = nurbs_curve(control, degree, splinesteps=1);
+    assert_approx(via_breaks, via_splinesteps);
+}
+test_nurbs_curve_breaks_match_curve_evaluation();
+'''
+
+[[test]]
+name = "test_nurbs_curve_degree1_interpolates_control_points_at_breaks"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_degree1_interpolates_control_points_at_breaks() {
+    // A degree-1 clamped B-spline is exactly the piecewise-linear
+    // interpolant through its control points, and the breakpoints are
+    // exactly the parameter values at which each control point is reached.
+    control = [[0,0],[3,4],[6,4],[10,4]];
+    degree = 1;
+    breaks = nurbs_curve_breaks(control, degree);
+    assert_equal(len(breaks), len(control));
+    pts = nurbs_curve(control, degree, u=breaks);
+    assert_approx(pts, control);
+}
+test_nurbs_curve_degree1_interpolates_control_points_at_breaks();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_length_matches_mult_length"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_length_matches_mult_length() {
+    // Each entry of an explicit (clamped) mult vector produces exactly one
+    // breakpoint, even where the multiplicity creates a repeated knot.
+    pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    mult = [1,1,1,2,1,1,1,1];
+    breaks = nurbs_curve_breaks(pts, 2, mult=mult);
+    assert_equal(len(breaks), len(mult));
+    assert(is_increasing(breaks));
+    assert_approx(breaks[0], 0);
+    assert_approx(last(breaks), 1);
+}
+test_nurbs_curve_breaks_length_matches_mult_length();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_default_length_matches_formula"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_default_length_matches_formula() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 4;
+    breaks = nurbs_curve_breaks(control, degree);
+    assert_equal(len(breaks), len(control)-degree+1);
+}
+test_nurbs_curve_breaks_default_length_matches_formula();
+'''
+
+[[test]]
+name = "test_nurbs_curve_breaks_open_type_domain"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve_breaks_open_type_domain() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 2;
+    breaks = nurbs_curve_breaks(control, degree, type="open");
+    assert(is_increasing(breaks));
+    assert_approx(breaks[0], 0);
+    assert_approx(last(breaks), 1);
+}
+test_nurbs_curve_breaks_open_type_domain();
+'''
+
+# ---------------------------------------------------------------------
+# nurbs_length()
+# ---------------------------------------------------------------------
+
+[[test]]
+name = "test_nurbs_length"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_degree1_polyline_is_exact() {
+    // A degree-1 clamped B-spline is a polyline, so its length is exactly
+    // the sum of the segment lengths between consecutive control points.
+    control = [[0,0],[3,4],[6,4],[10,4]];
+    expected = norm([3,4]-[0,0]) + norm([6,4]-[3,4]) + norm([10,4]-[6,4]);  // 5+3+4 = 12
+    assert_approx(nurbs_length(control, 1), expected, 1e-9);
+}
+test_nurbs_length_degree1_polyline_is_exact();
+'''
+
+[[test]]
+name = "test_nurbs_length_zero_for_degenerate_interval"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_zero_for_degenerate_interval() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    assert_equal(nurbs_length(control, 2, start_u=0.3, end_u=0.3), 0);
+}
+test_nurbs_length_zero_for_degenerate_interval();
+'''
+
+[[test]]
+name = "test_nurbs_length_is_monotonic_in_end_u"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_is_monotonic_in_end_u() {
+    // Arc length is the integral of a non-negative speed, so it can only
+    // grow (or stay flat) as the upper bound advances.
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 2;
+    short = nurbs_length(control, degree, end_u=0.3);
+    long  = nurbs_length(control, degree, end_u=0.7);
+    full  = nurbs_length(control, degree, end_u=1);
+    assert(short < long);
+    assert(long < full);
+}
+test_nurbs_length_is_monotonic_in_end_u();
+'''
+
+[[test]]
+name = "test_nurbs_length_rational_semicircle_matches_pi"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_rational_semicircle_matches_pi() {
+    control = [[1,0],[1,2],[-1,2],[-1,0]];
+    w = [1,1/3,1/3,1];
+    len = nurbs_length(control, 3, weights=w);
+    assert(approx(len, PI, 1e-4));
+}
+test_nurbs_length_rational_semicircle_matches_pi();
+'''
+
+[[test]]
+name = "test_nurbs_length_rational_full_circle_matches_two_pi"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_rational_full_circle_matches_two_pi() {
+    // Two glued semicircles (clamped, with a multiplicity-3 interior knot)
+    // form a full unit circle.
+    control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2],[1,0]];
+    w = [1,1/3,1/3,1,1/3,1/3,1];
+    len = nurbs_length(control, 3, weights=w, mult=[1,3,1]);
+    assert(approx(len, 2*PI, 1e-4));
+}
+test_nurbs_length_rational_full_circle_matches_two_pi();
+'''
+
+[[test]]
+name = "test_nurbs_length_closed_type_circle_matches_two_pi"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_closed_type_circle_matches_two_pi() {
+    control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2]];
+    w = [1,1/3,1/3,1,1/3,1/3];
+    len = nurbs_length(control, 3, weights=w, mult=[1,3,3], type="closed");
+    assert(approx(len, 2*PI, 1e-4));
+}
+test_nurbs_length_closed_type_circle_matches_two_pi();
+'''
+
+[[test]]
+name = "test_nurbs_length_closed_wrap_sums_to_total"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_closed_wrap_sums_to_total() {
+    pts = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    full       = nurbs_length(pts, degree, type="closed");
+    wrap_part  = nurbs_length(pts, degree, type="closed", start_u=0.75, end_u=0.25);
+    other_part = nurbs_length(pts, degree, type="closed", start_u=0.25, end_u=0.75);
+    assert(approx(wrap_part + other_part, full, 1e-4*(1+abs(full))));
+}
+test_nurbs_length_closed_wrap_sums_to_total();
+'''
+
+[[test]]
+name = "test_nurbs_length_param_list_form_matches_direct_call"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_param_list_form_matches_direct_call() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    direct = nurbs_length(control, degree);
+    plist = ["clamped", degree, control, undef, undef, undef];
+    via_list = nurbs_length(plist);
+    assert_approx(direct, via_list);
+}
+test_nurbs_length_param_list_form_matches_direct_call();
+'''
+
+[[test]]
+name = "test_nurbs_length_start_u_out_of_range_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_start_u_out_of_range_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_length(control, 2, start_u=-0.1);
+}
+test_nurbs_length_start_u_out_of_range_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_end_before_start_non_closed_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_end_before_start_non_closed_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_length(control, 2, start_u=0.7, end_u=0.3);  // only valid when type="closed"
+}
+test_nurbs_length_end_before_start_non_closed_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_nonpositive_tol_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_nonpositive_tol_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_length(control, 2, tol=0);
+}
+test_nurbs_length_nonpositive_tol_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_negative_maxdepth_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_negative_maxdepth_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_length(control, 2, maxdepth=-1);
+}
+test_nurbs_length_negative_maxdepth_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_weights_wrong_length_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_weights_wrong_length_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_length(control, 2, weights=[1,1,1]);  // needs length 4
+}
+test_nurbs_length_weights_wrong_length_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_param_list_with_extra_args_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_param_list_with_extra_args_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    plist = ["clamped", 2, control, undef, undef, undef];
+    x = nurbs_length(plist, 2);  // degree must not be given alongside a param list
+}
+test_nurbs_length_param_list_with_extra_args_errors();
+'''
+
+[[test]]
+name = "test_nurbs_length_param_list_too_short_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_length_param_list_too_short_errors() {
+    plist = ["clamped", 2, [[0,0],[1,1],[2,2],[3,3]]];  // too short, need >=6 elements
+    x = nurbs_length(plist);
+}
+test_nurbs_length_param_list_too_short_errors();
+'''
+
+# ---------------------------------------------------------------------
+# nurbs_find_u()
+# ---------------------------------------------------------------------
+
+[[test]]
+name = "test_nurbs_find_u"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_degree1_forward_exact() {
+    // On a degree-1 (polyline) curve, travelling 2 units forward along the
+    // first segment (length 5, from [0,0] to [3,4]) lands 2/5 of the way in.
+    control = [[0,0],[3,4],[6,4],[10,4]];
+    degree = 1;
+    u = nurbs_find_u(2, control, degree);
+    assert(approx(u,2/15,eps=1e-7));    
+    pt = nurbs_curve(control, degree, u=u);
+    assert(approx(pt, [1.2,1.6],1e-6));    
+}
+test_nurbs_find_u_degree1_forward_exact();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_degree1_backward_exact"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_degree1_backward_exact() {
+    // Starting at control point index 2 ([6,4], u=2/3) and going backward
+    // exactly the length of the preceding segment (3) lands exactly on
+    // control point index 1 ([3,4], u=1/3).
+    control = [[0,0],[3,4],[6,4],[10,4]];
+    degree = 1;
+    u = nurbs_find_u(-3, control, degree, start_u=2/3);
+    assert(approx(u, 1/3,1e-7));
+    pt = nurbs_curve(control, degree, u=u);
+    assert(approx(pt, [3,4],1e-6));    
+}
+test_nurbs_find_u_degree1_backward_exact();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_zero_distance_returns_start_u"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_zero_distance_returns_start_u() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    u = nurbs_find_u(0, control, 2, start_u=0.37);
+    assert_equal(u, 0.37);
+}
+test_nurbs_find_u_zero_distance_returns_start_u();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_forward_roundtrip_matches_length"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_forward_roundtrip_matches_length() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 2;
+    u = nurbs_find_u(50, control, degree);
+    got = nurbs_length(control, degree, end_u=u);
+    assert(approx(got, 50, 1e-3));
+}
+test_nurbs_find_u_forward_roundtrip_matches_length();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_backward_roundtrip_matches_length"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_backward_roundtrip_matches_length() {
+    control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+    degree = 2;
+    u = nurbs_find_u(-10, control, degree, start_u=0.5);
+    got = nurbs_length(control, degree, start_u=u, end_u=0.5);
+    assert(approx(got, 10, 1e-3));
+}
+test_nurbs_find_u_backward_roundtrip_matches_length();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_full_circle_wraps_to_start_point"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_full_circle_wraps_to_start_point() {
+    control = [[1,0],[1,2],[-1,2],[-1,0],[-1,-2],[1,-2]];
+    w = [1,1/3,1/3,1,1/3,1/3];
+    degree = 3;
+    mult = [1,3,3];
+    total = nurbs_length(control, degree, weights=w, mult=mult, type="closed");
+    u = nurbs_find_u(total, control, degree, weights=w, mult=mult, type="closed", start_u=0);
+    pt = nurbs_curve(control, degree, u=u, weights=w, mult=mult, type="closed");
+    assert(approx(pt, [1,0], 1e-3));
+}
+test_nurbs_find_u_full_circle_wraps_to_start_point();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_param_list_form_matches_direct_call"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_param_list_form_matches_direct_call() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    degree = 2;
+    direct = nurbs_find_u(5, control, degree);
+    plist = ["clamped", degree, control, undef, undef, undef];
+    via_list = nurbs_find_u(5, plist);
+    assert_approx(direct, via_list);
+}
+test_nurbs_find_u_param_list_form_matches_direct_call();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_exceeds_available_length_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_exceeds_available_length_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1e6, control, 2);  // way beyond the curve's total length
+}
+test_nurbs_find_u_exceeds_available_length_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_start_u_out_of_range_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_start_u_out_of_range_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1, control, 2, start_u=1.5);
+}
+test_nurbs_find_u_start_u_out_of_range_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_nonpositive_tol_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_nonpositive_tol_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1, control, 2, tol=-1e-6);
+}
+test_nurbs_find_u_nonpositive_tol_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_nonpositive_u_tol_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_nonpositive_u_tol_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1, control, 2, u_tol=0);
+}
+test_nurbs_find_u_nonpositive_u_tol_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_negative_maxiter_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_negative_maxiter_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1, control, 2, maxiter=-1);
+}
+test_nurbs_find_u_negative_maxiter_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_weights_wrong_length_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_weights_wrong_length_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    x = nurbs_find_u(1, control, 2, weights=[1,1,1]);  // needs length 4
+}
+test_nurbs_find_u_weights_wrong_length_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_param_list_with_extra_args_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_param_list_with_extra_args_errors() {
+    control = [[13,43],[30,52],[49,22],[24,3]];
+    plist = ["clamped", 2, control, undef, undef, undef];
+    x = nurbs_find_u(1, plist, 2);  // degree must not be given alongside a param list
+}
+test_nurbs_find_u_param_list_with_extra_args_errors();
+'''
+
+[[test]]
+name = "test_nurbs_find_u_param_list_too_short_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_find_u_param_list_too_short_errors() {
+    plist = ["clamped", 2, [[0,0],[1,1],[2,2],[3,3]]];  // too short, need >=6 elements
+    x = nurbs_find_u(1, plist);
+}
+test_nurbs_find_u_param_list_too_short_errors();
 '''

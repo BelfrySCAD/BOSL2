@@ -1,23 +1,49 @@
-# Renders the openscad code blocks in tutorials/*.md through BelfrySCAD's
-# own evaluator rather than by launching the OpenSCAD binary once per
-# image. The counterpart to the Checks workflow's CheckTutorials job,
-# which runs the same tool with -T (execute every block, generate no
-# images).
-name: Regenerate Tutorials
+# Brings the wiki up to date with the library, rendered by BelfrySCAD's own
+# evaluator rather than by launching the OpenSCAD binary once per image.
+#
+# Incremental: docsgen keeps a hash per source file and re-renders only what
+# changed, so a run after a small edit costs minutes rather than the ~35 a
+# full render takes. Use Regenerate Docs Wiki when every image has to be
+# rebuilt regardless -- after a renderer change, say, which the hashes
+# cannot see.
+name: Update Docs Wiki
 
 on:
   workflow_dispatch:
     inputs:
       publish_to_wiki:
-        description: "Push the generated tutorials to the live wiki (overwrites it)"
+        description: "Push the generated docs to the live wiki (overwrites it)"
+        type: boolean
+        default: true
+  # Called by weekly_release.yml, and only when it actually creates a
+  # release -- most weeks it finds one already exists for the latest tag and
+  # does nothing.
+  #
+  # A call, not an event, on purpose. GitHub raises no event for anything
+  # done with the default GITHUB_TOKEN, to stop workflows setting each other
+  # off in a loop, and that job creates its release with exactly that token.
+  # So `release: published` below never sees the weekly one. A workflow_call
+  # runs inside the caller's own run, raises no event, and needs no PAT.
+  workflow_call:
+    inputs:
+      publish_to_wiki:
         type: boolean
         default: true
 
+  # Still useful for a release published by hand or by anything holding a
+  # PAT; the weekly path comes through workflow_call above.
+  release:
+    types: [published]
+
 jobs:
-  RegenerateTutorials:
-    # macOS for a real GL implementation -- see the note in gen_docs.yml.
+  UpdateDocsWiki:
+    # macOS for a real GL implementation. This job actually renders; on
+    # Linux the offscreen renderer falls back to EGL against software Mesa,
+    # which is slower and one more way for CI output to differ from what a
+    # developer sees locally. CheckDocs stays on ubuntu because -T renders
+    # nothing at all.
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
     - name: Checkout
       uses: actions/checkout@v5
@@ -33,28 +59,26 @@ jobs:
       with:
         python-version: "3.12"
 
-    # BelfrySCAD replaces openscad-mdimggen AND the OpenSCAD binary -- see
-    # the note in gen_docs.yml for what goes away with them.
+    # BelfrySCAD replaces openscad-docsgen AND the OpenSCAD binary. Gone
+    # with them: the AppImage download, libfuse2, imageio, python3-pil, and
+    # xvfb -- the renderer is offscreen, so there is no X server for a
+    # virtual display to stand in for. gifsicle went too; APNG is always
+    # used, so no GIF is ever written to optimise.
     - name: Install BelfrySCAD
       run: pip install belfryscad
 
-    - name: Tabs Check
-      run: |
-        cd $GITHUB_WORKSPACE
-        ./scripts/check_for_tabs.sh
-
-    - name: Generate Tutorials
+    - name: Generate Docs
       env:
         OPENSCADPATH: ${{ github.workspace }}/..
-      run: belfryscad --mdimggen -f
+      run: belfryscad --docsgen
 
     # Uploaded whether or not the wiki gets published, and on failure too,
     # so a partial or unpublished run can still be inspected.
-    - name: Upload generated tutorials
+    - name: Upload generated docs
       if: always()
       uses: actions/upload-artifact@v6
       with:
-        name: bosl2-wiki-tutorials
+        name: bosl2-wiki
         # Hidden files included deliberately. The publish step mirrors this
         # artifact over the wiki with rsync --delete, and .source_hashes --
         # docsgen's record of what it has already rendered -- is a dotfile.
@@ -69,8 +93,10 @@ jobs:
           !BOSL2.wiki/.git/**
 
   PublishToWiki:
-    needs: RegenerateTutorials
-    if: ${{ inputs.publish_to_wiki }}
+    needs: UpdateDocsWiki
+    # `inputs` is empty on a release event, so testing it alone would skip
+    # the publish on precisely the run that must not skip it.
+    if: ${{ github.event_name == 'release' || inputs.publish_to_wiki }}
     # ubuntu because this job only moves files -- the render job stays on
     # macOS for its GL. It used to have to be Linux, because the publish was
     # a Docker action and GitHub runs those on Linux only; that action is
@@ -80,10 +106,10 @@ jobs:
     - name: Fetch the generated docs
       uses: actions/download-artifact@v7
       with:
-        name: bosl2-wiki-tutorials
+        name: bosl2-wiki
         path: BOSL2.wiki
 
-    - name: Upload Tutorials to Wiki
+    - name: Upload Docs to Wiki
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
@@ -122,7 +148,7 @@ jobs:
           echo "Wiki already matches the generated docs; nothing to publish."
           exit 0
         fi
-        git commit -m "Update tutorials from ${GITHUB_SHA:0:8}"
+        git commit -m "Update docs from ${GITHUB_SHA:0:8}"
         git push origin HEAD:master
         echo "Published:"
         git show --stat --oneline HEAD | tail -5
