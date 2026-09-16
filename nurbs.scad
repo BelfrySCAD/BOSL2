@@ -1621,51 +1621,24 @@ function _nurbs_speed_at_u(degree, pinfo, u, dim=undef) =
     norm(Cders[1]);
 
 
-function _nurbs_length_gl3(degree, pinfo, a, b, dim=undef) =
+// n-point Gauss-Legendre rule over [a,b], reusing the shared node/weight
+// table in _gauss_legendre() rather than hardcoding coefficients again.
+function _nurbs_length_gl(n, degree, pinfo, a, b, dim=undef) =
     let(
-        m  = (a+b)/2,
-        h  = (b-a)/2,
-        x1 = 0.7745966692414834,
-        w1 = 0.5555555555555556,
-        w0 = 0.8888888888888888
+        gl    = _gauss_legendre(n),
+        nodes = gl[0],
+        wts   = gl[1],
+        m     = (a+b)/2,
+        h     = (b-a)/2
     )
-    h * (
-        w1 * (
-            _nurbs_speed_at_u(degree, pinfo, m-h*x1, dim) +
-            _nurbs_speed_at_u(degree, pinfo, m+h*x1, dim)
-        ) +
-        w0 * _nurbs_speed_at_u(degree, pinfo, m, dim)
-    );
-
-
-function _nurbs_length_gl5(degree, pinfo, a, b, dim=undef) =
-    let(
-        m  = (a+b)/2,
-        h  = (b-a)/2,
-        x1 = 0.9061798459386640,
-        x2 = 0.5384693101056831,
-        w1 = 0.2369268850561891,
-        w2 = 0.4786286704993665,
-        w0 = 0.5688888888888889
-    )
-    h * (
-        w1 * (
-            _nurbs_speed_at_u(degree, pinfo, m-h*x1, dim) +
-            _nurbs_speed_at_u(degree, pinfo, m+h*x1, dim)
-        ) +
-        w2 * (
-            _nurbs_speed_at_u(degree, pinfo, m-h*x2, dim) +
-            _nurbs_speed_at_u(degree, pinfo, m+h*x2, dim)
-        ) +
-        w0 * _nurbs_speed_at_u(degree, pinfo, m, dim)
-    );
+    h * sum([for (i=idx(nodes)) wts[i] * _nurbs_speed_at_u(degree, pinfo, m+h*nodes[i], dim)]);
 
 
 function _nurbs_length_adapt(degree, pinfo, a, b, tol, maxdepth, dim=undef) =
     a >= b ? 0
   : let(
-        i3  = _nurbs_length_gl3(degree, pinfo, a, b, dim),
-        i5  = _nurbs_length_gl5(degree, pinfo, a, b, dim),
+        i3  = _nurbs_length_gl(3, degree, pinfo, a, b, dim),
+        i5  = _nurbs_length_gl(5, degree, pinfo, a, b, dim),
         err = abs(i5 - i3),
         m   = (a+b)/2
     )
