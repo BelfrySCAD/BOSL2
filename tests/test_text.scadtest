@@ -1,0 +1,47 @@
+[[test]]
+name = "test_BASELINE"
+script = '''
+include <../std.scad>
+
+module test_BASELINE() {
+    assert_equal(BASELINE("start",TOP), "base0_tight[-1, 0, 1]");
+	assert_equal(BASELINE("end",tight=false), "base-1_box[1, 0, 0]");
+}
+test_BASELINE();
+'''
+
+[[test]]
+name = "test_TEXTLINE"
+script = '''
+include <../std.scad>
+
+module test_TEXTLINE() {
+    assert_equal(TEXTLINE(2,TOP+RIGHT), "text2_tight[1, 0, 1]");
+    assert_equal(TEXTLINE("end",pos=BOT,tight=false), "text-1_box[1, 0, -1]");
+}
+test_TEXTLINE();
+'''
+
+[[test]]
+name = "test_get_font_size"
+script = '''
+include <../std.scad>
+
+module test_get_font_size() {
+    assert(get_font_size(size=15) == 15);
+    assert(round(get_font_size(nom_height=20)) == 13);
+}
+test_get_font_size();
+'''
+
+[[test]]
+name = "test_fit_font_size"
+script = '''
+include <../std.scad>
+
+module test_fit_font_size() {
+    assert(round(fit_font_size("Fitting to a width", max_width=100)) == 9);
+    assert(round(fit_font_size("Fitting to a height", max_height=20)) == 13);
+}
+test_fit_font_size();
+'''
