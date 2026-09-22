@@ -839,6 +839,8 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [error=], [same_length=])
 //   path_faces = offset(path, return_faces=true, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [error=], [firstface_index=], [flip_faces=])
 // Description:
+//   This is documentation for the BOSL2 function form of `offset()`.  [Click Here for documentation for the builtin module.](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-Transformations#offset)
+//   .
 //   Takes a 2D input {{path}}, {{polygon}} or {{region}} and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
 //   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
@@ -1540,6 +1542,8 @@ module hull_region(region)
 // Usage:
 //    filled = fill(region);
 // Description:
+//   This is documentation for the BOSL2 function form of `fill()`.  [Click Here for documentation for the builtin module.](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-Other-Modules#fill)
+//   .
 //   Given a {{region}}, fill in any internal holes in the components of the region.  This returns the outside border of each region component, and
 //   is equivalent to {{hull()}} for region components whose outside boundary is convex.  
 // Arguments:
