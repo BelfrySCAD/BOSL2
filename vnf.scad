@@ -1773,6 +1773,8 @@ function vnf_bounds(vnf,fast=false) =
 // Usage:
 //   region = projection(vnf, [cut], [z]);
 // Description:
+//   This is documentation for the BOSL2 function form of `projection()`.  [Click Here for documentation for the builtin module.](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-2D-to-3D#projection)
+//   .
 //   Project a VNF object onto the xy plane at position `z`, returning a region.
 //   .
 //   The default action (`cut=false`) is to projects the input VNF
