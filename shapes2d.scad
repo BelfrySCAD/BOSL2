@@ -2249,8 +2249,8 @@ function _semicircle_pair(value, name) =
     value;
 
 
-// Returns [CW_path_starting_at_back_corner, dimensions, front_blend, back_blend].
-// Dimensions: [radius, angle, flat_x, half_chord, thickness, center_x].
+/// Returns [CW_path_starting_at_back_corner, dimensions, front_blend, back_blend].
+/// Dimensions: [radius, angle, flat_x, half_chord, thickness, center_x].
 function _semicircle_section(r, d, thickness, width, angle, long=false,
                              rounding=0, chamfer=0, extra=0, k=0.75) =
     let(dims=_semicircle_size(r=r, d=d, thickness=thickness, width=width, angle=angle, long=long))

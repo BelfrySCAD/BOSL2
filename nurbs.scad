@@ -1676,6 +1676,10 @@ function _nurbs_length_range(degree, pinfo, start_u, end_u, tol, maxdepth, dim=u
 //   adaptive Gauss-Legendre quadrature: each knot span in the interval is integrated with
 //   both a 3-point and a 5-point rule, and only subdivided further where the two estimates
 //   disagree beyond `tol`.  For closed curves, if `u1 < u0` the length wraps across the seam.
+//   The approximation length is very accurate when your curve has no cusps between knots.
+//   To improve accuracy for the general case increase `tol`.  If you want more accuracy
+//   when cusps appear between knots and you cannot divide the curve at the cusp, you
+//   will get improved accuracy by increasing `maxdepth`.
 // Arguments:
 //   control = list of control points in any dimension or a NURBS parameter list
 //   degree = degree of NURBS
