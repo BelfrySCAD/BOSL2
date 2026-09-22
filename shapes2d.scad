@@ -2027,6 +2027,441 @@ function _gs_indent_R(r1,r2,s,h) =
     goodR;
 
 
+
+// Function&Module: semicircle()
+// Synopsis: Creates a semicircle with optional roundings or chamfers
+// SynTags: Geom, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Rounding, Chamfers
+// See Also: circle(), arc(), hemicyl(), teardrop2d()
+// Usage: As a Module
+//   semicircle(r, [anchor=], [spin=]) [ATTACHMENTS];
+//   semicircle(d=, ...) [ATTACHMENTS];
+// Usage: As a Function
+//   path = semicircle(r|d=, ...);
+// Usage: Other Circular Segments
+//   semicircle(r|d=, thickness=, ...);
+//   semicircle(r|d=, width=, [long=], ...);
+//   semicircle(r|d=, angle=, ...);
+//   semicircle(angle=, width=, ...);
+//   semicircle(angle=, thickness=, ...);
+//   semicircle(width=, thickness=, ...);
+// Usage: Rounded, Chamfered or Flared Corners
+//   semicircle(..., [rounding=], [chamfer=], [k=], [extra=]);
+// Description:
+//   Creates a semicircle or a circular segment.  The flat side is on the LEFT and the curved side extends toward RIGHT.
+//   The module creates a filled shape; the function returns a clockwise polygon path without repeating the first point.
+//   Giving a radius or diameter specifies a semicircle.  To get other fractions of the circle specify exactly
+//   two of `r`/`d`, `angle`, `width`, and `thickness`.  The angle is the span of the circular arc.  The width is the
+//   length of the flat side, and thickness is the distance from the flat side to the opposite side of the shape.
+//   Combining radius and width gives two possible segments, one smaller than 180 degrees and one larger.
+//   The default is the smaller segment; `long=true` chooses the larger.  At width equal to the diameter both
+//   choices give a semicircle.  For a full circle use {{circle()}}.
+//   .
+//   You can independently round or chamfer the two corners using `rounding=` or `chamfer=`, set to a scalar
+//   to treat both equally or a list `[front,back]`.  Negative roundings and chamfers extend outward as usual.
+//   You may mix signs, chamfers and roundings, but cannot give a nonzero chamfer and rounding for the same corner.
+//   .
+//   Rounding and chamfer sizes are joint lengths: the straight distance along the flat side and the matching
+//   arc length along the curved side.  For negative values the flat endpoint moves outward, but the circle
+//   endpoint still moves along the retained arc.  Positive joints share the available flat-side length;
+//   joints of either sign share the available arc length.  A single joint may use more than half of either.
+//   Joints may meet exactly, provided the construction is valid and the shape does not collapse.
+//   An exterior chamfer that crosses the circle is an error; reduce its magnitude.
+//   .
+//   The roundings are continuous-curvature fourth-degree Beziers.  Unlike the continuous-curvature roundings
+//   elsewhere in the library, they mate with a circle at one end and have nonzero curvature at that end.
+//   The `k` parameter therefore behaves differently, but is still between 0 and 1: small values give pointier
+//   roundings that hug the base curve, and larger values give blunter roundings.  The default is `k=0.75`.
+//   At `k=1` an endpoint handle vanishes and the continuous-curvature property does not apply.
+//   Control points may be adjusted to obtain a valid joint, or an infeasible joint rejected.  The circle-side
+//   check is local and does not guarantee exact containment of the entire curve.
+//   .
+//   Bezier sampling uses the segment count for a quarter circle whose radius equals the joint magnitude,
+//   with a minimum of four segments.  Thus `$fn`, `$fa` and `$fs` control the count, not the actual angles or
+//   lengths of the Bezier segments.  The circular arc uses these settings in the usual way.
+//   .
+//   The `extra` parameter extends the remaining flat side toward LEFT without moving any anchors.
+//   It is useful when subtracting or unioning the shape to avoid coincident boundaries.
+//   .
+//   The output path is clockwise with `path[0]` set to the top-most point on the flat edge.  
+//   .
+//   Anchors describe the nominal shape without roundings, chamfers or extra, so they need not lie on the
+//   modified boundary.  CENTER is midway between the flat side and the bulge at the right; the named anchor
+//   "center" is the center of the circle that generates the shape.  Both forms support `anchor` and `spin`.
+//   Directions within the arc's span attach radially to the circle.  Other directions snap to the nearest of
+//   LEFT, LEFT+FWD, LEFT+BACK, FWD and BACK that is also outside the span.  Ties snap toward LEFT, the middle
+//   of the flat side.  Use "front_corner" and "back_corner" to reach the original corners at any angle.
+// Arguments:
+//   r = radius that defines the semicircle
+//   ---
+//   d = diameter that defines the semicircle
+//   thickness = Distance along X axis from the straight side to the farthest point of the arc.  
+//   width = Length of the flat edge.  (Cannot exceed the diameter.)
+//   angle = Arc span in degrees, strictly between 0 and 360.  Default: 180 when only `r` or `d` is given.
+//   long = With radius/diameter and width, selects the larger segment.  Ignored for other size combinations.  Default: false
+//   rounding = Joint length at the corners, a scalar or `[front,back]`.  Positive rounds inward; negative flares outward.  Default: 0
+//   chamfer = Chamfer joint lengths at the corners, in the same form as rounding.  Default: 0
+//   extra = Nonnegative extension past the straight side toward LEFT.  Anchors ignore this extension.  Default: 0
+//   k = Bezier bluntness from 0 (pointiest) to 1 (bluntest).  Does not affect chamfers.  Default: 0.75
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Named Anchors:
+//   "center" = Center of the notional circle.  Points BACK.
+//   "front_corner" = Original corner at the FWD end of the straight side.  Points along the corner bisector.
+//   "back_corner" = Original corner at the BACK end of the straight side.  Points along the corner bisector.
+// Example(2D): A semicircle, a smaller segment and a larger segment.
+//   semicircle(10);
+//   right(15) semicircle(10, thickness=4);
+//   left(18) semicircle(10, thickness=16);
+// Example(2D): Radius and width admit two segments.
+//   left(8) semicircle(10, width=12);
+//   right(8) semicircle(10, width=12, long=true);
+// Example(2D): A segment defined without a radius.
+//   semicircle(width=20, thickness=6);
+// Example(2D): Rounding the corners
+//   $fs=.5;$fa=1;
+//   left(14) semicircle(r=10, rounding=2);
+// Example(2D): Negative rounding
+//   $fs=.5;$fa=1;
+//   left(14) semicircle(r=10, rounding=-2);
+// Example(2D): Unequal positive rounding on the two corners.
+//   $fs=.5;$fa=1;                   
+//   semicircle(12, rounding=[6,2]);
+// Example(2D): Chamfers
+//   left(17) semicircle(12, chamfer=[4,2]);
+// Example(2D): Negative chamfers.
+//   right(17) semicircle(12, chamfer=[-4,-2]);
+// Example(2D): A rounded front corner and a chamfered back corner.
+//   $fs=.5;$fa=1;                                      
+//   semicircle(12, rounding=[4,0], chamfer=[0,2]);
+// Example(2D): Extra material extends the straight edge
+//   $fs=.5;$fa=1;                                      
+//   semicircle(12, rounding=-3, extra=2, anchor=LEFT);
+// Example(2D): Subtracting a flared recess, with extra material outside the rectangle.
+//   $fs=.5;$fa=1;                                      
+//   difference() {
+//       rect([24,36], anchor=LEFT);
+//       semicircle(10, rounding=-3, extra=1, anchor=LEFT);
+//   }
+// Example(2D): Using attachments
+//   $fs=.5;$fa=1;                                      
+//   diff()
+//     pentagon(side=15) {
+//       attach("side3",LEFT)
+//         semicircle(d=9,rounding=-2);
+//       attach("side4",LEFT,inside=true)
+//         semicircle(d=9,rounding=-2);       
+//     }       
+// Example(2D): Use as a function
+//   path = semicircle(12, rounding=[4,0], chamfer=[0,2], $fn=64);
+//   stroke(path, closed=true, width=0.4);
+// Example(2D): Attaching at a named corner and an arbitrary radial direction.
+//   semicircle(15, angle=300) {
+//       attach("front_corner", FWD) rect([2,5]);
+//       attach([cos(30),sin(30)], FWD) rect([2,5]);
+//   }
+// Example(2D): A one-sided rounding can pass the middle of the circular arc.
+//   semicircle(10, rounding=[0,18]);
+// Example(2D): The two positive roundings consume the entire flat side.
+//   semicircle(10, rounding=[10,10]);
+// Example(2D): The two flares consume the entire arc and meet at RIGHT.
+//   semicircle(10, rounding=-5*PI);
+// Example(2D): A one-sided chamfer uses the full flat-side length (original shape shown in gray)
+//   %semicircle(10);
+//   semicircle(10, chamfer=[0,20]);
+module semicircle(r, thickness, width, angle, long=false,
+                  rounding=0, chamfer=0, extra=0, k=0.75, d,
+                  anchor=CENTER, spin=0)
+{
+    section = _semicircle_section(r=r, d=d, thickness=thickness, width=width,
+                                 angle=angle, long=long, rounding=rounding,
+                                 chamfer=chamfer, extra=extra, k=k);
+    geom = _semicircle_geom(section[1]);
+    attachable(anchor, spin, geom=geom) {
+        polygon(section[0]);
+        children();
+    }
+}
+
+function semicircle(r, thickness, width, angle, long=false,
+                    rounding=0, chamfer=0, extra=0, k=0.75, d,
+                    anchor=CENTER, spin=0) =
+    let(
+        section = _semicircle_section(r=r, d=d, thickness=thickness, width=width,
+                                     angle=angle, long=long, rounding=rounding,
+                                     chamfer=chamfer, extra=extra, k=k),
+        geom = _semicircle_geom(section[1])
+    )
+    // The shared sweep profile is clockwise, starting at the back corner's
+    // flat-side point, and already matches BOSL2's clockwise convention for
+    // public 2D shape paths, so it is used directly here.
+    reorient(anchor, spin, geom=geom, p=section[0]);
+
+
+// Returns [radius, angle, flat_x, half_chord, thickness, center_x].
+function _semicircle_size(r, d, thickness, width, angle, long=false) =
+    assert(is_bool(long), "\nlong must be a boolean")
+    assert(is_undef(r) || is_undef(d), "\nCannot give both r and d")
+    assert(is_undef(r) || (is_finite(r) && r>0), "\nr must be a positive finite number")
+    assert(is_undef(d) || (is_finite(d) && d>0), "\nd must be a positive finite number")
+    assert(is_undef(angle) || (is_finite(angle) && angle>0 && angle<360),
+           "\nangle must be a finite number strictly between 0 and 360")
+    assert(is_undef(width) || (is_finite(width) && width>0), "\nwidth must be a positive finite number")
+    assert(is_undef(thickness) || (is_finite(thickness) && thickness>0),
+           "\nthickness must be a positive finite number")
+    let(
+        radius_given = get_radius(r=r, d=d),
+        count = len([for (v=[radius_given,angle,width,thickness]) if (!is_undef(v)) 1])
+    )
+    assert(count>0, "\nGive r or d alone, or give two of r/d, angle, width and thickness")
+    assert(count<3, "\nToo many size parameters: give only two of r/d, angle, width and thickness")
+    assert(count==2 || !is_undef(radius_given), "\nA lone angle, width or thickness does not specify a segment")
+    assert(is_undef(radius_given) || is_undef(thickness) || thickness<2*radius_given,
+           "\nthickness must be less than the diameter of the circle")
+    assert(is_undef(radius_given) || is_undef(width) || width<=2*radius_given+EPSILON,
+           "\nwidth cannot be larger than the diameter of the circle")
+    let(
+        radius = !is_undef(radius_given) ? radius_given
+               : !is_undef(angle) && !is_undef(width) ? width/(2*sin(angle/2))
+               : !is_undef(angle) && !is_undef(thickness) ? thickness/(2*sin(angle/4)^2)
+               : (width*width/4 + thickness*thickness)/(2*thickness),
+        arc_angle = count==1 ? 180
+                  : !is_undef(angle) ? angle
+                  : !is_undef(radius_given) && !is_undef(width) ?
+                        let(short_angle=2*asin(min(1,width/(2*radius_given))))
+                        long ? 360-short_angle : short_angle
+                  : 2*acos(1-thickness/radius),
+        flat_x = radius*cos(arc_angle/2),
+        half_chord = radius*sin(arc_angle/2),
+        total_thickness = 2*radius*sin(arc_angle/4)^2,
+        center_x = (flat_x+radius)/2
+    )
+    assert(is_finite(radius) && radius>0 && is_finite(arc_angle) && arc_angle>0 && arc_angle<360
+           && is_finite(half_chord) && half_chord>0 && is_finite(total_thickness) && total_thickness>0,
+           "\nThe supplied dimensions are numerically degenerate; use a less extreme segment or scale")
+    [radius, arc_angle, flat_x, half_chord, total_thickness, center_x];
+
+
+function _semicircle_pair(value, name) =
+    is_finite(value) ? [value,value] :
+    assert(is_list(value) && len(value)==2 && is_finite(value[0]) && is_finite(value[1]),
+           str("\n",name," must be a finite number or a pair of finite numbers"))
+    value;
+
+
+/// Returns [CW_path_starting_at_back_corner, dimensions, front_blend, back_blend].
+/// Dimensions: [radius, angle, flat_x, half_chord, thickness, center_x].
+function _semicircle_section(r, d, thickness, width, angle, long=false,
+                             rounding=0, chamfer=0, extra=0, k=0.75) =
+    let(dims=_semicircle_size(r=r, d=d, thickness=thickness, width=width, angle=angle, long=long))
+    assert(is_finite(extra) && extra>=0, "\nextra must be a nonnegative finite number")
+    assert(is_finite(k) && k>=0 && k<=1, "\nk must be a finite number between 0 and 1")
+    let(
+        rr=_semicircle_pair(rounding,"rounding [front,back]"),
+        cc=_semicircle_pair(chamfer,"chamfer [front,back]"),
+        sizes=[for (i=[0:1]) rr[i]!=0 ? rr[i] : cc[i]],
+        width=2*dims[3],
+        arc_length=dims[0]*dims[1]*PI/180,
+        flat_used=max(0,sizes[0])+max(0,sizes[1]),
+        arc_used=abs(sizes[0])+abs(sizes[1]),
+        eps=1e-12*dims[0]
+    )
+    assert(rr[0]==0 || cc[0]==0, "\nThe front corner has both a rounding and a chamfer")
+    assert(rr[1]==0 || cc[1]==0, "\nThe back corner has both a rounding and a chamfer")
+    assert(flat_used<=width+eps, "\nThe positive joints exceed the flat-side length")
+    assert(arc_used<=arc_length+eps, "\nThe joints exceed the available circular arc length")
+    let(
+        front=_semicircle_edge_blend(dims[0],dims[1],sizes[0],rr[0]==0 && cc[0]!=0,k),
+        back=_semicircle_edge_blend(dims[0],dims[1],sizes[1],rr[1]==0 && cc[1]!=0,k)
+    )
+    assert(front[3], cc[0]<0 ? "\nThe front exterior chamfer crosses the circle; reduce its size"
+                            : "\nNo valid front rounding found; reduce its size or change k")
+    assert(back[3], cc[1]<0 ? "\nThe back exterior chamfer crosses the circle; reduce its size"
+                           : "\nNo valid back rounding found; reduce its size or change k")
+    let(path=_semicircle_side_profile(dims[0],dims[2],front,back,extra))
+    assert(len(path)>=3 && _semicircle_area(path)<0,
+           "\nThe sampled profile has collapsed; reduce the joints or increase the facet count")
+    [path,dims,front,back];
+
+
+// Work at unit radius.  M=V+t(F-V), t in [0,1], with t=0 preferred for BOTH signs.
+// D(t) is M's inward normal distance from the circle tangent at E.  Curvature
+// matching gives b^2=3*D/4 and P3=E+b*T.  Require D>=0 and P3.x>=flat_x.
+// The bounds remain finite when E crosses the arc midpoint (sin(phi)=0).
+function _semicircle_m_bounds(alpha, s) =
+    let(
+        delta=abs(s)*180/PI,
+        phi=alpha-delta,
+        sn=sin(phi),
+        d0=2*sin(delta/2)^2,
+        slope=s*sn,
+        // cos(phi)-cos(alpha), without subtracting nearly equal numbers.
+        dx=2*sin((alpha+phi)/2)*sin(delta/2),
+        first=_semicircle_linear_bound([0,1],d0,slope)
+    )
+    sn<=0 ? first :
+    _semicircle_linear_bound(first,(4/3)*(max(0,dx)/sn)^2-d0,-slope);
+
+
+// Intersect an interval with a+b*t>=0.  An inverted interval is empty.
+function _semicircle_linear_bound(bounds, a, b) =
+    b==0 ? (a>=0 ? bounds : [1,0]) :
+    b>0 ? [max(bounds[0],-a/b),bounds[1]] : [bounds[0],min(bounds[1],-a/b)];
+
+
+function _semicircle_joint_points(alpha, s, k, t) =
+    let(
+        delta=abs(s)*180/PI,
+        phi=alpha-delta,
+        v=[cos(alpha),sin(alpha)],
+        f=v-[0,s],
+        m=v-[0,t*s],
+        e=[cos(phi),sin(phi)],
+        dist=2*sin(delta/2)^2+t*s*sin(phi),
+        b=sqrt(0.75*max(0,dist))
+    )
+    [f,lerp(m,f,k),m,e+b*[-sin(phi),cos(phi)],e];
+
+
+// Bernstein coefficient c5 of |B(t)|^2-1, evaluated without subtracting 1
+// from dot products close to 1.  The circle-side test is LOCAL, not a proof
+// of whole-curve containment.  Its normalized tolerance is 1e-9 as before.
+function _semicircle_joint_c5(alpha, s, k, t) =
+    let(
+        delta=abs(s)*180/PI,
+        phi=alpha-delta,
+        d0=2*sin(delta/2)^2,
+        dist=d0+t*s*sin(phi),
+        d1=d0+(k+(1-k)*t)*s*sin(phi),
+        tangent_m=sin(delta)-t*s*cos(phi),
+        b=sqrt(0.75*max(0,dist))
+    ) (-d1+6*(-dist+b*tangent_m))/7;
+
+
+// Returns the selected fraction along V--F, or undef if the construction fails.
+function _semicircle_joint_fraction(alpha, s, k) =
+    let(bounds=_semicircle_m_bounds(alpha,s), lo=max(0,bounds[0]), hi=min(1,bounds[1]))
+    hi<lo ? undef :
+    let(
+        delta=abs(s)*180/PI,
+        phi=alpha-delta,
+        is_ok=function(t)
+            let(dist=2*sin(delta/2)^2+t*s*sin(phi), c5=_semicircle_joint_c5(alpha,s,k,t))
+            t<1 && dist>0 && (s>0 ? c5<=1e-9 : c5>=-1e-9)
+    )
+    is_ok(lo) ? lo : _semicircle_search_joint(is_ok,lo,hi);
+
+
+// Scan for the first passing interval, then bisect it.  As in the previous
+// construction this is a finite search, not a proof that no feasible t exists.
+function _semicircle_search_joint(is_ok, lo, hi, steps=200) =
+    let(passing=[for (i=[1:steps]) if (is_ok(lerp(lo,hi,i/steps))) i])
+    passing==[] ? undef :
+    _semicircle_bisect_joint(is_ok,lerp(lo,hi,(passing[0]-1)/steps),lerp(lo,hi,passing[0]/steps),40);
+
+function _semicircle_bisect_joint(is_ok, lo, hi, count) =
+    count==0 ? hi :
+    let(mid=(lo+hi)/2)
+    is_ok(mid) ? _semicircle_bisect_joint(is_ok,lo,mid,count-1)
+              : _semicircle_bisect_joint(is_ok,mid,hi,count-1);
+
+
+// Returns [sampled curve, contact angle, flat endpoint y, valid].
+// Both signs consume abs(size) of retained arc; only the flat setback is signed.
+// No tangent-line intersection is used.  For an exterior chamfer, F.E>=r^2
+// is necessary and sufficient for its entire straight segment to stay outside
+// the circle; equality is the valid tangent case.
+function _semicircle_edge_blend(radius, angle, size, use_chamfer, k) =
+    let(
+        alpha=angle/2,
+        s=size/radius,
+        delta=abs(s)*180/PI,
+        phi=alpha-delta,
+        f=[cos(alpha),sin(alpha)-s],
+        e=[cos(phi),sin(phi)]
+    )
+    size==0 ? [[],alpha,radius*f.y,true] :
+    use_chamfer ?
+        let(margin=abs(s)*sin(phi)-2*sin(delta/2)^2)
+        [[radius*f,radius*e],phi,radius*f.y,size>0 || margin>=-1e-12] :
+    let(t=_semicircle_joint_fraction(alpha,s,k))
+    is_undef(t) ? [[],phi,radius*f.y,false] :
+    let(points=_semicircle_joint_points(alpha,s,k,t))
+    [radius*bezier_curve(points,splinesteps=max(4,ceil(segs(abs(size))/4))),phi,radius*f.y,true];
+
+
+// Assemble in circle-centered coordinates, starting at the back corner's
+// flat-side point and ending at the front corner's flat-side point, so the
+// flat side (plus any "extra" detour) is the closing edge of the path.
+// A fully consumed arc contributes just its common endpoint; a fully
+// consumed flat side contributes no extra slab (which would otherwise make
+// an out-and-back, zero-area spike).
+function _semicircle_side_profile(radius, flat_x, front, back, extra) =
+    let(
+        eps=1e-12*radius,
+        start=-front[1], finish=back[1],
+        span=max(0,finish-start),
+        // The tiny ceil correction makes equivalent size specifications use
+        // the same count when roundoff straddles an integer.
+        arc_points=span<=1e-10 ? [radius*[cos((start+finish)/2),sin((start+finish)/2)]] :
+            arc(r=radius,angle=[start,finish],n=max(3,ceil(segs(radius)*span/360-1e-12)+1)),
+        // back_at_flat..back_at_arc: from the back corner's flat-side point
+        // toward (but not including) its arc contact point.
+        back_at_flat_to_arc=back[0]==[] ? [] : reverse(list_tail(reverse(back[0]))),
+        // front_at_arc..front_at_flat: from (just after) the front corner's
+        // arc contact point to its flat-side point.
+        front_at_arc_to_flat=front[0]==[] ? [] : reverse(list_head([for (p=front[0]) [p.x,-p.y]])),
+        extra_points=extra>0 && back[2]+front[2]>eps ?
+            [[flat_x-extra,-front[2]],[flat_x-extra,back[2]]] : []
+    )
+    _semicircle_clean_path(concat(back_at_flat_to_arc,reverse(arc_points),front_at_arc_to_flat,extra_points),eps);
+
+
+// Remove only consecutive duplicates and the repeated closing vertex.
+function _semicircle_clean_path(path, eps) =
+    let(p=[for (i=idx(path)) if (i==0 || norm(path[i]-path[i-1])>eps) path[i]])
+    len(p)>1 && norm(p[0]-last(p))<=eps ? list_head(p) : p;
+
+function _semicircle_area(path) =
+    len(path)<3 ? 0 :
+    sum([for (i=[1:len(path)-2]) cross(path[i]-path[0],path[i+1]-path[0])])/2;
+
+
+// Nominal 2D anchor [position,direction].  Accepts any 2D direction, not only
+// the eight standard compass anchors.  The center's 2D direction is BACK.
+function _semicircle_anchor(anch, dims) =
+    let(a=_force_anchor_2d(anch))
+    norm(a)<EPSILON ? [[dims[5],0],[0,1]] :
+    let(direction_angle=atan2(a.y,a.x))
+    abs(direction_angle)<=dims[1]/2+EPSILON ?
+        let(dir=unit(a)) [dims[0]*dir,dir] :
+    let(
+        candidates=[for (x=[90,135,180]) if (x>dims[1]/2+EPSILON) x],
+        distances=[for (x=candidates) abs(abs(direction_angle)-x)],
+        nearest=min(distances),
+        snapped=last([for (i=idx(candidates)) if (approx(distances[i],nearest)) candidates[i]]),
+        side=direction_angle<0 ? -1 : 1,
+        bisector=90+dims[1]/4,
+        on_flat=snapped==180,
+        dir=on_flat ? [-1,0] : snapped==90 ? [0,side]
+            : [cos(side*bisector),sin(side*bisector)],
+        pos=[dims[2],on_flat ? 0 : side*dims[3]]
+    ) [pos,dir];
+
+
+function _semicircle_named_anchors(dims) =
+    let(bisector=90+dims[1]/4)
+    [
+        named_anchor("center", [0,0], BACK),
+        named_anchor("front_corner", [dims[2],-dims[3]], [cos(bisector),-sin(bisector)]),
+        named_anchor("back_corner", [dims[2],dims[3]], [cos(bisector),sin(bisector)])
+    ];
+
+function _semicircle_geom(dims) =
+    attach_geom(two_d=true, r=dims[0], anchors=_semicircle_named_anchors(dims),
+                override=function(a) _semicircle_anchor(a,dims));
+
+
 // Function&Module: squircle()
 // Synopsis: Creates a shape between a circle and a square.
 // SynTags: Geom, Path
