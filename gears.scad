@@ -477,7 +477,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   It is possible to design the worm to follow the curved shape of its mated gear, resulting
 //   in an enveloping (also called "globoid") worm.  This type of worm makes better contact with
 //   the worm gear, but is less often used due to manufacturing complexity and consequent expense.  
-// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): A cylindrical worm appears on the left in green.  Note its straight sides.  The enveloping (globoid) worm gears appears on the right in green.  Its sides curve so several teeth can mate with the worm gear, and it requires a complex tooth form.
+// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): The enveloping (globoid) worm appears on the left in green.  Its sides curve so several teeth can mate with the worm gear, and it requires a complex tooth form.  A cylindrical worm appears on the right in blue.  Note its straight sides.
 //   tilt=20;
 //   starts=1;
 //   ps=0;
@@ -503,7 +503,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //      }
 //      yrot(-tilt)
 //      union(){
-//       color("lightgreen")
+//       color("lightblue")
 //         xrot(90) 
 //         zrot(-90)
 //                                worm(l=43, $fn=128,
