@@ -39,8 +39,9 @@
 //   ### Usage
 // Includes:
 //   include <BOSL2/std.scad>
-// FileGroup: Text
+// FileGroup: Basic Modeling
 // FileSummary: 2D and 3D text rendering
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
@@ -52,7 +53,7 @@ DATA OBJECTS
 Listed from lowest level. Higher-level objects include lower level objects.
 
 
-Font data, returned by _fontdata. Example:
+Font data, returned by _fontdata(). Example:
 {
     // fontmetrics() object properties, with font size inserted in 'font' property
     nominal   = { ascent = 12.5733; descent = -2.9433; };
@@ -63,13 +64,13 @@ Font data, returned by _fontdata. Example:
     spacer    = 0;          // amount of space to insert between characters
     spc       = 3.8588;     // width of a space character for this font
     direction = "ltr";      // text direction, "ltr" or "rtl"
-    language  = "en";       // passed through to text(), function unknown
-    script    = "latin";    // passed through to text(), function unknown
+    language  = "en";       // passed through to text()
+    script    = "latin";    // passed through to text()
 }
 
 
-Returned by _textobj() - primary workhorse, contains horizontal offset position data about a
-single wrapped line of text. First character position is always zero.
+Returned by _textobj() - primary workhorse, contains horizontal offset position data about each
+character in a single wrapped line of text. First character position is always zero.
 
 {
     text                    // text for this line
@@ -112,7 +113,7 @@ as well as each line's baseline.
 }
 
 
-_writeob() returns a write object, which includes everything needed to render the text.
+_writeobj() returns a write object, which includes everything needed to render the text.
 
 {
     fontname                // name of the font from _fontdata object
@@ -122,7 +123,7 @@ _writeob() returns a write object, which includes everything needed to render th
     boundbox_center         // position offset of the bounding box within the user box
     vbaseline0              // distance from top of bounding box to first baseline
     osize                   // OpenSCAD font size derived from one of the specified sizes passed
-    baseline_pos            // list of baseline_pos objects
+    baseline_pos            // list of baseline_pos objects, which include a wrapobj for each line
 }
 */
 
@@ -322,6 +323,8 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   TEXTLINE(n,[pos],[tight],[rtl]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set).
 // Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `nom_height` to specify the size of the font from nominal ascender to nominal descender.
 //   write("Flying high", nom_height=14, font="Liberation Sans");
+// Example(2D): Anchors are used to position text vertically and horizontally with respect to the origin, instead of `valign` and `halign` in OpenSCAD's `text()`. To position the start of the baseline at the origin (the default behavior in `text()`), use a `BASELINE("start")` anchor. Glyph descenders then extend below the X axis.
+//   write("Quippy", size=10, anchor=BASELINE("start"));
 // Example(2D,NoAxes,VPT=[0,0,0],VPD=285): You can pass multi-line text by inserting newline (`\n`) characters, or passing an array of strings. An array of strings may also contain newlines, and they are split into separate lines. The results are identical.
 //   left(50)      write("Hello\nthere,\nworld!", size=10);
 //   color("gray") write(["Hello", "there,", "world!"], size=10);
@@ -342,8 +345,8 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   }
 // Example(2D,NoAxes,VPT=[0,0,0],VPD=280): You can also use inline style codes to format parts of the text with different styles. Here the font is given without a style and the style codes for italic, regular, bold, and bold italic are inserted. The style changes with each code. The text is automatically word-wrapped because a font size and `max_width` were both specified. See other wordwrapping examples below.
 //   string = "Go {{i}}placidly{{r}} amid the noise and
-//       haste, and remember what {{b}}peace{{r}} there
-//       may be in {{bi}}silence.";
+//             haste, and remember what {{b}}peace{{r}}
+//             there may be in {{bi}}silence.";
 //   fontname = "Liberation Serif";
 //   write(string, max_width=130, size=10, font=fontname);
 // Example(2D,NoAxes,VPD=230): When you need a nonbreaking space. The code `{ }` (a space between two curly braces) is used for this purpose. In this example, the string `"1000 kg"` should be treated as a single word with a nonbreaking space, to prevent wordwrapping the "kg" to a separate line.
@@ -372,7 +375,7 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   fontname = "Liberation Serif:style=Bold Italic";
 //   write(string, [130,90], size=10, font=fontname,
 //        wrap_optimize=false);
-// Example(2D,VPT=[0,0,0],VPD=280): Same as previous example, but using the default `wrap_optimize=true`. Optimization never increases the number of wrapped lines, and the resulting lines have roughly equal length with no "widow" at the end. Setting `show_bounds=true` reveals the first line's baseline shown in magenta, the bounding box shown in green centered inside the maximum width defined in the `[max_width,max_height]` limits. The vertical size of the bounding box is determined by the default value `vbound="nominal".
+// Example(2D,VPT=[0,0,0],VPD=280): Same as previous example, but using the default `wrap_optimize=true`. Optimization never increases the number of wrapped lines, and the resulting lines have roughly equal length with no "widow" at the end. Setting `show_bounds=true` reveals the first line's baseline shown in magenta, the bounding box shown in green centered inside the maximum width defined in the `[max_width,max_height]` limits. The vertical size of the bounding box is determined by the default value `vbound="nominal"`.
 //   string = "Go placidly amid the noise and haste,
 //       and remember what peace there may be in silence.";
 //   fontname = "Liberation Serif:style=Bold Italic";
@@ -473,7 +476,7 @@ module write(text, max_width=INF, max_height=INF,
 //   write3d("Flying\nhigh", h=6, size=10, text_align="center",
 //       font="Liberation Serif:style=Bold Italic",
 //       anchor=BASELINE("start",TOP));
-// Example(3D,VPD=405,VPR=[56,0,40],VPT=[2,0,2]): Attaching 3D text to three sides of a cuboid.
+// Example(3D,VPD=405,VPR=[56,0,40],VPT=[2,0,2]): Attaching 3D text, sunk 1 unit into three sides of a beveled cuboid.
 //   cuboid(100, chamfer=6) {
 //       attach(TOP,BOT,overlap=1) color("lightgreen")
 //           write3d("ETERNAL", thickness=4, size=14, spin=45);
@@ -486,7 +489,7 @@ module write(text, max_width=INF, max_height=INF,
 //   write3d("{{bi}}Thriller\n{{b}}Best Selling {{r}}Album",
 //       h=3, max_width=100, font="Liberation Sans", size=10,
 //       text_align="center", letterspace=0.5, orient=FWD);
-// Example(3D): A message embossed onto the top of a rounded cuboid, using the default font. The text is 4 units thick and sunk 2 units into the cuboid. The message is automatically word-wrapped to fit within `max_width`. 
+// Example(3D): A message embossed onto the top of a rounded cuboid, using the default font. The text is 4 units thick and sunk 2 units into the cuboid. The text has additional letterspacing, and is automatically word-wrapped to fit within `max_width`. 
 //   cuboid([105,80,15], rounding=6, clip_angle=40)
 //   attach(TOP,BOT,overlap=2)
 //       color("lightgreen")
