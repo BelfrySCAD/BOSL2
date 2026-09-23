@@ -2922,6 +2922,334 @@ module zcyl(
 }
 
 
+
+// Module: hemicyl()
+// Synopsis: Creates a half cylinder, with optional rounding or chamfers on the flat face.
+// Topics: Shapes (3D), Cylinders, Attachable, Rounding, Chamfers
+// See Also: cyl(), semicircle(), arc(), teardrop()
+// Usage: Half cylinder
+//   hemicyl(h|l|height|length, r, [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, d=, ...) [ATTACHMENTS];
+// Usage: Other circular segments
+//   hemicyl(h|l|height|length, r|d=, thickness=, ...) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, r|d=, width=, [long=], ...) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, r|d=, angle=, ...) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, angle=, width=, ...) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, angle=, thickness=, ...) [ATTACHMENTS];
+//   hemicyl(h|l|height|length, width=, thickness=, ...) [ATTACHMENTS];
+// Usage: Rounded, chamfered or flared edges
+//   hemicyl(..., [rounding=], [chamfer=], [end_rounding=], [end_chamfer=], [k=], [extra=]) [ATTACHMENTS];
+// Description:
+//   Creates a half-cylinder or an extrusion of a circular segment.
+//   The flat face is on the LEFT, and the curved surface extends toward RIGHT.
+//   Giving a radius or diameter specifies a half cylinder.  To get other fractions of the cylinder specify exactly
+//   two of `r`/`d`, `angle`, `width`, and `thickness`.  The angle is the span of the circular arc.  The width is the width
+//   of the flat face, and thickness is the distance from the flat face to the opposite side of the shape.
+//   Combining radius and width gives two possible truncated cylinders, one smaller than 180 degrees and one larger.
+//   The default is the smaller segment; `long=true` chooses the larger.  At width equal to the diameter both
+//   choices give a half cylinder.  For a full cylinder use {{cyl()}}.
+//   Height is required and is the first positional argument; radius is the second.  Name the remaining arguments.
+//   .
+//   You can independently chamfer and round each of the four edges of the flat face.  The edges where the curved surface
+//   meets the flat face can be treated using `rounding=` or `chamfer=`, set to a scalar to treat both equally
+//   or a list `[front,back]`.  Negative roundings and chamfers extend outward as usual.  Use `end_rounding=` and
+//   `end_chamfer=` on the edges where two flat faces meet; a vector is interpreted as `[bottom,top]`.
+//   You may mix signs, chamfers and roundings, but cannot give a nonzero chamfer and rounding for the same edge.
+//   These parameters do not treat the curved rims at the cylinder ends.
+//   .
+//   Rounding and chamfer sizes are joint lengths: the straight distance along the flat face and the matching
+//   arc length along the curved surface.  For negative values the flat endpoint moves outward, but the circle
+//   endpoint still moves along the retained arc.  End treatments use equal straight distances on their two faces.
+//   Positive long-edge joints share the flat-face width; joints of either sign share the available arc length.
+//   Positive end joints share the height and individually cannot exceed the thickness.  Joints may meet exactly,
+//   provided the construction is valid and the shape does not collapse.  An exterior long-edge chamfer that crosses
+//   the circle is an error; reduce its magnitude.
+//   .
+//   The roundings are continuous curvature fourth degree beziers, but unlike the continuous curvature roundings elsewhere in the library,
+//   these roundings mate with a circle at once end, which means they have nonzero curvature at that end of the joint.
+//   This requires a different bezier definition, which means that the `k` parameter behaves somewhat differently, but
+//   it is still between 0 and 1 and still controls the shape in the same general manner, with small `k` values giving pointier roundings
+//   that hug the base curve, and large `k` giving blunter roundings.  The default is `k=0.75`.  
+//   .
+//   Bezier sampling uses the segment count for a quarter circle whose radius equals the joint length
+//   with a minimum of four segments.  Thus `$fn`, `$fa` and `$fs` control the count, not the actual angles or
+//   lengths of the Bezier segments. 
+//   .
+//   The `extra` parameter extends the remaining flat face toward LEFT by the specified distance, without moving
+//   any anchors.  It is useful when subtracting or unioning the shape to avoid coincident faces.
+//   .
+//   Anchors describe the nominal shape without roundings, chamfers or extra, so an anchor need not lie on the
+//   modified surface.  CENTER is midway between the flat face and the bulge at the right, at mid-height.
+//   The named anchor "center" is instead on the axis of the cylinder that generates the shape.
+//   .
+//   Anchor directions whose XY components lie within the span of the arc attach to the curved surface as for a
+//   cylinder.  Directions outside the span snap to the nearest of LEFT, LEFT+FWD, LEFT+BACK, FWD and BACK that is
+//   also outside the span.  Ties snap toward LEFT, the middle of the flat face.  Use "front_edge" and "back_edge"
+//   to reach the original flat-face edges at any angle.  The `_top` and `_bot` named variants change the position,
+//   not the sideways direction.  Spin and orient rotate about the selected anchor.
+// Arguments:
+//   h / l / height / length = Height of the half-cylinder
+//   r = Radius of the half-cylinder
+//   ---
+//   d = Diameter of the half-cylinder
+//   thickness = Distance along X from the flat face to the farthest point of the arc. 
+//   width = width of the flat face (in the Y direction)
+//   angle = Span of the circular arc, in degrees, strictly between 0 and 360.  Default: 180 when only `r` or `d` specifies the cross-section.
+//   long = With `r`/`d` and `width`, select the larger segment when true.  Otherwise has no effect.  Default: false
+//   rounding = Rounding joint length for the vertical edges: a number or `[front,back]`.  Default: 0
+//   chamfer = Chamfer joint length  for the vertical edges: a number or `[front,back]`.  Default: 0
+//   end_rounding = Rounding joint length at the top and bottom of the flat face: a number or `[bottom,top]`.  Default: 0
+//   end_chamfer = Chamfer joint length at the top and bottom of the flat face: a number or `[bottom,top]`.  Default: 0
+//   extra = Nonnegative extension of the flat face toward LEFT; ignored by anchoring.  Default: 0
+//   k = Bluntness of all Bezier roundings, from 0 (pointiest) to 1 (bluntest).  Default: 0.75
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [anchor](attachments.scad#subsection-spin). Default: `0`
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
+// Named Anchors:
+//   "center" = Cylinder axis at mid-height.  Points UP.
+//   "center_top" = Cylinder axis at the nominal top.  Points UP.
+//   "center_bot" = Cylinder axis at the nominal bottom.  Points UP, not DOWN.
+//   "front_edge" = Middle of the nominal front long edge.  Points along the flat/curved-face bisector, with spin up along the edge.
+//   "front_edge_top" = Top of the nominal front long edge.  Same direction and spin as "front_edge".
+//   "front_edge_bot" = Bottom of the nominal front long edge.  Same direction and spin as "front_edge".
+//   "back_edge" = Middle of the nominal back long edge.  Points along the flat/curved-face bisector, with spin up along the edge.
+//   "back_edge_top" = Top of the nominal back long edge.  Same direction and spin as "back_edge".
+//   "back_edge_bot" = Bottom of the nominal back long edge.  Same direction and spin as "back_edge".
+// Example(3D): A half cylinder: height first, then radius.
+//   hemicyl(20, 10);
+// Example(3D): Named height aliases and diameter.  These specify the same half cylinder.
+//   xdistribute(25) {
+//       hemicyl(l=20, d=20);
+//       hemicyl(height=20, r=10);
+//       hemicyl(length=20, d=20);
+//   }
+// Example(3D): A thin segment, a half cylinder, and a larger segment, specified by thickness.
+//   xdistribute(25) {
+//       hemicyl(16, 10, thickness=4);
+//       hemicyl(16, 10, thickness=10);
+//       hemicyl(16, 10, thickness=16);
+//   }
+// Example(3D): Specifying the arc angle: 90, 180 and 270 degrees.
+//   xdistribute(25) {
+//       hemicyl(16, 10, angle=90);
+//       hemicyl(16, 10, angle=180);
+//       hemicyl(16, 10, angle=270);
+//   }
+// Example(3D): The two segments with radius 10 and chord width 16.  `long=true` selects the larger one.
+//   xdistribute(30) {
+//       hemicyl(16, 10, width=16);
+//       hemicyl(16, d=20, width=16, long=true);
+//   }
+// Example(3D): Inferring the radius.  All three combinations give radius 10 and arc angle 120 degrees.
+//   xdistribute(25) {
+//       hemicyl(16, angle=120, width=10*sqrt(3));
+//       hemicyl(16, angle=120, thickness=5);
+//       hemicyl(16, width=10*sqrt(3), thickness=5);
+//   }
+// Example(3D,VPR=[65,0,315]): Positive rounding on all four flat-face edges.  The curved end rims remain sharp.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=3, end_rounding=2);
+// Example(3D,VPR=[65,0,315]): Different rounding sizes on the same shape: front 1, back 5, bottom 3, top 1.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=[1,5], end_rounding=[3,1]);
+// Example(3D,VPR=[65,0,315]): Unequal chamfers on all four edges.
+//   hemicyl(24, 12, chamfer=[2,4], end_chamfer=[1,3]);
+// Example(3D,VPR=[65,0,315]): Mixing rounding and chamfer: round front/top, chamfer back/bottom.  Zeros select which parameter controls each edge.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=[4,0], chamfer=[0,2],
+//                   end_rounding=[0,3], end_chamfer=[1,0]);
+// Example(3D,VPR=[65,0,315]): Round only the back long edge; the other three flat-face edges are unchanged.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=[0,4]);
+// Example(3D,VPR=[65,0,45]): Negative rounding adds flares.  Long-edge and end flares meet in miter creases.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=-3, end_rounding=-3);
+// Example(3D,VPR=[65,0,45]): Unequal negative treatments: a rounded flare on front/top and a flared chamfer on back/bottom.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=[-2,0], chamfer=[0,-4],
+//                   end_rounding=[0,-3], end_chamfer=[-1,0]);
+// Example(3D,VPR=[65,0,45]): Mixed signs are also supported: front/top flare outward, while back/bottom round inward.
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(24, 12, rounding=[-3,2], end_rounding=[1,-2]);
+// Example(3D,VPR=[65,0,315]): A top rounding uses the entire height.
+//   $fa = 3;$fs = 0.2;  
+//   hemicyl(8, 12, end_rounding=[0,8]);
+// Example(3D,VPR=[65,0,315]): Bottom and top roundings meet, using the entire height.
+//   $fa = 3;$fs = 0.2;  
+//   hemicyl(20, 12, end_rounding=[8,12]);
+// Example(3D): Combined roundings that use more that half the space
+//   $fa = 3;$fs = 0.2;
+//   hemicyl(8, 12, rounding=[0,17], end_rounding=[0,8]);
+// Example(3D,VPR=[65,0,315]): Small `k` gives a sharper roundover and large `k` a blunter one for the same size
+//   $fa = 1;$fs = 0.5;
+//   ks = [0.25,0.95];
+//   for (i=[0:1])
+//       right(30*(i-1/2))
+//           hemicyl(24, 12, rounding=5, end_rounding=3, k=ks[i]);
+// Example(3D): Extra material extends LEFT without moving the nominal flat-face anchor. 
+//   hemicyl(24, 12, rounding=-3, extra=3, anchor=LEFT);
+// Example(3D): Subtracting a through groove.  Negative rounding eases the mouth; `extra` avoids a coincident face at the block's top.
+//   diff()
+//       cuboid([40,40,20])
+//           attach(TOP, LEFT, inside=true)
+//               tag("remove") hemicyl(42, 10, rounding=-3, extra=1);
+// Example(3D): A blind recess with flares on all four sides of its mouth.  The miter creases at the corners are intentional.
+//   $fs=0.5;$fa=1;
+//   diff()
+//       cuboid([30,30,20])
+//           attach(TOP, LEFT, inside=true)
+//               hemicyl(20, 8, rounding=-2, end_rounding=-2, extra=1);
+module hemicyl(h, r,
+               thickness, width, angle, long=false,
+               rounding=0, chamfer=0, end_rounding=0, end_chamfer=0,
+               extra=0, k=0.75, convexity=10, d, l, length, height,
+               anchor=CENTER, spin=0, orient=UP)
+{
+    // Share the raw profile and resolved dimensions, then anchor in 3D once.
+    section = _semicircle_section(r=r, d=d, thickness=thickness, width=width,
+                                 angle=angle, long=long, rounding=rounding,
+                                 chamfer=chamfer, extra=extra, k=k);
+    dims = section[1];
+    circle_radius = dims[0];
+    arc_angle = dims[1];
+    flat_x = dims[2];
+    half_chord = dims[3];
+    total_thickness = dims[4];
+    center_x = dims[5];
+    side_profile = section[0];
+
+    length_value = one_defined([h,l,height,length], "h,l,height,length");
+    rr = _semicircle_pair(end_rounding,"end_rounding [bottom,top]");
+    cc = _semicircle_pair(end_chamfer,"end_chamfer [bottom,top]");
+    bottom_size = rr[0]!=0 ? rr[0] : cc[0];
+    top_size = rr[1]!=0 ? rr[1] : cc[1];
+    bottom_is_chamfer = rr[0]==0 && cc[0]!=0;
+    top_is_chamfer = rr[1]==0 && cc[1]!=0;
+    end_check =
+        assert(is_finite(length_value) && length_value>0, "\nLength must be a positive finite number")
+        assert(rr[0]==0 || cc[0]==0, "\nThe bottom end has both rounding and chamfer: give only one")
+        assert(rr[1]==0 || cc[1]==0, "\nThe top end has both rounding and chamfer: give only one")
+        assert(bottom_size<=total_thickness+1e-12*circle_radius, "\nThe bottom end joint exceeds the thickness")
+        assert(top_size<=total_thickness+1e-12*circle_radius, "\nThe top end joint exceeds the thickness")
+        assert(max(0,bottom_size)+max(0,top_size)<=length_value+1e-12*length_value,
+               "\nThe positive bottom and top treatments are too large for the length")
+        assert(is_finite(convexity) && convexity>=1, "\nconvexity must be at least 1");
+    // ---------- Anchors
+    // Directions outside the arc snap to the nearest of these anchor angles (as absolute values):
+    // FWD/BACK, LEFT+FWD/LEFT+BACK, LEFT.  Only the ones outside the arc are used.
+    snap_angles = [for (candidate = [90,135,180]) if (candidate > arc_angle/2 + EPSILON) candidate];
+    corner_bisector = 90 + arc_angle/4;    // direction angle for the back corner, and the front corner is its negative
+    override = function(anch)
+        let(
+            z_sign = sign(anch.z),
+            z_offset = anch.z*length_value/2
+        )
+        norm([anch.x,anch.y]) < EPSILON ?
+            let(dir = z_sign==0 ? UP : [0,0,z_sign])
+            [[center_x,0,z_offset], dir, _compute_spin(dir,BACK)]
+      : let(direction_angle = atan2(anch.y,anch.x))
+        abs(direction_angle) <= arc_angle/2 + EPSILON ? undef
+      : let(
+            side = direction_angle<0 ? -1 : 1,
+            distances = [for (snap = snap_angles) abs(abs(direction_angle)-snap)],
+            nearest = min(distances),
+            snapped = last([for (i = idx(snap_angles)) if (approx(distances[i],nearest)) snap_angles[i]]),
+            on_flat = snapped==180,
+            horizontal_dir = on_flat ? [-1,0]
+                           : snapped==90 ? [0,side]
+                           : [cos(side*corner_bisector), sin(side*corner_bisector)],
+            dir = unit([horizontal_dir.x, horizontal_dir.y, z_sign]),
+            pos = [flat_x, on_flat ? 0 : side*half_chord, z_offset],
+            spin_dir = on_flat && z_sign!=0 ? (z_sign>0 ? BACK : FWD) : UP
+        )
+        [pos, dir, _compute_spin(dir, spin_dir, BACK)];
+
+    front_edge_dir = [cos(corner_bisector), -sin(corner_bisector), 0];
+    back_edge_dir = [cos(corner_bisector), sin(corner_bisector), 0];
+    front_edge_spin = _compute_spin(front_edge_dir, UP);
+    back_edge_spin = _compute_spin(back_edge_dir, UP);
+    named = [
+        named_anchor("center", [0,0,0], UP),
+        named_anchor("center_top", [0,0,length_value/2], UP),
+        named_anchor("center_bot", [0,0,-length_value/2], UP),
+        named_anchor("front_edge", [flat_x,-half_chord,0], front_edge_dir, front_edge_spin),
+        named_anchor("front_edge_top", [flat_x,-half_chord,length_value/2], front_edge_dir, front_edge_spin),
+        named_anchor("front_edge_bot", [flat_x,-half_chord,-length_value/2], front_edge_dir, front_edge_spin),
+        named_anchor("back_edge", [flat_x,half_chord,0], back_edge_dir, back_edge_spin),
+        named_anchor("back_edge_top", [flat_x,half_chord,length_value/2], back_edge_dir, back_edge_spin),
+        named_anchor("back_edge_bot", [flat_x,half_chord,-length_value/2], back_edge_dir, back_edge_spin)
+    ];
+
+    // ---------- Geometry
+    has_end_treatment = bottom_size!=0 || top_size!=0;
+    // Flares at the ends extend beyond the nominal length
+    bottom_extension = max(0,-bottom_size);
+    top_extension = max(0,-top_size);
+    end_x_max = max(max([for (p=side_profile) p.x]), flat_x+max(abs(bottom_size),abs(top_size))) + circle_radius;
+    end_y_extent = max([for (p=side_profile) abs(p.y)]) + circle_radius;
+
+    attachable(anchor,spin,orient, r=circle_radius, l=length_value, anchors=named, override=override)
+    {
+        if (!has_end_treatment)
+            linear_extrude(height=length_value, center=true, convexity=convexity) polygon(side_profile, convexity=convexity);
+        else
+            // The side sweep is extended to cover any flares at the ends, and is trimmed and given the
+            // end roundings by intersecting it with a sweep of the end profile along Y.
+            intersection(){
+                up((top_extension-bottom_extension)/2)
+                    linear_extrude(height=length_value+bottom_extension+top_extension, center=true, convexity=convexity)
+                        polygon(side_profile, convexity=convexity);
+                xrot(90)
+                    linear_extrude(height=2*end_y_extent, center=true, convexity=convexity)
+                        polygon(convexity=convexity, points=_hemicyl_end_profile(flat_x, end_x_max, length_value,
+                                                     [bottom_size,bottom_is_chamfer],
+                                                     [top_size,top_is_chamfer], extra, k));
+            }
+        children();
+    }
+}
+
+
+/// Function: _hemicyl_end_corner()
+/// Description:
+///   Curve replacing the sharp corner of the flat face at one end of the extrusion, in the XZ plane (as x,y).
+///   Returns a curve from the point on the flat plane to the point on the end face, or the corner alone if the size is zero.
+function _hemicyl_end_corner(flat_x, edge_z, size, use_chamfer, smoothness) =
+    let(
+        z_sign = sign(edge_z),
+        corner = [flat_x, edge_z],
+        flat_point = [flat_x, edge_z - z_sign*size],
+        end_point = [flat_x + abs(size), edge_z]
+    )
+    size==0 ? [corner]
+  : use_chamfer ? [flat_point, end_point]
+  : bezier_curve(
+        [flat_point,
+         lerp(corner,flat_point,smoothness),
+         corner,
+         lerp(corner,end_point,smoothness),
+         end_point],
+        splinesteps=max(4,ceil(segs(abs(size))/4)));
+
+
+/// Function: _hemicyl_end_profile()
+/// Description:
+///   Polygon in the XZ plane (as x,y) that is extruded along Y and intersected with the side sweep to make the end roundings.
+///   The `bottom` and `top` arguments are lists `[size, use_chamfer]`.
+function _hemicyl_end_profile(flat_x, x_max, length, bottom, top, extra, smoothness) =
+    let(
+        bottom_curve = _hemicyl_end_corner(flat_x, -length/2, bottom[0], bottom[1], smoothness),
+        top_curve = _hemicyl_end_corner(flat_x, length/2, top[0], top[1], smoothness),
+        eps=1e-12*max(length,abs(x_max-flat_x)),
+        has_flat=top_curve[0].y-bottom_curve[0].y>eps,
+        bottom_extra = extra>0 && has_flat ? [[flat_x-extra, bottom_curve[0].y]] : [],
+        top_extra = extra>0 && has_flat ? [[flat_x-extra, top_curve[0].y]] : []
+    )
+    _semicircle_clean_path(concat(bottom_extra,bottom_curve,[[x_max,-length/2],[x_max,length/2]],reverse(top_curve),top_extra),eps);
+
+
+
+
 // Module: tube()
 // Synopsis: Creates a cylindrical or conical tube.
 // SynTags: Geom

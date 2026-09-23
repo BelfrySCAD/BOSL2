@@ -584,7 +584,8 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   any pair of axes for the layout using the `axes` parameter, which is a two letter parameter
 //   where the first letter gives the direction o a row.  The default is "xy".  The order matters because
 //   whichever axis is first will correspond to the first entry in `size`, and if you set `stagger=true` that
-//   operates on rows, so interchanging the axes will produce a different result.  
+//   operates on rows, so interchanging the axes will produce a different result.  Staggering works by
+//   skipping items, so you will get about half as many child objects as when `stagger=false`.  
 //
 // Arguments:
 //   spacing = Distance between copies in [X,Y] or scalar distance.

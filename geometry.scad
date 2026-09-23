@@ -2427,6 +2427,8 @@ function ___is_polygon_in_list(poly, polys, i) =
 // Usage:
 //   face_list_or_index_list = hull(points);
 // Description:
+//   This is documentation for the BOSL2 function form of `hull()`.  [Click Here for documentation for the builtin module.](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-Other-Modules#hull)
+//   .
 //   Takes a list of 2D or 3D points (but not both in the same list) and returns either the list of
 //   indexes into `points` that forms the 2D convex hull perimeter path, or the list of faces that
 //   form the 3d convex hull surface.  Each face is a list of indexes into `points`.  If the input

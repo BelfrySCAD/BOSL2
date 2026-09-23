@@ -2156,7 +2156,7 @@ module show_int(tags)
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
-//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default is used.  This option applies only to the "trapezoid" and "prismoid" geometry types.  
+//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default is used.  This option applies only to the "trapezoid", "prismoid", "conoid", and "vnf_*"  geometry types.  
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //   expose_tags = If true then delay the decision to display or not display this object to the children, which it possible for tags to respond to operations like {{diff()}} used outside the attachble object. This works correctly only if everything in the attachable is also attachable.  Default: false
 //   keep_color = If true then delay application of color to the children, which means that externally applied color is overridden by color specified within the attachable. This works properly only if everything in the attachable is also attacahble.  Default: false
@@ -2944,11 +2944,11 @@ function attach_geom(
             assert(is_num(r2) || is_vector(r2,2))
             assert(is_num(l))
             assert(is_vector(shift,2))
-            ["conoid", r1, r2, l, shift, axis, cp, offset, anchors]
+            ["conoid", r1, r2, l, shift, axis, over_f, cp, offset, anchors]
         ) : (
             two_d? (
                 assert(is_num(r1) || is_vector(r1,2))
-                ["ellipse", r1, cp, offset, anchors]
+                ["ellipse", r1, over_f, cp, offset, anchors]
             ) : (
                 assert(is_num(r1) || is_vector(r1,3))
                 ["spheroid", r1, cp, offset, anchors]
@@ -3463,6 +3463,7 @@ function _find_anchor(anchor, geom)=
             length=geom[3],
             shift=point2d(geom[4]),
             axis=point3d(geom[5]),
+            override = geom[6](anchor),
             r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
             r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
             anch = rot(from=axis, to=UP, p=anchor),
@@ -3502,7 +3503,7 @@ function _find_anchor(anchor, geom)=
             spin = anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
                  : anch.z==0 && norm(anch)>_EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
                  : oang
-        ) [anchor, pos2, vec2, spin]
+        ) [anchor, default(override[0],pos2), default(override[1],vec2),default(override[2], spin)]
     ) : type == "point"? (
         let(
             anchor = unit(point3d(anchor),CENTER),
@@ -3702,6 +3703,7 @@ function _find_anchor(anchor, geom)=
         let(
             anchor = unit(_force_anchor_2d(anchor),[0,0]),
             r = force_list(geom[1],2),
+            override = geom[2](anchor), 
             pos = approx(anchor.x,0)
                 ? [0,sign(anchor.y)*r.y]
                 : let(
@@ -3712,7 +3714,7 @@ function _find_anchor(anchor, geom)=
                   [px,m*px],
             vec = approx(min(r),0)? (approx(norm(anchor),0)? BACK : anchor) :
                 unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
-        ) [anchor, point2d(cp+offset)+pos, vec, 0]
+        ) [anchor, default(override[0],point2d(cp+offset)+pos),default(override[1], vec),default(override[2], 0)]
     ) : type == "rgn_isect"? ( //region
         let(
             anchor = _force_anchor_2d(anchor),

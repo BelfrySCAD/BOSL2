@@ -321,3 +321,91 @@ module test_gs_get_tangent_R() {
 }
 test_gs_get_tangent_R();
 '''
+
+
+[[test]]
+name = "test_semicircle"
+script = '''
+include <../std.scad>
+
+module test_semicircle() {
+
+    // ---- Winding: every semicircle path is clockwise, matching BOSL2's
+    // convention for public 2D shape paths (like circle(), rect(), etc). ----
+    assert(is_polygon_clockwise(semicircle(r=10, angle=120, $fn=25)));
+    assert(is_polygon_clockwise(semicircle(d=100, thickness=30, $fn=25)));
+    assert(is_polygon_clockwise(semicircle(r=10, angle=90, rounding=2, $fn=32)));
+    assert(is_polygon_clockwise(semicircle(r=10, angle=90, chamfer=[1,2], $fn=32)));
+    assert(is_polygon_clockwise(semicircle(r=10, angle=200, long=true, $fn=32)));
+
+    // ---- Containment: with no rounding/chamfer, every vertex of the
+    // segment lies exactly on the circle of radius r.  Anchor "center"
+    // (the named anchor, not the CENTER vector) puts the true circle
+    // center at the origin, so norm() against the origin is meaningful. ----
+    for (ang = [30, 90, 120, 179])
+        for (pt = semicircle(r=10, angle=ang, anchor="center", $fn=48))
+            assert(approx(norm(pt), 10),
+                   str("segment vertex not on circle, angle=", ang, " pt=", pt));
+
+    // With (interior) rounding or chamfer, every vertex stays on or inside
+    // the circle -- rounding/chamfering only removes material.
+    for (pt = semicircle(r=10, angle=120, rounding=[1,2], anchor="center", $fn=64))
+        assert(norm(pt) <= 10+1e-9);
+    for (pt = semicircle(r=10, angle=120, chamfer=[1,2], anchor="center", $fn=64))
+        assert(norm(pt) <= 10+1e-9);
+
+    // ---- Point ordering: the path starts at the back corner and ends at
+    // the front corner, so the implicit closing edge (last->first) is the
+    // flat edge.  With anchor="back_corner"/"front_corner" that vertex is
+    // shifted to the origin, so this checks WHICH vertex is first/last
+    // without relying on absolute coordinates. ----
+    p_back  = semicircle(r=10, angle=120, anchor="back_corner",  $fn=25);
+    assert(approx(p_back[0], [0,0]),
+           "path should start at the back corner");
+
+    p_front = semicircle(r=10, angle=120, anchor="front_corner", $fn=25);
+    assert(approx(p_front[len(p_front)-1], [0,0]),
+           "path should end at the front corner");
+
+    // The same ordering property should hold with rounding/chamfer applied,
+    // where the arc-contact point and the flat-side corner point
+    p_back_r = semicircle(r=10, angle=120, rounding=2, anchor=LEFT, $fn=32);    
+    assert(approx(p_back_r[0].x,0) && approx(last(p_back_r).x,0),
+           "rounded path should still start at the back corner's flat-side vertex");
+    // ---- The closing edge really is the flat edge: first and last points
+    // of the unshifted path share the same x (the flat-side offset), and
+    // their separation equals the chord length / width. ----
+    path = semicircle(r=10, angle=120, $fn=25);
+    first = path[0];
+    last  = path[len(path)-1];
+    assert(approx(first.x, last.x), "closing edge should be vertical (the flat side)");
+    assert(first.y > last.y, "back corner should be above the front corner");
+    assert(approx(norm(first-last), 2*10*sin(60)), "flat edge length should equal the chord");
+
+    // ---- r/d and width/thickness parameterizations agree with each other. ----
+    assert_approx(semicircle(r=10, angle=120, $fn=25), semicircle(d=20, angle=120, $fn=25));
+
+    p_wt = semicircle(width=40, thickness=10, $fn=25);
+    fwt = p_wt[0]; lwt = p_wt[len(p_wt)-1];
+    assert(approx(norm(fwt-lwt), 40), "explicit width should set the chord length");
+    xs = [for (pt=p_wt) pt.x];
+    assert(approx(max(xs)-min(xs), 10), "explicit thickness should set the sagitta");
+
+    // ---- extra lengthens the flat side symmetrically about the corners
+    // without changing anything else about the boundary. ----
+    p0 = semicircle(r=10, angle=120, rounding=1, extra=0, $fn=32);
+    pe = semicircle(r=10, angle=120, rounding=1, extra=3, $fn=32);
+    assert(len(pe) == len(p0)+2, "extra should insert exactly two vertices");
+    // The non-flat portion of the boundary (everything but the first/last
+    // pair of extra vertices) should be unchanged.
+    assert_approx([for (i=[0:len(p0)-3]) p0[i]], [for (i=[0:len(p0)-3]) pe[i]]);
+
+    // ---- Regression check against a known-good run of the original code
+    // (r=10, angle=120, $fn=25, no rounding/chamfer/extra). ----
+    known = [[-2.5,8.66025],[-0.637584,7.27374],[0.854878,5.49509],[1.89693,3.4202],
+             [2.43238,1.16093],[2.43238,-1.16093],[1.89693,-3.4202],[0.854878,-5.49509],
+             [-0.637584,-7.27374],[-2.5,-8.66025]];
+    assert(approx(semicircle(r=10, angle=120, $fn=25), known, eps=1e-4));             
+}
+test_semicircle();
+'''
