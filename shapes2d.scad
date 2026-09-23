@@ -2137,7 +2137,7 @@ function _gs_indent_R(r1,r2,s,h) =
 // Example(2D): Extra material extends the straight edge
 //   $fs=.5;$fa=1;                                      
 //   semicircle(12, rounding=-3, extra=2, anchor=LEFT);
-// Example(2D): Subtracting a flared recess, with extra material outside the rectangle.
+// Example(2D,NoScales): Subtracting a flared recess, with extra material outside the rectangle.
 //   $fs=.5;$fa=1;                                      
 //   difference() {
 //       rect([24,36], anchor=LEFT);
@@ -2155,16 +2155,14 @@ function _gs_indent_R(r1,r2,s,h) =
 // Example(2D): Use as a function
 //   path = semicircle(12, rounding=[4,0], chamfer=[0,2], $fn=64);
 //   stroke(path, closed=true, width=0.4);
-// Example(2D): Attaching at a named corner and an arbitrary radial direction.
-//   semicircle(15, angle=300) {
-//       attach("front_corner", FWD) rect([2,5]);
-//       attach([cos(30),sin(30)], FWD) rect([2,5]);
-//   }
 // Example(2D): A one-sided rounding can pass the middle of the circular arc.
+//   $fs=0.5;$fa=1;
 //   semicircle(10, rounding=[0,18]);
 // Example(2D): The two positive roundings consume the entire flat side.
+//   $fs=0.5;$fa=1;
 //   semicircle(10, rounding=[10,10]);
 // Example(2D): The two flares consume the entire arc and meet at RIGHT.
+//   $fs=0.5;$fa=1;
 //   semicircle(10, rounding=-5*PI);
 // Example(2D): A one-sided chamfer uses the full flat-side length (original shape shown in gray)
 //   %semicircle(10);

@@ -3079,11 +3079,12 @@ module zcyl(
 //   $fa = 3;$fs = 0.2;
 //   hemicyl(8, 12, rounding=[0,17], end_rounding=[0,8]);
 // Example(3D,VPR=[65,0,315]): Increasing bluntness, from left to right: k=0, 0.5, 0.75 and 1.  The last has degenerate endpoint handles.
+//   $fa = 1;$fs = 0.5;
 //   ks = [0.25,0.95];
 //   for (i=[0:1])
 //       right(30*(i-1/2))
 //           hemicyl(24, 12, rounding=5, end_rounding=3, k=ks[i]);
-// Example(3D,VPR=[65,0,315]): Extra material extends LEFT without moving the nominal flat-face anchor. 
+// Example(3D): Extra material extends LEFT without moving the nominal flat-face anchor. 
 //   hemicyl(24, 12, rounding=-3, extra=0, anchor=LEFT);
 // Example(3D): Subtracting a through groove.  Negative rounding eases the mouth; `extra` avoids a coincident face at the block's top.
 //   diff()
@@ -3207,10 +3208,10 @@ module hemicyl(h, r,
 }
 
 
-// Function: _hemicyl_end_corner()
-// Description:
-//   Curve replacing the sharp corner of the flat face at one end of the extrusion, in the XZ plane (as x,y).
-//   Returns a curve from the point on the flat plane to the point on the end face, or the corner alone if the size is zero.
+/// Function: _hemicyl_end_corner()
+/// Description:
+///   Curve replacing the sharp corner of the flat face at one end of the extrusion, in the XZ plane (as x,y).
+///   Returns a curve from the point on the flat plane to the point on the end face, or the corner alone if the size is zero.
 function _hemicyl_end_corner(flat_x, edge_z, size, use_chamfer, smoothness) =
     let(
         z_sign = sign(edge_z),
@@ -3229,10 +3230,10 @@ function _hemicyl_end_corner(flat_x, edge_z, size, use_chamfer, smoothness) =
         splinesteps=max(4,ceil(segs(abs(size))/4)));
 
 
-// Function: _hemicyl_end_profile()
-// Description:
-//   Polygon in the XZ plane (as x,y) that is extruded along Y and intersected with the side sweep to make the end roundings.
-//   The `bottom` and `top` arguments are lists `[size, use_chamfer]`.
+/// Function: _hemicyl_end_profile()
+/// Description:
+///   Polygon in the XZ plane (as x,y) that is extruded along Y and intersected with the side sweep to make the end roundings.
+///   The `bottom` and `top` arguments are lists `[size, use_chamfer]`.
 function _hemicyl_end_profile(flat_x, x_max, length, bottom, top, extra, smoothness) =
     let(
         bottom_curve = _hemicyl_end_corner(flat_x, -length/2, bottom[0], bottom[1], smoothness),
