@@ -3072,20 +3072,22 @@ module zcyl(
 //   $fa = 3;$fs = 0.2;
 //   hemicyl(24, 12, rounding=[-3,2], end_rounding=[1,-2]);
 // Example(3D,VPR=[65,0,315]): A top rounding uses the entire height.
+//   $fa = 3;$fs = 0.2;  
 //   hemicyl(8, 12, end_rounding=[0,8]);
 // Example(3D,VPR=[65,0,315]): Bottom and top roundings meet, using the entire height.
+//   $fa = 3;$fs = 0.2;  
 //   hemicyl(20, 12, end_rounding=[8,12]);
 // Example(3D): Combined roundings that use more that half the space
 //   $fa = 3;$fs = 0.2;
 //   hemicyl(8, 12, rounding=[0,17], end_rounding=[0,8]);
-// Example(3D,VPR=[65,0,315]): Increasing bluntness, from left to right: k=0, 0.5, 0.75 and 1.  The last has degenerate endpoint handles.
+// Example(3D,VPR=[65,0,315]): Small `k` gives a sharper roundover and large `k` a blunter one for the same size
 //   $fa = 1;$fs = 0.5;
 //   ks = [0.25,0.95];
 //   for (i=[0:1])
 //       right(30*(i-1/2))
 //           hemicyl(24, 12, rounding=5, end_rounding=3, k=ks[i]);
 // Example(3D): Extra material extends LEFT without moving the nominal flat-face anchor. 
-//   hemicyl(24, 12, rounding=-3, extra=0, anchor=LEFT);
+//   hemicyl(24, 12, rounding=-3, extra=3, anchor=LEFT);
 // Example(3D): Subtracting a through groove.  Negative rounding eases the mouth; `extra` avoids a coincident face at the block's top.
 //   diff()
 //       cuboid([40,40,20])
