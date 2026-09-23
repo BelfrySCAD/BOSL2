@@ -826,15 +826,15 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0],dir) =
     assert(p==_NO_ARG || is_list(p),"Invalid point list")
     assert(is_undef(dir) || is_vector(dir),"Invalid dir vector")
     assert(is_vector(cp))
-    is_def(dir)? assert(is_num(v),"v must be a scalar when dir is given")
-                 assert(len(dir)<=3 && norm(dir)>0, "dir must be a nonzero vector with 3 or fewer entries")
-                 rot(from=dir,to=RIGHT,reverse=true)
-               * xscale(v,p=p,cp=rot(from=dir,to=RIGHT,p=cp))
-               * rot(from=dir,to=RIGHT)
-  : let(
-        v = is_num(v)? [v,v,v] : v,
-        m = cp==[0,0,0]
-          ? affine3d_scale(v)
+    let(
+        m = is_def(dir)? assert(is_num(v),"v must be a scalar when dir is given")
+                         assert(len(dir)<=3 && norm(dir)>0, "dir must be a nonzero vector with 3 or fewer entries")
+                         rot(from=dir,to=RIGHT,reverse=true)
+                           * xscale(v,cp=rot(from=dir,to=RIGHT,p=cp))
+                           * rot(from=dir,to=RIGHT)
+          :
+            let(v=force_list(v,3))
+            cp==[0,0,0] ? affine3d_scale(v)
           : affine3d_translate(point3d(cp))
             * affine3d_scale(v)
             * affine3d_translate(point3d(-cp))
