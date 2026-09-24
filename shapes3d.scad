@@ -2957,16 +2957,17 @@ module zcyl(
 //   You may mix signs, chamfers and roundings, but cannot give a nonzero chamfer and rounding for the same edge.
 //   These parameters do not treat the curved rims at the cylinder ends.
 //   .
-//   Rounding and chamfer sizes are joint lengths: the straight distance along the flat face and the matching
-//   arc length along the curved surface.  For negative values the flat endpoint moves outward, but the circle
-//   endpoint still moves along the retained arc.  End treatments use equal straight distances on their two faces.
-//   Positive long-edge joints share the flat-face width; joints of either sign share the available arc length.
-//   Positive end joints share the height and individually cannot exceed the thickness.  Joints may meet exactly,
-//   provided the construction is valid and the shape does not collapse.  An exterior long-edge chamfer that crosses
-//   the circle is an error; reduce its magnitude.
+//   Rounding and chamfer sizes are joint lengths: the path length across the two surfaces where the rounding/chamfer is placed.
+//   Edge treatments on the vertical edges cannot have a joint length larger than the width of the flat face.
+//   Edge treatments on the flat ends cannot be larger than the thickness.  The only other requirement is that they
+//   joints can't interfere with each other.  When you use very large joint sizes this may produce odd effects; for example,
+//   it means you can , so a huge joint on one side is only possible if the other side can be You can 
+//   you can clip off almost the entire semicircle using a chamfer, leaving only a thin sliver.  Some exterior (negative) chamfer configurations
+//   lead to chamfers that cross the circle.  When this happens you need to reduce the chamfer size. 
 //   .
-//   The roundings are continuous curvature fourth degree beziers, but unlike the continuous curvature roundings elsewhere in the library,
-//   these roundings mate with a circle at once end, which means they have nonzero curvature at that end of the joint.
+//   The roundings connecting to the circular surface are continuous curvature fourth degree beziers,
+//   but unlike the continuous curvature roundings elsewhere in the library,
+//   these roundings mate with a circle at onc end, which means they have nonzero curvature at that end of the joint.
 //   This requires a different bezier definition, which means that the `k` parameter behaves somewhat differently, but
 //   it is still between 0 and 1 and still controls the shape in the same general manner, with small `k` values giving pointier roundings
 //   that hug the base curve, and large `k` giving blunter roundings.  The default is `k=0.75`.  

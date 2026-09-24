@@ -2062,19 +2062,18 @@ function _gs_indent_R(r1,r2,s,h) =
 //   You may mix signs, chamfers and roundings, but cannot give a nonzero chamfer and rounding for the same corner.
 //   .
 //   Rounding and chamfer sizes are joint lengths: the straight distance along the flat side and the matching
-//   arc length along the curved side.  For negative values the flat endpoint moves outward, but the circle
-//   endpoint still moves along the retained arc.  Positive joints share the available flat-side length;
+//   arc length along the curved side.  Positive joints share the available flat-side length;
 //   joints of either sign share the available arc length.  A single joint may use more than half of either.
-//   Joints may meet exactly, provided the construction is valid and the shape does not collapse.
-//   An exterior chamfer that crosses the circle is an error; reduce its magnitude.
+//   This can produce odd effects since it mean syou can clip off almost the entire semicircule using a chamfer,
+//   leaving just a thin sliver.  Some exterior (negative) chamfer configurations
+//   lead to chamfers that cross the circle.  When this happens you need to reduce the chamfer size 
 //   .
-//   The roundings are continuous-curvature fourth-degree Beziers.  Unlike the continuous-curvature roundings
-//   elsewhere in the library, they mate with a circle at one end and have nonzero curvature at that end.
-//   The `k` parameter therefore behaves differently, but is still between 0 and 1: small values give pointier
-//   roundings that hug the base curve, and larger values give blunter roundings.  The default is `k=0.75`.
-//   At `k=1` an endpoint handle vanishes and the continuous-curvature property does not apply.
-//   Control points may be adjusted to obtain a valid joint, or an infeasible joint rejected.  The circle-side
-//   check is local and does not guarantee exact containment of the entire curve.
+//   The roundings connecting to the circular surface are continuous curvature fourth degree beziers,
+//   but unlike the continuous curvature roundings elsewhere in the library,
+//   these roundings mate with a circle at onc end, which means they have nonzero curvature at that end of the joint.
+//   This requires a different bezier definition, which means that the `k` parameter behaves somewhat differently, but
+//   it is still between 0 and 1 and still controls the shape in the same general manner, with small `k` values giving pointier roundings
+//   that hug the base curve, and large `k` giving blunter roundings.  The default is `k=0.75`.  
 //   .
 //   Bezier sampling uses the segment count for a quarter circle whose radius equals the joint magnitude,
 //   with a minimum of four segments.  Thus `$fn`, `$fa` and `$fs` control the count, not the actual angles or
@@ -2164,9 +2163,10 @@ function _gs_indent_R(r1,r2,s,h) =
 // Example(2D): The two flares consume the entire arc and meet at RIGHT.
 //   $fs=0.5;$fa=1;
 //   semicircle(10, rounding=-5*PI);
-// Example(2D): A one-sided chamfer uses the full flat-side length (original shape shown in gray)
-//   %semicircle(10);
-//   semicircle(10, chamfer=[0,20]);
+// Example(2D): The largest size value is the full length of the flat side.  This cuts almost all of the semicircle away, so the chamfer is just a small sliver, and the rounding A one-sided chamfer uses the full flat-side length.  The original shape appears in yellow. 
+//   semicircle(r=10);
+//   color("lightblue")semicircle(r=10, rounding=[20,0]);
+//   color("green")semicircle(r=10, chamfer=[20,0]);
 module semicircle(r, thickness, width, angle, long=false,
                   rounding=0, chamfer=0, extra=0, k=0.75, d,
                   anchor=CENTER, spin=0)
