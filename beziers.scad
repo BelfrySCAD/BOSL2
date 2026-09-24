@@ -1928,7 +1928,108 @@ module bezpath_sweep(shape, bezpath, splinesteps=16, N=3, method="incremental", 
 }  
 
 
-                                         
+
+// Section: Patch Joining
+
+
+// Function: bezier_patch_join()
+// Synopsis: Creates a bezier patch that smoothly joins two patch edges with G1 continuity.
+// SynTags: BezPatch
+// Topics: Bezier Patches, Bezier Surfaces
+// See Also: bezier_patch_flat(), bezier_patch_points(), bezier_patch_normals(), bezier_vnf()
+// Usage:
+//   patch = bezier_patch_join(patch1, edge1, patch2, edge2, [tangent_len=]);
+// Description:
+//   Creates a cubic bezier patch that smoothly connects an edge of `patch1` to an
+//   edge of `patch2` with G1 (tangential) continuity.  The resulting patch shares
+//   boundary control points with the source patches and its interior control points
+//   are computed from the surface tangent directions at the edges, ensuring a smooth
+//   transition without creases.
+//   .
+//   Each edge is specified as a string: "u0" (u=0 edge), "u1" (u=1 edge),
+//   "v0" (v=0 edge), or "v1" (v=1 edge).  The edges must have the same number
+//   of control points (same degree along that parameter).
+//   .
+//   The `tangent_len` parameter controls how far the interior control points extend
+//   from the boundary, as a fraction of the distance between the two edges.
+//   Larger values produce a more gradual, wider arc; smaller values produce a
+//   tighter transition.
+// Arguments:
+//   patch1 = First bezier patch (2D array of 3D control points).
+//   edge1 = Edge of patch1 to join: "u0", "u1", "v0", or "v1".
+//   patch2 = Second bezier patch (2D array of 3D control points).
+//   edge2 = Edge of patch2 to join: "u0", "u1", "v0", or "v1".
+//   ---
+//   tangent_len = Fraction of inter-edge distance for tangent control points. Default: 1/3
+// Example(3D,Med,NoAxes): Joining two flat patches with a smooth curved transition
+//   p1 = bezier_patch_flat([80,80], N=3, orient=UP, trans=[-50,0,0]);
+//   p2 = bezier_patch_flat([80,80], N=3, orient=UP, trans=[50,0,40]);
+//   jp = bezier_patch_join(p1, "u1", p2, "u0");
+//   vnf_polyhedron(bezier_vnf([p1, p2, jp], splinesteps=16));
+// Example(3D,Med,NoAxes): Joining angled patches
+//   p1 = bezier_patch_flat([60,60], N=3, orient=UP, trans=[0,-40,0]);
+//   p2 = bezier_patch_flat([60,60], N=3, orient=RIGHT, trans=[0,40,30]);
+//   jp = bezier_patch_join(p1, "v1", p2, "v0");
+//   vnf_polyhedron(bezier_vnf([p1, p2, jp], splinesteps=16));
+function bezier_patch_join(patch1, edge1, patch2, edge2, tangent_len=1/3) =
+    assert(is_bezier_patch(patch1), "\npatch1 must be a valid bezier patch.")
+    assert(is_bezier_patch(patch2), "\npatch2 must be a valid bezier patch.")
+    assert(is_string(edge1) && in_list(edge1, ["u0","u1","v0","v1"]),
+           "\nedge1 must be one of: \"u0\", \"u1\", \"v0\", \"v1\".")
+    assert(is_string(edge2) && in_list(edge2, ["u0","u1","v0","v1"]),
+           "\nedge2 must be one of: \"u0\", \"u1\", \"v0\", \"v1\".")
+    assert(is_finite(tangent_len) && tangent_len > 0,
+           "\ntangent_len must be a positive number.")
+    let(
+        // Extrair edges e tangentes dos patches de origem
+        e1_data = _bpj_edge_data(patch1, edge1),
+        e2_data = _bpj_edge_data(patch2, edge2),
+        edge1_pts = e1_data[0],
+        tang1 = e1_data[1],  // vetores tangentes apontando para fora do patch1
+        edge2_pts = e2_data[0],
+        tang2 = e2_data[1]   // vetores tangentes apontando para fora do patch2
+    )
+    assert(len(edge1_pts) == len(edge2_pts),
+           str("\nEdges must have the same number of control points. edge1 has ",
+               len(edge1_pts), " but edge2 has ", len(edge2_pts), "."))
+    let(
+        N = len(edge1_pts),
+        // Calcular distancia media entre as edges para escalar tangentes
+        avg_dist = mean([for(i=[0:1:N-1]) norm(edge2_pts[i] - edge1_pts[i])]),
+        t_scale = avg_dist * tangent_len,
+        // Pontos de controle interiores: projetam na direcao tangente
+        row1_inner = [for(i=[0:1:N-1]) edge1_pts[i] + tang1[i] * t_scale],
+        row2_inner = [for(i=[0:1:N-1]) edge2_pts[i] + tang2[i] * t_scale]
+    )
+    // Patch resultado: 4 linhas (cubico em u), N colunas
+    [edge1_pts, row1_inner, row2_inner, edge2_pts];
+
+
+// Funcao auxiliar: extrai pontos da edge e vetores tangentes de um patch
+function _bpj_edge_data(patch, edge) =
+    let(
+        N_u = len(patch),       // linhas (direcao u)
+        N_v = len(patch[0])     // colunas (direcao v)
+    )
+    edge == "u0" ? [
+        patch[0],  // edge em u=0 (primeira linha)
+        [for(j=[0:1:N_v-1]) unit(patch[0][j] - patch[1][j])]  // tangente para fora
+    ] :
+    edge == "u1" ? [
+        patch[N_u-1],  // edge em u=1 (ultima linha)
+        [for(j=[0:1:N_v-1]) unit(patch[N_u-1][j] - patch[N_u-2][j])]
+    ] :
+    edge == "v0" ? [
+        column(patch, 0),  // edge em v=0 (primeira coluna)
+        [for(i=[0:1:N_u-1]) unit(patch[i][0] - patch[i][1])]
+    ] :
+    // edge == "v1"
+    [
+        column(patch, N_v-1),  // edge em v=1 (ultima coluna)
+        [for(i=[0:1:N_u-1]) unit(patch[i][N_v-1] - patch[i][N_v-2])]
+    ];
+
+
 // Section: Debugging Beziers
 
 
