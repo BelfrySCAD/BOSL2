@@ -91,7 +91,7 @@ Each wrap object includes:
     width_err               // a word exceeds the specified wrap width (if true anywhere, true in all objects)
     textobj                 // the _textobj() for this line, described above
     indent                  // the amount of indentation for this line
-    newparagraph            // boolean, if true then this line starts a new wrapped paragraph
+    paragraph            // boolean, if true then this line starts a new wrapped text block
 }
 
 
@@ -166,17 +166,16 @@ function _get_write_data(w) = object(
 //   #### Input text
 //   The `text` input must be a string or list of strings, which may include embedded newline
 //   characters (`\n`) or codes for nonbreaking spaces or inline font styles (described below). A
-//   new "paragraph" starts at the beginning of each string in the list of strings, **and** at any
-//   embedded newline character in any of the input strings. Consecutive spaces in your input
-//   collapse to a single space by default.
+//   new text block or "paragraph" starts at the beginning of each string in the list of strings,
+//   **and** at any embedded newline character in any of the input strings. Consecutive spaces in
+//   your input collapse to a single space by default.
 //   .
-//   The space between paragraphs is controlled by `para_spacing`, which is a multiple of the font's
-//   interline height and defaults to one. If you want a sequence of lines with specified line
-//   breaks, give your lines as a sequence of paragraphs. The best way to create more space between
-//   paragraphs is to adjust `para_spacing`, but you can also use sequential newlines (`\n\n`) to
-//   create a blank line.
+//   The space between text blocks is controlled by `para_spacing` (analogous to "paragraph spacing"
+//   in typesetting), which is a multiple of the font's interline height and defaults to one. If you
+//   want a sequence of lines with specified line breaks, give your lines as a sequence of text
+//   blocks. The best way to create more space between text blocks is to adjust `para_spacing`, but
+//   you can also use sequential newlines (`\n\n`) to create a blank line.
 //   .
-//   #### Inline font styling
 //   You can create an entire text in a other font styles by specifying the style with the font,
 //   e.g. font="Times:Italic". Inline font styles enable you to switch between styles on the fly
 //   using inline style codes.
@@ -189,9 +188,9 @@ function _get_write_data(w) = object(
 //   specified in your `font=` parameter (or the regular style if no style is specified), "two" is
 //   set in the italic style, and "three" is set in the regular style. When `write()` counters one
 //   of these inline codes, it renders subsequent characters in the corresponding style until it
-//   encounters another style code or the end of a paragraph. **A style does not persist across
-//   paragraphs**, including `\n` line breaks in the text (which start new paragraphs). When a new
-//   paragraph starts, it starts with the font originally passed into `write()`. If you really need
+//   encounters another style code or the end of a text block. **A style does not persist across
+//   text blocks**, including `\n` line breaks in the text (which start new text blocks). When a new
+//   text block starts, it starts with the font originally passed into `write()`. If you really need
 //   to render a double left brace `{{`, you can do so as long as it doesn't start one of the codes
 //   listed.
 //   .
@@ -239,14 +238,14 @@ function _get_write_data(w) = object(
 //   #### Layout
 //   The `text_align=` parameter controls text alignment. Set it to "center" for centered lines,
 //   "left" for left aligned text, "right" for right aligned text and "justify" to justify the text.
-//   If the text is not aligned to "center", you can add paragraph indentation using `indent=`,
-//   which indents the first line of each paragraph, or if it is negative, produces a hanging
-//   indent. The `indent=` parameter requires that you specify a font size. When justification is
-//   enabled you can control the behavior of the last line using `justify_last`, which can be set to
-//   "left", "right", or "center". The `justify_tight=` parameter determines the width of
-//   justification. When `justify_tight=true`, the justified text block has its minimal size,
-//   defined by the width of the bounding box. If you set it to false then the text is justified to
-//   the `max_width` limit. This has no effect if you didn't give a horizontal limit.
+//   If the text is not aligned to "center", you can add indent the first line of each text block
+//   using `indent=`; negative values produce a hanging indent. The `indent=` parameter requires
+//   that you specify a font size. When justification is enabled you can control the behavior of the
+//   last line using `justify_last`, which can be set to "left", "right", or "center". The
+//   `justify_tight=` parameter determines the width of justification. When `justify_tight=true`,
+//   the justified text block has its minimal size, defined by the width of the bounding box. If you
+//   set it to false then the text is justified to the `max_width` limit. This has no effect if you
+//   didn't give a horizontal limit.
 //   .
 //   The `frame_align` parameter controls how the bounding box of your text is positioned within the
 //   limits. It is given as a direction (e.g. `RIGHT`, `BACK`, `TOP+RIGHT`). Limits that were not
@@ -315,11 +314,11 @@ function _get_write_data(w) = object(
 //   letterspace = If set, adds space between letters in CAD units. Cannot be used with `letterspace_em` or `letterspace_ref`. Negative values squish letters together.
 //   letterspace_em = If set, adds space between letters as a fraction of the width of the em size of the font (where 0 is no change, 0.15 would be 15% increase, negative values squish letters together). Cannot be used with `letterspace` or `letterspace_ref`.
 //   letterspace_ref = If set, adds space between letters as fraction of the width of `$refchar_width` (typically `"0"`). 0 is no change, negative values squish the letters together. Cannot be used with `letterspace` or `letterspace_em`.
-//   indent = Horizontal offset of the first line of each paragraph relative to subsequent lines, with positive numbers in the direction of text flow. Negative values produce a hanging indent. No effect if font size is not set, or if `text_align="center"`. Default: 0
+//   indent = Horizontal offset of the first line of each text block relative to subsequent lines, with positive numbers in the direction of text flow. Negative values produce a hanging indent. No effect if font size is not set, or if `text_align="center"`. Default: 0
 //   wrap_optimize = If true, and wordwrapping is needed, attempt to equalize line lengths without increasing number of wrapped lines. If false, use greedy wordwrapping, which can result in "widow" words by themselves on the last line. Default: `true`
 //   collapse_space = If `true`, collapse any repeated space characters in the input string into a single space. This is useful when the input string covers multiple indented lines in the source code. If set to `true` and consecutive spaces are required, you can use nonbreaking spaces (e.g. `"{ } { }"` gives 3 spaces, two nonbreaking and one normal space in between). Default: `true`
 //   line_spacing = Proportion of font's interline height for vertical spacing of multiple lines. Default: 1.0
-//   para_spacing = Proportion of font's interline height for vertical spacing between paragraphs: Default: 1.0
+//   para_spacing = Proportion of font's interline height for vertical spacing between text blocks: Default: 1.0
 //   direction = Direction of the text flow, "ltr" (left-to-right), "rtl" (right-to-left). This module **does not** support "ttb" (top-to-bottom), or "btt" (bottom-to-top). Default: "ltr"
 //   language = Language hint for text shaping, passed through to `text()`. May affect language-specific glyphs and font features. Default: "en"
 //   script = Writing-script hint for text shaping, passed through to `text()`. May affect glyph selection and shaping. Default: "latin"
@@ -329,7 +328,7 @@ function _get_write_data(w) = object(
 //   BASELINE(n,[pos],[tight],[rtl]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
 //   TEXTLINE(n,[pos],[tight],[rtl]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set). The `tight` and `rtl` parameters should be named and not used positionally.
 // Side Effects:
-//   $write_data = An object containing metadata about the last `write()` call. The properties are `fontname`, `fontsize`, `bounding_box` (dimensions), `bounding_center` (center offset), `anchor_box` (dimensions), and `baselines` (an array of object with properties, `xstart`, `xend`, `y`, `top`, `bot`) 
+//   $write_data = An object containing metadata about the last `write()` call. The properties are `fontname`, `fontsize`, `bounding_box` (dimensions), `bounding_center` (center offset), `anchor_box` (dimensions), and `baselines` (an array of objects with properties `xstart`, `xend`, `y`, `top`, `bot`) 
 // Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `nom_height` to specify the size of the font from nominal ascender to nominal descender.
 //   write("Flying high", nom_height=14, font="Liberation Sans");
 // Example(2D): Anchors are used to position text vertically and horizontally with respect to the origin, instead of `valign` and `halign` in OpenSCAD's `text()`. To position the start of the baseline at the origin (the default behavior in `text()`), use a `BASELINE("start")` anchor. Glyph descenders then extend below the X axis.
@@ -751,11 +750,11 @@ function _postprocess_text(text, styles, code="{{lb}}", char="{") = let(
 /// Arguments:
 ///    wrapobj = return from _textwrap(), regardless if text is wrapped
 ///    lheight = user-defined line height multiple of font interline height
-///    pheight = user-defined paragraph height multiple of font interline height
+///    pheight = user-defined text block height multiple of font interline height
 
 function _baselines(wrapobj, lheight, pheight, interline) =
     cumsum([
-        for(i=[0:len(wrapobj)-1]) i==0?0: -(wrapobj[i].newparagraph ? pheight : lheight)
+        for(i=[0:len(wrapobj)-1]) i==0?0: -(wrapobj[i].paragraph ? pheight : lheight)
     ] * interline);
 
     
@@ -916,8 +915,8 @@ function get_font_size(font=_DEFAULTFONT, size, cap_height, nom_height, full_hei
 //   letterspace_em = Fraction of font's em-box to insert between characters. Default: 0
 //   vbound = Determines how the vertical size of the block of text is calculated for vertical alignment, accounting for `line_spacing` and `para_spacing`. When set to "nominal", the nominal ascender at the top and nominal descender at the bottom is used. When set to "tight", the actual ascender at the top and descender at the bottom is used. Default: "nominal"
 //   direction = Text direction, "ltr" (left to right) or "rtl" (right to left). This matters for kerning. Default: "ltr"
-//   line_spacing = Proportion of font's interline height for vertical spacing between lines in a paragraph. Default: 1.0
-//   para_spacing = Proportion of font's interline height for vertical spacing between paragraphs. Each line in the text is considered to be a paragraph. Because there is no word-wrapping when fitting text into the given bounds, line spacing is assumed to be the same as paragraph spacing. Default: 1.0
+//   line_spacing = Proportion of font's interline height for vertical spacing between lines in a text block. Default: 1.0
+//   para_spacing = Proportion of font's interline height for vertical spacing between text blocks. Each line in the input text is considered to be a text block. Because there is no word-wrapping when fitting text into the given bounds, line spacing is assumed to be the same as text block spacing. Default: 1.0
 // Example: Various ways to find a font that causes the text to fit within the given constraint. The default font is "Liberation Sans:style=Bold" if not specified.
 //   //
 //   // returns 9.001
@@ -961,7 +960,7 @@ let(
 
 
 /// Internal function: _get_font_stylecodes() - called by _textwrap()
-/// This is called to get the style code of the first character in a paragraph
+/// This is called to get the style code of the first character in a text block
 
 function _get_font_stylecode(s) =
     s == "Regular" ? 0
@@ -1152,7 +1151,7 @@ function _fontdata(font=_DEFAULTFONT, osize, cap_height, nom_height, full_height
 //   line of text is roughly the same length to minimize the occurrence of an unusually short final
 //   line. The actual overall width of the final text always is less than or equal to the requested
 //   width. You can use `{{text_array_size()}}` to get the actual bounding box of the wrapped text.
-//   Multple paragraphs are returned if the `string` argument contains newline (`\n`) characters
+//   Multple text blocks are returned if the `string` argument contains newline (`\n`) characters
 //   that split the string. To insert a blank line, use two newlines with a nonbreaking space in between
 //   (`\n{ }\n`).
 /// Arguments:
@@ -1160,7 +1159,7 @@ function _fontdata(font=_DEFAULTFONT, osize, cap_height, nom_height, full_height
 //   width = the maximum width of a line of text in display units.
 //   ---
 //   optimize = When false, tries to fit as many words as possible on each successive line, which may result in a "widow" (a word all by itself) on the last line. When true, attempts to make the wrapped lines more equal in length.  Default: `true`
-//   indent = If positive, first line of paragraph is indented by this amount. If negative, first line is effectively outdented by indenting subsequent lines by the positive value of this amount. Default: 0
+//   indent = If positive, first line of text block is indented by this amount. If negative, first line is effectively outdented by indenting subsequent lines by the positive value of this amount. Default: 0
 //   fontdata = structure returned from _fontdata()
 //   rtl = true if text is to be rendered right-to-left
 
@@ -1217,7 +1216,7 @@ function _textwrap(texts, width=INF, height=INF, optimize=true, optimize_ht=fals
                 width_err = width_err,
                 textobj = _textobj(tx, fontdata, 0, st),
                 indent = j != firstline ? 0 : indent,
-                newparagraph = (j==firstline)
+                paragraph = (j==firstline)
             )
 ];
 
@@ -1283,7 +1282,7 @@ function _style_split_at_breaks(style, break, i=0, res=[]) =
         concat(res, [slice(style, break[i-1]+1, break[i])]));
 
 /// Private recursive function: _wrap_optimize(), called by _textwrap()
-/// Recursively find minimum wrap width in all paragraphs represented by breaks[]
+/// Recursively find minimum wrap width in all text blocks represented by breaks[]
 /// such that the total number of lines of wrapped text does not increase.
 /// Arguments:
 ///   maxlines = total number of lines not to exceed
@@ -1292,7 +1291,7 @@ function _style_split_at_breaks(style, break, i=0, res=[]) =
 ///   breaks = a _get_breaks() object representing no more than maxlines line breaks
 ///   reqwid = requested wrap width
 ///   spc = length of a space
-///   cumlen = cumulative list of line lengths with same paragraph structure as line_indexes
+///   cumlen = cumulative list of line lengths with same text block structure as line_indexes
 ///   iter = maximum number of recursions allowed
 function _wrap_optimize(maxlines, minwid, spacepos, breaks, reqwid, spc, indent, iter=50) =
     let(
