@@ -128,11 +128,20 @@ _writeobj() returns a write object, which includes everything needed to render t
 */
 
 
+_DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change each occurrence in docs
+
 $refchar_cap = "H";   // Reference character for measuring the height of an uppercase character
 $refchar_width = "0"; // Reference character for the letterspace_ref argument in write()
-$write_obj = object(); // write object to propagate to children
+$write_data = object(); // write object to propagate to children
 
-_DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change each occurrence in docs
+function _get_write_data(w) = object(
+    fontname = w.fontname,
+    fontsize = w.osize,
+    bounding_box = w.boundboxsize,
+    bounding_center = w.boundbox_center,
+    anchor_box = w.anchorboxsize,
+    baselines = [ for(p=w.baseline_pos) object(xstart=p.xstart, xend=p.xend, y=w.vbaseline0+p.y, top=p.top, bot=p.bot) ]
+);
 
 
 // Module: write()
@@ -164,9 +173,8 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   The space between paragraphs is controlled by `para_spacing`, which is a multiple of the font's
 //   interline height and defaults to one. If you want a sequence of lines with specified line
 //   breaks, give your lines as a sequence of paragraphs. The best way to create more space between
-//   paragraphs is to adjust `para_spacing`. Consecutive newline charactesr only give one paragraph
-//   break.  If you must create a blank line in your text, use a nonbreaking space between
-//   consecutive newlines, for example: `"Line1\n{ }\nLine2"`.
+//   paragraphs is to adjust `para_spacing`, but you can also use sequential newlines (`\n\n`) to
+//   create a blank line.
 //   .
 //   #### Inline font styling
 //   You can create an entire text in a other font styles by specifying the style with the font,
@@ -187,9 +195,11 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   to render a double left brace `{{`, you can do so as long as it doesn't start one of the codes
 //   listed.
 //   .
-//   The nonbreaking space `"\u00a0"` is not collapsed into adjacent spaces and it prevents the
-//   word-wrapping process from breaking a line at that space. You can include the unicode character
-//   directly or you can specify it using `{{ }}` or the shortcut `{ }`.
+//   Literal codes designate special characters to include in the text:
+//   * `{{ }}` = convenient substute for a nonbreaking space `\u00a0`. This is not collapsed into adjacent spaces and it prevents the word-wrapping process from breaking a line at that space.
+//   * `{ }` = shortcut for `{{ }}`.
+//   * `{{lb}}` = left curly brace `{`, in case you really need to display one of these codes literally in your text. You just need one; for example, `"{{lb}}{r}}"` displays as `"{{r}}"` and `"{{lb}} }"` displays as `"{ }"`.
+//   * Anything else enclosed in double curly braces is not converted to anything and renders as-is.
 //   .
 //   #### Auto-scaling versus word wrapping
 //   The `max_width` and `max_height` parameters specify optional limits on the size of the text. If
@@ -238,11 +248,11 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   defined by the width of the bounding box. If you set it to false then the text is justified to
 //   the `max_width` limit. This has no effect if you didn't give a horizontal limit.
 //   .
-//   The `block_align` parameter controls how the bounding box of your text is positioned within the
+//   The `frame_align` parameter controls how the bounding box of your text is positioned within the
 //   limits. It is given as a direction (e.g. `RIGHT`, `BACK`, `TOP+RIGHT`). Limits that were not
 //   set in `max_width` or `max_height` default to the dimensions of the bounding box, so if you do
 //   not give `max_height` then the vertical height limit defaults to the height of the bounding
-//   box, and `block_align=RIGHT+BACK` aligns to the `RIGHT` because it is already aligned `BACK`.
+//   box, and `frame_align=RIGHT+BACK` aligns to the `RIGHT` because it is already aligned `BACK`.
 //   .
 //   #### Font sizes
 //   There are several mutually-exclusive font size parameters to choose from.
@@ -301,7 +311,7 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   justify_last = Alignment of last line in multiline full-justified text (when `text_align="justify"`). Defaults to "left" if `direction="ltr"` (default) or "right" if `direction="rtl"`.
 //   justify_tight = Determines the width of the box used for horizontal justification of the text. When true, uses the bounding box width (the rendered horizontal width of longest line in the text). When false, uses the `max_width` value. Default: true
 //   vbound = Determines how the vertical size of the bounding box is calculated for vertical alignment within `[max_width,max_height]` bounds, accounting for `line_spacing` and `para_spacing`. When set to "tight", the bounds fit the actual ascender of the first line to the actual descender of the last line. When set to "nominal", the nominal ascender and descender are used. When set to "full", the font's maximum ascender and descender are used.  Default: "nominal"
-//   block_align = Positions the bounding box within the area defined by `max_width` and/or `max_height`. If neither `max_width` nor `max_height` are set, they default to the size of the bounding box, so this parameter would have no effect. Uses the standard direction vectors (for example, `LEFT+BACK`). If unset, the bounding box is positioned horizontally within `max_width` according to the `text_align` parameter (using `justify_last` if `text_align="justify"`), and vertically as `CENTER`.
+//   frame_align = Positions the bounding box within the area defined by `max_width` and/or `max_height`. If neither `max_width` nor `max_height` are set, they default to the size of the bounding box, so this parameter would have no effect. Uses the standard direction vectors (for example, `LEFT+BACK`). If unset, the bounding box is positioned horizontally within `max_width` according to the `text_align` parameter (using `justify_last` if `text_align="justify"`), and vertically as `CENTER`.
 //   letterspace = If set, adds space between letters in CAD units. Cannot be used with `letterspace_em` or `letterspace_ref`. Negative values squish letters together.
 //   letterspace_em = If set, adds space between letters as a fraction of the width of the em size of the font (where 0 is no change, 0.15 would be 15% increase, negative values squish letters together). Cannot be used with `letterspace` or `letterspace_ref`.
 //   letterspace_ref = If set, adds space between letters as fraction of the width of `$refchar_width` (typically `"0"`). 0 is no change, negative values squish the letters together. Cannot be used with `letterspace` or `letterspace_em`.
@@ -315,12 +325,11 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   script = Writing-script hint for text shaping, passed through to `text()`. May affect glyph selection and shaping. Default: "latin"
 //   anchor = Translate so that the [anchor](attachments.scad#subsection-anchor) point is at origin (0,0,0). The usual anchors `LEFT`, `RIGHT`, `CENTER`, `FWD`, `BACK` apply to the anchor box (which defaults to the text bounding box). Mutiline text can use named anchors (see below), and a named anchor is the **only** way to position the baseline of the text onto the origin. Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   $fn = Works the same as with OpenSCAD's `text`. Used for subdividing curves in characters.
-//   $refchar_cap = Reference character to use for gauging `cap_height`. Default: "H"
-//   $refchar_width = Reference character for `letterspace_ref`. Default: "0" (zero)
 // Named Anchors:
-//   BASELINE(n,[pos],[tight],[rtl]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`.
-//   TEXTLINE(n,[pos],[tight],[rtl]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set).
+//   BASELINE(n,[pos],[tight],[rtl]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
+//   TEXTLINE(n,[pos],[tight],[rtl]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set). The `tight` and `rtl` parameters should be named and not used positionally.
+// Side Effects:
+//   $write_data = An object containing metadata about the last `write()` call. The properties are `fontname`, `fontsize`, `bounding_box` (dimensions), `bounding_center` (center offset), `anchor_box` (dimensions), and `baselines` (an array of object with properties, `xstart`, `xend`, `y`, `top`, `bot`) 
 // Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `nom_height` to specify the size of the font from nominal ascender to nominal descender.
 //   write("Flying high", nom_height=14, font="Liberation Sans");
 // Example(2D): Anchors are used to position text vertically and horizontally with respect to the origin, instead of `valign` and `halign` in OpenSCAD's `text()`. To position the start of the baseline at the origin (the default behavior in `text()`), use a `BASELINE("start")` anchor. Glyph descenders then extend below the X axis.
@@ -365,10 +374,23 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   string = "Go placidly amid the noise and haste,
 //       and remember what peace there may be in silence.";
 //   write(string, max_height=200, size=10, show_bounds=true);
-// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by making each subsequent `write()` as a child of the parent. Use spaces if needed to keep the words separate.
+// Example(2D,Med,NoAxes,VPT=[51,8,0],VPD=210): If you need to concatenate instances of `write()` to display things in different fonts, sizes, or styles, you can do it without anchors simply by chaining `write()` calls, with each as a child of the parent. Use spaces if needed to keep the words separate.
 //   write("The", size=8, font="Liberation Sans", anchor=LEFT+FWD) // position the first one
 //     write(" right ", size=14, font="Liberation Serif:style=Bold Italic")
 //       write("stuff", size=11, font="Liberation Sans:style=Bold");
+// Example(2D,NoAxes,VPD=78,VPT=[16.5,0,0]): You can also use recursion to chain `write()` calls for input text that may not be known in advance. Here we display each string using a font size of of 12 divided by the string length (which includes a trailing space at the end of the strings).
+//   strings = [ "I ", "am ", "not ", "here ", "today." ];
+//   font = "Liberation Sans:style=Bold";
+//   
+//   module write_lensize(t, base_size, font, i=0) {
+//       echo(t[i], len(t[i]), base_size/len(t[i]));
+//       if (i<len(t)-1)
+//           write(t[i], size = base_size/len(t[i]), font=font)
+//               write_lensize(t, base_size, font, i+1);
+//       else
+//           write(t[i], size = base_size/len(t[i]), font=font);
+//   }
+//   write_lensize(strings, base_size=12, font=font);
 // Example(2D,VPT=[0,0,0],VPD=280): Basic textwrap of a single long string to fit within `[max_width,max_height]` limits (specified as a vector in the second parameter). We override the default wrapping behavior by setting `wrap_optimize=false` to force `write()` to use "greedy" word-wrapping, causing each line to use as much of the allowed horizontal width as possible without exceeding it. This results in a "widow" word by itself on the last line.
 //   string = "Go placidly amid the noise and haste,
 //       and remember what peace there may be in silence.";
@@ -381,12 +403,12 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 //   fontname = "Liberation Serif:style=Bold Italic";
 //   write(string, [130,90], size=10, font=fontname,
 //       show_bounds=true);
-// Example(2D,VPT=[0,0,0],VPD=280): To position the bounding box within your `[max_width,max_height]` limits, set `block_align` to a combination of direction vectors. Here the bounding box is aligned to the upper right corner of bounds defined.
+// Example(2D,VPT=[0,0,0],VPD=280): To position the bounding box within your `[max_width,max_height]` limits, set `frame_align` to a combination of direction vectors. Here the bounding box is aligned to the upper right corner of bounds defined.
 //   string = "Go placidly amid the noise and haste,
 //       and remember what peace there may be in silence.";
 //   fontname = "Liberation Serif:style=Bold Italic";
 //   write(string, [130,90], size=10, font=fontname,
-//       show_bounds=true, block_align=RIGHT+BACK);
+//       show_bounds=true, frame_align=RIGHT+BACK);
 // Example(2D,VPT=[0,0,0],VPD=280): This example demonstrates several things using the same text as previous example, disabling `wrap_optimize` again. We use `text_align="justify"`, which spreads out the word spacing so the text fits the horizontal width of the bounding box, leaving the last word justified according to `justify_last` (which defaults to "left" for left-to-right text). 
 //   string = "Go placidly amid the noise and haste,
 //   and remember what peace there may be in silence.";
@@ -397,7 +419,7 @@ _DEFAULTFONT = "Liberation Sans:style=Bold"; // if this is changed, then change 
 
 module write(text, max_width=INF, max_height=INF,
  size, cap_height, nom_height, full_height, line_height, em, font=_DEFAULTFONT,
- text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", block_align=undef,
+ text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
  direction="ltr", language="en", script="latin", anchor=undef, spin=0, show_bounds=false) {
@@ -405,10 +427,10 @@ module write(text, max_width=INF, max_height=INF,
      heightlimit = is_vector(max_width,2) ? max_width.y : max_height;
     // get write object
     w = _writeobj(text, 0, widthlimit, heightlimit, size, cap_height, nom_height, full_height,
-        line_height, em, font, text_align, justify_last, justify_tight, vbound, block_align,
+        line_height, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
         letterspace, letterspace_em, letterspace_ref, indent, wrap_optimize, collapse_space,
         line_spacing, para_spacing, direction, language, script, "write");
-    $write_obj = w;
+    $write_data = _get_write_data(w);
 
     // if concatenating write() calls, get the parent offset
 
@@ -507,7 +529,7 @@ module write(text, max_width=INF, max_height=INF,
 
 module write3d(text, thickness, max_width=INF, max_height=INF,
  size, cap_height, nom_height, full_height, line_height, em, font=_DEFAULTFONT,
- text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", block_align=undef,
+ text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
  direction="ltr", language="en", script="latin", anchor=undef, spin=0, orient=UP, show_bounds=false, h) {
@@ -519,10 +541,10 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
     // get write object
 
     w = _writeobj(text, thk, widthlimit, heightlimit, size, cap_height, nom_height, full_height,
-        line_height, em, font, text_align, justify_last, justify_tight, vbound, block_align,
+        line_height, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
         letterspace, letterspace_em, letterspace_ref, indent, wrap_optimize, collapse_space,
         line_spacing, para_spacing, direction, language, script, "write3d");
-    $write_obj = w;
+    $write_data = _get_write_data(w);
 
     // if concatenating write() calls, get the parent offset
 
@@ -560,7 +582,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
 function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
  size, cap_height, nom_height, full_height, line_height, em,
  font=_DEFAULTFONT, text_align="left", justify_last=undef,
- justify_tight=true, vbound="nominal", block_align=undef,
+ justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, line_spacing=1, para_spacing=1,
  direction="ltr", language="en", script="latin", caller, _silent=false) = let(
@@ -613,14 +635,14 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
     htight = text_align=="justify" && !justify_tight && is_finite(wid) ? wid
         : max([ for(i=[0:len(wrapobj)-1]) wrapobj[i].textobj.boxwidth + wrapobj[i].indent ]),
 
-    boxpos = is_undef(block_align)
+    boxpos = is_undef(frame_align)
         ? (text_align=="left"
             ? LEFT
             : text_align=="right" ? RIGHT
             : text_align=="justify"
                 ? (just_last=="left" ? LEFT : just_last=="right" ? RIGHT : CENTER)
                 : CENTER)
-        : block_align,
+        : frame_align,
     anchorboxsizex = is_finite(wid) ? wid : htight,
     anchorboxsizey = is_finite(ht) ? ht : vboxsize,
 
@@ -701,17 +723,28 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
 /// Internal function: _preprocess_text() - called by _writeob()
 function _preprocess_text(text, collapse_space, caller="write") =
     is_string(text) ? let(
-        txtpass0 = str_replace(text, "{{ }}", "\u00A0"), // replace nonbreaking space codes
-        txtpass1 = str_replace(txtpass0, "{ }", "\u00A0"), // replace nonbreaking space codes
-        txtpass2 = collapse_space ? str_collapse_char(txtpass1, " ") : txtpass1 // optionally collapse spaces
-    ) collapse_space ? str_replace(txtpass2, "\n ", "\n") : txtpass2 // remove any remaining leading collapsed spaces after \n
+        txtpass0 = collapse_space ? str_collapse_char(text, " ") : text // optionally collapse spaces
+    ) collapse_space ? str_replace(txtpass2, "\n ", "\n") : txtpass0 // remove remaining leading spaces after \n
     : is_list(text) && is_string(text[0]) ? let(
-        txtpass1 = [for(t=text) str_replace(t, "{ }", "\u00A0")],
-        txtpass2 = collapse_space ? [for(t=txtpass1) str_collapse_char(t, " ")] : txtpass1
-    ) collapse_space ? [for(t=txtpass2) str_replace(t, "\n ", "\n")] : txtpass2
+        txtpass0 = collapse_space ? [for(t=text) str_collapse_char(t, " ")] : text
+    ) collapse_space ? [for(t=txtpass0) str_replace(t, "\n ", "\n")] : txtpass0
     : assert(false, str("\n",caller,"(): 'text' must be a string or list of strings.")) "";
 
 
+/// Internal function: _postprocess_text() - called by _textwrap()
+/// This function is called after processing the font style codes, but before wrapping the text.
+/// text = text to process
+/// styles = style codes for each character of text
+/// code = code to look for
+/// char = character that the code represents
+/*
+function _postprocess_text(text, styles, code="{{lb}}", char="{") = let(
+    pos = str_find(text, code)
+) len(pos)==0 ? [text, styles]
+: let(
+    
+    ) [ str_replace(text, code, char), style];
+*/
 
 /// Internal function: _baselines() - called by _writeobj()
 /// Return baseline positions for multi-line text, starting at 0 and going negative from there.
@@ -927,31 +960,42 @@ let(
 ) 9.999 * min(wid / htight, ht / vboxsize); // multiplying by 10 can introduce roundoff that overflows width in _textwrap()
 
 
+/// Internal function: _get_font_stylecodes() - called by _textwrap()
+/// This is called to get the style code of the first character in a paragraph
 
-/// Internal function: _text_styles() - called by _textwrap()
-/// Parse font style codes in the input text, return text withhout the codes,
-/// and an array containing style code indices for each character in the returned text.
-
-_stylecodes = [    // style codes in text. The index of the array is used to identify the style
-    "{{r}}",    // 0 = Regular
-    "{{i}}",    // 1 = Italic
-    "{{b}}",    // 2 = Bold
-    "{{bi}}"    // 3 = Bold Italic
-];
 function _get_font_stylecode(s) =
     s == "Regular" ? 0
     : s == "Italic" ? 1
     : s == "Bold" ? 2
     : s == "Bold Italic" ? 3 : 0;
 
+
+/// Internal function: _text_styles() - called by _textwrap()
+/// Parse font style codes and literal codes in the input text, return text without the codes,
+/// and an array containing style code indices for each character in the returned text.
+
+_style_codes = [  // style codes in text. The index of the array is used to identify the style.
+    "{{r}}",    // 0 = Regular
+    "{{i}}",    // 1 = Italic
+    "{{b}}",    // 2 = Bold
+    "{{bi}}"    // 3 = Bold Italic
+];
+_literal_codes = [ "{{lb}}", "{{ }}",  "{ }" ];
+_literal_chars = [ "{",      "\u00A0", "\u00A0" ];
+
 function _text_styles(text, firststyle=0) =
     let(
         n = len(text),
-        // one str_find(all=true) call per code — each uses OpenSCAD's fast internal search()
-        matches = [for (ci = idx(_stylecodes))
-                     for (p = str_find(text, _stylecodes[ci], all=true))
-                       [p, len(_stylecodes[ci]), ci]],
-        sorted = sort(matches),         // sorts by position first
+        // type 1 = style code (payload = style index), type 0 = literal code (payload = ord of literal char)
+        style_matches = [for (ci = idx(_style_codes))
+                            let(cl = len(_style_codes[ci]))
+                            for (p = str_find(text, _style_codes[ci], all=true))
+                              [p, cl, 1, ci]],
+        literal_matches = [for (li = idx(_literal_codes))
+                              let(cl = len(_literal_codes[li]))
+                              for (p = str_find(text, _literal_codes[li], all=true))
+                                [p, cl, 0, ord(_literal_chars[li])]],
+        sorted = sort(concat(style_matches, literal_matches)),
         nm = len(sorted),
         // greedy non-overlap filter, same logic str_replace() uses
         pos = [
@@ -967,13 +1011,16 @@ function _text_styles(text, firststyle=0) =
             for (i = 0, mi = 0, style = firststyle,
                  matched = (0 < np && sorted[pos[0]][0] == 0);
                  i < n;
-                 style = matched ? sorted[pos[mi]][2] : style,
+                 style = (matched && sorted[pos[mi]][2] == 1) ? sorted[pos[mi]][3] : style,
                  i     = matched ? i + sorted[pos[mi]][1] : i + 1,
                  mi    = matched ? mi + 1 : mi,
                  matched = (mi < np && sorted[pos[mi]][0] == i))
               if (!matched) [ord(text[i]), style]
+              else if (sorted[pos[mi]][2] == 0) [sorted[pos[mi]][3], style]
+              // else: type 1 (style code) -> consumed, nothing emitted
         ]
-    ) object(text = chr([for (e = built) e[0]]), style=[for (e = built) e[1]]);
+    )
+    [chr([for (e = built) e[0]]), [for (e = built) e[1]]];
 
 
 
@@ -1184,10 +1231,10 @@ function _textwrap(texts, width=INF, height=INF, optimize=true, optimize_ht=fals
 ///   text_array = _strings_to_array(string);
 /// Description:
 //   Given a simple string, a string containing `\n` characters, an array of either of those two
-//   kinds of strings, or an array that includes strings and other embedded string arrays, returns
-//   a flat array of simple strings, split appropriately on newline characters. Any leading or
-//   trailing non-space-character white space is stripped out from each string in the returned
-//   array.
+//   kinds of strings, or an array that includes strings and other embedded string arrays, returns a
+//   flat array of simple strings, split appropriately on newline characters. Zero-length strings
+//   are replaced by a nonbreaking space `\u00a0`. Any leading or trailing non-space-character white
+//   space is stripped out from each string in the returned array.
 /// Arguments:
 //   string = Input string or string array, which may contain embedded newlines.
 function _strings_to_array(strings) = let(
@@ -1195,8 +1242,8 @@ function _strings_to_array(strings) = let(
     err = assert(is_string(list[0]), "\nNot a string or list of strings.")
 ) [
     for(s=list) each [
-        for(p = str_split(s, "\n", false))
-                str_strip(p, "\t\r\n")
+        for(p = str_split(s, "\n", true))
+            len(p)==0 ? "\u00A0" : str_strip(p, "\t\r\n")
     ]
 ];
 
