@@ -723,7 +723,7 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
 function _preprocess_text(text, collapse_space, caller="write") =
     is_string(text) ? let(
         txtpass0 = collapse_space ? str_collapse_char(text, " ") : text // optionally collapse spaces
-    ) collapse_space ? str_replace(txtpass2, "\n ", "\n") : txtpass0 // remove remaining leading spaces after \n
+    ) collapse_space ? str_replace(txtpass0, "\n ", "\n") : txtpass0 // remove remaining leading spaces after \n
     : is_list(text) && is_string(text[0]) ? let(
         txtpass0 = collapse_space ? [for(t=text) str_collapse_char(t, " ")] : text
     ) collapse_space ? [for(t=txtpass0) str_replace(t, "\n ", "\n")] : txtpass0
@@ -1018,8 +1018,7 @@ function _text_styles(text, firststyle=0) =
               else if (sorted[pos[mi]][2] == 0) [sorted[pos[mi]][3], style]
               // else: type 1 (style code) -> consumed, nothing emitted
         ]
-    )
-    [chr([for (e = built) e[0]]), [for (e = built) e[1]]];
+    ) object(text = chr([for (e = built) e[0]]), style=[for (e = built) e[1]]);
 
 
 
