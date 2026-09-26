@@ -208,7 +208,6 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n. Set sample rate for 
 //       ]
 //   ], slices=20);
 // Example: Vaccum connector example from list-comprehension-demos
-//   include <BOSL2/rounding.scad>
 //   $fn=32;
 //   base = round_corners(square([2,4],center=true), radius=0.5);
 //   skin([

@@ -11,10 +11,7 @@
 _BOSL2_WALLS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
        echo("Warning: walls.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
-include<rounding.scad>
-
 // Section: Walls
-
 
 // Module: sparse_wall()
 // Synopsis: Makes an open cross-braced rectangular wall.

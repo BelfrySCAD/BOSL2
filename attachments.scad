@@ -55,6 +55,9 @@ $ghosting=false;    // Ghosting is in effect, so don't apply it again
 $highlight_this=false;
 $highlight=false;
 
+$hide_this=false;
+$anchor_inside=false;
+
 _ANCHOR_TYPES = ["intersect","hull"];
 
 
@@ -93,19 +96,18 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
 //   - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
 //   .
-//   When the object is cubical or rectangular in shape the anchors must have zero or one values
-//   for their components and they refer to the face centers, edge centers, or corners of the object.
+//   When the object is cubical or rectangular in shape the anchor components must be 0, -1, or 1 and 
+//   these values specify the face centers, edge centers, or corners of the object.
 //   The direction of a face anchor is perpendicular to the face, pointing outward.  The direction of an edge
-//   anchor is the average of the anchor directions of the two faces the edge is between.  The direction
-//   of a corner anchor is the average of the anchor directions of the three faces the corner is
-//   on.
+//   anchor is the average of the anchor directions of the two faces on either side of the edge.  The direction
+//   of a corner anchor is the average of the anchor directions of the three faces meeting at the corner. 
 //   .
-//   When the object is cylindrical, conical, or spherical in nature, the anchors are located
-//   around the surface of the cylinder, cone, or sphere, relative to the center.
-//   You can generally use an arbitrary vector to get an anchor positioned anywhere on the curved
-//   surface of such an object, and the anchor direction is the surface normal at the anchor location.
-//   However, for anchor component pointing toward the flat face should be either -1, 1, or 0, and
-//   anchors that point diagonally toward one of the flat faces select a point on the edge.
+//   When the object is cylindrical or conical and aligned with the z axis the z component of an anchor must be
+//   0, 1 or -1.  For selecting the flat faces the x and y components must be zero, but otherwise, the x and y components
+//   can be arbitrary and will select any angle on either the circular edges (if anchor.z is nonzero) or on the center
+//   of the curved face (if anchor.z is zero).  When the object is spherical the anchors are arbitrary and can select any location on the sphere.  
+//   Anchors on curved surfaces are oriented normal to the surface.  Anchors on edges are oriented to divide the
+//   edge angle.  
 //   .
 //   For objects in two dimensions, the natural expectation is for TOP and BOTTOM to refer to the Y direction
 //   of the shape.  To support this, if you give an anchor in 2D that has anchor.y=0 then the Z component
@@ -474,7 +476,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   Some of the modules allow you to change the centerpoint using a `cp=` argument.  If you need to change the centerpoint for
 //   a module that does not provide this option, you can use the generic {{region()}} module, which lets you specify a centerpoint.
 //   The default center point is the centroid, specified by "centroid".  You can also choose "mean", which gives the mean of all
-//   the data points, or "bbox", which gives the centerpoint of the bounding box for the data.  Your last option for centerpoint is to
+//   the data points, or "box", which gives the centerpoint of the bounding box for the data.  Your last option for centerpoint is to
 //   choose an arbitrary point that meets your needs.
 // Figure(2D,Med,NoAxes): The centerpoint for "intersect" anchors is located at the red dot
 //   region(supershape(n=128,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9),atype="intersect",cp=[0,30]) show_anchors();
@@ -751,7 +753,8 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
           dummy=assert(all_zero(v_mul(thisedge,thisface)),
                        str("\nalign (",thisedge,") cannot include component parallel to anchor ",thisface,"."));
           thisface_anch = _find_anchor(thisface, $parent_geom);
-          inset_dir = two_d ? -thisface
+          face_dir = two_d ? point2d(thisface_anch[2]) : thisface_anch[2];
+          inset_dir = two_d ? unit(thisface_anch[1]-_find_anchor(thisface+thisedge, $parent_geom)[1], [0,0])
                     : unit(thisface_anch[1]-_find_anchor([thisedge.x,0,0]+thisface, $parent_geom)[1],CTR)
                        +unit(thisface_anch[1]-_find_anchor([0,thisedge.y,0]+thisface, $parent_geom)[1],CTR)
                        +unit(thisface_anch[1]-_find_anchor([0,0,thisedge.z]+thisface, $parent_geom)[1],CTR);
@@ -761,8 +764,8 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
           $attach_anchor=list_set(pos_anch,2,UP);
           translate(pos_anch[1]
                     +inset*inset_dir
-                    +shiftout*(thisface_anch[2]-inset_dir)
-                    -overlap*thisface_anch[2])
+                    +shiftout*(face_dir-inset_dir)
+                    -overlap*face_dir)
               default_tag("remove",inside) children();                  
         }
     }
@@ -807,10 +810,10 @@ function _make_anchor_legal(anchor,geom) =
 //   When an object is attached to one of the other anchors its FRONT is pointed DOWN and its
 //   BACK pointed UP.  You can change this using the `spin=` argument to attach().  This spin
 //   rotates around the attachment vector and is not the same as the spin argument to the child, which
-//   will usually rotate around some other direction that may be hard to predict.  Any spin
-//   parameter you give to the child is ignored so that the attachment condition of parallel anchors is preserved.  
-//   For 2D objects you cannot give spin because it is not possible to spin around the attachment vector;
-//   spinning the object around the Z axis would change the child orientation so that the anchors are no longer parallel.
+//   will usually rotate around some other axis that may be hard to predict. 
+//   For 2D objects you cannot give the `spin=` argument to attach() because this breaks the anchor
+//   alignment that attach() creates.  (You can,  however, still give `spin=` to the child, which will
+//   misalign the anchors produe by the attachment.)
 //   .
 //   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner of the
 //   face where that child is attached.  For example, `attach(TOP,BOT,align=RIGHT)` stands the child
@@ -931,7 +934,7 @@ function _make_anchor_legal(anchor,geom) =
 //     attach(RIGHT+FRONT, TOP, inside=true) cuboid([10,3,5]);
 //     attach(RIGHT+FRONT, TOP, inside=true, align=TOP,shiftout=.01) cuboid([5,1,2]);  
 //   }
-// Example: Attaching a 3d edge mask.  Simple 2d masks can be done using {{edge_profile()}} but this mask varies along its length.
+// Example: Attaching a 3d edge mask.  Simple 2d masks can be done using {{edge_profile()}} but this mask varies along its length. In order to correctly position the anchors on the mask we can use `offset=` when creating it with attachable().  
 //   module wavy_edge(length,cycles, r, steps, n)
 //   {
 //     rmin = is_vector(r) ? r[0] : 0.01;
@@ -944,7 +947,7 @@ function _make_anchor_legal(anchor,geom) =
 //                                  arc(corner=path2d([BACK,CTR,RIGHT]), n=n, r=r)),
 //                           z/steps*length-length/2)
 //               ];
-//     attachable([rmax,rmax,length]){
+//     attachable(size=[rmax,rmax,length], offset=[rmax/2,rmax/2,0]){
 //         skin(layers,slices=0);
 //         children();
 //     }  
@@ -1132,6 +1135,7 @@ module attach_part(name, ind=0)
   req_children($children);
   part = _get_part(name,ind);
   $parent_geom = part[0];
+  $parent_size = _attach_geom_size(part[0]);
   $anchor_inside = part[1];
   T = part[2];
   $parent_parts = [];
@@ -1195,7 +1199,7 @@ module tag(tag)
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Usage:
-//   PARENT() tag(tag) CHILDREN;
+//   PARENT() tag_this(tag) CHILDREN;
 // Description:
 //   Assigns the specified tag to the children at the current level only, with tags reverting to
 //   the previous tag in force for deeper descendents.  This works using `$tag` and `$save_tag`.  
@@ -1277,7 +1281,7 @@ module force_tag(tag)
 {
     req_children($children);
     check1=assert(is_undef(tag) || is_string(tag),"\n'tag' must be a string.");
-    $tag = str($tag_prefix,default(tag,$tag));
+    $tag = is_undef(tag) ? $tag : str($tag_prefix,tag);
     assert(undef==str_find($tag," "),str("\nTag string \"",$tag,"\" contains a space, which is not allowed."));
     if(_is_shown())
       show_all()
@@ -1954,7 +1958,7 @@ module hide(tags)
 //   Hides all attachable children at the current level, while still displaying descendants.  
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Side Effects:
-//   Sets `$tag` and `$save_tag`
+//   Sets `$hide_this`, which is cleared for descendants by attachable().
 // Example: Use an invisible parent to position children.  Unlike with {{hide()}} we do not need to explicitly use any tags.  
 //   $fn=16;
 //   hide_this() cuboid(10)
@@ -1971,9 +1975,8 @@ module hide(tags)
 
 module hide_this()
 {
-  tag_scope()
-    hide("child")
-    tag_this("child")
+    req_children($children);
+    $hide_this=true;
     children();
 }
 
@@ -2140,6 +2143,7 @@ module show_int(tags)
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
+//   scale = Scalar or 2-vector scaling the top of an extruded path or region relative to the bottom. Default: `[1,1]`
 //   r = Radius of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d = Diameter of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
 //   r1 = Radius of the bottom of the conical volume.  Can be a scalar, or a list of sizes per axis.
@@ -2151,13 +2155,14 @@ module show_int(tags)
 //   path = The path to generate a polygon from.
 //   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection, for VNFs and paths.  Default: true.
-//   cp = If given, specifies the centerpoint of the volume.  For VNF and region attachment, changes the reference for determining the other anchors.  For other geometry types, this only changes the CENTER anchor.  If you need to change the other anchors combine this with `offset`.  Default: `[0,0,0]`
-//   offset = If given, offsets the perimeter of the volume around the centerpoint.  This leaves the CENTER anchor unchanged but changes the other anchors.  If you need to also change the CENTER anchor then combine this with `cp`.  
+//   cp = If given, specifies the centerpoint of the volume for an object whose anchor center is not at its true center.  All of the directional anchors shift by this vector.  Default: `[0,0,0]`
+//   offset = If given, offsets the non-centered anchor components, while leaving centered components (including CENTER itself) unchanged. Ignored for region, extrusion, and VNF geometries.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
-//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default is used.  This option applies only to the "trapezoid", "prismoid", "conoid", and "vnf_*"  geometry types.  
-//   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
+//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default is used.  This option applies only to the "trapezoid", "prismoid", "conoid", "ellipse", and "vnf_*"  geometry types.  
+//   geom = If given, uses the pre-defined geometry produced by {{attach_geom()}}.
+//   parts = List of named attachable parts created with {{define_part()}}. Select a part with {{attach_part()}}. Default: `[]`
 //   expose_tags = If true then delay the decision to display or not display this object to the children, which it possible for tags to respond to operations like {{diff()}} used outside the attachble object. This works correctly only if everything in the attachable is also attachable.  Default: false
 //   keep_color = If true then delay application of color to the children, which means that externally applied color is overridden by color specified within the attachable. This works properly only if everything in the attachable is also attacahble.  Default: false
 //
@@ -2195,13 +2200,13 @@ module show_int(tags)
 //
 // Example(NORENDER): Cylindrical Shape, Y-Axis Aligned
 //   attachable(anchor, spin, orient, r=r, l=h, axis=BACK) {
-//       cyl(r=r, l=h);
+//       cyl(r=r, l=h, orient=BACK);
 //       children();
 //   }
 //
 // Example(NORENDER): Cylindrical Shape, X-Axis Aligned
 //   attachable(anchor, spin, orient, r=r, l=h, axis=RIGHT) {
-//       cyl(r=r, l=h);
+//       cyl(r=r, l=h, orient=RIGHT);
 //       children();
 //   }
 //
@@ -2213,13 +2218,13 @@ module show_int(tags)
 //
 // Example(NORENDER): Conical Shape, Y-Axis Aligned
 //   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h, axis=BACK) {
-//       cyl(r1=r1, r2=r2, l=h);
+//       cyl(r1=r1, r2=r2, l=h, orient=BACK);
 //       children();
 //   }
 //
 // Example(NORENDER): Conical Shape, X-Axis Aligned
 //   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h, axis=RIGHT) {
-//       cyl(r1=r1, r2=r2, l=h);
+//       cyl(r1=r1, r2=r2, l=h, orient=RIGHT);
 //       children();
 //   }
 //
@@ -2231,14 +2236,14 @@ module show_int(tags)
 //
 // Example(NORENDER): Extruded Polygon Shape, by Extents
 //   attachable(anchor, spin, orient, path=path, l=length, scale=scale) {
-//       linear_extrude(height=length, center=true)
+//       linear_extrude(height=length, center=true, scale=scale)
 //           polygon(path);
 //       children();
 //   }
 //
 // Example(NORENDER): Extruded Polygon Shape, by Intersection
 //   attachable(anchor, spin, orient, path=path, l=length, extent=false, scale=scale) {
-//       linear_extrude(height=length, center=true)
+//       linear_extrude(height=length, center=true, scale=scale)
 //           polygon(path);
 //       children();
 //   }
@@ -2292,8 +2297,9 @@ module show_int(tags)
 //   }
 //
 // Example(NORENDER): Using Pre-defined Geometry
-//   geom = atype=="perim"? attach_geom(two_d=true, path=path, extent=false) :
-//       atype=="extents"? attach_geom(two_d=true, path=path, extent=true) :
+//   r = max([for(pt=path) norm(pt)]);
+//   geom = atype=="perim"? attach_geom(two_d=true, region=[path], extent=false) :
+//       atype=="extents"? attach_geom(two_d=true, region=[path], extent=true) :
 //       atype=="circle"? attach_geom(two_d=true, r=r) :
 //       assert(false, "Bad atype");
 //   attachable(anchor, spin, orient, geom=geom) {
@@ -2474,7 +2480,7 @@ module attachable(
         $parent_parts = parts;
         $anchor_inside = false;
         $change_anchors = undef;
-        if (expose_tags || _is_shown()){
+        if (!$hide_this && (expose_tags || _is_shown())){
             if (!keep_color)
                 _color($color)
                   _show_ghost() children(0);
@@ -2484,6 +2490,7 @@ module attachable(
             }
         }
         let(
+            $hide_this=false,
             $ghost_this=false,
             $highlight_this=false,
             $tag=default($save_tag,$tag),
@@ -2555,8 +2562,8 @@ function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 //   mat = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], ...);
 //   vnf = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], p=, ...);
 // Usage: VNF Geometry
-//   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
-//   vnf = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
+//   mat = reorient(anchor, spin, [orient], vnf=, [extent=], ...);
+//   vnf = reorient(anchor, spin, [orient], vnf=, [extent=], p=, ...);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -2569,16 +2576,10 @@ function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 //   If `p` contains a path, a new path is returned with the vertices transformed by the matrix.
 //   If `p` contains a point, a new point is returned, transformed by the matrix.
 //   .
-//   If `$attach_to` is not defined, then the following transformations are performed in order:
-//   * Translates so the `anchor` point is at the origin (0,0,0).
-//   * Rotates around the Z axis by `spin` degrees counter-clockwise.
-//   * Rotates so the top of the part points toward the vector `orient`.
-//   .
-//   If `$attach_to` is defined, as a consequence of `attach(from,to)`, then
-//   the following transformations are performed in order:
-//   * Translates this part so its anchor position matches the parent's anchor position.
-//   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
-//   * Rotates this part so its anchor spin matches the parent's anchor spin.
+//   The following transformations are performed in order:
+//   * Translate so the `anchor` point is at the origin (0,0,0).
+//   * Rotate around the Z axis by `spin` degrees counter-clockwise.
+//   * In 3D, totate so the top of the part points toward the vector `orient`.
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 //
@@ -2600,12 +2601,15 @@ function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   region = The region to generate a shape from.
-//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
+//   cp = If given, specifies the centerpoint of the volume for an object whose anchor center is not at its true center.  All of the directional anchors shift by this vector.  Default: `[0,0,0]`
 //   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
-//   offset = If given, offsets the perimeter of the volume around the centerpoint.
+//   offset = If given, offsets the non-centered anchor components, while leaving centered components (including CENTER itself) unchanged. Ignored for region, extrusion, and VNF geometries.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
+//   override = Function or lookup table overriding computed anchor positions, directions, and spins. See {{attachable()}} for supported geometry types and return formats.
+//   geom = If given, uses pre-defined geometry produced by {{attach_geom()}} instead of the individual geometry arguments.
 //   p = The VNF, path, or point to transform.
 function reorient(
     anchor, spin, orient,
@@ -2786,8 +2790,8 @@ module change_anchors(named=undef, alias=undef, remove=undef)
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
-//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
-//   offset = If given, offsets the perimeter of the volume around the centerpoint.
+//   cp = If given, specifies the centerpoint of the volume for an object whose anchor center is not at its true center.  All of the directional anchors shift by this vector.  Default: `[0,0,0]`
+//   offset = If given, offsets the non-centered anchor components, while leaving centered components (including CENTER itself) unchanged. Ignored for region, extrusion, and VNF geometries.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
@@ -2911,6 +2915,7 @@ function attach_geom(
               : ["vnf_isect", vnf, over_f, cp, offset, anchors]
     ) : !is_undef(region)? (
         assert(is_region(region),2)
+        assert(is_undef(override), "\nThe override geometry parameter is not supported by region or extrusion geometry")
         let( l = default(l, h) )
         two_d==true
           ? assert(is_undef(l), "\nCannot give l/h with region anchor types (when two_d is set).")
@@ -2951,10 +2956,12 @@ function attach_geom(
                 ["ellipse", r1, over_f, cp, offset, anchors]
             ) : (
                 assert(is_num(r1) || is_vector(r1,3))
+                assert(is_undef(override), "\nThe override geometry parameter is not supported by spheroid geometry")
                 ["spheroid", r1, cp, offset, anchors]
             )
         )
     ) :
+    assert(is_undef(override), "\nThe override geometry parameter is not supported by point geometry")
     two_d?     ["point2d", cp, offset, anchors]
     : ["point", cp, offset, anchors];
 
@@ -2971,7 +2978,8 @@ function attach_geom(
 //   A simple part has a single geometry and associated transformation matrix and `inside` flag.
 //   A compound part is a part with multiple components that can be indexed numerically.  To create
 //   a compound part either `geom` should be a list of geometries or `T` a list of transformations,
-//   or they should both be lists of compatible length.  
+//   or they should both be lists of compatible length. A single geometry or transformation,
+//   including a one-element list, is repeated to match the other list.
 // Arguments:
 //   name = name of part
 //   geom = geometry of part (or list for compound parts) produced by {{attach_geom()}}
@@ -3028,11 +3036,14 @@ function define_part(name, geom, inside=false, T=IDENT) =
            : assert(is_consistent(T, ident(4)), "\nT must be a transformation or list of transformations")
              len(T)
   )
+  assert(geom_n>0 && T_n>0, "\ngeom and T lists must not be empty.")
   assert(geom_n==T_n || geom_n==1 || T_n==1, "\ngeom and T have inconsistent lengths")
   let(
        n = max(T_n,geom_n),
-       geom_list = _is_geometry(geom) ? repeat(geom,n) : geom,
-       T = is_matrix(T) ? repeat(T,n) : T,
+       geom_list = _is_geometry(geom) ? repeat(geom,n)
+                 : geom_n==1 ? repeat(geom[0],n) : geom,
+       T = is_matrix(T) ? repeat(T,n)
+         : T_n==1 ? repeat(T[0],n) : T,
        inside = is_bool(inside) ? repeat(inside,n)
               : assert(is_bool_list(inside,n), str("\ninside must be a boolean list with length ",n))
                 inside
@@ -3070,63 +3081,80 @@ function _attach_geom_2d(geom) =
 /// Description:
 ///   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function _attach_geom_size(geom) =
-    let( type = geom[0] )
-    type == "point"? [0,0,0] :
-    type == "point2d"? [0,0] :
-    type == "prismoid"? ( //size, size2, shift, axis
+    let(type=geom[0])
+    type=="point" ? [0,0,0] :
+    type=="point2d" ? [0,0] :
+    type=="prismoid" ? (
         let(
-            size=geom[1], size2=geom[2], shift=point2d(geom[3]),
-            maxx = max(size.x,size2.x),
-            maxy = max(size.y,size2.y),
-            z = size.z
-        ) [maxx, maxy, z]
-    ) : type == "conoid"? ( //r1, r2, l, shift
+            size=[for(v=geom[1]) max(0,v)],
+            size2=[for(v=geom[2]) max(0,v)],
+            shift=geom[3],
+            corners=[for(z=[-1,1], x=[-1,1], y=[-1,1])
+                point3d(v_mul(z<0 ? point2d(size)/2 : size2/2,[x,y])
+                        + (z<0 ? [0,0] : shift), z*size.z/2)],
+            bounds=pointlist_bounds(rot(from=UP,to=geom[4],p=corners))
+        ) bounds[1]-bounds[0]
+    ) : type=="conoid" ? (
         let(
-            r1=geom[1], r2=geom[2], l=geom[3],
-            shift=point2d(geom[4]), axis=point3d(geom[5]),
-            rx1 = default(r1[0],r1),
-            ry1 = default(r1[1],r1),
-            rx2 = default(r2[0],r2),
-            ry2 = default(r2[1],r2),
-            maxxr = max(rx1,rx2),
-            maxyr = max(ry1,ry2)
-        )
-        approx(axis,UP)? [2*maxxr,2*maxyr,l] :
-        approx(axis,RIGHT)? [l,2*maxyr,2*maxxr] :
-        approx(axis,BACK)? [2*maxxr,l,2*maxyr] :
-        [2*maxxr, 2*maxyr, l]
-    ) : type == "spheroid"? ( //r
-        let( r=geom[1] )
-        is_num(r)? [2,2,2]*r : v_mul([2,2,2],point3d(r))
-    ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
+            r1=force_list(geom[1],2), r2=force_list(geom[2],2),
+            m=rot(from=UP,to=geom[5]),
+            bot=apply(m,[0,0,-geom[3]/2]),
+            top=apply(m,point3d(geom[4],geom[3]/2))
+        ) [for(i=[0:2]) let(
+                b=norm([r1.x*m[i][0],r1.y*m[i][1]]),
+                t=norm([r2.x*m[i][0],r2.y*m[i][1]])
+            ) max(bot[i]+b,top[i]+t)-min(bot[i]-b,top[i]-t)]
+    ) : type=="spheroid" ? 2*force_list(geom[1],3)
+    : in_list(type,["vnf_extent","vnf_isect"]) ? (
+        geom[1]==EMPTY_VNF ? [0,0,0] :
+        let(bounds=pointlist_bounds(geom[1][0])) bounds[1]-bounds[0]
+    ) : in_list(type,["extrusion_isect","extrusion_extent"]) ? (
         let(
-            vnf = geom[1]
-        ) vnf==EMPTY_VNF? [0,0,0] :
-        let(
-            mm = pointlist_bounds(geom[1][0]),
-            delt = mm[1]-mm[0]
-        ) delt
-    ) : type == "extrusion_isect" || type == "extrusion_extent"? ( //path, l
-        let(
-            mm = pointlist_bounds(flatten(geom[1])),
-            delt = mm[1]-mm[0]
-        ) [delt.x, delt.y, geom[2]]
-    ) : type == "trapezoid"? ( //size, size2
-        let(
-            size=geom[1], size2=geom[2], shift=geom[3],
-            maxx = max(size.x,size2+abs(shift))
-        ) [maxx, size.y]
-    ) : type == "ellipse"? ( //r
-        let( r=geom[1] )
-        is_num(r)? [2,2]*r : v_mul([2,2],point2d(r))
-    ) : type == "rgn_isect" || type == "rgn_extent"? ( //path
-        let(
-            mm = pointlist_bounds(flatten(geom[1])),
-            delt = mm[1]-mm[0]
-        ) [delt.x, delt.y]
-    ) :
-    assert(false, "\nUnknown attachment geometry type.");
+            points=flatten(geom[1]),
+            twist=geom[3], sc=geom[4], shift=geom[5]
+        ) twist==0 ?
+            let(bounds=pointlist_bounds(concat(points,[for(p=points) v_mul(sc,p)+shift])))
+            [each bounds[1]-bounds[0], abs(geom[2])]
+          : let(bounds=[for(p=points) [for(i=[0:1])
+                    _attach_sweep_coord_bounds(p,i,sc[i]-1,shift[i],-twist)]])
+            [for(i=[0:1]) max([for(b=bounds) b[i][1]])-min([for(b=bounds) b[i][0]]), abs(geom[2])]
+    ) : type=="trapezoid" ? (
+        let(size=geom[1], size2=geom[2], shift=geom[3])
+        [max(size.x/2,shift+size2/2)-min(-size.x/2,shift-size2/2), abs(size.y)]
+    ) : type=="ellipse" ? 2*force_list(geom[1],2)
+    : in_list(type,["rgn_isect","rgn_extent"]) ? (
+        let(bounds=pointlist_bounds(flatten(geom[1]))) bounds[1]-bounds[0]
+    ) : assert(false, "\nUnknown attachment geometry type.");
 
+
+/// Bound one coordinate of a vertex under simultaneous linear scale, twist, and shift.
+/// Its second-derivative zeros divide the first derivative into monotonic intervals.
+/// Consecutive second-derivative zeros are at least 120 degrees apart in sweep angle,
+/// so 90-degree brackets isolate them, even when the scale changes sign.
+function _attach_sweep_coord_bounds(p, i, k, shift, angle) =
+    let(
+        a=p[i], b=i==0 ? -p.y : p.x,
+        w=angle*PI/180,
+        q=function(u) a*cos(angle*u)+b*sin(angle*u),
+        dq=function(u) w*(-a*sin(angle*u)+b*cos(angle*u)),
+        f=function(u) (1+k*u)*q(u)+shift*u,
+        df=function(u) k*q(u)+(1+k*u)*dq(u)+shift,
+        ddf=function(u) 2*k*dq(u)-(1+k*u)*w*w*q(u),
+        n=max(1,ceil(abs(angle)/90)),
+        inflections=_attach_bracket_roots(ddf,[for(j=[0:n]) j/n]),
+        stationary=_attach_bracket_roots(df,concat([0],inflections,[1])),
+        values=[f(0),f(1),for(u=stationary) f(u)]
+    ) [min(values),max(values)];
+
+
+function _attach_bracket_roots(f, knots) = [
+    for(i=[0:1:len(knots)-2]) let(
+        a=knots[i], b=knots[i+1], fa=f(a), fb=f(b)
+    ) if (a<b)
+        if (fa==0) a
+        else if (fa*fb<0) root_find(f,a,b),
+    if (f(last(knots))==0) last(knots)
+];
 
 
 /// Internal Function: _attach_geom_edge_path()
@@ -3178,7 +3206,7 @@ function _attach_geom_edge_path(geom, edge) =
                 if (edge.y) xrot(yang-90, p=sign(axy.y)*BACK),
                 if (edge.z) [0,0,sign(edge.z)]
             ], 
-            segvec = cross(unit(vecs[1]), unit(vecs[0])),
+            segvec = unit(cross(unit(vecs[1]), unit(vecs[0])), unit(ep2-ep1,RIGHT)),
             seglen = norm(ep2 - ep1),
             path = [
                 cp - segvec * seglen/2,
@@ -3294,29 +3322,11 @@ function _get_cp(geom) =
     let(cp=select(geom,-3))
     is_vector(cp) ? cp
   : let(
-        type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
-             : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
-             : in_list(geom[0],["extrusion_extent","extrusion_isect"]) ? "xpath"
-             : "other"
-    )
-    assert(type!="other", "\nInvalid cp value.")
-    cp=="centroid" ? (
-       type=="vnf" && (len(geom[1][0])==0 || len(geom[1][1])==0) ? [0,0,0] :
-       [each centroid(geom[1]), if (type=="xpath") 0]
-    )
-  : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
-    cp=="mean" ? [each mean(points), if (type=="xpath") 0]
-  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") 0]
-  : assert(false,"\nInvalid cp specification.");
-
-
-function _get_cp(geom) =
-    let(cp=select(geom,-3))
-    is_vector(cp) ? cp
-  : let(
         is_vnf = in_list(geom[0],["vnf_extent","vnf_isect"])
     )
     cp == "centroid" ? (
+       assert(is_vnf || in_list(geom[0],["rgn_extent","rgn_isect","extrusion_extent","extrusion_isect"]),
+              "\ncp=\"centroid\" is only allowed for VNF, region, and extruded-region attachment geometries.")
        is_vnf && len(geom[1][1])==0
           ? [0,0,0]
           : centroid(geom[1])
@@ -3474,13 +3484,18 @@ function _find_anchor(anchor, geom)=
             dummy = assert(anch.z == sign(anch.z), str("\nThe ",axisname," component of an anchor for the cylinder/cone must be -1, 0, or 1.")),
             offset = rot(from=axis, to=UP, p=offset),
             u = (anch.z+1)/2,
-            // Returns [point,tangent_dir]
-            solve_ellipse = function (r,dir) approx(dir,[0,0]) ? [[0,0],[0,0]]
-                                            : let(
-                                                  x = r.x*dir.x*r.y / sqrt(dir.x^2*r.y^2+dir.y^2*r.x^2),
-                                                  y = r.x*dir.y*r.y / sqrt(dir.x^2*r.y^2+dir.y^2*r.x^2)
-                                             )
-                                             [[x,y], unit([y*r.x^2,-x*r.y^2],CTR)],
+            /// Return the point and its clockwise derivative with respect to ray angle.
+            /// Retain tangent magnitudes so interpolation also works with unequal end ellipses.
+            solve_ellipse = function (r,dir)
+                approx(dir,[0,0]) || r==[0,0] ? [[0,0],[0,0]]
+              : let(
+                    d = unit(dir),
+                    den = d.x*d.x*r.y*r.y + d.y*d.y*r.x*r.x,
+                    pt = r.x==0 ? [0, approx(d.x,0) ? sign(d.y)*r.y : 0]
+                       : r.y==0 ? [approx(d.y,0) ? sign(d.x)*r.x : 0, 0]
+                       : r.x*r.y/sqrt(den)*d,
+                    tangent = den==0 ? [0,0] : [pt.y*r.x*r.x, -pt.x*r.y*r.y]/den
+                ) [pt,tangent],
             on_center = approx(point2d(anch), [0,0]),
             botdata = solve_ellipse(r1,point2d(anch)),
             topdata = solve_ellipse(r2,point2d(anch)),
@@ -3492,15 +3507,17 @@ function _find_anchor(anchor, geom)=
             obot = point3d(v_mul(r1,axy), -length/2),
             otop = point3d(v_mul(r2,axy)+shift, length/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            sidevec = rot(from=UP, to=top==bot?UP:top-bot, p=point3d(normal)),
+            sidevec = unit(cross(top-bot,point3d(tangent)), point3d(axy)),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
-            vec = on_center? unit(anch,UP)
+            apex = (anch.z==-1 && r1==[0,0]) || (anch.z==1 && r2==[0,0]),
+            vec = on_center || apex ? unit([0,0,anch.z],UP)
                 : approx(anch.z,0)? sidevec
-                : unit((sidevec+vvec)/2,UP),
+                : unit(sidevec+vvec,UP),
             pos2 = rot(from=UP, to=axis, p=pos),
             vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec),
                // Set spin for top/bottom to be clockwise
-            spin = anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
+            spin = apex ? _compute_spin(vec2, v_abs(vec2)==UP ? BACK : UP)
+                 : anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
                  : anch.z==0 && norm(anch)>_EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
                  : oang
         ) [anchor, default(override[0],pos2), default(override[1],vec2),default(override[2], spin)]
@@ -3521,9 +3538,14 @@ function _find_anchor(anchor, geom)=
             rr = geom[1],
             r = is_num(rr)? [rr,rr,rr] : point3d(rr),
             anchor = unit(point3d(anchor),CENTER),
-            pos = point3d(cp) + v_mul(r,anchor) + point3d(offset),
-            vec = unit(v_mul(r,anchor),UP)
-        ) [anchor, pos, vec, oang]
+            /// Intersect the ray with the ellipsoid before applying anchor offsets.
+            outside = [for(i=[0:2]) if (r[i]==0 && anchor[i]!=0) i]!=[],
+            denom = norm([for(i=[0:2]) r[i]==0 ? 0 : anchor[i]/r[i]]),
+            surface = outside || denom==0 ? CENTER : anchor/denom,
+            pos = point3d(cp) + surface + point3d(offset),
+            vec = unit([for(i=[0:2]) r[i]==0 ? 0 : surface[i]/(r[i]*r[i])], unit(anchor,UP)),
+            spin = approx(point2d(vec),[0,0]) ? 0 : atan2(vec.y,vec.x)+90
+        ) [anchor, pos, vec, spin]
     ) : type == "vnf_isect"? ( //vnf
         let(
             vnf=geom[1],
@@ -3780,23 +3802,28 @@ function _find_anchor(anchor, geom)=
             cp=point2d(cp)
         )
         approx(anchor_xy,[0,0]) ? [anchor, apply(mat, point3d(cp,anchor.z*L/2)), unit(anchor, UP), oang] :
+        lerp([1,1],scale,u)==[0,0] ? [anchor, point3d(u*shift,anchor.z*L/2), unit([0,0,anchor.z],UP), 0] :
         let(
             newrgn = apply(mat, rgn),
             newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="extrusion_extent", cp=cp),
-            topmat = anchor.z!=0 ? []
-                   : move(shift)*scale(scale)*zrot(-twist),
-            topgeom = anchor.z!=0? []
-                    : attach_geom(two_d=true, region=apply(topmat,rgn), extent=type=="extrusion_extent", cp=cp),
-            top2d =  anchor.z!=0? []
-                  : _find_anchor(anchor_xy, topgeom),
             result2d = _find_anchor(anchor_xy, newgeom),
             pos = point3d(result2d[1], anchor.z*L/2),
-            vec = anchor.z==0? rot(from=UP,to=point3d(top2d[1],L/2)-point3d(result2d[1]),p=point3d(result2d[2]))
-                : unit(point3d(result2d[2], anchor.z),UP),
-            oang = atan2(vec.y,vec.x) + 90
-        )
-        [anchor, pos, vec, oang]
-    ) :
+            sc = lerp([1,1],scale,u),
+            rp = [for(i=[0:1]) sc[i]==0 ? 0 : (result2d[1][i]-u*shift[i])/sc[i]],
+            /// Differentiate shift + scale * rotation with respect to sweep fraction.
+            velocity = shift + v_mul(scale-[1,1],rp)
+                     - twist*PI/180*v_mul(sc,[-rp.y,rp.x]),
+
+            normal = point2d(result2d[2]),
+            tangent = [normal.y, -normal.x],   // 90° cw rotation of the outward normal:
+                                               // the boundary's own tangent direction
+            sidevec = unit([L*normal.x, L*normal.y, -normal*velocity], point3d(normal)),
+            vec = anchor.z==0 ? sidevec : unit(sidevec+[0,0,anchor.z],UP),
+            oang = anchor.z==0 ? _compute_spin(vec, UP)
+                               : _compute_spin(vec, point3d(tangent), UP)
+        ) [anchor, pos, vec, oang]
+
+      ) :
     assert(false, "\nUnknown attachment geometry type.");
 
 
@@ -3927,7 +3954,7 @@ module show_anchors(s=10, std=true, custom=true) {
 //   color = Color of the arrow.  Default: `[0.333, 0.333, 1]`
 //   flag = If true, draw the orientation flag on the arrowhead.  Default: true
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOT`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
@@ -4591,11 +4618,14 @@ function _canonical_edge(edge) =
 //   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
 //   related to transformation operations then the transformation that parent() returns is likely to be incorrect, even if OpenSCAD
 //   continues to run and produces a valid result.  
+/// The fourth description field stores anchor, spin, orient, size, and inside-part state.
 function parent() =
     let(
-        geom = default($parent_geom, attach_geom([0,0,0]))
-    )                 
-    [$transform, geom, $parent_parts];
+        geom = default($parent_geom, attach_geom([0,0,0])),
+        state = is_undef($parent_geom) ? [CENTER,0,UP,[0,0,0],false]
+              : [$parent_anchor, $parent_spin, $parent_orient, $parent_size, $anchor_inside]
+    )
+    [$transform, geom, $parent_parts, state];
 
 
 
@@ -4645,8 +4675,11 @@ function parent() =
 //                     fillet=1);
 
 function parent_part(name,ind=0) =
-    let(part = _get_part(name, ind))
-    [$transform * part[2], part[0],undef];
+    let(
+        part = _get_part(name, ind),
+        state = [$parent_anchor, $parent_spin, $parent_orient, _attach_geom_size(part[0]), part[1]]
+    )
+    [$transform * part[2], part[0], [], state];
 
 
 // Module: restore()
@@ -4673,20 +4706,20 @@ function parent_part(name,ind=0) =
 
 module restore(desc)
 {
-   req_children($children);
-   if (is_undef(desc)){
-     T = matrix_inverse($transform);
-     $parent_geom = attach_geom([0,0,0]);
-     $parent_parts = undef;
-     multmatrix(T) children();
-   }
-   else{
-     check=assert(is_description(desc), "\nInvalid description.");
-     T = linear_solve($transform, desc[0]);
-     $parent_geom = desc[1];
-     $parent_parts = desc[2];
-     multmatrix(T) children();
-   }
+    req_children($children);
+    desc = is_undef(desc)
+         ? [IDENT, attach_geom([0,0,0]), undef, [CENTER,0,UP,[0,0,0],false]]
+         : desc;
+    check=assert(is_description(desc), "\nInvalid description.");
+    T = linear_solve($transform, desc[0]);
+    $parent_geom = desc[1];
+    $parent_parts = desc[2];
+    $parent_anchor = desc[3][0];
+    $parent_spin = desc[3][1];
+    $parent_orient = desc[3][2];
+    $parent_size = desc[3][3];
+    $anchor_inside = desc[3][4];
+    multmatrix(T) children();
 }
 
 // Function: desc_point()
@@ -4701,7 +4734,7 @@ module restore(desc)
 //   desc = Description to use to get the point
 //   p = Point or point list to transform.  Default: CENTER (if anchor not given)
 //   ---
-//   anchor = Anchor point (only one) that you want to extract.  Default: CENTER
+//   anchor = Anchor point (only one) that you want to extract.
 // Example(3D): In this example we translate away from the parent object and then compute points on that object.  Note that with OpenSCAD 2021.01 you must use union() or alternatively place the pt1 and pt2 assignments in a let() statement.  This is not necessary in development versions.  
 //  cuboid(10) let(desc=parent())
 //    right(12) up(27)
@@ -4721,14 +4754,13 @@ function desc_point(desc, p, anchor) =
        let(
             T = matrix_inverse($transform)
        )
-       apply(T, default(p,UP))
+       apply(T, default(p,CENTER))
   : assert(is_description(desc), "\nInvalid description.")
     assert(num_defined([anchor,p])<2, "\nCannot give both anchor and p")
     let (
          T = linear_solve($transform, desc[0]),
-         p = is_def(p) ? p
-           :  let(anch = _find_anchor(anchor, desc[1]))
-              anch[1]
+         p = is_def(anchor) ? _find_anchor(anchor, desc[1])[1]
+           : default(p,CENTER)
     )
     apply(T, p);
 
@@ -4738,7 +4770,7 @@ function desc_point(desc, p, anchor) =
 // Topics: Descriptions, Attachment
 // See Also: parent(), desc_point()
 // Usage:
-//   dir = desc_anchor(desc,[dir], [anchor]);
+//   dir = desc_dir(desc,[dir], [anchor]);
 // Description:
 //   Computes the direction in the current context of a direction in the context of the description.  You can specify
 //   the direction by giving a direction vector, or you can give an anchor that is interpreted from the description.
@@ -4769,14 +4801,19 @@ function desc_dir(desc, dir, anchor) =
     assert(num_defined([dir,anchor])<2, "\nCannot give both dir and anchor.")
     let(
          T = linear_solve($transform, desc[0]),
-         dir = is_def(dir) ? dir
-             : let(
-                   anch = _find_anchor(anchor, desc[1])
-               )
-               anch[2]
+         dir = is_def(anchor) ? _find_anchor(anchor, desc[1])[2]
+             : default(dir,UP)
     )
     move(-apply(T,CENTER),apply(T, dir));
 
+/// Function: desc_attach()
+/// Synopsis: Converts point data between an anchor frame and the current coordinates.
+/// Topics: Descriptions, Attachments
+/// Description:
+///   Converts point data from the coordinate frame of a description's specified anchor into the current coordinate system.
+///   The frame is determined by the anchor's position, direction, and spin. With `reverse=true`, converts from the current
+///   coordinate system into the anchor frame instead. The default anchor is UP. Intended for 3D rotation and translation;
+///   the frame construction does not preserve scaling or shear.
 function desc_attach(desc, anchor=UP, p, reverse=false) =
     assert(is_description(desc), "\nInvalid description.")
     let(
@@ -4847,8 +4884,8 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
 
 function transform_desc(T,desc) =
     assert(is_description(desc), "\nInvalid description.")
-    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1],desc[2]]]
-  : is_matrix(T,4,4) ? [T*desc[0], desc[1],desc[2]]
+    is_consistent(T, ident(4)) ? [for(t=T) list_set(desc,0,t*desc[0])]
+  : is_matrix(T,4,4) ? list_set(desc,0,T*desc[0])
   : assert(false,"\nT must be a 4×4 matrix or list of 4×4 matrices.");
 
 
@@ -4901,19 +4938,22 @@ function transform_desc(T,desc) =
 
 module desc_copies(transforms)
 {
-  $count=len(transforms);
-  for(i=idx(transforms))
-     let(
-          $idx=i,
-          $is_last = i==len(transforms)-1,
-          $desc = function(i,desc) transform_desc(transforms[i]*matrix_inverse(transforms[i]),default(desc,parent())),
-          $next = function(di=1,desc) transform_desc(select(transforms,i+di)*matrix_inverse(transforms[i]), default(desc,parent())),
-          $prev = function(di=1,desc) transform_desc(select(transforms,i-di)*matrix_inverse(transforms[i]), default(desc,parent()))
-     )
-     multmatrix(transforms[i])children();
-}       
+    req_children($children);
+    $count=len(transforms);
+    /// Capture the distributor frame before applying any copy transform.
+    let(base=$transform, base_inv=matrix_inverse($transform))
+    for(i=idx(transforms))
+        let(
+            $idx=i,
+            $is_last = i==len(transforms)-1,
+            from_inv = matrix_inverse(transforms[i])*base_inv,
+            $desc = function(i,desc) transform_desc(base*transforms[i]*from_inv, default(desc,parent())),
+            $next = function(di=1,desc) transform_desc(base*select(transforms,i+di)*from_inv, default(desc,parent())),
+            $prev = function(di=1,desc) transform_desc(base*select(transforms,i-di)*from_inv, default(desc,parent()))
+        )
+        multmatrix(transforms[i]) children();
+}
 
-           
 // Function: is_description()
 // Synopsis: Check if its argument is a description
 // Topics: Descriptions
@@ -4924,7 +4964,13 @@ module desc_copies(transforms)
 // Arguments:
 //   desc = argument to check
 function is_description(desc) =
-  is_list(desc) && len(desc)==3 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
+  is_list(desc) && len(desc)==4 && is_matrix(desc[0],4,4) && _is_geometry(desc[1])
+  && (is_undef(desc[2]) || is_list(desc[2]))
+  && is_list(desc[3]) && len(desc[3])==5
+  && (is_vector(desc[3][0]) || is_string(desc[3][0]))
+  && is_finite(desc[3][1]) && is_vector(desc[3][2],3)
+  && is_vector(desc[3][3]) && in_list(len(desc[3][3]),[2,3])
+  && is_bool(desc[3][4]);
 
 
 
