@@ -60,6 +60,20 @@ _BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
        echo("Warning: isosurface.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
+/// Interpolation tolerance: This resolves near-degenerate corners (field value within tolerance of
+/// the isovalue) by snapping to the exact corner coordinate. Needed because the marching cubes
+/// algorithm independently interpolates distinct edges, but doesn't identify isosurface
+/// intersections converging on the same voxel corner from different edges. Near-corner
+/// intersections can produce vertices with tiny differences. Therefore the interpolation snaps the
+/// surface to the corner, possibly creating a degenerate triangle that gets cleaned up by
+/// isosurface() as a final step. This is an an empirically-tuned tolerance, not a proof, so a
+/// pathological case with a corner value close enough to the isovalue could still slip through. If
+/// someone later reports a case that still fails, consider adjusting this constant.
+
+_interp_tol0 = 0.0001;
+_interp_tol1 = 1 - _interp_tol0;
+
+
 //////////////////// 3D initializations and support functions ////////////////////
 
 /*
@@ -99,6 +113,7 @@ z changes fastest, then y, then x.
 
 /// Pair of vertex indices for each edge on the voxel
 _MCEdgeVertexIndices = [
+    /*
     [0, 1],
     [1, 3],
     [3, 2],
@@ -111,6 +126,20 @@ _MCEdgeVertexIndices = [
     [1, 5],
     [3, 7],
     [2, 6]
+    */
+    [0,1],  // 0: +Z
+    [1,3],  // 1: +Y
+    [2,3],  // 2: +Z
+    [0,2],  // 3: +Y
+    [4,5],  // 4: +Z
+    [5,7],  // 5: +Y
+    [6,7],  // 6: +Z
+    [4,6],  // 7: +Y
+    [0,4],  // 8: +X
+    [1,5],  // 9: +X
+    [3,7],  // 10: +X
+    [2,6]   // 11: +X
+
 ];
 
 /// For each of the 256 configurations of a marching cube, define a list of triangles, specified as
@@ -690,7 +719,7 @@ _MCFaceVertexIndices = [
 
 /// Pair of vertex indices for each edge on the clip face (using clip face indexing)
 _MCClipEdgeVertexIndices = [
-  [0,1], [1,2], [2,3], [3,0]
+  [0,1], [1,2], [3,2], [0,3]
 ];
 
 /// In keeping with the convention for triangulating an isosurface through a voxel, analogous to the
@@ -792,6 +821,90 @@ _MCClipTriangleTable = [
  [] // 2222 = 80 (×1)
 ];
 
+_MCClipTriangleTable_reverse = [ // reverse-face version of _MCClipTriangleTable
+ [],
+ [[0],[3,0]],
+ [[],[0,4,3,3,4,7]],
+ [[1],[0,1]],
+ [[1,0],[1],[0],[3,1]],
+ [[1],[4,1],[],[7,3,4],[],[3,1,4]],
+ [[],[1,5,0,0,5,4]],
+ [[0],[3,4],[],[1,5,4],[],[3,1,4]],
+ [[],[7,3,1,1,5,7]],
+ [[2],[1,2]],
+ [[0],[3,0],[2],[1,2]],
+ [[],[0,4,3,3,4,7],[2],[1,2]],
+ [[2,1],[2],[1],[0,2]],
+ [[1,0],[3],[1],[3,2],[2,1],[2]],
+ [[2,1],[4],[2],[4,2],[],[7,3,2],[],[4,7,2]],
+ [[2],[5,2],[],[4,0,5],[],[0,2,5]],
+ [[0],[3,4],[2],[5,2],[],[2,5,4],[],[4,3,2]],
+ [[2],[5,2],[],[7,3,2],[],[7,2,5]],
+ [[],[2,6,1,1,6,5]],
+ [[],[2,6,1,1,6,5],[0],[3,0]],
+ [[],[0,4,7],[],[7,3,0],[],[6,5,1],[],[1,2,6]],
+ [[1],[0,5],[],[2,6,5],[],[0,2,5]],
+ [[1,0],[3],[1],[3,5],[],[2,5,3],[],[2,6,5]],
+ [[1],[4,5],[],[7,6,5],[],[3,2,6],[],[7,3,6],[],[5,4,7]],
+ [[],[4,0,2,2,6,4]],
+ [[0],[3,4],[],[6,4,3],[],[3,2,6]],
+ [[],[6,7,2,7,3,2]],
+ [[3],[2,3]],
+ [[0,3],[0],[3],[2,0]],
+ [[3],[2,7],[],[0,4,7],[],[2,0,7]],
+ [[1],[0,1],[3],[2,3]],
+ [[0,3],[2],[0],[2,1],[1,0],[1]],
+ [[3],[2,7],[1],[4,1],[],[1,4,7],[],[7,2,1]],
+ [[],[1,5,0,0,5,4],[3],[2,3]],
+ [[0,3],[2],[0],[2,4],[],[1,4,2],[],[1,5,4]],
+ [[3],[2,7],[],[5,7,2],[],[2,1,5]],
+ [[3,2],[3],[2],[1,3]],
+ [[3,2],[1],[3],[1,0],[0,3],[0]],
+ [[3,2],[1],[3],[1,7],[],[0,7,1],[],[0,4,7]],
+ [[2,1],[0],[2],[0,3],[3,2],[3]],
+ [[2,1,0],[],[3,2,0],[]],
+ [[2,1],[4],[2],[4,7],[3,2],[7]],
+ [[3,2],[5],[3],[5,3],[],[4,0,3],[],[5,4,3]],
+ [[3,2],[5],[3],[5,4],[0,3],[4]],
+ [[2],[5,7],[3,2],[7]],
+ [[3],[6,3],[],[5,1,6],[],[1,3,6]],
+ [[0,3],[6],[0],[6,0],[],[5,1,0],[],[6,5,0]],
+ [[3],[6,7],[],[5,4,7],[],[1,0,4],[],[5,1,4],[],[7,6,5]],
+ [[1],[0,5],[3],[6,3],[],[3,6,5],[],[5,0,3]],
+ [[0,3],[6],[0],[6,5],[1,0],[5]],
+ [[1],[4,5],[3],[6,7],[],[6,5,4],[],[7,6,4]],
+ [[3],[6,3],[],[4,0,3],[],[4,3,6]],
+ [[3],[6,4],[0,3],[4]],
+ [[3],[6,7]],
+ [[],[3,7,2,2,7,6]],
+ [[0],[7,0],[],[6,2,7],[],[2,0,7]],
+ [[],[6,2,0,0,4,6]],
+ [[],[3,7,2,2,7,6],[1],[0,1]],
+ [[1,0],[7],[1],[7,1],[],[6,2,1],[],[7,6,1]],
+ [[1],[4,1],[],[6,2,1],[],[6,1,4]],
+ [[],[1,5,4],[],[4,0,1],[],[7,6,2],[],[2,3,7]],
+ [[0],[7,4],[],[6,5,4],[],[2,1,5],[],[6,2,5],[],[4,7,6]],
+ [[],[5,6,1,6,2,1]],
+ [[2],[1,6],[],[3,7,6],[],[1,3,6]],
+ [[2],[1,6],[0],[7,0],[],[0,7,6],[],[6,1,0]],
+ [[2],[1,6],[],[4,6,1],[],[1,0,4]],
+ [[2,1],[0],[2],[0,6],[],[3,6,0],[],[3,7,6]],
+ [[1,0],[7],[1],[7,6],[2,1],[6]],
+ [[1],[4,6],[2,1],[6]],
+ [[2],[5,6],[],[4,7,6],[],[0,3,7],[],[4,0,7],[],[6,5,4]],
+ [[2],[5,6],[0],[7,4],[],[7,6,5],[],[4,7,5]],
+ [[2],[5,6]],
+ [[],[5,1,3,3,7,5]],
+ [[0],[7,0],[],[5,1,0],[],[5,0,7]],
+ [[],[4,5,0,5,1,0]],
+ [[1],[0,5],[],[7,5,0],[],[0,3,7]],
+ [[0],[7,5],[1,0],[5]],
+ [[1],[4,5]],
+ [[],[7,4,3,4,0,3]],
+ [[0],[7,4]],
+ []
+];
+
 /// _clipfacindex() - private function, called by _clipfacevertices()
 /// Return the index ID of a voxel face depending on the field strength at each corner in relation
 /// to isovalmin and isovalmax.
@@ -858,7 +971,7 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
         for(j=[0:ny]) let(y=v0.y+j*voxsize.y)
             for(k=[0:nz]) let(z=v0.z+k*voxsize.z)
                 let(i1=i+1, j1=j+1, k1=k+1,
-                    cf = [  // cube corner field values clamped to ±1e9
+                    cf = [ // cube corner field values clamped to ±1e9
                         min(1e9,max(-1e9,field[i][j][k])),
                         min(1e9,max(-1e9,field[i][j][k1])),
                         min(1e9,max(-1e9,field[i][j1][k])),
@@ -884,6 +997,7 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
                 ) if(cubefound_isomin || cubefound_isomax || cubefound_outer)
                     [ // return data structure:
                         cubecoord,          // voxel lower coordinate
+                        [i,j,k],            // voxel lower index in field array
                         cubeindex_isomin,   // cube ID for isomin
                         cubeindex_isomax,   // cube ID for isomax
                         cf,                 // clamped voxel corner values
@@ -895,16 +1009,21 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
 /// _isosurface_triangles() - called by isosurface()
 /// Given a list of voxel cubes structures, triangulate the isosurface(s) that intersect each cube
 /// and return a list of triangle vertices.
-function _isosurface_triangles(bbox0, cubelist, voxsize, isovalmin, isovalmax, tritablemin, tritablemax, reverse) = [
+function _isosurface_triangles(bbox0, cubelist, voxsize, isovalmin, isovalmax, reverse) = let(
+        tritablemin = reverse ? _MCTriangleTable_reverse : _MCTriangleTable,
+        tritablemax = reverse ? _MCTriangleTable : _MCTriangleTable_reverse,
+        facetable = reverse ? _MCClipTriangleTable_reverse : _MCClipTriangleTable
+    ) [
     for(cl=cubelist)
         let(
             v = cl[0],          // voxel coord
-            cbidxmin = cl[1],   // cube ID for isomvalmin
-            cbidxmax = cl[2],   // cube ID for isovalmax
-            f = cl[3],          // function values for each cube corner
-            bbfaces = cl[4],    // faces (if any) on the bounding box
-            /*
-            vi = [ round((v.x-bbox0.x)/voxsize.x), round((v.y-bbox0.y)/voxsize.y), round((v.z-bbox0.z)/voxsize.z) ],
+            vi = cl[1],         // voxel index
+            cbidxmin = cl[2],   // cube ID for isomvalmin
+            cbidxmax = cl[3],   // cube ID for isovalmax
+            f = cl[4],          // function values for each cube corner
+            bbfaces = cl[5],    // faces (if any) on the bounding box
+
+            // calculate cube corners the same way as in _isosurface_cubes()
             x0 = bbox0.x + vi.x * voxsize.x,
             x1 = bbox0.x + (vi.x+1) * voxsize.x,
             y0 = bbox0.y + vi.y * voxsize.y,
@@ -916,12 +1035,6 @@ function _isosurface_triangles(bbox0, cubelist, voxsize, isovalmin, isovalmax, t
                 [x0,y1,z0], [x0,y1,z1],
                 [x1,y0,z0], [x1,y0,z1],
                 [x1,y1,z0], [x1,y1,z1]
-            ] */
-            vcube = [           // list of cube corner vertex coordinates
-                v, v+[0,0,voxsize.z],
-                v+[0,voxsize.y,0], v+[0,voxsize.y,voxsize.z],
-                v+[voxsize.x,0,0], v+[voxsize.x,0,voxsize.z],
-                v+[voxsize.x,voxsize.y,0], v+voxsize
             ]
         )
         each [
@@ -932,8 +1045,9 @@ function _isosurface_triangles(bbox0, cubelist, voxsize, isovalmin, isovalmax, t
                     vi1 = edge[1],
                     denom = f[vi1] - f[vi0],
                     u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
-                )
-                vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
+                ) u<_interp_tol0 ? vcube[vi0]
+                : u>_interp_tol1 ? vcube[vi1]
+                : vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
             if(len(tritablemax[cbidxmax])>0) for(ei=tritablemax[cbidxmax]) // max surface
                 let(
                     edge = _MCEdgeVertexIndices[ei],
@@ -941,16 +1055,17 @@ function _isosurface_triangles(bbox0, cubelist, voxsize, isovalmin, isovalmax, t
                     vi1 = edge[1],
                     denom = f[vi1] - f[vi0],
                     u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
-                )
-                vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
+                ) u<_interp_tol0 ? vcube[vi0]
+                : u>_interp_tol1 ? vcube[vi1]
+                : vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
             if(len(bbfaces)>0) for(bf = bbfaces)
-                  each _clipfacevertices(vcube, f, bf, isovalmin, isovalmax, reverse)
+                  each _clipfacevertices(vcube, f, bf, isovalmin, isovalmax, facetable)
         ]
 ];
 
 
 /// Generate triangles for the special case of voxel faces clipped by the bounding box
-function _clipfacevertices(vcube, fld, bbface, isovalmin, isovalmax, reverse) =
+function _clipfacevertices(vcube, fld, bbface, isovalmin, isovalmax, facetable) =
     let(
         vi = _MCFaceVertexIndices[bbface], // four voxel face vertex indices
         vface = [ for(i=vi) vcube[i] ], // four voxel face vertex coordinates
@@ -958,23 +1073,23 @@ function _clipfacevertices(vcube, fld, bbface, isovalmin, isovalmax, reverse) =
         idx = _clipfacindex(f, isovalmin, isovalmax)
     ) [
         if(idx>0 && idx<80)
-            let(tri = _MCClipTriangleTable[idx])
+            let(tri = facetable[idx])
                 for(i=[0:2:len(tri)-1]) let(
                     cpath = tri[i],
-                    epath = tri[i+1],
-                    triangle = [
-                        for(corner=cpath) vface[corner],
-                        for(edge=epath) let(
-                            iso = edge>3 ? isovalmax : isovalmin,
-                            e = edge>3 ? edge-4 : edge,
-                            v0 = e,
-                            v1 = (e+1)%4,
-                            denom = f[v1]-f[v0],
-                            u = abs(denom)<0.00001 ? 0.5 : (iso-f[v0]) / denom
-                        ) vface[v0] + u*(vface[v1]-vface[v0])
-                    ],
-                    trifinal = reverse ? [triangle[2], triangle[1], triangle[0]] : triangle
-            ) each trifinal
+                    epath = tri[i+1]
+                ) each [
+                    for(corner=cpath) vface[corner],
+                    for(edge=epath) let(
+                        iso = edge>3 ? isovalmax : isovalmin,
+                        e = edge>3 ? edge-4 : edge,
+                        v0 = e,
+                        v1 = (e+1)%4,
+                        denom = f[v1]-f[v0],
+                        u = abs(denom)<0.00001 ? 0.5 : (iso-f[v0]) / denom
+                    ) u<_interp_tol0 ? vface[v0]
+                    : u>_interp_tol1 ? vface[v1]
+                    : vface[v0] + u*(vface[v1]-vface[v0])
+                ]
     ];
 
 
@@ -1184,7 +1299,8 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
         for(j=[0:ny]) let(y=v0.y+pixsize.y*j)
             let(i1=i+1, j1=j+1,
                 pf = let(
-                    // clamp corner values to ±1e9, make sure no corner=isovalmin or isovalmax
+                    // clamp corner values to ±1e9, also make sure no corner=isovalmin or isovalmax,
+                    // to avoid creating a contour path that crosses itself
                     f0=let(c=min(1e9,max(-1e9,field[i][j]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
                     f1=let(c=min(1e9,max(-1e9,field[i][j1]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
                     f2=let(c=min(1e9,max(-1e9,field[i1][j]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
@@ -1240,7 +1356,9 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
                         u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
-                      ) vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
+                      ) u<_interp_tol0 ? vpix[vi0]
+                      : u>_interp_tol1 ? vpix[vi1]
+                      : vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
             ],
         for(sp=segtablemax[idxmax]) // max contour
             if(len(sp)>0) [
@@ -1251,7 +1369,9 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
                         u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
-                      ) vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
+                      ) u<_interp_tol0 ? vpix[vi0]
+                      : u>_interp_tol1 ? vpix[vi1]
+                      : vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
             ],
         if(len(bbsides)>0) for(b = bbsides)
             let(
@@ -3472,7 +3592,7 @@ module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reve
 function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
     assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
     assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
-    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
+    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size,3) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
     assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
     assert(is_function(f) ||
         (is_list(f) &&
@@ -3501,9 +3621,7 @@ function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, re
         cubes = _isosurface_cubes(voxsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
             isovalmin=isovalmin, isovalmax=isovalmax, closed=closed),
-        tritablemin = reverse ? _MCTriangleTable_reverse : _MCTriangleTable,
-        tritablemax = reverse ? _MCTriangleTable : _MCTriangleTable_reverse,
-        trianglepoints = _isosurface_triangles(bbox[0], cubes, voxsize, isovalmin, isovalmax, tritablemin, tritablemax, reverse),
+        trianglepoints = _isosurface_triangles(bbox[0], cubes, voxsize, isovalmin, isovalmax, reverse),
         faces = [
             for(i=[0:3:len(trianglepoints)-1])
                 let(i1=i+1, i2=i+2)
