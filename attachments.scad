@@ -4814,7 +4814,7 @@ function desc_dir(desc, dir, anchor) =
 ///   The frame is determined by the anchor's position, direction, and spin. With `reverse=true`, converts from the current
 ///   coordinate system into the anchor frame instead. The default anchor is UP. Intended for 3D rotation and translation;
 ///   the frame construction does not preserve scaling or shear.
-function desc_attach(desc, anchor=UP, p, reverse=false) =
+function _desc_attach(desc, anchor=UP, p, reverse=false) =
     assert(is_description(desc), "\nInvalid description.")
     let(
          T = linear_solve($transform, desc[0]),

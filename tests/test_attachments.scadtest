@@ -168,22 +168,6 @@ module test_desc_dir() {
 test_desc_dir();
 '''
 
-[[test]]
-name = "test_desc_attach"
-script = '''
-include <../std.scad>
-
-module test_desc_attach() {
-    $fn = 8;
-    // desc_attach returns a transformed point; needs a point argument p
-    cyl(r=5, h=10)
-      let(desc = parent()) {
-          pt = desc_attach(desc, anchor=TOP, p=[0,0,0]);
-          assert(is_vector(pt, 3));
-      }
-}
-test_desc_attach();
-'''
 
 [[test]]
 name = "test_desc_dist"
