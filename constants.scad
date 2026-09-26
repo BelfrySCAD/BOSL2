@@ -14,8 +14,8 @@ _BOSL2_CONSTANTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 
 
 
-// a value that the user should never enter randomly;
-// result of `dd if=/dev/random bs=32 count=1 |base64` :
+// a value that the user should never enter randomly.
+// Used internally as a sentinel for an undefined value.                                      
 _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 
 // Section: General Constants
@@ -66,7 +66,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   Take the plug and orient it so that the arrow points down, facing you.
 //   Starting with the hole with the largest number in front of it, insert the small end of the plug into the hole.
 //   If you can insert and remove the small end of the plug from the hole without much force, then try again with the hole with the next smaller number.
-//   Repeat step 5 until you have found the hole with the smallest number that the plug fits into without much force.
+//   Repeat the previous step until you have found the hole with the smallest number that the plug fits into without much force.
 //   The correct hole should hold the plug when the long block is turned upside-down.
 //   The number in front of that hole will indicate the `$slop` value that is ideal for your printer.
 //   Remember to set that slop value in your scripts after you include the BOSL2 library:  ie: `$slop = 0.15;`
@@ -147,16 +147,16 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 // Usage:
 //    slop = get_slop();
 // Description:
-//    Returns the current $slop value, or the default value if the user did not set $slop.
+//    Returns the current $slop value or 0 if `$slop` is not set. 
 //    Always access the `$slop` variable using this function.  
 function get_slop() = is_undef($slop) ? 0 : $slop;
 
 
 // Constant: INCH
-// Synopsis: A constant containing the  number of millimeters in an inch. `25.4`
+// Synopsis: A constant, the  number of millimeters in an inch. `25.4`
 // Topics: Constants
 // Description:
-//   The number of millimeters in an inch.
+//   The exact number of millimeters in an inch.
 // Example(2D):
 //   square(2*INCH, center=true);
 // Example(3D):
@@ -165,7 +165,7 @@ INCH = 25.4;
 
 
 // Constant: IDENT
-// Synopsis: A constant containing the 3D identity transformation matrix.
+// Synopsis: A constant, the 3D identity transformation matrix.
 // SynTags: Mat
 // Topics: Constants, Affine, Matrices, Transforms
 // See Also: ident()
@@ -259,9 +259,10 @@ CENTRE = CENTER;
 //   EDGE(direction,i)
 // Description:
 //   A shorthand for the named anchors "edge0", "top_edge0", "bot_edge0", etc.
-//   Use `EDGE(i)` to get "edge<i>".  Use `EDGE(TOP,i)` to get "top_edge<i>" and
-//   use `EDGE(BOT,i)` to get "bot_edge(i)".  You can also use
-//   `EDGE(CTR,i)` to get "edge<i>" and you can replace TOP or BOT with simply 1 or -1.
+//   Use `EDGE(i)` to get "edge<i>", or use `EDGE(direction,i)` where `direction` may
+//   be `TOP`, `BOT`, or `CENTER`, or the corresponding values `, 1, -1, or 0.  In this case
+//   the returned anchor will select the edge in the given direction:
+//   top_edge<i>", "bot_edge<i>" or "edge<i>".
 
 function EDGE(a,b) =
     is_undef(b) ? str("edge",a)
@@ -303,7 +304,7 @@ SEGMENT = [true,true];
 // Synopsis: A constant for specifying a ray line in various geometry.scad functions.  `[true,false]`
 // Topics: Constants, Lines
 // See Also: SEGMENT, LINE
-// Description: Treat a line as a ray, based at the first point.  [true, false]
+// Description: Treat a line as a ray, based at the first point extending through the second point.  [true, false]
 // Example: Usage with line_intersection:
 //    line = [[-30,0],[30,30]];
 //    pt = [40,25];

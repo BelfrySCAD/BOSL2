@@ -418,7 +418,7 @@ function _lab_finv(t) =
 
 _LAB_XN = 0.95047;  _LAB_YN = 1.0;  _LAB_ZN = 1.08883;   // D65 white point
 
-function rgb_to_xyz(rgb) =
+function _rgb_to_xyz(rgb) =
     let(
         r=_srgb_to_linear(rgb[0]), g=_srgb_to_linear(rgb[1]), b=_srgb_to_linear(rgb[2])
     ) [
@@ -427,18 +427,18 @@ function rgb_to_xyz(rgb) =
         0.0193339*r + 0.1191920*g + 0.9503041*b
     ];
 
-function xyz_to_rgb(xyz) =
+function _xyz_to_rgb(xyz) =
     let(
         r= 3.2404542*xyz[0] - 1.5371385*xyz[1] - 0.4985314*xyz[2],
         g=-0.9692660*xyz[0] + 1.8760108*xyz[1] + 0.0415560*xyz[2],
         b= 0.0556434*xyz[0] - 0.2040259*xyz[1] + 1.0572252*xyz[2]
     ) [_linear_to_srgb(r), _linear_to_srgb(g), _linear_to_srgb(b)];
 
-function xyz_to_lab(xyz) =
+function _xyz_to_lab(xyz) =
     let(fx=_lab_f(xyz[0]/_LAB_XN), fy=_lab_f(xyz[1]/_LAB_YN), fz=_lab_f(xyz[2]/_LAB_ZN))
     [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
 
-function lab_to_xyz(lab) =
+function _lab_to_xyz(lab) =
     let(fy=(lab[0]+16)/116, fx=fy+lab[1]/500, fz=fy-lab[2]/200)
     [_LAB_XN*_lab_finv(fx), _LAB_YN*_lab_finv(fy), _LAB_ZN*_lab_finv(fz)];
 
@@ -446,7 +446,7 @@ function lab_to_xyz(lab) =
 /// Monotonic increasing in chroma along a fixed hue/lightness ray, so it
 /// has exactly one root -- safe input for root_find().
 function _gamut_violation(h,c,l) =
-    let(rgb = xyz_to_rgb(lab_to_xyz([l*100, c*cos(h), c*sin(h)])))
+    let(rgb = _xyz_to_rgb(_lab_to_xyz([l*100, c*cos(h), c*sin(h)])))
     max(max(rgb)-1, -min(rgb));
 
 // Function&Module: lch()
@@ -492,7 +492,7 @@ function lch(l, c, h, a, sat) =
     let(
         calc_rgb = function(l,c,h)
                       let(lab = [l*100, c*cos(h), c*sin(h)])
-                      xyz_to_rgb(lab_to_xyz(lab)),            
+                      _xyz_to_rgb(_lab_to_xyz(lab)),            
         h = posmod(h,360),
         rgb = is_def(sat) ? constrain(calc_rgb(l,sat*max_chroma(l,h),h),0,1)
             : let(
