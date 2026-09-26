@@ -9,6 +9,7 @@ module test__standard_anchors() {
 test__standard_anchors();
 '''
 
+
 [[test]]
 name = "test_is_description"
 script = '''
@@ -19,9 +20,11 @@ module test_is_description() {
     assert(!is_description(42));
     assert(!is_description([1,2,3]));
     assert(!is_description("foo"));
-    // A list of length 3 where [0] is a 4x4 matrix and [1] is a list with a string first element
+    // A list of length 4: [0] is a 4x4 matrix, [1] is a geom-like list with a
+    // string first element, [2] is the parts field (undef when there are none),
+    // and [3] is the [anchor,spin,orient,size,anchor_inside] anchor-info tuple.
     mat = ident(4);
-    valid = [mat, ["name", [0,0,0]], CTR];
+    valid = [mat, ["name", [0,0,0]], undef, [CTR, 0, UP, [0,0,0], false]];
     assert(is_description(valid));
 }
 test_is_description();
@@ -87,6 +90,7 @@ module test_define_part() {
 test_define_part();
 '''
 
+
 [[test]]
 name = "test_parent"
 script = '''
@@ -98,7 +102,7 @@ module test_parent() {
     cyl(r=5, h=10)
       let(desc = parent()) {
           assert(is_list(desc));
-          assert(len(desc) == 3);
+          assert(len(desc) == 4);
       }
 }
 test_parent();
@@ -124,11 +128,12 @@ module test_parent_part() {
     _test_myobj()
       let(desc = parent_part("cap")) {
           assert(is_list(desc));
-          assert(len(desc) == 3);
+          assert(len(desc) == 4);
       }
 }
 test_parent_part();
 '''
+
 
 [[test]]
 name = "test_desc_point"
@@ -209,7 +214,7 @@ module test_transform_desc() {
           T = up(5);
           tdesc = transform_desc(T, desc);
           assert(is_list(tdesc));
-          assert(len(tdesc) == 3);
+          assert(len(tdesc) == 4);
       }
 }
 test_transform_desc();

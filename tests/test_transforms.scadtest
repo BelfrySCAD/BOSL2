@@ -183,6 +183,8 @@ module test_scale() {
         assert_equal(scale(point2d(val)), [[val.x,0,0,0],[0,val.y,0,0],[0,0,1,0],[0,0,0,1]]);
         assert_equal(scale(val), [[val.x,0,0,0],[0,val.y,0,0],[0,0,val.z,0],[0,0,0,1]]);
         assert_equal(scale(val, p=[1,2,3]), v_mul([1,2,3], val));
+        // Matrix form and point-application form must agree.
+        assert_approx(scale(val, p=[1,2,3]), apply(scale(val), [1,2,3]));
         scale(val) union(){};
     }
     assert_equal(scale(3), [[3,0,0,0],[0,3,0,0],[0,0,3,0],[0,0,0,1]]);
@@ -213,9 +215,76 @@ module test_scale() {
     assert_approx(scale(3) * scale(3), scale(9));
     // Verify that module at least doesn't crash.
     scale(-5) scale(5) union(){};
+
+
+    // ---- dir=: scale by scalar v along an arbitrary direction, identity
+    // in the perpendicular subspace. ----
+
+    // An axis-aligned dir should reduce exactly to a non-uniform scale()
+    // along that axis, both as a matrix and applied to points.
+    assert_approx(scale(2, dir=[1,0,0]), scale([2,1,1]));
+    assert_approx(scale(2, dir=[0,1,0]), scale([1,2,1]));
+    assert_approx(scale(2, dir=[0,0,1]), scale([1,1,2]));
+    assert_approx(scale(2, dir=[1,0,0], p=[3,4,5]), scale([2,1,1], p=[3,4,5]));
+    assert_approx(scale(2, dir=[0,1,0], p=[3,4,5]), scale([1,2,1], p=[3,4,5]));
+    assert_approx(scale(2, dir=[0,0,1], p=[3,4,5]), scale([1,1,2], p=[3,4,5]));
+
+    // Per the docs, only the direction of `dir` matters: its sign and
+    // magnitude are irrelevant.
+    d = [1,2,-3];
+    pt = [5,-1,4];
+    assert_approx(scale(2, dir=d, p=pt), scale(2, dir=5*d, p=pt));
+    assert_approx(scale(2, dir=d, p=pt), scale(2, dir=-d, p=pt));
+    assert_approx(scale(2, dir=d, p=pt), scale(2, dir=-0.1*d, p=pt));
+
+    // A point lying exactly along dir is scaled by v, in full, regardless
+    // of dir's own length -- this holds for any direction, not just the
+    // coordinate axes.
+    dirs = [[1,0,0],[0,1,0],[1,1,1],[2,-1,3],[-3,5,1]];
+    for (v = [2, 0.5, -3])
+        for (dv = dirs)
+            for (t = [-2, 0.7, 3])
+                assert_approx(scale(v, dir=dv, p=t*dv), v*t*dv);
+
+    // A point perpendicular to dir (zero dot product) is left unchanged,
+    // for several (direction, perpendicular point) pairs.
+    perp_cases = [
+        [[1,0,0], [0,3,-2]],
+        [[0,1,0], [5,0,7]],
+        [[1,1,1], [1,-1,0]],
+        [[2,-1,3], [1,2,0]],
+    ];
+    for (c = perp_cases) {
+        assert(approx(c[0]*c[1], 0), "test setup: point must be perpendicular to dir");
+        assert_approx(scale(2, dir=c[0], p=c[1]), c[1]);
+        assert_approx(scale(-4, dir=c[0], p=c[1]), c[1]);
+    }
+
+    // dir works in 2D too.
+    assert_approx(scale(3, dir=[1,1], p=[6,6]), [18,18]);   // parallel to dir
+    assert_approx(scale(3, dir=[1,1], p=[1,-1]), [1,-1]);   // perpendicular to dir
+
+    // dir combined with cp: scaling along dir relative to a center point
+    // cp should match shifting to cp, scaling along dir about the origin,
+    // and shifting back.
+    cp = [2,-1,3];
+    assert_approx(
+        scale(2, dir=[1,1,0], cp=cp, p=pt),
+        move(cp, p=scale(2, dir=[1,1,0], p=move(-cp, p=pt)))
+    );
+
+    // Matrix form and point-application form agree for dir (with and
+    // without cp).
+    assert_approx(scale(2, dir=d, p=pt), apply(scale(2, dir=d), pt));
+    assert_approx(scale(2, dir=d, cp=cp, p=pt), apply(scale(2, dir=d, cp=cp), pt));
+
+    // Module form with dir at least doesn't crash.
+    scale(2, dir=[1,1,0]) union(){};
+    scale(-3, dir=[0,1,1], cp=[1,0,0]) union(){};
 }
 test_scale();
 '''
+
 
 [[test]]
 name = "test_xscale"
