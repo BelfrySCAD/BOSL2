@@ -18,9 +18,6 @@ _BOSL2_REGIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
        echo("Warning: regions.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
-// CommonCode:
-//   include <BOSL2/rounding.scad>
-
 
 // Section: Regions
 //   A {{region}} is a list of polygons meeting these conditions:

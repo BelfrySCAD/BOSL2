@@ -13,7 +13,6 @@ _BOSL2_BOTTLECAPS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 
 include <threading.scad>
 include <structs.scad>
-include <rounding.scad>
 
 // Section: PCO-1810 Bottle Threading
 //   The PCO (Plastic Closure Only) 1810 is a bottle neck standard for water and drink bottles typically ranging from 250 ml to 2 L.
