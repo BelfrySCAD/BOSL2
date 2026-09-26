@@ -356,8 +356,8 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   By default the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
 //   attachments to the ellipse will retain their dimensions, whereas scaling a circle with attachments will also scale the attachments.
 //   If you set `uniform` to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  The `circum` option
-//   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  Note that
-//   you cannot gives `circum=true` and `uniform=true`.
+//   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  You cannot
+//   combine `circum=true` and `uniform=true`.
 //   .
 //   When the `realign` parameter is false the shape appears with its first vertex on the X+ axis and points moving counterclockwise from there.
 //   If `realign` is true then the midpoint of an edge is on the X+ axis and the first point of the polygon is below the X+ axis.  By default,
