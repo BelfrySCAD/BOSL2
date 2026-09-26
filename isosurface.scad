@@ -60,6 +60,9 @@ _BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
        echo("Warning: isosurface.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
+
+//////////////////// 3D initializations and support functions ////////////////////
+
 /// Interpolation tolerance: This resolves near-degenerate corners (field value within tolerance of
 /// the isovalue) by snapping to the exact corner coordinate. Needed because the marching cubes
 /// algorithm independently interpolates distinct edges, but doesn't identify isosurface
@@ -73,21 +76,27 @@ _BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 _interp_tol0 = 0.0001;
 _interp_tol1 = 1 - _interp_tol0;
 
-
-//////////////////// 3D initializations and support functions ////////////////////
-
 /*
 Lookup Tables for Transvoxel's Modified Marching Cubes
 
 Adapted for OpenSCAD from https://gist.github.com/dwilliamson/72c60fcd287a94867b4334b42a7888ad
 
-Unlike the original paper (Marching Cubes: A High Resolution 3D Surface Construction Algorithm), these tables provide a topology produces a closed mesh, avoiding the usual marching-cubes ambiguities.
+Unlike the original paper (Marching Cubes: A High Resolution 3D Surface Construction Algorithm),
+these tables provide a topology produces a closed mesh, avoiding the usual marching-cubes
+ambiguities.
 
-Rotations are prioritized over inversions so that 3 of the 6 cases containing ambiguous faces are never added. 3 extra cases are added as a post-process, overriding inversions through custom-built rotations to eliminate the remaining ambiguities.
+Rotations are prioritized over inversions so that 3 of the 6 cases containing ambiguous faces are
+never added. 3 extra cases are added as a post-process, overriding inversions through custom-built
+rotations to eliminate the remaining ambiguities.
 
-The cube index determines the sequence of edges to split. The index ranges from 0 to 255, representing all possible combinations of the 8 corners of the cube being greater or less than the isosurface threshold.
+The cube index determines the sequence of edges to split. The index ranges from 0 to 255,
+representing all possible combinations of the 8 corners of the cube being greater or less than the
+isosurface threshold.
 
-For example, a cube with corners 2, 3, and 7 greater than the threshold isovalue would have the index 10000110, an 8-bit binary number with bits 2, 3, and 7 set to 1, corresponding to decimal index 134. After determining the cube's index value this way, the triangulation order is looked up in a table.
+For example, a cube with corners 2, 3, and 7 greater than the threshold isovalue would have the
+index 10000110, an 8-bit binary number with bits 2, 3, and 7 set to 1, corresponding to decimal
+index 134. After determining the cube's index value this way, the triangulation order is looked up
+in a table.
 
 Axes are
      z
@@ -682,7 +691,8 @@ function _cubeindex(f, isoval) =
 -----------------------------------------------------------
 Bounding box clipping support:
 
-Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box bounding all voxels.
+Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box
+bounding all voxels.
 
                     4(back)
                3 +----------+ 7
@@ -695,7 +705,9 @@ Vertex and face layout for triangulating one voxel face that corrsesponds to a s
             0 +----------+ 4
                 1(front)
 
-The clip face uses different indexing. After vertex coordinates and function values are assigned to each corner from the original voxel based on _MCFaceVertexIndices below, this is the clip face diagram:
+The clip face uses different indexing. After vertex coordinates and function values are assigned to
+each corner from the original voxel based on _MCFaceVertexIndices below, this is the clip face
+diagram:
 
 (1)           (2)
    +----1----+
@@ -1098,7 +1110,8 @@ function _clipfacevertices(vcube, fld, bbface, isovalmin, isovalmax, facetable) 
 /*
 "Marching triangles" algorithm
 
-A square pixel has 5 vertices, four on each corner and one in the center. Vertices and edges are numbered as follows:
+A square pixel has 5 vertices, four on each corner and one in the center. Vertices and edges are
+numbered as follows:
 
 (1)                 (3)
    +-------1-------+
@@ -1112,9 +1125,11 @@ A square pixel has 5 vertices, four on each corner and one in the center. Vertic
    +-------3-------+
 (0)                 (2)
 
-The vertices are assigned a value 1 if greater than or equal to the isovalue, or 0 if less than the isovalue.
+The vertices are assigned a value 1 if greater than or equal to the isovalue, or 0 if less than the
+isovalue.
 
-These ones and zeros, when arranged as a binary number with vertex (0) being the least significant bit and vertex (4) the most significant, forms an address ranging from 0 to 31.
+These ones and zeros, when arranged as a binary number with vertex (0) being the least significant
+bit and vertex (4) the most significant, forms an address ranging from 0 to 31.
 
 This address is used as an index in _MTriSegmentTable to get the order of edges that are crossed.
 */
@@ -1131,7 +1146,8 @@ _MTEdgeVertexIndices = [
     [2, 4]
 ];
 
-// edge order for drawing a contour (or two contours) through a pixel, for all 32 possibilities of vertices being higher or lower than isovalue
+// edge order for drawing a contour (or two contours) through a pixel, for all 32 possibilities of
+vertices being higher or lower than isovalue
 _MTriSegmentTable = [ // marching triangle segment table
     [[], []],            // 0 - 00000
     [[0,4,3], []],       // 1 - 00001
@@ -1262,7 +1278,7 @@ function _mctrindex(f, isoval) =
     (f[3] >= isoval ? 8 : 0) +
     (is_def(f[4]) && f[4] >= isoval ? 16 : 0);
 
-/// return an array of edgee indices in _MTEdgeVertexIndices if the pixel at coordinate pc
+/// return an array of edge indices in _MTEdgeVertexIndices if the pixel at coordinate pc
 /// corresponds to the bounding box.
 function _bbox_sides(pc, pixsize, bbox) = let(
     a = v_abs(pc-bbox[0]),
@@ -1347,6 +1363,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
         bbsides = px[4],
         vpix = [ v, v+[0,pxsize.y], v+[pxsize.x,0], v+[pxsize.x,pxsize.y], v+0.5*[pxsize.x,pxsize.y] ]
     ) each [
+        // in 2D we don't snap the interpolation to grid corners, to avoid a crossing contour
         for(sp=segtablemin[idxmin]) // min contour
             if(len(sp)>0) [
                 for(p=sp)
@@ -1356,9 +1373,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
                         u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
-                      ) u<_interp_tol0 ? vpix[vi0]
-                      : u>_interp_tol1 ? vpix[vi1]
-                      : vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
+                      ) vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
             ],
         for(sp=segtablemax[idxmax]) // max contour
             if(len(sp)>0) [
@@ -1369,9 +1384,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
                         u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
-                      ) u<_interp_tol0 ? vpix[vi0]
-                      : u>_interp_tol1 ? vpix[vi1]
-                      : vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
+                      ) vpix[vi0] + u*(vpix[vi1]-vpix[vi0])
             ],
         if(len(bbsides)>0) for(b = bbsides)
             let(
