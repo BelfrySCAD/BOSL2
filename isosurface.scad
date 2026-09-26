@@ -1147,7 +1147,7 @@ _MTEdgeVertexIndices = [
 ];
 
 // edge order for drawing a contour (or two contours) through a pixel, for all 32 possibilities of
-vertices being higher or lower than isovalue
+// vertices being higher or lower than isovalue
 _MTriSegmentTable = [ // marching triangle segment table
     [[], []],            // 0 - 00000
     [[0,4,3], []],       // 1 - 00001
