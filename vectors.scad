@@ -51,7 +51,7 @@ function is_vector(v, length, zero, all_nonzero=false, eps=_EPSILON) =
     is_list(v) && len(v)>0 && []==[for(vi=v) if(!is_finite(vi)) 0] 
     && (is_undef(length) || (assert(is_num(length))len(v)==length))
     && (is_undef(zero) || ((norm(v) >= eps) == !zero))
-    && (!all_nonzero || all_nonzero(v)) ;
+    && (!all_nonzero || all_nonzero(v,eps)) ;
 
 
 
@@ -184,6 +184,9 @@ function v_round(v) =
 // Example:
 //   x = v_lookup(4.5, [[4, [3,4,5]], [5, [5,6,7]]]);  // Returns: [4,5,6]
 function v_lookup(x, v) =
+    assert(is_list(v) && len(v)>0, "\nSecond parameter, v, is not a list")
+    assert(is_list(v[0]))
+    assert(is_finite(x))
     is_num(v[0][1])? lookup(x,v) :
     let(
         i = lookup(x, [for (i=idx(v)) [v[i].x,i]]),
@@ -376,7 +379,9 @@ function vector_bisect(v1,v2) =
 //   stroke([[0,0],vector_perp(v,w)], endcap2="arrow2", color="blue");
 function vector_perp(v,w) =
     assert(is_vector(v) && is_vector(w) && len(v)==len(w), "\nInvalid or mismatched inputs")
-    w - w*v*v/(v*v);
+    let(length=v*v)
+    assert(!approx(len,0), "\nZero length reference vector")
+    w - w*v*v/length;
 
 
 // Section: Vector Searching
@@ -700,7 +705,8 @@ function pointlist_bounds(pts) =
 // Description:
 //   Given a list of 2D or 3D points, or a VNF structure, rescale and position one or more of the coordinates
 //   to fit within specified ranges. At least one range (`x`, `y`, or `z`) must be specified. A normal use case
-//   for this function is to rescale a VNF texture to fit within `0 <= z <= 1`.
+//   for this function is to rescale a VNF texture to fit within `0 <= z <= 1`.  The data along directions
+//   that you do not specify is not changed from the input.  
 //   .
 //   While a range is typically `[min_value,max_value]`, the minimum and maximum values can be reversed,
 //   resulting in new coordinates being a rescaled mirror image of the original coordinates.
@@ -709,7 +715,7 @@ function pointlist_bounds(pts) =
 //   x = `[min,max]` of rescaled x coordinates. Default: undef
 //   y = `[min,max]` of rescaled y coordinates. Default: undef
 //   z = `[min,max]` of rescaled z coordinates. Default: undef
-// Example(2D): A 2D bezier path (red) rescaled (blue) to fit in a square box centered on the origin.
+// Example(2D): A 2D bezier path (red) rescaled (blue) to fit in a square.
 //   bez = [
 //       [10,60], [-5,30],
 //       [20,60], [50,50], [100,30],
@@ -720,11 +726,12 @@ function pointlist_bounds(pts) =
 //   stroke(path, width=2, color="red");
 //   stroke(square(40), width=1, closed=true);
 //   stroke(newpath, width=2, color="blue");
-// Example(3D): A prismoid (left) is rescaled to fit new x and z bounds. The z bounds minimum and maximum values are reversed, resulting in the new object on the right having inverted z coordinates.
+// Example(3D): A prismoid (left) is rescaled to fit new x and z bounds. The z bounds minimum and maximum values are reversed, resulting in the new object on the right having inverted z coordinates.  The y bounds are not given, so they do not change.  
 //   vnf = prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 //   vnf_boxed = fit_to_box(vnf, x=[30,55], z=[5,-15]);
 //   vnf_polyhedron(vnf);
 //   vnf_polyhedron(vnf_boxed);
+//   % cuboid(p1=[30,-15,-15],p2=[55,15,5]);
 function fit_to_box(pts, x, y, z) =
     assert(is_path(pts) || is_vnf(pts), "\npts must be a valid 2D or 3D path, or a VNF structure.")
     assert(any_defined([x,y,z]), "\nAt least one [min,max] range x, y, or z must be defined.")
@@ -746,9 +753,9 @@ function fit_to_box(pts, x, y, z) =
         yscale = whichdim.y ? (y[1]-y[0]) / (bounds[1][1]-ymin) : 1,
         zscale = whichdim.z ? (z[1]-z[0]) / (bounds[1][2]-zmin) : 1,
         // new offsets
-        xo = whichdim.x ? x[0] : 0,
-        yo = whichdim.y ? y[0] : 0,
-        zo = whichdim.z ? z[0] : 0,
+        xo = whichdim.x ? x[0] : xmin,
+        yo = whichdim.y ? y[0] : ymin,
+        zo = whichdim.z ? z[0] : zmin,
         // shift original min to 0, rescale to new scale, shift back to new min
         newpts = move(dim>2 ? [xo,yo,zo] : [xo,yo],
                       scale(dim>2 ? [xscale,yscale,zscale] : [xscale,yscale],
