@@ -22,7 +22,7 @@ $tag = "";
 $save_tag = undef;
 $tag_prefix = "";
 $overlap = 0;
-$color = "default";
+$color = ["default",undef];
 $save_color = undef;         // Saved color to revert back for children
 
 $anchor_override = undef;
@@ -2482,7 +2482,7 @@ module attachable(
         $change_anchors = undef;
         if (!$hide_this && (expose_tags || _is_shown())){
             if (!keep_color)
-                _color($color)
+                _color($color[0],$color[1])
                   _show_ghost() children(0);
             else {
                 $save_color=undef; // Force color_this() color in effect to persist for the entire object
@@ -4016,9 +4016,9 @@ module expose_anchors(opacity=0.2) {
     show_only("anchor-arrow")
         children();
     hide("anchor-arrow")
-        color(is_undef($color) || $color=="default" ? [0,0,0] :
-              is_string($color) ? $color
-                                : point3d($color),
+        color(is_undef($color) || $color==["default",undef] ? [0,0,0] :
+              is_string($color[0]) ? $color[0]
+                                : point3d($color[0]),
               opacity)
             children();
 }
