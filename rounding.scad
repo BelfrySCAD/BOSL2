@@ -4754,7 +4754,7 @@ function _extrusion_isect(geom,line,bounded,flip) =
 function _find_center_anchor(desc1, desc2, anchor2, flip) =
   let(
        pt2 = desc_point(desc2, anchor=anchor2),
-       line = [CTR,desc_attach(desc1,CTR,p=pt2,reverse=true)],
+       line = [CTR,_desc_attach(desc1,CTR,p=pt2,reverse=true)],
        geom = desc1[1]
   )
     geom[0]=="prismoid" ? _prismoid_isect(geom, line, RAY, flip)

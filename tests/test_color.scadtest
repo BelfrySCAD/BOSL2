@@ -54,6 +54,77 @@ module test_hsv() {
 test_hsv();
 '''
 
+
+[[test]]
+name = "test_lch"
+script = '''
+include <../std.scad>
+
+assert_approx(lch(l=0, c=0, h=0), [0, 0, 0]);
+
+assert(approx(lch(l=1, c=0, h=137), [1, 1, 1],1e-6));
+
+// Hue is irrelevant when chroma is zero.
+assert_approx(lch(l=.5, c=0, h=0),
+              lch(l=.5, c=0, h=137));
+
+// Hue is periodic.
+assert_approx(lch(l=.5, c=40, h=0),
+              lch(l=.5, c=40, h=360));
+
+// sat=1 gives the maximum in-gamut chroma.
+assert_approx(
+    lch(l=.5, sat=1, h=120),
+    lch(l=.5, c=max_chroma(.5,120), h=120)
+);
+'''
+
+
+[[test]]
+name = "test_lch"
+expect_success = false
+script = '''
+include <../std.scad>
+
+lch(l=.5, c=max_chroma(.5,120)*1.01, h=120);
+
+'''
+
+
+[[test]]
+name = "test_max_chroma"
+script = '''
+include <../std.scad>
+
+
+// max_chroma()
+assert_approx(max_chroma(0, 0), 0);
+
+assert_approx(max_chroma(1, 137), 0);
+
+// There is nonzero chroma available in the interior of the gamut.
+assert(max_chroma(.5, 0) > 0);
+
+// The computed maximum lies on the gamut boundary.
+let(
+    l = .5,
+    h = 0,
+    c = max_chroma(l,h)
+)
+assert_approx(_gamut_violation(h,c,l), 0);
+
+// Slightly below the maximum must remain in gamut.
+let(
+    l = .5,
+    h = 120,
+    c = max_chroma(l,h)
+)
+assert(_gamut_violation(h,c*.999,l) <= 0);
+'''
+
+
+
+
 [[test]]
 name = "test_highlight"
 expect_success = false
