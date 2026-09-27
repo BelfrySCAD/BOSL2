@@ -119,7 +119,7 @@ function all_nonzero(x, eps=_EPSILON) =
 //   g = all_positive([3,-1,2]);  // Returns: false.
 function all_positive(x,eps=0) =
     is_finite(x)? x>eps :
-    is_vector(x) && [for (xx=x) if(xx<=0) 1] == [];
+    is_vector(x) && [for (xx=x) if(xx<=eps) 1] == [];
 
 
 // Function: all_negative()
@@ -172,7 +172,7 @@ function all_negative(x, eps=0) =
 //   g = all_nonpositive([3,-1,2]);  // Returns: false.
 //   h = all_nonpositive([-3,-1,-2]);  // Returns: true.
 function all_nonpositive(x,eps=0) =
-    is_num(x)? x<=eps :
+    is_finite(x)? x<=eps :
     is_vector(x) && [for (xx=x) if(xx>eps) 1] == []; 
 
 
@@ -200,7 +200,7 @@ function all_nonpositive(x,eps=0) =
 //   h = all_nonnegative([3,-1,2]);  // Returns: false.
 //   i = all_nonnegative([-3,-1,-2]);  // Returns: false.
 function all_nonnegative(x,eps=0) =
-    is_num(x)? x>=-eps :
+    is_finite(x)? x>=-eps :
     is_vector(x) && [for (xx=x) if(xx<-eps) 1] == [];
 
 
@@ -290,8 +290,8 @@ function is_decreasing(list,strict=false) =
 function _type_num(x) =
     is_undef(x)?  0 :
     is_bool(x)?   1 :
-    is_num(x)?    2 :
     is_nan(x)?    3 :
+    is_num(x)?    2 :
     is_string(x)? 4 :
     is_list(x)?   5 : 6;
 
@@ -364,7 +364,7 @@ function compare_lists(a, b) =
 //   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
 //   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
 function min_index(vals, all=false) =
-    assert( is_vector(vals), "Invalid or list of numbers.")
+    assert( is_vector(vals), "Invalid or empty list of numbers.")
     all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
 
@@ -408,7 +408,7 @@ function max_index(vals, all=false) =
 //   ---
 //   start = The index to start searching from.  Default: 0
 //   all = If true, returns a list of all matching item indices.  Default: false
-//   eps = The maximum allowed floating point rounding error for numeric comparisons.  Default: 1e-9 (1e-9)
+//   eps = The maximum allowed floating point rounding error for numeric comparisons.  Default: 1e-9
 // Example:
 //   find_approx(3,[4,5,3.01,2,2.99], eps=0.1);  // Returns 2
 //   find_approx(9,[4,5,3.01,2,2.99], eps=0.1);  // Returns undef
@@ -478,9 +478,9 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
 //   closed = If true, drops trailing indices if their list value matches the list value corresponding to the first index. Default: false
 //   eps = The maximum difference to allow between numbers or vectors.
 // Example:
-//   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
-//   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
-//   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
+//   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,1,2,0,1]
+//   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,1,2,0]
+//   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [1,3,4]
 // Example: Remove duplicates from `a` and then remove corresponding points from `b`.
 //   a = [1, 1, 2, 3, 4, 4, 5, 5, 5];
 //   b = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
@@ -529,7 +529,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
 //   1 are returned unchanged.  
 // Arguments:
 //   list = list to unwrap
-//   eps = epsilon for comparison.  Default: 1e-9 (1e-9)
+//   eps = epsilon for comparison.  Default: 1e-9
 
 function list_wrap(list, eps=_EPSILON) =
     assert(is_list(list))
@@ -959,7 +959,7 @@ function group_sort(list, idx) =
 //   groups = A list of integer group index numbers.
 //   values = A list of values to sort into groups.
 // Example:
-//   groups = group_data([1,2,0], ["A","B","C"]);  // Returns [["B"],["C"],["A"]]
+//   groups = group_data([1,2,0], ["A","B","C"]);  // Returns [["C"],["A"],["B"]]
 // Example:
 //   groups = group_data([1,3,1], ["A","B","C"]);  // Returns [[],["A","C"],[],["B"]]
 function group_data(groups, values) =

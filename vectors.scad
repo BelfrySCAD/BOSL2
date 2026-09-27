@@ -380,7 +380,7 @@ function vector_bisect(v1,v2) =
 function vector_perp(v,w) =
     assert(is_vector(v) && is_vector(w) && len(v)==len(w), "\nInvalid or mismatched inputs")
     let(length=v*v)
-    assert(!approx(len,0), "\nZero length reference vector")
+    assert(!approx(length,0), "\nZero length reference vector")
     w - w*v*v/length;
 
 
