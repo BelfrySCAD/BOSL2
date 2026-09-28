@@ -4014,7 +4014,7 @@ module anchor_arrow2d(s=10, color=[0.333,0.333,1], $tag="anchor-arrow") {
 // Example(FlatSpin,VPD=333):
 //   expose_anchors()
 //     cube(50, center=true) show_anchors();
-// Example(FlatSpin,VPD=333):
+// Example(FlatSpin,VPD=333):  Changing the color of children, while anchor arrows stay their normal color.  
 //   recolor("green")
 //     expose_anchors()
 //       cube(50, center=true) show_anchors();

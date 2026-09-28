@@ -56,7 +56,10 @@ function _color_pair(c, a) =
 //   Omitting `c`, or giving `c="default"` sets the color to the default for your color scheme.
 //   .
 //   The color can be an RGB vector with values between 0 and 1, or an RGBA vector that includes an alpha component.
-//   The color can also be a string, either a standard web color name, or in development snapshots after July 2026 support [xkcd colors](https://xkcd.com/color/rgb/) with the format `"xkcd:<name>"`  
+//   You can also give the name (as a string) for a standard
+//   web [color name](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/openscad_colors.html), and
+//   in development snapshots after July 2026 you
+//   can use [xkcd colors](https://xkcd.com/color/rgb/) with the format `"xkcd:<name>"`.  
 // Arguments:
 //   c = Color name, RGB vector, or RGBA vector. Default: the default color in your color scheme.
 //   a = Alpha from 0 (transparent) to 1 (opaque), overriding embedded alpha when supplied. Default: preserve embedded alpha, otherwise opaque. Ignored for the default color.
