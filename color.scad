@@ -1,21 +1,18 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: color.scad
-//   In OpenSCAD the `color()` module sets the color immutably for all children:
-//   any `color()` modules appearing below are ignored.  This is both inflexible
-//   and somewhat unintuitive. In BOSL2 {{recolor()}} replaces `color()` for
-//   use with attachable objects.  
-//   If you need to impose immutable color, it has an option to do that, but
-//   by default it colors objects in such a way that you can change the colors
-//   of children when desired.  The {{color_this()}} module can 
-//   change the color at just one level, which children switching back to
-//   the previous color.  
+//   In OpenSCAD the `color()` module sets the color immutably for its geometry subtree:
+//   nested `color()` calls cannot override it. In BOSL2, {{recolor()}} provides mutable
+//   coloring for attachable objects, so that descendants can change their colors.
+//   Use `mutable=false` when an immutable color is needed, including for geometry
+//   that is not attachable. The {{color_this()}} module changes color at just one
+//   level, with descendants reverting to the previous color and alpha.
 //   .
-//   The `rainbow()` module for gives its children each a different color (e.g.
-//   for debugging), and also provided are conversions from HSV, HSL and LCh. 
+//   The {{rainbow()}} module assigns different colors to items in a list, for example
+//   for debugging. This file also provides HSL, HSV, and D65 CIE LCh conversions.
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
-// FileSummary: HSV and HSL conversion, color multiple objects, change color of objects
+// FileSummary: HSL, HSV, and LCh conversion; mutable colors and object modifiers.
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
@@ -25,29 +22,48 @@ _BOSL2_COLOR = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 
 use <builtins.scad>
 
+/// Validate the color/alpha pair and canonicalize the default-color sentinel.
+/// There is no explicit RGB value to which alpha can be applied for the default color.
+function _color_pair(c, a) =
+    assert(is_undef(c) || is_string(c) || is_vector(c,3) || is_vector(c,4),
+           "\nc must be a color name, an RGB or RGBA vector, or undef.")
+    assert(is_undef(a) || (is_finite(a) && a>=0 && a<=1),
+           "\na must be a finite number between 0 and 1.")
+    let(c=default(c,"default"))
+    [c, c=="default" ? undef : a];
+
 // Section: Coloring Objects
 
 // Module: recolor()
-// Synopsis:  Sets the color for attachable children and their descendants.
+// Synopsis: Sets the color for attachable children and their descendants.
 // SynTags: Trans
-// Topics: Attachments
-// See Also: color_this(), hsl(), hsv()
+// Topics: Attachments, Colors
+// See Also: color_this(), hsl(), hsv(), lch()
 // Usage:
-//   recolor([c],[a],[mutable=]) CHILDREN;
+//   recolor([c], [a], [mutable=]) CHILDREN;
 // Description:
-//   Sets the color for attachable children and their descendants, down until another {{recolor()}}
-//   or {{color_this()}}.  This only works with attachables and you cannot have any color() modules
-//   above it in any parents, only other {{recolor()}} or {{color_this()}} modules.  This works by
-//   setting the special `$color` variable, which attachable objects make use of to set the color.
-//   As with `color()`, if you specify the alpha value with `a` that overrides any alpha given in the `c` vector.                                    
+//   This is the BOSL2 replacement for `color()`.  Unlike `color()` it enables children
+//   to change their color even when a parent has set a color.  
+//   With `mutable=true` (the default) it sets the color for attachable children and their descendants
+//   until another {{recolor()}} or {{color_this()}} changes it. This sets the special
+//   `$color` variable, which attachable objects use to apply the color. 
+//   .
+//   With `mutable=false` it behaves like the native module and applies an immutable color to all of the children and descendants.  
+//   No operation performed by a child can override that color.  
+//   .
+//   A separate `a` specifies alpha and overrides alpha given in an RGBA vector. 
+//   Each call replaces the alpha rather than multiplying alpha values.
+//   Omitting `c`, or giving `c="default"` sets the color to the default for your color scheme.
+//   .
+//   The color can be an RGB vector with values between 0 and 1, or an RGBA vector that includes an alpha component.
+//   The color can also be a string, either a standard web color name, or in development snapshots after July 2026 support [xkcd colors](https://xkcd.com/color/rgb/) with the format `"xkcd:<name>"`  
 // Arguments:
-//   c = Color name or RGBA vector.  Default: The default color in your color scheme.
-//   a = Alpha value. Overrides any alpha specified in `c`.  Default: 1
+//   c = Color name, RGB vector, or RGBA vector. Default: the default color in your color scheme.
+//   a = Alpha from 0 (transparent) to 1 (opaque), overriding embedded alpha when supplied. Default: preserve embedded alpha, otherwise opaque. Ignored for the default color.
 //   ---
-//   mutable = If false set color using `color()` so that the color can never change again for any child.  Default: False                                    
+//   mutable = If true, use mutable attachable coloring. If false, apply immutable coloring to the complete child geometry. Default: true
 // Side Effects:
-//   Changes the value of `$color`.
-//   Sets the color of child attachments.
+//   Sets `$color` to the color/alpha pair used by attachable objects.
 // Example:
 //   cuboid([10,10,5])
 //     recolor("green")attach(TOP,BOT) cuboid([9,9,4.5])
@@ -59,30 +75,33 @@ use <builtins.scad>
 module recolor(c="default", a=undef, mutable=true)
 {
     req_children($children);
-    if (mutable){
-      $color=[c,a];
-      children();
-    } else color(c,a)children();
+    assert(is_bool(mutable), "\nmutable must be a boolean.");
+    $color = _color_pair(c,a);
+    if (mutable) children();
+    else _color($color[0],$color[1]) children();
 }
 
 
 // Module: color_this()
-// Synopsis: Sets the color for children at the current level only.
+// Synopsis: Sets the color for attachable children at the current level only.
 // SynTags: Trans
-// Topics: Attachments
-// See Also: recolor(), hsl(), hsv()
+// Topics: Attachments, Colors
+// See Also: recolor(), hsl(), hsv(), lch()
 // Usage:
-//   color_this([c]) CHILDREN;
+//   color_this([c], [a]) CHILDREN;
 // Description:
-//   Sets the color for children at one level, reverting to the previous color for further descendants.
-//   This works only with attachables and you cannot have any color() modules above it in any parents,
-//   only recolor() or other color_this() modules.  This works using the `$color` and `$save_color` variables,
-//   which attachable objects make use of to set the color. 
+//   Sets the color for attachable children at one level, reverting to the previous
+//   color and alpha for their descendants. This uses `$color` and
+//   `$save_color`, which attachable objects interpret. An enclosing native `color()`
+//   or immutable {{recolor()}} cannot be overridden.
+//   .
+//   As with {{recolor()}}, a separate `a` overrides alpha embedded in `c`.  
+//   Omitting the color or giving `c="default"` selects the default color for your OpenSCAD color scheme.  
 // Arguments:
-//   c = Color name or RGBA vector.  Default: the default color in your color scheme
+//   c = Color name, RGB vector, or RGBA vector. Default: the default color in your color scheme.
+//   a = Alpha from 0 (transparent) to 1 (opaque), overriding any alpha specified in the `c` vector
 // Side Effects:
-//   Changes the value of `$color` and `$save_color`.
-//   Sets the color of child attachments.
+//   Sets `$color` and saves the previous color/alpha pair in `$save_color`.
 // Example:
 //   cuboid([10,10,5])
 //     color_this("green")attach(TOP,BOT) cuboid([9,9,4.5])
@@ -91,12 +110,12 @@ module recolor(c="default", a=undef, mutable=true)
 //           attach(TOP,BOT) cuboid([6,6,3])
 //             color_this("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
 //               attach(TOP,BOT) cuboid([4,4,2]);
-module color_this(c="default")
+module color_this(c="default", a=undef)
 {
-  req_children($children);  
-  $save_color=default($color,"default");
-  $color=c;
-  children();
+    req_children($children);
+    $save_color=default($color,["default",undef]);
+    $color=_color_pair(c,a);
+    children();
 }
 
 
@@ -104,30 +123,37 @@ module color_this(c="default")
 // Synopsis: Iterates through a list, displaying children in different colors.
 // SynTags: Trans
 // Topics: Colors, List Handling, Debugging
-// See Also: hsl(), hsv()
+// See Also: hsl(), hsv(), recolor(), color_this()
 // Usage:
-//   rainbow(list,[stride],[maxhues],[shuffle],[seed]) CHILDREN;
+//   rainbow(list, [stride], [maxhues], [shuffle=], [seed=], [mutable=]) CHILDREN;
 // Description:
-//   Iterates over the list, invoking the children with different colors for each list item.  The color
-//   is set using the color() module, so this module is not compatible with {{recolor()}} or
-//   {{color_this()}}.  You use the `$item` variable to control the display of different children.
-//   By default the colors are chosen as mathematically uniform hue steps in HSV using a different hue
-//   for every item in the list.  The `stride` specifies how big of a step to take between two adjacent
-//   items.  If `stride=1` then the step gives the next adjacent color, which may be very similar.  By
-//   default a stride that is coprime with the list length is chosen to maximize the used and distinguishability
-//   of nearby the available colors.  
+//   Iterates over a list or string, invoking the children once per item. Use `$item`
+//   for the current item and `$idx` for its index. An empty input generates no children.
+//   Assigns color to each child using {{recolor()}} with `mutable=true` by default.
+//   .
+//   Colors use uniformly spaced HSV hues at full saturation and value. The `maxhues` parameter
+//   specifies the number hues to use and defaults to the number of items in `list`;
+//   colors repeat when there are more items than hues.
+//   The integer `stride` controls the step through those hues. A stride of 1 selects
+//   adjacent hues; a negative stride reverses traversal, and 0 repeats one hue.
+//   The default stride is a number near `maxhues` divided by the golden ratio and also
+//   coprime with `maxhues`.  This is meant to separate nearby colors while visiting
+//   every hue.  If you give a stride that has common factors with `maxhue` then
+//   some hues will be skipped.
+//   .  
+//   Set `shuffle=true` to shuffle the resulting color assignments.
 // Arguments:
-//   list = The list of items to iterate through.
-//   stride = How big of a step to take through the available hue list between two adjacent items.  Default: see description
-//   maxhues = max number of hues to use (to prevent lots of indistinguishable hues)
+//   list = List of items, or a string to iterate character by character.
+//   stride = Integer step through the available hues. Default: see description.
+//   maxhues = Positive integer number of available hues. Default: the input length, or 1 for empty input.
 //   ---
-//   shuffle = if true then shuffle the hues in a random order.  Default: false
-//   seed = seed to use for shuffle
-//   mutable = If false set color using `color()` so that the color can never change again for any child.  Default: False                                    
+//   shuffle = If true, shuffle the color assignments. Default: false
+//   seed = Optional finite numeric random seed passed to {{shuffle()}}.
+//   mutable = If true, use mutable attachable coloring. If false, color complete child geometry immutably. Default: true
 // Side Effects:
-//   Sets the color to progressive values along the ROYGBIV spectrum for each item.
-//   Sets `$idx` to the index of the current item in `list` that we want to show.
-//   Sets `$item` to the current item in `list` that we want to show.
+//   Sets the color of each item using {{hsv()}} and {{recolor()}}.
+//   Sets `$idx` to the index of the current item.
+//   Sets `$item` to the current item.
 // Example(2D):
 //   rainbow(["Foo","Bar","Baz","Big","Bam"]) fwd($idx*10) text(text=$item,size=8,halign="center",valign="center");
 // Example(2D):
@@ -147,16 +173,21 @@ module color_this(c="default")
 module rainbow(list, stride, maxhues, shuffle=false, seed, mutable=true)
 {
     req_children($children);
-    listlen = len(list);
-    maxhues = first_defined([maxhues,listlen]);
-    stride = default(stride,_golden_stride(maxhues));
+    assert(is_bool(shuffle), "\nshuffle must be a boolean.");
+    assert(is_bool(mutable), "\nmutable must be a boolean.");
+    assert(is_undef(seed) || is_finite(seed), "\nseed must be a finite number.");
+    listlen = assert(is_list(list) || is_string(list), "\nlist must be a list or string.") len(list);
+    maxhues = assert(is_undef(maxhues) || (is_int(maxhues) && maxhues>0),
+                     "\nmaxhues must be a positive integer.")
+              default(maxhues,max(1,listlen));
+    stride = assert(is_undef(stride) || is_int(stride), "\nstride must be an integer.")
+             default(stride,_golden_stride(maxhues));
     huestep = 360 / maxhues;
-    huelist = [for (i=[0:1:listlen-1]) posmod(i*stride*huestep,360)];
-    hues = shuffle ? shuffle(huelist, seed=seed) : huelist;
+    huelist = [for (i=[0:1:listlen-1]) posmod(i*posmod(stride,maxhues),maxhues)*huestep];
+    hues = listlen==0 ? [] : shuffle ? shuffle(huelist, seed=seed) : huelist;
     for($idx=idx(list)) {
-        echo($idx,floor($idx/maxhues));
         $item = list[$idx];
-        hsv(h=hues[$idx],mutable=mutable) children();        
+        hsv(h=hues[$idx],mutable=mutable) children();
     }
 }
 
@@ -187,7 +218,7 @@ function _nearest_coprime(n, target, d) =
 //   color_overlaps([color]) CHILDREN;
 // Description:
 //   Displays the given children in ghostly transparent gray, while the places where
-//   they overlap are highlighted with the given color.
+//   they overlap are highlighted with the given color. Uses immutable coloring.
 // Arguments:
 //   color = The color to highlight overlaps with.  Default: "red"
 // Example(2D): 2D Overlaps
@@ -196,7 +227,7 @@ function _nearest_coprime(n, target, d) =
 //       left(20) circle(d=50);
 //       right(20) circle(d=50);
 //   }
-// Example(): 3D Overlaps
+// Example(3D): 3D Overlaps
 //   color_overlaps() {
 //       cuboid(50);
 //       left(30) sphere(d=50);
@@ -222,7 +253,7 @@ module color_overlaps(color="red") {
 
 
 // Module: highlight()
-// Synopsis: Sets # modifier for attachable children and their descendents.
+// Synopsis: Sets # modifier for attachable children and their descendants.
 // SynTags: Trans
 // Topics: Attachments, Modifiers, Debugging
 // See Also: highlight_this(), ghost(), ghost_this(), recolor(), color_this()
@@ -234,7 +265,7 @@ module color_overlaps(color="red") {
 //   Give the `false` parameter to disable the modifier and restore children to normal.  
 //   Do not mix this with user supplied `#` modifiers anywhere in the geometry tree.  
 // Arguments:
-//   highlight = If true set the descendents to use `#`; if false, disable `#` for descendents.  Default: true
+//   highlight = If true set the descendants to use `#`; if false, disable `#` for descendants.  Default: true
 // Example(3D):
 //   highlight() cuboid(10)
 //     highlight(false) attach(RIGHT,BOT)cuboid(5);
@@ -254,7 +285,7 @@ module highlight(highlight=true)
 // Usage:
 //   highlight_this() CHILDREN;
 // Description:
-//   Applies the `#` modifier to the children at a single level, reverting to the previous highlight state for further descendents.  
+//   Applies the `#` modifier to the children at a single level, reverting to the previous highlight state for further descendants.  
 //   This works only with attachables and you cannot give the `#` operator anywhere in the geometry tree.  
 // Example(3D):
 //   highlight_this()
@@ -271,7 +302,7 @@ module highlight_this()
 
 
 // Module: ghost()
-// Synopsis: Sets % modifier for attachable children and their descendents.
+// Synopsis: Sets % modifier for attachable children and their descendants.
 // SynTags: Trans
 // Topics: Attachments, Modifiers, Debugging
 // See Also: ghost_this(), recolor(), color_this()
@@ -283,7 +314,7 @@ module highlight_this()
 //   Give the `false` parameter to disable the modifier and restore children to normal.  
 //   Do not mix this with user supplied `%` modifiers anywhere in the geometry tree.  
 // Arguments:
-//   ghost = If true set the descendents to use `%`; if false, disable `%` for descendents.  Default: true
+//   ghost = If true set the descendants to use `%`; if false, disable `%` for descendants.  Default: true
 // Example(3D):
 //   ghost() cuboid(10)
 //     ghost(false) cuboid(5);
@@ -303,7 +334,7 @@ module ghost(ghost=true)
 // Usage:
 //   ghost_this() CHILDREN;
 // Description:
-//   Applies the `%` modifier to the children at a single level, reverting to the previous ghost state for further descendents.  
+//   Applies the `%` modifier to the children at a single level, reverting to the previous ghost state for further descendants.  
 //   This works only with attachables and you cannot give the `%` operator anywhere in the geometry tree.  
 // Example(3D):
 //   ghost_this() cuboid(10)
@@ -319,37 +350,38 @@ module ghost_this()
 // Section: Colorspace Conversion
 
 // Function&Module: hsl()
-// Synopsis: Sets the color of children to a specified hue, saturation, lightness and optional alpha channel value.
+// Synopsis: Converts HSL to RGB or colors children with an HSL color.
 // SynTags: Trans
-// See Also: hsv(), recolor(), color_this()
+// See Also: hsv(), lch(), recolor(), color_this()
 // Topics: Colors, Colorspace
-// Usage:
-//   hsl(h,[s],[l],[a]) CHILDREN;
-//   rgb = hsl(h,[s],[l],[a]);
+// Usage: As a function
+//   rgb = hsl(h, [s], [l], [a]);
+// Usage: As a module
+//   hsl(h, [s], [l], [a], [mutable=]) CHILDREN;
+// Description:
 // Description:
 //   When called as a function, returns the `[R,G,B]` color for the given hue `h`, saturation `s`, and
 //   lightness `l` from the [HSL colorspace](https://en.wikipedia.org/wiki/HSL_and_HSV).  If you supply the `a` value then you'll get a length 4
-//   list `[R,G,B,A]`.  When called as a module, sets the color using the color() module to the given
-//   hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
+//   list `[R,G,B,A]`.  When called as a module, sets the color using {{recolor()}} with `mutable=true` by default.
 // Arguments:
-//   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
-//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
-//   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.  Default: 0.5
-//   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
+//   h = Hue angle in degrees, wrapped mod 360. 0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
+//   s = Saturation from 0 (grayscale) to 1 (vivid colors). Default: 1
+//   l = Lightness from 0 (black) to 1 (white); 0.5 gives bright colors. Default: 0.5
+//   a = Alpha from 0 (transparent) to 1 (opaque). Default: 1 (opaque)
 //   ---
-//   mutable = If false set color using `color()` so that the color can never change again for any child.  Default: False                                    
+//   mutable = Module only. Specifies whether color applies to children mutably or immutably.  Default: true
 // Side Effects:
-//   When called as a module, sets the color of the children.
+//   The module sets `$color` through {{recolor()}}.
 // Example:
 //   hsl(h=120,s=1,l=0.5) sphere(d=60);
 // Example:
 //   rgb = hsl(h=270,s=0.75,l=0.6);
-//   color(rgb) cube(60, center=true);
+//   recolor(rgb) cuboid(60);
 function hsl(h,s=1,l=0.5,a) =
-    assert(is_finite(s) && s>=0 && s<=1)
-    assert(is_finite(l) && l>=0 && l<=1,str(l))
-    assert(is_finite(h))
-    assert(is_undef(a) || a>=0 && a<=1)
+    assert(is_finite(h), "\nh must be a finite hue angle.")
+    assert(is_finite(s) && s>=0 && s<=1, "\ns must be a finite number between 0 and 1.")
+    assert(is_finite(l) && l>=0 && l<=1, "\nl must be a finite number between 0 and 1.")
+    assert(is_undef(a) || (is_finite(a) && a>=0 && a<=1), "\na must be a finite number between 0 and 1.")
     let(
         h=posmod(h,360)
     ) [
@@ -367,37 +399,40 @@ module hsl(h,s=1,l=0.5,a=1, mutable=true)
 
 
 // Function&Module: hsv()
-// Synopsis: Sets the color of children to a hue, saturation, value and optional alpha channel value.
+// Synopsis: Converts HSV to RGB or colors children with an HSV color.
 // SynTags: Trans
-// See Also: hsl(), recolor(), color_this()
+// See Also: hsl(), lch(), recolor(), color_this()
 // Topics: Colors, Colorspace
-// Usage:
-//   hsv(h,[s],[v],[a]) CHILDREN;
-//   rgb = hsv(h,[s],[v],[a]);
+// Usage: As a function
+//   rgb = hsv(h, [s], [v], [a]);
+// Usage: As a module
+//   hsv(h, [s], [v], [a], [mutable=]) CHILDREN;
 // Description:
 //   When called as a function, returns the `[R,G,B]` color for the given hue `h`, saturation `s`, and
 //   value `v` from the [HSV colorspace](https://en.wikipedia.org/wiki/HSL_and_HSV).
 //   If you supply the `a` value then you'll get a length 4 list
 //   `[R,G,B,A]`.  When called as a module, sets the color using the color() module to the given hue
 //   `h`, saturation `s`, and value `v` from the HSV colorspace.
+//   When called as a module, sets the color using {{recolor()}} with `mutable=true` by default.
 // Arguments:
-//   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
-//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
-//   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.  Default: 1
-//   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
+//   h = Hue angle in degrees, wrapped mod 360. 0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
+//   s = Saturation from 0 (grayscale) to 1 (vivid colors). Default: 1
+//   v = Value from 0 (black) to 1 (full brightness). Default: 1
+//   a = Alpha from 0 (transparent) to 1 (opaque). Default: 1 (opaque)
 //   ---
-//   mutable = If false set color using `color()` so that the color can never change again for any child.  Default: False                                    
+//   mutable = Module only. Specifies whether color applies to children mutably or immutably.  Default: true
 // Side Effects:
-//   When called as a module, sets the color of the children.
+//   The module sets `$color` through {{recolor()}}.
 // Example:
 //   hsv(h=120,s=1,v=1) sphere(d=60);
 // Example:
 //   rgb = hsv(h=270,s=0.75,v=0.9);
-//   color(rgb) cube(60, center=true);
+//   recolor(rgb) cube(60, center=true);
 function hsv(h,s=1,v=1,a) =
-    assert(s>=0 && s<=1)
-    assert(v>=0 && v<=1)
-    assert(is_undef(a) || a>=0 && a<=1)
+    assert(is_finite(h), "\nh must be a finite hue angle.")
+    assert(is_finite(s) && s>=0 && s<=1, "\ns must be a finite number between 0 and 1.")
+    assert(is_finite(v) && v>=0 && v<=1, "\nv must be a finite number between 0 and 1.")
+    assert(is_undef(a) || (is_finite(a) && a>=0 && a<=1), "\na must be a finite number between 0 and 1.")
     let(
         h = posmod(h,360),
         c = v * s,
@@ -422,8 +457,8 @@ module hsv(h,s=1,v=1,a=1,mutable=true)
 }    
 
 
-// ---- sRGB <-> CIE XYZ <-> CIE Lab/LCh ----
-// D65 reference white, standard sRGB primaries/gamma.
+/// sRGB <-> CIE XYZ <-> CIE Lab/LCh conversions.
+/// D65 reference white, standard sRGB primaries and transfer function.
 
 function _srgb_to_linear(c) =
     c <= 0.04045 ? c/12.92 : pow((c+0.055)/1.055, 2.4);
@@ -463,118 +498,86 @@ function _lab_to_xyz(lab) =
     let(fy=(lab[0]+16)/116, fx=fy+lab[1]/500, fz=fy-lab[2]/200)
     [_LAB_XN*_lab_finv(fx), _LAB_YN*_lab_finv(fy), _LAB_ZN*_lab_finv(fz)];
 
-/// >0 means outside the RGB cube, <0 inside, 0 exactly on the boundary.
-/// Monotonic increasing in chroma along a fixed hue/lightness ray, so it
-/// has exactly one root -- safe input for root_find().
-function _gamut_violation(h,c,l) =
-    let(rgb = _xyz_to_rgb(_lab_to_xyz([l*100, c*cos(h), c*sin(h)])))
-    max(max(rgb)-1, -min(rgb));
-
 // Function&Module: lch()
-// Synopsis: Sets the color of children to a lightness, chroma and hue with optional alpha channel value. 
+// Synopsis: Converts D65 CIE LCh to sRGB or colors children with an LCh color.
 // SynTags: Trans
-// See Also: max_chroma(), hsl(), hsv(), recolor(), color_this()
+// See Also: hsl(), hsv(), recolor(), color_this()
 // Topics: Colors, Colorspace
-// Usage:
-//   lch(l, c, h, [a], [sat=]) CHILDREN;
-//   rgb = lch(l, c, h, [a], [sat=])
+// Usage: As a function
+//   rgb = lch(l, c, h, [a], [clip=]);
+// Usage: As a module
+//   lch(l, c, h, [a], [clip=], [mutable=]) CHILDREN;
 // Description:
-//   When called as a function, returns the `[R,G,B]` color for the given lightness `l`, chroma `c`,
-//   and hue `h` from the CIE LCh colorspace.  If you supply the `a` value then you'll get a length 4
-//   list `[R,G,B,A]`.  When called as a module, sets the color using the color() module to the given
-//   lightness `l`, chroma `c`, and hue `h` from the CIE LCh colorspace.  Unlike HSL/HSV, equal steps in
-//   `l` and `h` correspond much more closely to equal steps in perceived lightness and hue, which makes
-//   LCh a better basis for generating sets of colors that need to look evenly distinguishable.
-//   The tradeoff is that `c` has no fixed maximum: the highest chroma displayable in
-//   sRGB depends on both `l` and `h`, so a chroma that looks vivid for one hue may be out of gamut for
-//   another.  If you give an out of bounds value for chroma then you'll get an error with the
-//   unrealizable RGB value shown.  If you'd rather work in a 0-1 dial similar to HSL/HSV's `s`,
-//   you can specify `sat=` and the chroma will be calculated as that fraction of the available
-//   maximum chroma at the given `l` and `h`.  
+//   As a function, converts D65-referenced CIE LCh coordinates to sRGB `[R,G,B]`.
+//   If you give `a` it returns `[R,G,B,A]`. Lightness `l` uses the range 0-100,
+//   corresponding to CIE Lab lightness 0-100. Chroma `c` uses absolute CIE Lab
+//   units. Hue is an angle in the Lab a*-b* plane, not the HSL/HSV hue wheel.
+//   .
+//   As a rough guide to hue, the fully saturated sRGB primaries are approximately
+//   | Color   | approx. h |
+//   |---------|-----------|
+//   | red     | 40°       |
+//   | yellow  | 103°      |
+//   | green   | 136°      |
+//   | cyan    | 196°      |
+//   | blue    | 306°      |
+//   | magenta | 328°      |
+//   .
+//   Unlike HSL/HSV, these are not exact or fixed: which hue angle looks like a given
+//   named color shifts with `l` and `c`.  Unlike the {{hsl()}} and {{hsv()}} functions,
+//   this function follows the CIE Lab convention with values ranging from 0 to 100, not 0 to 1.
+//   .
+//   For a given lightness and hue only some chroma values result in colors
+//   that can be represented in sRGB.  There is no simple way to identify which
+//   chroma values are valid, and it is not even a simple range of continuous
+//   values.  Your requested color is tested after conversion.  By default, if it
+//   is out of gamut you will get an error showing its RGB components.  If you set
+//   `clip=true` then the converted RGB values will be clipped into the valid range.
+//   Clipping can change the requested lightness and hue.  
+//   .
+//   When called as a module, sets the color using {{recolor()}} with `mutable=true` by default.
 // Arguments:
-//   l = lightness, 0 (black) to 1 (white)
-//   c = chroma in absolute CIE Lab units.  0 = gray.  The max value (0-150 depending on hue and lightness) is the most vivid or saturated color
-//   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
-//   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
+//   l = Lightness, CIE Lab L* from 0 (black) to 100 (white)
+//   c = Chroma in CIE Lab units. 0 is gray. There is no fixed upper limit; representability is tested in sRGB.
+//   h = Hue angle in degrees, wrapped modulo 360. 0 is the +a* axis, 90 is +b*, 180 is -a*, and 270 is -b*.
+//   a = Optional alpha from 0 (transparent) to 1 (opaque). Omitted by default from the function result; the module is opaque when omitted.
 //   ---
-//   sat = Value between 0 and 1 specifying chroma as a fraction of the maximum chroma available at this lightness and hue.
-//   mutable = If false set color using `color()` so that the color can never change again for any child.  Default: False                                    
+//   clip = If true, clamp out-of-gamut RGB components to [0,1]. Otherwise, assert an error for out-of-gamut colors beyond the roundoff tolerance. Default: false
+//   mutable = Module only. If true, use mutable attachable coloring; if false, color complete child geometry immutably. Default: true
 // Side Effects:
-//   When called as a module, sets the color of the children.
+//   The module sets `$color` through {{recolor()}}.
 // Example:
-//   lch(l=0.6,c=45,h=120) sphere(d=60);
+//   lch(l=60,c=45,h=120) sphere(d=60);
 // Example:
-//   rgb = lch(l=0.7,sat=0.9,h=270);
+//   rgb = lch(l=70,c=30,h=270);
 //   recolor(rgb) cube(60, center=true);
-
-function lch(l, c, h, a, sat) =
-    assert(num_defined([c,sat])==1, "Must give exactly one of 'c' and 'sta'")
-    assert(is_finite(h))
-    assert(is_finite(l) && l>=0 && l<=1)
+// Example: Clip an out-of-gamut color to displayable RGB.
+//   lch(l=50,c=150,h=0,clip=true) sphere(d=60);
+// Example: Apply alpha to the converted color.
+//   lch(l=60,c=45,h=20,a=0.4) cuboid(40);
+function lch(l, c, h, a, clip=false) =
+    assert(is_finite(l) && l>=0 && l<=100, "\nl must be a finite number between 0 and 100.")
+    assert(is_finite(c) && c>=0, "\nc must be a finite nonnegative chroma.")
+    assert(is_finite(h), "\nh must be a finite hue angle.")
+    assert(is_undef(a) || (is_finite(a) && a>=0 && a<=1), "\na must be a finite number between 0 and 1.")
+    assert(is_bool(clip), "\nclip must be a boolean.")
     let(
-        calc_rgb = function(l,c,h)
-                      let(lab = [l*100, c*cos(h), c*sin(h)])
-                      _xyz_to_rgb(_lab_to_xyz(lab)),            
         h = posmod(h,360),
-        rgb = is_def(sat) ? constrain(calc_rgb(l,sat*max_chroma(l,h),h),0,1)
-            : let(
-                  val = calc_rgb(l,c,h),
-                  ok = [for(v=val) if (v<-1e-6 || v >1+1e-6) 1]==[]
-              )
-              assert(ok,str("\nChroma ",c," is out of gamut at l=",l,", h=",h,": RGB=",val,", max c=",max_chroma(l,h)))
-              constrain(val,0,1)
+        rgb = _xyz_to_rgb(_lab_to_xyz([l,c*cos(h),c*sin(h)])),
+        eps = 1e-6
     )
+    assert(is_vector(rgb,3), str("\nLCh conversion produced nonfinite RGB components: ",rgb))
+    assert(clip || (min(rgb)>=-eps && max(rgb)<=1+eps),
+           str("\nRequested LCh color is outside the sRGB gamut: RGB=",rgb,
+               ". Use clip=true to clamp the RGB components."))
+    let(rgb=constrain(rgb,0,1))
     is_def(a) ? point4d(rgb,a) : rgb;
 
-
-module lch(l, c, h, a, sat, mutable=true) 
+module lch(l, c, h, a, clip=false, mutable=true)
 {
     req_children($children);
-    recolor(lch(h=h,c=c,sat=sat,l=l,a=a), mutable=mutable) children();
+    recolor(lch(l=l,c=c,h=h,a=a,clip=clip), mutable=mutable) children();
 }
 
-
-// Function: max_chroma()
-// Synopsis: Compute maximum chroma value for lightness and hue values in lch()
-// Topics: Colors, Colorspace
-// See Also: lch()
-// Usage:
-//   max_c = max_chroma(l,h)
-// Description:
-//   Returns the maximum chroma (absolute CIE Lab units) achievable in sRGB
-//   at the given hue and lightness, before the color goes outside gamut.
-//   Useful for building custom palettes, or for gamut-boundary visualization.
-//   Note: this runs a root-find internally so if you need it for many (h,l)
-//   pairs it may be worth storing values. 
-function max_chroma(l,h) =
-    l==0 || l==1 ? 0
-                 : root_find(function(c) _gamut_violation(h,c,l), 0, 150);
-
-
-/// This version produces uniform lightness hues but actually this seems bad because
-/// they are less distinctive.  
-/// // Module: rainbow_lch()
-/// // Like rainbow(), but hues are perceptually-spaced via CIE LCh instead of
-/// // HSV, and chroma is auto-maximized per hue at the given lightness.
-/// // l   = lightness for every color, 0-1. Default: 0.6
-/// // sat = fraction of each hue's max available chroma, 0-1. Default: 0.9
-/// module rainbow_lch(list, stride, maxhues, l=0.7, sat=.8, shuffle=false, seed)
-/// {
-///     req_children($children);
-///     ll = len(list);
-///     maxhues = first_defined([maxhues, ll]);
-///     stride = first_defined([stride, _golden_stride(maxhues)]);
-///     huestep = 360/maxhues;
-///     bucket_cmax = [for (b=[0:1:maxhues-1]) max_chroma(b*huestep, l)];  // once per bucket, not per item
-///     huelist = [for (i=[0:1:ll-1]) posmod(i*stride*huestep,360)];
-///     hues = shuffle ? shuffle(huelist, seed=seed) : huelist;
-///     for ($idx = idx(list)) {
-///         $item = list[$idx];
-///         h = hues[$idx];
-///         b = round(h/huestep) % maxhues;
-///         color(lch(h=h, c=sat*bucket_cmax[b], l=l)) children();
-///     }
-/// }
-/// 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

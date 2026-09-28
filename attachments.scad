@@ -4006,19 +4006,26 @@ module anchor_arrow2d(s=10, color=[0.333,0.333,1], $tag="anchor-arrow") {
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
 // Description:
-//   Used in combination with show_anchors() to display an object in transparent gray with its anchors in solid color.
-//   Children appear transparent and any anchor arrows drawn appear in solid color.
+//   Used in combination with show_anchors() to display an object transparently, in gray by default, with its anchors in solid color.
+//   Children appear transparent and any anchor arrows drawn appear in solid color.  If you use {{recolor()}} before calling `expose_anchors()`
+//   then the children will be given the specified color.  
 // Arguments:
 //   opacity = The opacity of the children.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
 // Example(FlatSpin,VPD=333):
-//   expose_anchors() cube(50, center=true) show_anchors();
+//   expose_anchors()
+//     cube(50, center=true) show_anchors();
+// Example(FlatSpin,VPD=333):
+//   recolor("green")
+//     expose_anchors()
+//       cube(50, center=true) show_anchors();
 module expose_anchors(opacity=0.2) {
-    show_only("anchor-arrow")
-        children();
+    recolor("default")
+      show_only("anchor-arrow")
+         children();
     hide("anchor-arrow")
-        color(is_undef($color) || $color==["default",undef] ? [0,0,0] :
-              is_string($color[0]) ? $color[0]
-                                : point3d($color[0]),
+        color(  is_undef($color) || $color[0]=="default" ? [0,0,0]
+               :is_string($color[0]) ? $color[0]
+               : point3d($color[0]),
               opacity)
             children();
 }
