@@ -157,19 +157,24 @@ module color_this(c="default", a=undef)
 //   Sets the color of each item using {{hsv()}} and {{recolor()}}.
 //   Sets `$idx` to the index of the current item.
 //   Sets `$item` to the current item.
-// Example(2D):
-//   rainbow(["Foo","Bar","Baz","Big","Bam"]) fwd($idx*10) text(text=$item,size=8,halign="center",valign="center");
-// Example(2D):
-//   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
+// Example(2D,NoAxes):
+//   rainbow(["Foo","Bar","Baz","Big","Bam"])
+//     fwd($idx*10)
+//       text(text=$item,size=8,halign="center",
+//            valign="center");
+// Example(2D,NoAxes,Med):
+//   rgn = [circle(d=45,$fn=3),
+//          circle(d=75,$fn=4),
+//          circle(d=50)];
 //   rainbow(rgn) stroke($item, closed=true);
-// Example(2D):
+// Example(2D,NoAxes,Med):
 //   rainbow(lerpn(0,360,30,endpoint=false))
 //     zrot($item)
 //       stroke([[0,0],[50,0]]);
-// Example(2D): Setting maxhues to a small value
+// Example(2D,NoAxes,Med): Setting maxhues to a small value
 //   rainbow(lerpn(0,360,30,endpoint=false),maxhues=3)
 //      zrot($item)stroke([[0,0],[50,0]]);
-// Example(2D): Changing stride to 1
+// Example(2D,NoAxes,Med): Changing stride to 1
 //   rainbow(lerpn(0,360,30,endpoint=false),stride=1)
 //     zrot($item)stroke([[0,0],[50,0]]);
 

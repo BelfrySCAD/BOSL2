@@ -62,9 +62,13 @@ module _linear_extrude(height, v, scale, center, twist, slices, segments, convex
     }
 }       
 
-module _rotate_extrude() rotate_extrude() children();
-module _polyhedron() polyhedron() children();
-module _polgon() polygon() children();
-                          
+module _hull() hull() children();
 
+module _rotate_extrude() rotate_extrude(angle,start,convexity,a) children();
+module _polyhedron(points, faces, convexity) polyhedron() children();
+module _polgon(points, paths, convexity) polygon() children();
+module _surface(file,center,convexity,invert) surface() children();
+module _projection(cut,convexity) projection() children();
+// import?                                  
+                                              
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
