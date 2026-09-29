@@ -57,7 +57,7 @@ function _color_pair(c, a) =
 //   .
 //   The color can be an RGB vector with values between 0 and 1, or an RGBA vector that includes an alpha component.
 //   You can also give the name (as a string) for a standard
-//   web [color name](https://htmlpreview.github.io/?https://https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/openscad_colors.html), and
+//   web [color name](https://htmlpreview.github.io/?https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/openscad_colors.html), and
 //   in development snapshots after July 2026 you
 //   can use [xkcd colors](https://xkcd.com/color/rgb/) with the format `"xkcd:<name>"`.  
 // Arguments:
@@ -170,13 +170,15 @@ module color_this(c="default", a=undef)
 // Example(2D,NoAxes,Med):
 //   rainbow(lerpn(0,360,30,endpoint=false))
 //     zrot($item)
-//       stroke([[0,0],[50,0]]);
+//       stroke([[10,0],[50,0]],width=3);
 // Example(2D,NoAxes,Med): Setting maxhues to a small value
 //   rainbow(lerpn(0,360,30,endpoint=false),maxhues=3)
-//      zrot($item)stroke([[0,0],[50,0]]);
+//     zrot($item)
+//       stroke([[10,0],[50,0]],width=3);
 // Example(2D,NoAxes,Med): Changing stride to 1
 //   rainbow(lerpn(0,360,30,endpoint=false),stride=1)
-//     zrot($item)stroke([[0,0],[50,0]]);
+//     zrot($item)
+//       stroke([[7,0],[50,0]],width=3);
 
 module rainbow(list, stride, maxhues, shuffle=false, seed, mutable=true)
 {
