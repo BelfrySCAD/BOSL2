@@ -2972,7 +2972,7 @@ module text(text, size, font, direction="ltr", language="en", script="latin", ha
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         if (_is_shown()){
-            _color($color) _show_ghost() {
+            _color($color[0],$color[1]) _show_ghost() {
                if(pass_em)
                   _text(
                     text=text, size=size, font=font,
