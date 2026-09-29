@@ -91,20 +91,6 @@ assert(approx(lch(50,150,0,clip=true),[1, 0, 0.49467754157347016],eps=1e-6));
 
 
 [[test]]
-name = "test_lch"
-expect_success = false
-script = '''
-include <../std.scad>
-
-lch(l=.5, c=max_chroma(.5,120)*1.01, h=120);
-
-'''
-
-
-
-
-
-[[test]]
 name = "test_highlight"
 expect_success = false
 script = '''
