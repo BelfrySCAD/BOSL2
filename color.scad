@@ -57,7 +57,7 @@ function _color_pair(c, a) =
 //   .
 //   The color can be an RGB vector with values between 0 and 1, or an RGBA vector that includes an alpha component.
 //   You can also give the name (as a string) for a standard
-//   web [color name](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/openscad_colors.html), and
+//   web [color name](https://htmlpreview.github.io/?https://https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/openscad_colors.html), and
 //   in development snapshots after July 2026 you
 //   can use [xkcd colors](https://xkcd.com/color/rgb/) with the format `"xkcd:<name>"`.  
 // Arguments:
