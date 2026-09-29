@@ -460,7 +460,6 @@ module write(text, max_width=INF, max_height=INF,
     dir = direction == "rtl" ? -1 : 1;
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
-    xxx=echo("anchors", _line_anchors(w.baseline_pos, w.boundboxsize));
     translate(parent_offset)
         attachable(anch, spin, two_d=true, size=w.anchorboxsize, anchors=_line_anchors(w.baseline_pos, w.boundboxsize)) {
             union() {

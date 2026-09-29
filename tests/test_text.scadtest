@@ -40,8 +40,8 @@ script = '''
 include <../std.scad>
 
 module test_fit_font_size() {
-    assert(round(fit_font_size("Fitting to a width", max_width=100)) == 9);
-    assert(round(fit_font_size("Fitting to a height", max_height=20)) == 13);
+    assert(round(fit_font_size("Fitting to a width", font="Liberation Sans", max_width=100)) == 10);
+    assert(round(fit_font_size("Fitting to a height", font="Liberation Sans", max_height=20)) == 13);
 }
 test_fit_font_size();
 '''
