@@ -62,17 +62,17 @@ function _hex_offsets(n, d, lev=0, arr=[]) =
 // Usage:
 //   wire_bundle(path, wires, [wirediam], [rounding], [wirenum=], [corner_steps=]);
 // Description:
-//   Returns a 3D object representing a bundle of wires that follow a given path,
+//   Creates a 3D object representing a bundle of wires that follow a given path,
 //   with the corners rounded to a given radius.  There are 17 base wire colors.
 //   If you have more than 17 wires, colors will get re-used.
 // Arguments:
 //   path = The 3D path that the wire bundle should follow.
-//   wires = The number of wires in the wire bundle.
-//   wirediam = The diameter of each wire in the bundle.
-//   rounding = The radius that the path corners will be rounded to.
+//   wires = The number of wires in the wire bundle. 
+//   wirediam = The diameter of each wire in the bundle. Default: 2
+//   rounding = The radius that the path corners will be rounded to.  Default: 10
 //   ---
-//   wirenum = The first wire's offset into the color table.
-//   corner_steps = The corner roundings in the path will be converted into this number of segments.
+//   wirenum = The first wire's offset into the color table.  Default: 0
+//   corner_steps = Use this number of segments on 90 deg corners (e.g. set `$fn` to `4*(corner_steps+1))`.  Default: 15
 // Example:
 //   wire_bundle([[50,0,-50], [50,50,-50], [0,50,-50], [0,0,-50], [0,0,0]], rounding=10, wires=13);
 module wire_bundle(path, wires, wirediam=2, rounding=10, wirenum=0, corner_steps=15) {

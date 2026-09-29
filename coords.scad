@@ -113,10 +113,15 @@ function point4d(p, fill=0) = assert(is_list(p))
 // Usage:
 //   pt = path4d(points, [fill]);
 // Description:
-//   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
+//   Returns a list of 4D vectors/points from a list of vectors/points of some other length.
+//   When the vectors are being extended, the `fill` parameter gives the value(s) to fill the missing coordinates with.
+//   If fill is a scalar the same value will be used everywhere, so a 2D vector `[3,4]` with `fill=7`
+//   becomes `[3,4,7,7]`.  If fill is a vector each vector in `points` is extended by the given
+//   vector.  So a 2D vector `[3,4]` with `fill=[7,8]` becomes `[3,4,7,8]`.  The length of `fill` must
+//   match the number of missing dimensions.
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-//   fill = Scalar value to fill missing values in vectors with.  Default: 0 
+//   fill = Value(s) to fill missing coordinates with: a scalar fills every missing coordinate with the same value; a vector supplies one fill value per missing coordinate (its length must match the number of missing dimensions).  Default: 0
 function path4d(points, fill=0) = 
    assert(is_num(fill) || is_vector(fill))
    assert(is_path(points, dim=undef, fast=true), "\nInput to path4d is not a path.")
@@ -127,6 +132,7 @@ function path4d(points, fill=0) =
       result = points*M
    ) 
    assert(is_def(result), "\nInput to path4d is invalid.")
+  
    fill == 0 || change >= 0 ? result :
     let(
       addition = is_list(fill) ? concat(0*points[0],fill) :
@@ -158,9 +164,9 @@ function path4d(points, fill=0) =
 //   theta = angle in degrees, counter-clockwise of X+.
 // Example:
 //   xy = polar_to_xy(20,45);    // Returns: ~[14.1421365, 14.1421365]
-//   xy = polar_to_xy(40,30);    // Returns: ~[34.6410162, 15]
-//   xy = polar_to_xy([40,30]);  // Returns: ~[34.6410162, 15]
-//   xy = polar_to_xy([[40,30],[20,120]]);  // Returns: ~[[34.6410162, 15], [-10, 17.3205]]
+//   xy = polar_to_xy(40,30);    // Returns: ~[34.6410162, 20]
+//   xy = polar_to_xy([40,30]);  // Returns: ~[34.6410162, 20]
+//   xy = polar_to_xy([[40,30],[20,120]]);  // Returns: ~[[34.6410162, 20], [-10, 17.3205]]
 // Example(2D):
 //   r=40; ang=30; $fn=36;
 //   pt = polar_to_xy(r,ang);
@@ -535,7 +541,7 @@ function xyz_to_altaz(x,y,z) =
     y != undef
       ? assert(is_num(x) && is_num(y) && is_num(z), "\nBad arguments.")
         [atan2(z,norm([x,y])), atan2(x,y), norm([x,y,z])]
-      : assert(is_list(x), "Bad arguments.")
+      : assert(is_list(x), "\nBad arguments.")
         is_num(x.x)
           ? xyz_to_altaz(x.x, x.y, x.z)
           : [for(p = x) xyz_to_altaz(p.x, p.y, p.z)];
