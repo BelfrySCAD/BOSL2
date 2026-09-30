@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenSCAD Named Colors</title>
+<style>
+  :root {
+    --bg: #f3f4f2; --panel: #ffffff; --fg: #1d2220; --muted: #5d6763;
+    --line: #d6dbd8; --accent: #2f6f5e;
+    --sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151917; --panel: #1e2421; --fg: #e6ebe8; --muted: #9aa5a0;
+      --line: #323b37; --accent: #6fc2a8;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.4 var(--mono); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font: 600 1.8rem/1.2 var(--sans); margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px;
+          position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 8px 0; }
+  .bar input { flex: 1 1 220px; min-width: 0; font: inherit; padding: 8px 10px; border: 1px solid var(--line);
+                border-radius: 6px; background: var(--panel); color: var(--fg); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { font: inherit; padding: 8px 12px; border: 0; background: var(--panel); color: var(--muted); cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+  .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .grid { list-style: none; margin: 0; padding: 0; display: grid;
+           grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .tile button { display: flex; flex-direction: column; width: 100%; padding: 0; text-align: left; cursor: pointer;
+                  font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line);
+                  border-radius: 8px; overflow: hidden; }
+  .chip { display: block; height: 72px; border-bottom: 1px solid var(--line); }
+  .meta { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 10px; min-width: 0; }
+  .name { font: 600 0.95rem var(--sans); overflow-wrap: anywhere; }
+  .hex, .vec { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .vec { font-size: 11px; }
+  .tile.copied .name::after { content: " copied"; color: var(--accent); font: 11px var(--mono); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .note { color: var(--muted); margin-top: 24px; max-width: 70ch; line-height: 1.5; }
+  @media (prefers-reduced-motion: no-preference) {
+    .tile button { transition: transform .12s; }
+    .tile button:hover { transform: translateY(-2px); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>OpenSCAD Named Colors</h1>
+  <p class="sub">The 148 names accepted by <code>color("name")</code>.</p>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Filter by name or hex, e.g. blue or #ff" aria-label="Filter colors">
+    <div class="seg" role="group" aria-label="Sort order">
+      <button type="button" data-sort="name" aria-pressed="true">A–Z</button>
+      <button type="button" data-sort="hue" aria-pressed="false">Hue</button>
+      <button type="button" data-sort="light" aria-pressed="false">Lightness</button>
+    </div>
+    <span class="count" id="count">148 of 148</span>
+  </div>
+
+  <ul class="grid" id="grid">
+      <li class="tile" data-name="aliceblue" data-hex="#f0f8ff"><button type="button" title="Copy color(&quot;aliceblue&quot;)"><span class="chip" style="background:#f0f8ff"></span><span class="meta"><span class="name">aliceblue</span><span class="hex">#f0f8ff</span><span class="vec">[0.941, 0.973, 1]</span></span></button></li>
+      <li class="tile" data-name="antiquewhite" data-hex="#faebd7"><button type="button" title="Copy color(&quot;antiquewhite&quot;)"><span class="chip" style="background:#faebd7"></span><span class="meta"><span class="name">antiquewhite</span><span class="hex">#faebd7</span><span class="vec">[0.98, 0.922, 0.843]</span></span></button></li>
+      <li class="tile" data-name="aqua" data-hex="#00ffff"><button type="button" title="Copy color(&quot;aqua&quot;)"><span class="chip" style="background:#00ffff"></span><span class="meta"><span class="name">aqua</span><span class="hex">#00ffff</span><span class="vec">[0, 1, 1]</span></span></button></li>
+      <li class="tile" data-name="aquamarine" data-hex="#7fffd4"><button type="button" title="Copy color(&quot;aquamarine&quot;)"><span class="chip" style="background:#7fffd4"></span><span class="meta"><span class="name">aquamarine</span><span class="hex">#7fffd4</span><span class="vec">[0.498, 1, 0.831]</span></span></button></li>
+      <li class="tile" data-name="azure" data-hex="#f0ffff"><button type="button" title="Copy color(&quot;azure&quot;)"><span class="chip" style="background:#f0ffff"></span><span class="meta"><span class="name">azure</span><span class="hex">#f0ffff</span><span class="vec">[0.941, 1, 1]</span></span></button></li>
+      <li class="tile" data-name="beige" data-hex="#f5f5dc"><button type="button" title="Copy color(&quot;beige&quot;)"><span class="chip" style="background:#f5f5dc"></span><span class="meta"><span class="name">beige</span><span class="hex">#f5f5dc</span><span class="vec">[0.961, 0.961, 0.863]</span></span></button></li>
+      <li class="tile" data-name="bisque" data-hex="#ffe4c4"><button type="button" title="Copy color(&quot;bisque&quot;)"><span class="chip" style="background:#ffe4c4"></span><span class="meta"><span class="name">bisque</span><span class="hex">#ffe4c4</span><span class="vec">[1, 0.894, 0.769]</span></span></button></li>
+      <li class="tile" data-name="black" data-hex="#000000"><button type="button" title="Copy color(&quot;black&quot;)"><span class="chip" style="background:#000000"></span><span class="meta"><span class="name">black</span><span class="hex">#000000</span><span class="vec">[0, 0, 0]</span></span></button></li>
+      <li class="tile" data-name="blanchedalmond" data-hex="#ffebcd"><button type="button" title="Copy color(&quot;blanchedalmond&quot;)"><span class="chip" style="background:#ffebcd"></span><span class="meta"><span class="name">blanchedalmond</span><span class="hex">#ffebcd</span><span class="vec">[1, 0.922, 0.804]</span></span></button></li>
+      <li class="tile" data-name="blue" data-hex="#0000ff"><button type="button" title="Copy color(&quot;blue&quot;)"><span class="chip" style="background:#0000ff"></span><span class="meta"><span class="name">blue</span><span class="hex">#0000ff</span><span class="vec">[0, 0, 1]</span></span></button></li>
+      <li class="tile" data-name="blueviolet" data-hex="#8a2be2"><button type="button" title="Copy color(&quot;blueviolet&quot;)"><span class="chip" style="background:#8a2be2"></span><span class="meta"><span class="name">blueviolet</span><span class="hex">#8a2be2</span><span class="vec">[0.541, 0.169, 0.886]</span></span></button></li>
+      <li class="tile" data-name="brown" data-hex="#a52a2a"><button type="button" title="Copy color(&quot;brown&quot;)"><span class="chip" style="background:#a52a2a"></span><span class="meta"><span class="name">brown</span><span class="hex">#a52a2a</span><span class="vec">[0.647, 0.165, 0.165]</span></span></button></li>
+      <li class="tile" data-name="burlywood" data-hex="#deb887"><button type="button" title="Copy color(&quot;burlywood&quot;)"><span class="chip" style="background:#deb887"></span><span class="meta"><span class="name">burlywood</span><span class="hex">#deb887</span><span class="vec">[0.871, 0.722, 0.529]</span></span></button></li>
+      <li class="tile" data-name="cadetblue" data-hex="#5f9ea0"><button type="button" title="Copy color(&quot;cadetblue&quot;)"><span class="chip" style="background:#5f9ea0"></span><span class="meta"><span class="name">cadetblue</span><span class="hex">#5f9ea0</span><span class="vec">[0.373, 0.62, 0.627]</span></span></button></li>
+      <li class="tile" data-name="chartreuse" data-hex="#7fff00"><button type="button" title="Copy color(&quot;chartreuse&quot;)"><span class="chip" style="background:#7fff00"></span><span class="meta"><span class="name">chartreuse</span><span class="hex">#7fff00</span><span class="vec">[0.498, 1, 0]</span></span></button></li>
+      <li class="tile" data-name="chocolate" data-hex="#d2691e"><button type="button" title="Copy color(&quot;chocolate&quot;)"><span class="chip" style="background:#d2691e"></span><span class="meta"><span class="name">chocolate</span><span class="hex">#d2691e</span><span class="vec">[0.824, 0.412, 0.118]</span></span></button></li>
+      <li class="tile" data-name="coral" data-hex="#ff7f50"><button type="button" title="Copy color(&quot;coral&quot;)"><span class="chip" style="background:#ff7f50"></span><span class="meta"><span class="name">coral</span><span class="hex">#ff7f50</span><span class="vec">[1, 0.498, 0.314]</span></span></button></li>
+      <li class="tile" data-name="cornflowerblue" data-hex="#6495ed"><button type="button" title="Copy color(&quot;cornflowerblue&quot;)"><span class="chip" style="background:#6495ed"></span><span class="meta"><span class="name">cornflowerblue</span><span class="hex">#6495ed</span><span class="vec">[0.392, 0.584, 0.929]</span></span></button></li>
+      <li class="tile" data-name="cornsilk" data-hex="#fff8dc"><button type="button" title="Copy color(&quot;cornsilk&quot;)"><span class="chip" style="background:#fff8dc"></span><span class="meta"><span class="name">cornsilk</span><span class="hex">#fff8dc</span><span class="vec">[1, 0.973, 0.863]</span></span></button></li>
+      <li class="tile" data-name="crimson" data-hex="#dc143c"><button type="button" title="Copy color(&quot;crimson&quot;)"><span class="chip" style="background:#dc143c"></span><span class="meta"><span class="name">crimson</span><span class="hex">#dc143c</span><span class="vec">[0.863, 0.078, 0.235]</span></span></button></li>
+      <li class="tile" data-name="cyan" data-hex="#00ffff"><button type="button" title="Copy color(&quot;cyan&quot;)"><span class="chip" style="background:#00ffff"></span><span class="meta"><span class="name">cyan</span><span class="hex">#00ffff</span><span class="vec">[0, 1, 1]</span></span></button></li>
+      <li class="tile" data-name="darkblue" data-hex="#00008b"><button type="button" title="Copy color(&quot;darkblue&quot;)"><span class="chip" style="background:#00008b"></span><span class="meta"><span class="name">darkblue</span><span class="hex">#00008b</span><span class="vec">[0, 0, 0.545]</span></span></button></li>
+      <li class="tile" data-name="darkcyan" data-hex="#008b8b"><button type="button" title="Copy color(&quot;darkcyan&quot;)"><span class="chip" style="background:#008b8b"></span><span class="meta"><span class="name">darkcyan</span><span class="hex">#008b8b</span><span class="vec">[0, 0.545, 0.545]</span></span></button></li>
+      <li class="tile" data-name="darkgoldenrod" data-hex="#b8860b"><button type="button" title="Copy color(&quot;darkgoldenrod&quot;)"><span class="chip" style="background:#b8860b"></span><span class="meta"><span class="name">darkgoldenrod</span><span class="hex">#b8860b</span><span class="vec">[0.722, 0.525, 0.043]</span></span></button></li>
+      <li class="tile" data-name="darkgray" data-hex="#a9a9a9"><button type="button" title="Copy color(&quot;darkgray&quot;)"><span class="chip" style="background:#a9a9a9"></span><span class="meta"><span class="name">darkgray</span><span class="hex">#a9a9a9</span><span class="vec">[0.663, 0.663, 0.663]</span></span></button></li>
+      <li class="tile" data-name="darkgreen" data-hex="#006400"><button type="button" title="Copy color(&quot;darkgreen&quot;)"><span class="chip" style="background:#006400"></span><span class="meta"><span class="name">darkgreen</span><span class="hex">#006400</span><span class="vec">[0, 0.392, 0]</span></span></button></li>
+      <li class="tile" data-name="darkgrey" data-hex="#a9a9a9"><button type="button" title="Copy color(&quot;darkgrey&quot;)"><span class="chip" style="background:#a9a9a9"></span><span class="meta"><span class="name">darkgrey</span><span class="hex">#a9a9a9</span><span class="vec">[0.663, 0.663, 0.663]</span></span></button></li>
+      <li class="tile" data-name="darkkhaki" data-hex="#bdb76b"><button type="button" title="Copy color(&quot;darkkhaki&quot;)"><span class="chip" style="background:#bdb76b"></span><span class="meta"><span class="name">darkkhaki</span><span class="hex">#bdb76b</span><span class="vec">[0.741, 0.718, 0.42]</span></span></button></li>
+      <li class="tile" data-name="darkmagenta" data-hex="#8b008b"><button type="button" title="Copy color(&quot;darkmagenta&quot;)"><span class="chip" style="background:#8b008b"></span><span class="meta"><span class="name">darkmagenta</span><span class="hex">#8b008b</span><span class="vec">[0.545, 0, 0.545]</span></span></button></li>
+      <li class="tile" data-name="darkolivegreen" data-hex="#556b2f"><button type="button" title="Copy color(&quot;darkolivegreen&quot;)"><span class="chip" style="background:#556b2f"></span><span class="meta"><span class="name">darkolivegreen</span><span class="hex">#556b2f</span><span class="vec">[0.333, 0.42, 0.184]</span></span></button></li>
+      <li class="tile" data-name="darkorange" data-hex="#ff8c00"><button type="button" title="Copy color(&quot;darkorange&quot;)"><span class="chip" style="background:#ff8c00"></span><span class="meta"><span class="name">darkorange</span><span class="hex">#ff8c00</span><span class="vec">[1, 0.549, 0]</span></span></button></li>
+      <li class="tile" data-name="darkorchid" data-hex="#9932cc"><button type="button" title="Copy color(&quot;darkorchid&quot;)"><span class="chip" style="background:#9932cc"></span><span class="meta"><span class="name">darkorchid</span><span class="hex">#9932cc</span><span class="vec">[0.6, 0.196, 0.8]</span></span></button></li>
+      <li class="tile" data-name="darkred" data-hex="#8b0000"><button type="button" title="Copy color(&quot;darkred&quot;)"><span class="chip" style="background:#8b0000"></span><span class="meta"><span class="name">darkred</span><span class="hex">#8b0000</span><span class="vec">[0.545, 0, 0]</span></span></button></li>
+      <li class="tile" data-name="darksalmon" data-hex="#e9967a"><button type="button" title="Copy color(&quot;darksalmon&quot;)"><span class="chip" style="background:#e9967a"></span><span class="meta"><span class="name">darksalmon</span><span class="hex">#e9967a</span><span class="vec">[0.914, 0.588, 0.478]</span></span></button></li>
+      <li class="tile" data-name="darkseagreen" data-hex="#8fbc8f"><button type="button" title="Copy color(&quot;darkseagreen&quot;)"><span class="chip" style="background:#8fbc8f"></span><span class="meta"><span class="name">darkseagreen</span><span class="hex">#8fbc8f</span><span class="vec">[0.561, 0.737, 0.561]</span></span></button></li>
+      <li class="tile" data-name="darkslateblue" data-hex="#483d8b"><button type="button" title="Copy color(&quot;darkslateblue&quot;)"><span class="chip" style="background:#483d8b"></span><span class="meta"><span class="name">darkslateblue</span><span class="hex">#483d8b</span><span class="vec">[0.282, 0.239, 0.545]</span></span></button></li>
+      <li class="tile" data-name="darkslategray" data-hex="#2f4f4f"><button type="button" title="Copy color(&quot;darkslategray&quot;)"><span class="chip" style="background:#2f4f4f"></span><span class="meta"><span class="name">darkslategray</span><span class="hex">#2f4f4f</span><span class="vec">[0.184, 0.31, 0.31]</span></span></button></li>
+      <li class="tile" data-name="darkslategrey" data-hex="#2f4f4f"><button type="button" title="Copy color(&quot;darkslategrey&quot;)"><span class="chip" style="background:#2f4f4f"></span><span class="meta"><span class="name">darkslategrey</span><span class="hex">#2f4f4f</span><span class="vec">[0.184, 0.31, 0.31]</span></span></button></li>
+      <li class="tile" data-name="darkturquoise" data-hex="#00ced1"><button type="button" title="Copy color(&quot;darkturquoise&quot;)"><span class="chip" style="background:#00ced1"></span><span class="meta"><span class="name">darkturquoise</span><span class="hex">#00ced1</span><span class="vec">[0, 0.808, 0.82]</span></span></button></li>
+      <li class="tile" data-name="darkviolet" data-hex="#9400d3"><button type="button" title="Copy color(&quot;darkviolet&quot;)"><span class="chip" style="background:#9400d3"></span><span class="meta"><span class="name">darkviolet</span><span class="hex">#9400d3</span><span class="vec">[0.58, 0, 0.827]</span></span></button></li>
+      <li class="tile" data-name="deeppink" data-hex="#ff1493"><button type="button" title="Copy color(&quot;deeppink&quot;)"><span class="chip" style="background:#ff1493"></span><span class="meta"><span class="name">deeppink</span><span class="hex">#ff1493</span><span class="vec">[1, 0.078, 0.576]</span></span></button></li>
+      <li class="tile" data-name="deepskyblue" data-hex="#00bfff"><button type="button" title="Copy color(&quot;deepskyblue&quot;)"><span class="chip" style="background:#00bfff"></span><span class="meta"><span class="name">deepskyblue</span><span class="hex">#00bfff</span><span class="vec">[0, 0.749, 1]</span></span></button></li>
+      <li class="tile" data-name="dimgray" data-hex="#696969"><button type="button" title="Copy color(&quot;dimgray&quot;)"><span class="chip" style="background:#696969"></span><span class="meta"><span class="name">dimgray</span><span class="hex">#696969</span><span class="vec">[0.412, 0.412, 0.412]</span></span></button></li>
+      <li class="tile" data-name="dimgrey" data-hex="#696969"><button type="button" title="Copy color(&quot;dimgrey&quot;)"><span class="chip" style="background:#696969"></span><span class="meta"><span class="name">dimgrey</span><span class="hex">#696969</span><span class="vec">[0.412, 0.412, 0.412]</span></span></button></li>
+      <li class="tile" data-name="dodgerblue" data-hex="#1e90ff"><button type="button" title="Copy color(&quot;dodgerblue&quot;)"><span class="chip" style="background:#1e90ff"></span><span class="meta"><span class="name">dodgerblue</span><span class="hex">#1e90ff</span><span class="vec">[0.118, 0.565, 1]</span></span></button></li>
+      <li class="tile" data-name="firebrick" data-hex="#b22222"><button type="button" title="Copy color(&quot;firebrick&quot;)"><span class="chip" style="background:#b22222"></span><span class="meta"><span class="name">firebrick</span><span class="hex">#b22222</span><span class="vec">[0.698, 0.133, 0.133]</span></span></button></li>
+      <li class="tile" data-name="floralwhite" data-hex="#fffaf0"><button type="button" title="Copy color(&quot;floralwhite&quot;)"><span class="chip" style="background:#fffaf0"></span><span class="meta"><span class="name">floralwhite</span><span class="hex">#fffaf0</span><span class="vec">[1, 0.98, 0.941]</span></span></button></li>
+      <li class="tile" data-name="forestgreen" data-hex="#228b22"><button type="button" title="Copy color(&quot;forestgreen&quot;)"><span class="chip" style="background:#228b22"></span><span class="meta"><span class="name">forestgreen</span><span class="hex">#228b22</span><span class="vec">[0.133, 0.545, 0.133]</span></span></button></li>
+      <li class="tile" data-name="fuchsia" data-hex="#ff00ff"><button type="button" title="Copy color(&quot;fuchsia&quot;)"><span class="chip" style="background:#ff00ff"></span><span class="meta"><span class="name">fuchsia</span><span class="hex">#ff00ff</span><span class="vec">[1, 0, 1]</span></span></button></li>
+      <li class="tile" data-name="gainsboro" data-hex="#dcdcdc"><button type="button" title="Copy color(&quot;gainsboro&quot;)"><span class="chip" style="background:#dcdcdc"></span><span class="meta"><span class="name">gainsboro</span><span class="hex">#dcdcdc</span><span class="vec">[0.863, 0.863, 0.863]</span></span></button></li>
+      <li class="tile" data-name="ghostwhite" data-hex="#f8f8ff"><button type="button" title="Copy color(&quot;ghostwhite&quot;)"><span class="chip" style="background:#f8f8ff"></span><span class="meta"><span class="name">ghostwhite</span><span class="hex">#f8f8ff</span><span class="vec">[0.973, 0.973, 1]</span></span></button></li>
+      <li class="tile" data-name="gold" data-hex="#ffd700"><button type="button" title="Copy color(&quot;gold&quot;)"><span class="chip" style="background:#ffd700"></span><span class="meta"><span class="name">gold</span><span class="hex">#ffd700</span><span class="vec">[1, 0.843, 0]</span></span></button></li>
+      <li class="tile" data-name="goldenrod" data-hex="#daa520"><button type="button" title="Copy color(&quot;goldenrod&quot;)"><span class="chip" style="background:#daa520"></span><span class="meta"><span class="name">goldenrod</span><span class="hex">#daa520</span><span class="vec">[0.855, 0.647, 0.125]</span></span></button></li>
+      <li class="tile" data-name="gray" data-hex="#808080"><button type="button" title="Copy color(&quot;gray&quot;)"><span class="chip" style="background:#808080"></span><span class="meta"><span class="name">gray</span><span class="hex">#808080</span><span class="vec">[0.502, 0.502, 0.502]</span></span></button></li>
+      <li class="tile" data-name="green" data-hex="#008000"><button type="button" title="Copy color(&quot;green&quot;)"><span class="chip" style="background:#008000"></span><span class="meta"><span class="name">green</span><span class="hex">#008000</span><span class="vec">[0, 0.502, 0]</span></span></button></li>
+      <li class="tile" data-name="greenyellow" data-hex="#adff2f"><button type="button" title="Copy color(&quot;greenyellow&quot;)"><span class="chip" style="background:#adff2f"></span><span class="meta"><span class="name">greenyellow</span><span class="hex">#adff2f</span><span class="vec">[0.678, 1, 0.184]</span></span></button></li>
+      <li class="tile" data-name="grey" data-hex="#808080"><button type="button" title="Copy color(&quot;grey&quot;)"><span class="chip" style="background:#808080"></span><span class="meta"><span class="name">grey</span><span class="hex">#808080</span><span class="vec">[0.502, 0.502, 0.502]</span></span></button></li>
+      <li class="tile" data-name="honeydew" data-hex="#f0fff0"><button type="button" title="Copy color(&quot;honeydew&quot;)"><span class="chip" style="background:#f0fff0"></span><span class="meta"><span class="name">honeydew</span><span class="hex">#f0fff0</span><span class="vec">[0.941, 1, 0.941]</span></span></button></li>
+      <li class="tile" data-name="hotpink" data-hex="#ff69b4"><button type="button" title="Copy color(&quot;hotpink&quot;)"><span class="chip" style="background:#ff69b4"></span><span class="meta"><span class="name">hotpink</span><span class="hex">#ff69b4</span><span class="vec">[1, 0.412, 0.706]</span></span></button></li>
+      <li class="tile" data-name="indianred" data-hex="#cd5c5c"><button type="button" title="Copy color(&quot;indianred&quot;)"><span class="chip" style="background:#cd5c5c"></span><span class="meta"><span class="name">indianred</span><span class="hex">#cd5c5c</span><span class="vec">[0.804, 0.361, 0.361]</span></span></button></li>
+      <li class="tile" data-name="indigo" data-hex="#4b0082"><button type="button" title="Copy color(&quot;indigo&quot;)"><span class="chip" style="background:#4b0082"></span><span class="meta"><span class="name">indigo</span><span class="hex">#4b0082</span><span class="vec">[0.294, 0, 0.51]</span></span></button></li>
+      <li class="tile" data-name="ivory" data-hex="#fffff0"><button type="button" title="Copy color(&quot;ivory&quot;)"><span class="chip" style="background:#fffff0"></span><span class="meta"><span class="name">ivory</span><span class="hex">#fffff0</span><span class="vec">[1, 1, 0.941]</span></span></button></li>
+      <li class="tile" data-name="khaki" data-hex="#f0e68c"><button type="button" title="Copy color(&quot;khaki&quot;)"><span class="chip" style="background:#f0e68c"></span><span class="meta"><span class="name">khaki</span><span class="hex">#f0e68c</span><span class="vec">[0.941, 0.902, 0.549]</span></span></button></li>
+      <li class="tile" data-name="lavender" data-hex="#e6e6fa"><button type="button" title="Copy color(&quot;lavender&quot;)"><span class="chip" style="background:#e6e6fa"></span><span class="meta"><span class="name">lavender</span><span class="hex">#e6e6fa</span><span class="vec">[0.902, 0.902, 0.98]</span></span></button></li>
+      <li class="tile" data-name="lavenderblush" data-hex="#fff0f5"><button type="button" title="Copy color(&quot;lavenderblush&quot;)"><span class="chip" style="background:#fff0f5"></span><span class="meta"><span class="name">lavenderblush</span><span class="hex">#fff0f5</span><span class="vec">[1, 0.941, 0.961]</span></span></button></li>
+      <li class="tile" data-name="lawngreen" data-hex="#7cfc00"><button type="button" title="Copy color(&quot;lawngreen&quot;)"><span class="chip" style="background:#7cfc00"></span><span class="meta"><span class="name">lawngreen</span><span class="hex">#7cfc00</span><span class="vec">[0.486, 0.988, 0]</span></span></button></li>
+      <li class="tile" data-name="lemonchiffon" data-hex="#fffacd"><button type="button" title="Copy color(&quot;lemonchiffon&quot;)"><span class="chip" style="background:#fffacd"></span><span class="meta"><span class="name">lemonchiffon</span><span class="hex">#fffacd</span><span class="vec">[1, 0.98, 0.804]</span></span></button></li>
+      <li class="tile" data-name="lightblue" data-hex="#add8e6"><button type="button" title="Copy color(&quot;lightblue&quot;)"><span class="chip" style="background:#add8e6"></span><span class="meta"><span class="name">lightblue</span><span class="hex">#add8e6</span><span class="vec">[0.678, 0.847, 0.902]</span></span></button></li>
+      <li class="tile" data-name="lightcoral" data-hex="#f08080"><button type="button" title="Copy color(&quot;lightcoral&quot;)"><span class="chip" style="background:#f08080"></span><span class="meta"><span class="name">lightcoral</span><span class="hex">#f08080</span><span class="vec">[0.941, 0.502, 0.502]</span></span></button></li>
+      <li class="tile" data-name="lightcyan" data-hex="#e0ffff"><button type="button" title="Copy color(&quot;lightcyan&quot;)"><span class="chip" style="background:#e0ffff"></span><span class="meta"><span class="name">lightcyan</span><span class="hex">#e0ffff</span><span class="vec">[0.878, 1, 1]</span></span></button></li>
+      <li class="tile" data-name="lightgoldenrodyellow" data-hex="#fafad2"><button type="button" title="Copy color(&quot;lightgoldenrodyellow&quot;)"><span class="chip" style="background:#fafad2"></span><span class="meta"><span class="name">lightgoldenrodyellow</span><span class="hex">#fafad2</span><span class="vec">[0.98, 0.98, 0.824]</span></span></button></li>
+      <li class="tile" data-name="lightgray" data-hex="#d3d3d3"><button type="button" title="Copy color(&quot;lightgray&quot;)"><span class="chip" style="background:#d3d3d3"></span><span class="meta"><span class="name">lightgray</span><span class="hex">#d3d3d3</span><span class="vec">[0.827, 0.827, 0.827]</span></span></button></li>
+      <li class="tile" data-name="lightgreen" data-hex="#90ee90"><button type="button" title="Copy color(&quot;lightgreen&quot;)"><span class="chip" style="background:#90ee90"></span><span class="meta"><span class="name">lightgreen</span><span class="hex">#90ee90</span><span class="vec">[0.565, 0.933, 0.565]</span></span></button></li>
+      <li class="tile" data-name="lightgrey" data-hex="#d3d3d3"><button type="button" title="Copy color(&quot;lightgrey&quot;)"><span class="chip" style="background:#d3d3d3"></span><span class="meta"><span class="name">lightgrey</span><span class="hex">#d3d3d3</span><span class="vec">[0.827, 0.827, 0.827]</span></span></button></li>
+      <li class="tile" data-name="lightpink" data-hex="#ffb6c1"><button type="button" title="Copy color(&quot;lightpink&quot;)"><span class="chip" style="background:#ffb6c1"></span><span class="meta"><span class="name">lightpink</span><span class="hex">#ffb6c1</span><span class="vec">[1, 0.714, 0.757]</span></span></button></li>
+      <li class="tile" data-name="lightsalmon" data-hex="#ffa07a"><button type="button" title="Copy color(&quot;lightsalmon&quot;)"><span class="chip" style="background:#ffa07a"></span><span class="meta"><span class="name">lightsalmon</span><span class="hex">#ffa07a</span><span class="vec">[1, 0.627, 0.478]</span></span></button></li>
+      <li class="tile" data-name="lightseagreen" data-hex="#20b2aa"><button type="button" title="Copy color(&quot;lightseagreen&quot;)"><span class="chip" style="background:#20b2aa"></span><span class="meta"><span class="name">lightseagreen</span><span class="hex">#20b2aa</span><span class="vec">[0.125, 0.698, 0.667]</span></span></button></li>
+      <li class="tile" data-name="lightskyblue" data-hex="#87cefa"><button type="button" title="Copy color(&quot;lightskyblue&quot;)"><span class="chip" style="background:#87cefa"></span><span class="meta"><span class="name">lightskyblue</span><span class="hex">#87cefa</span><span class="vec">[0.529, 0.808, 0.98]</span></span></button></li>
+      <li class="tile" data-name="lightslategray" data-hex="#778899"><button type="button" title="Copy color(&quot;lightslategray&quot;)"><span class="chip" style="background:#778899"></span><span class="meta"><span class="name">lightslategray</span><span class="hex">#778899</span><span class="vec">[0.467, 0.533, 0.6]</span></span></button></li>
+      <li class="tile" data-name="lightslategrey" data-hex="#778899"><button type="button" title="Copy color(&quot;lightslategrey&quot;)"><span class="chip" style="background:#778899"></span><span class="meta"><span class="name">lightslategrey</span><span class="hex">#778899</span><span class="vec">[0.467, 0.533, 0.6]</span></span></button></li>
+      <li class="tile" data-name="lightsteelblue" data-hex="#b0c4de"><button type="button" title="Copy color(&quot;lightsteelblue&quot;)"><span class="chip" style="background:#b0c4de"></span><span class="meta"><span class="name">lightsteelblue</span><span class="hex">#b0c4de</span><span class="vec">[0.69, 0.769, 0.871]</span></span></button></li>
+      <li class="tile" data-name="lightyellow" data-hex="#ffffe0"><button type="button" title="Copy color(&quot;lightyellow&quot;)"><span class="chip" style="background:#ffffe0"></span><span class="meta"><span class="name">lightyellow</span><span class="hex">#ffffe0</span><span class="vec">[1, 1, 0.878]</span></span></button></li>
+      <li class="tile" data-name="lime" data-hex="#00ff00"><button type="button" title="Copy color(&quot;lime&quot;)"><span class="chip" style="background:#00ff00"></span><span class="meta"><span class="name">lime</span><span class="hex">#00ff00</span><span class="vec">[0, 1, 0]</span></span></button></li>
+      <li class="tile" data-name="limegreen" data-hex="#32cd32"><button type="button" title="Copy color(&quot;limegreen&quot;)"><span class="chip" style="background:#32cd32"></span><span class="meta"><span class="name">limegreen</span><span class="hex">#32cd32</span><span class="vec">[0.196, 0.804, 0.196]</span></span></button></li>
+      <li class="tile" data-name="linen" data-hex="#faf0e6"><button type="button" title="Copy color(&quot;linen&quot;)"><span class="chip" style="background:#faf0e6"></span><span class="meta"><span class="name">linen</span><span class="hex">#faf0e6</span><span class="vec">[0.98, 0.941, 0.902]</span></span></button></li>
+      <li class="tile" data-name="magenta" data-hex="#ff00ff"><button type="button" title="Copy color(&quot;magenta&quot;)"><span class="chip" style="background:#ff00ff"></span><span class="meta"><span class="name">magenta</span><span class="hex">#ff00ff</span><span class="vec">[1, 0, 1]</span></span></button></li>
+      <li class="tile" data-name="maroon" data-hex="#800000"><button type="button" title="Copy color(&quot;maroon&quot;)"><span class="chip" style="background:#800000"></span><span class="meta"><span class="name">maroon</span><span class="hex">#800000</span><span class="vec">[0.502, 0, 0]</span></span></button></li>
+      <li class="tile" data-name="mediumaquamarine" data-hex="#66cdaa"><button type="button" title="Copy color(&quot;mediumaquamarine&quot;)"><span class="chip" style="background:#66cdaa"></span><span class="meta"><span class="name">mediumaquamarine</span><span class="hex">#66cdaa</span><span class="vec">[0.4, 0.804, 0.667]</span></span></button></li>
+      <li class="tile" data-name="mediumblue" data-hex="#0000cd"><button type="button" title="Copy color(&quot;mediumblue&quot;)"><span class="chip" style="background:#0000cd"></span><span class="meta"><span class="name">mediumblue</span><span class="hex">#0000cd</span><span class="vec">[0, 0, 0.804]</span></span></button></li>
+      <li class="tile" data-name="mediumorchid" data-hex="#ba55d3"><button type="button" title="Copy color(&quot;mediumorchid&quot;)"><span class="chip" style="background:#ba55d3"></span><span class="meta"><span class="name">mediumorchid</span><span class="hex">#ba55d3</span><span class="vec">[0.729, 0.333, 0.827]</span></span></button></li>
+      <li class="tile" data-name="mediumpurple" data-hex="#9370db"><button type="button" title="Copy color(&quot;mediumpurple&quot;)"><span class="chip" style="background:#9370db"></span><span class="meta"><span class="name">mediumpurple</span><span class="hex">#9370db</span><span class="vec">[0.576, 0.439, 0.859]</span></span></button></li>
+      <li class="tile" data-name="mediumseagreen" data-hex="#3cb371"><button type="button" title="Copy color(&quot;mediumseagreen&quot;)"><span class="chip" style="background:#3cb371"></span><span class="meta"><span class="name">mediumseagreen</span><span class="hex">#3cb371</span><span class="vec">[0.235, 0.702, 0.443]</span></span></button></li>
+      <li class="tile" data-name="mediumslateblue" data-hex="#7b68ee"><button type="button" title="Copy color(&quot;mediumslateblue&quot;)"><span class="chip" style="background:#7b68ee"></span><span class="meta"><span class="name">mediumslateblue</span><span class="hex">#7b68ee</span><span class="vec">[0.482, 0.408, 0.933]</span></span></button></li>
+      <li class="tile" data-name="mediumspringgreen" data-hex="#00fa9a"><button type="button" title="Copy color(&quot;mediumspringgreen&quot;)"><span class="chip" style="background:#00fa9a"></span><span class="meta"><span class="name">mediumspringgreen</span><span class="hex">#00fa9a</span><span class="vec">[0, 0.98, 0.604]</span></span></button></li>
+      <li class="tile" data-name="mediumturquoise" data-hex="#48d1cc"><button type="button" title="Copy color(&quot;mediumturquoise&quot;)"><span class="chip" style="background:#48d1cc"></span><span class="meta"><span class="name">mediumturquoise</span><span class="hex">#48d1cc</span><span class="vec">[0.282, 0.82, 0.8]</span></span></button></li>
+      <li class="tile" data-name="mediumvioletred" data-hex="#c71585"><button type="button" title="Copy color(&quot;mediumvioletred&quot;)"><span class="chip" style="background:#c71585"></span><span class="meta"><span class="name">mediumvioletred</span><span class="hex">#c71585</span><span class="vec">[0.78, 0.082, 0.522]</span></span></button></li>
+      <li class="tile" data-name="midnightblue" data-hex="#191970"><button type="button" title="Copy color(&quot;midnightblue&quot;)"><span class="chip" style="background:#191970"></span><span class="meta"><span class="name">midnightblue</span><span class="hex">#191970</span><span class="vec">[0.098, 0.098, 0.439]</span></span></button></li>
+      <li class="tile" data-name="mintcream" data-hex="#f5fffa"><button type="button" title="Copy color(&quot;mintcream&quot;)"><span class="chip" style="background:#f5fffa"></span><span class="meta"><span class="name">mintcream</span><span class="hex">#f5fffa</span><span class="vec">[0.961, 1, 0.98]</span></span></button></li>
+      <li class="tile" data-name="mistyrose" data-hex="#ffe4e1"><button type="button" title="Copy color(&quot;mistyrose&quot;)"><span class="chip" style="background:#ffe4e1"></span><span class="meta"><span class="name">mistyrose</span><span class="hex">#ffe4e1</span><span class="vec">[1, 0.894, 0.882]</span></span></button></li>
+      <li class="tile" data-name="moccasin" data-hex="#ffe4b5"><button type="button" title="Copy color(&quot;moccasin&quot;)"><span class="chip" style="background:#ffe4b5"></span><span class="meta"><span class="name">moccasin</span><span class="hex">#ffe4b5</span><span class="vec">[1, 0.894, 0.71]</span></span></button></li>
+      <li class="tile" data-name="navajowhite" data-hex="#ffdead"><button type="button" title="Copy color(&quot;navajowhite&quot;)"><span class="chip" style="background:#ffdead"></span><span class="meta"><span class="name">navajowhite</span><span class="hex">#ffdead</span><span class="vec">[1, 0.871, 0.678]</span></span></button></li>
+      <li class="tile" data-name="navy" data-hex="#000080"><button type="button" title="Copy color(&quot;navy&quot;)"><span class="chip" style="background:#000080"></span><span class="meta"><span class="name">navy</span><span class="hex">#000080</span><span class="vec">[0, 0, 0.502]</span></span></button></li>
+      <li class="tile" data-name="oldlace" data-hex="#fdf5e6"><button type="button" title="Copy color(&quot;oldlace&quot;)"><span class="chip" style="background:#fdf5e6"></span><span class="meta"><span class="name">oldlace</span><span class="hex">#fdf5e6</span><span class="vec">[0.992, 0.961, 0.902]</span></span></button></li>
+      <li class="tile" data-name="olive" data-hex="#808000"><button type="button" title="Copy color(&quot;olive&quot;)"><span class="chip" style="background:#808000"></span><span class="meta"><span class="name">olive</span><span class="hex">#808000</span><span class="vec">[0.502, 0.502, 0]</span></span></button></li>
+      <li class="tile" data-name="olivedrab" data-hex="#6b8e23"><button type="button" title="Copy color(&quot;olivedrab&quot;)"><span class="chip" style="background:#6b8e23"></span><span class="meta"><span class="name">olivedrab</span><span class="hex">#6b8e23</span><span class="vec">[0.42, 0.557, 0.137]</span></span></button></li>
+      <li class="tile" data-name="orange" data-hex="#ffa500"><button type="button" title="Copy color(&quot;orange&quot;)"><span class="chip" style="background:#ffa500"></span><span class="meta"><span class="name">orange</span><span class="hex">#ffa500</span><span class="vec">[1, 0.647, 0]</span></span></button></li>
+      <li class="tile" data-name="orangered" data-hex="#ff4500"><button type="button" title="Copy color(&quot;orangered&quot;)"><span class="chip" style="background:#ff4500"></span><span class="meta"><span class="name">orangered</span><span class="hex">#ff4500</span><span class="vec">[1, 0.271, 0]</span></span></button></li>
+      <li class="tile" data-name="orchid" data-hex="#da70d6"><button type="button" title="Copy color(&quot;orchid&quot;)"><span class="chip" style="background:#da70d6"></span><span class="meta"><span class="name">orchid</span><span class="hex">#da70d6</span><span class="vec">[0.855, 0.439, 0.839]</span></span></button></li>
+      <li class="tile" data-name="palegoldenrod" data-hex="#eee8aa"><button type="button" title="Copy color(&quot;palegoldenrod&quot;)"><span class="chip" style="background:#eee8aa"></span><span class="meta"><span class="name">palegoldenrod</span><span class="hex">#eee8aa</span><span class="vec">[0.933, 0.91, 0.667]</span></span></button></li>
+      <li class="tile" data-name="palegreen" data-hex="#98fb98"><button type="button" title="Copy color(&quot;palegreen&quot;)"><span class="chip" style="background:#98fb98"></span><span class="meta"><span class="name">palegreen</span><span class="hex">#98fb98</span><span class="vec">[0.596, 0.984, 0.596]</span></span></button></li>
+      <li class="tile" data-name="paleturquoise" data-hex="#afeeee"><button type="button" title="Copy color(&quot;paleturquoise&quot;)"><span class="chip" style="background:#afeeee"></span><span class="meta"><span class="name">paleturquoise</span><span class="hex">#afeeee</span><span class="vec">[0.686, 0.933, 0.933]</span></span></button></li>
+      <li class="tile" data-name="palevioletred" data-hex="#db7093"><button type="button" title="Copy color(&quot;palevioletred&quot;)"><span class="chip" style="background:#db7093"></span><span class="meta"><span class="name">palevioletred</span><span class="hex">#db7093</span><span class="vec">[0.859, 0.439, 0.576]</span></span></button></li>
+      <li class="tile" data-name="papayawhip" data-hex="#ffefd5"><button type="button" title="Copy color(&quot;papayawhip&quot;)"><span class="chip" style="background:#ffefd5"></span><span class="meta"><span class="name">papayawhip</span><span class="hex">#ffefd5</span><span class="vec">[1, 0.937, 0.835]</span></span></button></li>
+      <li class="tile" data-name="peachpuff" data-hex="#ffdab9"><button type="button" title="Copy color(&quot;peachpuff&quot;)"><span class="chip" style="background:#ffdab9"></span><span class="meta"><span class="name">peachpuff</span><span class="hex">#ffdab9</span><span class="vec">[1, 0.855, 0.725]</span></span></button></li>
+      <li class="tile" data-name="peru" data-hex="#cd853f"><button type="button" title="Copy color(&quot;peru&quot;)"><span class="chip" style="background:#cd853f"></span><span class="meta"><span class="name">peru</span><span class="hex">#cd853f</span><span class="vec">[0.804, 0.522, 0.247]</span></span></button></li>
+      <li class="tile" data-name="pink" data-hex="#ffc0cb"><button type="button" title="Copy color(&quot;pink&quot;)"><span class="chip" style="background:#ffc0cb"></span><span class="meta"><span class="name">pink</span><span class="hex">#ffc0cb</span><span class="vec">[1, 0.753, 0.796]</span></span></button></li>
+      <li class="tile" data-name="plum" data-hex="#dda0dd"><button type="button" title="Copy color(&quot;plum&quot;)"><span class="chip" style="background:#dda0dd"></span><span class="meta"><span class="name">plum</span><span class="hex">#dda0dd</span><span class="vec">[0.867, 0.627, 0.867]</span></span></button></li>
+      <li class="tile" data-name="powderblue" data-hex="#b0e0e6"><button type="button" title="Copy color(&quot;powderblue&quot;)"><span class="chip" style="background:#b0e0e6"></span><span class="meta"><span class="name">powderblue</span><span class="hex">#b0e0e6</span><span class="vec">[0.69, 0.878, 0.902]</span></span></button></li>
+      <li class="tile" data-name="purple" data-hex="#800080"><button type="button" title="Copy color(&quot;purple&quot;)"><span class="chip" style="background:#800080"></span><span class="meta"><span class="name">purple</span><span class="hex">#800080</span><span class="vec">[0.502, 0, 0.502]</span></span></button></li>
+      <li class="tile" data-name="rebeccapurple" data-hex="#663399"><button type="button" title="Copy color(&quot;rebeccapurple&quot;)"><span class="chip" style="background:#663399"></span><span class="meta"><span class="name">rebeccapurple</span><span class="hex">#663399</span><span class="vec">[0.4, 0.2, 0.6]</span></span></button></li>
+      <li class="tile" data-name="red" data-hex="#ff0000"><button type="button" title="Copy color(&quot;red&quot;)"><span class="chip" style="background:#ff0000"></span><span class="meta"><span class="name">red</span><span class="hex">#ff0000</span><span class="vec">[1, 0, 0]</span></span></button></li>
+      <li class="tile" data-name="rosybrown" data-hex="#bc8f8f"><button type="button" title="Copy color(&quot;rosybrown&quot;)"><span class="chip" style="background:#bc8f8f"></span><span class="meta"><span class="name">rosybrown</span><span class="hex">#bc8f8f</span><span class="vec">[0.737, 0.561, 0.561]</span></span></button></li>
+      <li class="tile" data-name="royalblue" data-hex="#4169e1"><button type="button" title="Copy color(&quot;royalblue&quot;)"><span class="chip" style="background:#4169e1"></span><span class="meta"><span class="name">royalblue</span><span class="hex">#4169e1</span><span class="vec">[0.255, 0.412, 0.882]</span></span></button></li>
+      <li class="tile" data-name="saddlebrown" data-hex="#8b4513"><button type="button" title="Copy color(&quot;saddlebrown&quot;)"><span class="chip" style="background:#8b4513"></span><span class="meta"><span class="name">saddlebrown</span><span class="hex">#8b4513</span><span class="vec">[0.545, 0.271, 0.075]</span></span></button></li>
+      <li class="tile" data-name="salmon" data-hex="#fa8072"><button type="button" title="Copy color(&quot;salmon&quot;)"><span class="chip" style="background:#fa8072"></span><span class="meta"><span class="name">salmon</span><span class="hex">#fa8072</span><span class="vec">[0.98, 0.502, 0.447]</span></span></button></li>
+      <li class="tile" data-name="sandybrown" data-hex="#f4a460"><button type="button" title="Copy color(&quot;sandybrown&quot;)"><span class="chip" style="background:#f4a460"></span><span class="meta"><span class="name">sandybrown</span><span class="hex">#f4a460</span><span class="vec">[0.957, 0.643, 0.376]</span></span></button></li>
+      <li class="tile" data-name="seagreen" data-hex="#2e8b57"><button type="button" title="Copy color(&quot;seagreen&quot;)"><span class="chip" style="background:#2e8b57"></span><span class="meta"><span class="name">seagreen</span><span class="hex">#2e8b57</span><span class="vec">[0.18, 0.545, 0.341]</span></span></button></li>
+      <li class="tile" data-name="seashell" data-hex="#fff5ee"><button type="button" title="Copy color(&quot;seashell&quot;)"><span class="chip" style="background:#fff5ee"></span><span class="meta"><span class="name">seashell</span><span class="hex">#fff5ee</span><span class="vec">[1, 0.961, 0.933]</span></span></button></li>
+      <li class="tile" data-name="sienna" data-hex="#a0522d"><button type="button" title="Copy color(&quot;sienna&quot;)"><span class="chip" style="background:#a0522d"></span><span class="meta"><span class="name">sienna</span><span class="hex">#a0522d</span><span class="vec">[0.627, 0.322, 0.176]</span></span></button></li>
+      <li class="tile" data-name="silver" data-hex="#c0c0c0"><button type="button" title="Copy color(&quot;silver&quot;)"><span class="chip" style="background:#c0c0c0"></span><span class="meta"><span class="name">silver</span><span class="hex">#c0c0c0</span><span class="vec">[0.753, 0.753, 0.753]</span></span></button></li>
+      <li class="tile" data-name="skyblue" data-hex="#87ceeb"><button type="button" title="Copy color(&quot;skyblue&quot;)"><span class="chip" style="background:#87ceeb"></span><span class="meta"><span class="name">skyblue</span><span class="hex">#87ceeb</span><span class="vec">[0.529, 0.808, 0.922]</span></span></button></li>
+      <li class="tile" data-name="slateblue" data-hex="#6a5acd"><button type="button" title="Copy color(&quot;slateblue&quot;)"><span class="chip" style="background:#6a5acd"></span><span class="meta"><span class="name">slateblue</span><span class="hex">#6a5acd</span><span class="vec">[0.416, 0.353, 0.804]</span></span></button></li>
+      <li class="tile" data-name="slategray" data-hex="#708090"><button type="button" title="Copy color(&quot;slategray&quot;)"><span class="chip" style="background:#708090"></span><span class="meta"><span class="name">slategray</span><span class="hex">#708090</span><span class="vec">[0.439, 0.502, 0.565]</span></span></button></li>
+      <li class="tile" data-name="slategrey" data-hex="#708090"><button type="button" title="Copy color(&quot;slategrey&quot;)"><span class="chip" style="background:#708090"></span><span class="meta"><span class="name">slategrey</span><span class="hex">#708090</span><span class="vec">[0.439, 0.502, 0.565]</span></span></button></li>
+      <li class="tile" data-name="snow" data-hex="#fffafa"><button type="button" title="Copy color(&quot;snow&quot;)"><span class="chip" style="background:#fffafa"></span><span class="meta"><span class="name">snow</span><span class="hex">#fffafa</span><span class="vec">[1, 0.98, 0.98]</span></span></button></li>
+      <li class="tile" data-name="springgreen" data-hex="#00ff7f"><button type="button" title="Copy color(&quot;springgreen&quot;)"><span class="chip" style="background:#00ff7f"></span><span class="meta"><span class="name">springgreen</span><span class="hex">#00ff7f</span><span class="vec">[0, 1, 0.498]</span></span></button></li>
+      <li class="tile" data-name="steelblue" data-hex="#4682b4"><button type="button" title="Copy color(&quot;steelblue&quot;)"><span class="chip" style="background:#4682b4"></span><span class="meta"><span class="name">steelblue</span><span class="hex">#4682b4</span><span class="vec">[0.275, 0.51, 0.706]</span></span></button></li>
+      <li class="tile" data-name="tan" data-hex="#d2b48c"><button type="button" title="Copy color(&quot;tan&quot;)"><span class="chip" style="background:#d2b48c"></span><span class="meta"><span class="name">tan</span><span class="hex">#d2b48c</span><span class="vec">[0.824, 0.706, 0.549]</span></span></button></li>
+      <li class="tile" data-name="teal" data-hex="#008080"><button type="button" title="Copy color(&quot;teal&quot;)"><span class="chip" style="background:#008080"></span><span class="meta"><span class="name">teal</span><span class="hex">#008080</span><span class="vec">[0, 0.502, 0.502]</span></span></button></li>
+      <li class="tile" data-name="thistle" data-hex="#d8bfd8"><button type="button" title="Copy color(&quot;thistle&quot;)"><span class="chip" style="background:#d8bfd8"></span><span class="meta"><span class="name">thistle</span><span class="hex">#d8bfd8</span><span class="vec">[0.847, 0.749, 0.847]</span></span></button></li>
+      <li class="tile" data-name="tomato" data-hex="#ff6347"><button type="button" title="Copy color(&quot;tomato&quot;)"><span class="chip" style="background:#ff6347"></span><span class="meta"><span class="name">tomato</span><span class="hex">#ff6347</span><span class="vec">[1, 0.388, 0.278]</span></span></button></li>
+      <li class="tile" data-name="turquoise" data-hex="#40e0d0"><button type="button" title="Copy color(&quot;turquoise&quot;)"><span class="chip" style="background:#40e0d0"></span><span class="meta"><span class="name">turquoise</span><span class="hex">#40e0d0</span><span class="vec">[0.251, 0.878, 0.816]</span></span></button></li>
+      <li class="tile" data-name="violet" data-hex="#ee82ee"><button type="button" title="Copy color(&quot;violet&quot;)"><span class="chip" style="background:#ee82ee"></span><span class="meta"><span class="name">violet</span><span class="hex">#ee82ee</span><span class="vec">[0.933, 0.51, 0.933]</span></span></button></li>
+      <li class="tile" data-name="wheat" data-hex="#f5deb3"><button type="button" title="Copy color(&quot;wheat&quot;)"><span class="chip" style="background:#f5deb3"></span><span class="meta"><span class="name">wheat</span><span class="hex">#f5deb3</span><span class="vec">[0.961, 0.871, 0.702]</span></span></button></li>
+      <li class="tile" data-name="white" data-hex="#ffffff"><button type="button" title="Copy color(&quot;white&quot;)"><span class="chip" style="background:#ffffff"></span><span class="meta"><span class="name">white</span><span class="hex">#ffffff</span><span class="vec">[1, 1, 1]</span></span></button></li>
+      <li class="tile" data-name="whitesmoke" data-hex="#f5f5f5"><button type="button" title="Copy color(&quot;whitesmoke&quot;)"><span class="chip" style="background:#f5f5f5"></span><span class="meta"><span class="name">whitesmoke</span><span class="hex">#f5f5f5</span><span class="vec">[0.961, 0.961, 0.961]</span></span></button></li>
+      <li class="tile" data-name="yellow" data-hex="#ffff00"><button type="button" title="Copy color(&quot;yellow&quot;)"><span class="chip" style="background:#ffff00"></span><span class="meta"><span class="name">yellow</span><span class="hex">#ffff00</span><span class="vec">[1, 1, 0]</span></span></button></li>
+      <li class="tile" data-name="yellowgreen" data-hex="#9acd32"><button type="button" title="Copy color(&quot;yellowgreen&quot;)"><span class="chip" style="background:#9acd32"></span><span class="meta"><span class="name">yellowgreen</span><span class="hex">#9acd32</span><span class="vec">[0.604, 0.804, 0.196]</span></span></button></li>
+  </ul>
+
+  <p class="note">Click a swatch to copy <code>color("name")</code>. Under each name are the hex code and the same
+  color as an OpenSCAD RGB vector (0–1). Source: <code>src/core/WebColors.h</code> in the OpenSCAD repository.
+  <code>transparent</code> (RGBA 0,0,0,0) is also accepted but not shown.</p>
+</div>
+
+<script>
+(function () {
+  var grid = document.getElementById("grid");
+  var q = document.getElementById("q");
+  var count = document.getElementById("count");
+  var sortButtons = document.querySelectorAll(".seg button");
+  var sortKey = "name";
+
+  // Hue (0-360), saturation and lightness (0-1) from "#rrggbb".
+  function hsl(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255;
+    var g = parseInt(hex.slice(3, 5), 16) / 255;
+    var b = parseInt(hex.slice(5, 7), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var l = (max + min) / 2, d = max - min, hue = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === r) hue = ((g - b) / d) % 6;
+      else if (max === g) hue = (b - r) / d + 2;
+      else hue = (r - g) / d + 4;
+      hue = (hue * 60 + 360) % 360;
+    }
+    return { hue: hue, sat: s, light: l };
+  }
+
+  var tiles = Array.prototype.map.call(grid.children, function (el) {
+    var c = hsl(el.dataset.hex);
+    return { el: el, name: el.dataset.name, hex: el.dataset.hex, hue: c.hue, sat: c.sat, light: c.light };
+  });
+
+  var comparers = {
+    name: function (a, b) { return a.name.localeCompare(b.name); },
+    // Greys (low saturation) go last, ordered dark to light; colors by hue, then lightness.
+    hue: function (a, b) {
+      var ga = a.sat < 0.08, gb = b.sat < 0.08;
+      if (ga !== gb) return ga ? 1 : -1;
+      if (ga) return a.light - b.light;
+      return (a.hue - b.hue) || (a.light - b.light);
+    },
+    light: function (a, b) { return a.light - b.light; }
+  };
+
+  function update() {
+    var term = q.value.trim().toLowerCase();
+    var shown = 0;
+    tiles.sort(comparers[sortKey]).forEach(function (t) {
+      var match = !term || t.name.indexOf(term) !== -1 || t.hex.indexOf(term) !== -1;
+      t.el.hidden = !match;
+      if (match) shown++;
+      grid.appendChild(t.el);
+    });
+    count.textContent = shown + " of " + tiles.length;
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for file:// and plain http pages.
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+
+  grid.addEventListener("click", function (e) {
+    var li = e.target.closest(".tile");
+    if (!li) return;
+    copyText('color("' + li.dataset.name + '")').then(function () {
+      li.classList.add("copied");
+      setTimeout(function () { li.classList.remove("copied"); }, 1200);
+    }, function () {});
+  });
+
+  q.addEventListener("input", update);
+  Array.prototype.forEach.call(sortButtons, function (btn) {
+    btn.addEventListener("click", function () {
+      sortKey = btn.dataset.sort;
+      Array.prototype.forEach.call(sortButtons, function (b) {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
+      update();
+    });
+  });
+})();
+</script>
+</body>
+</html>

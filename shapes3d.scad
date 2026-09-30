@@ -132,7 +132,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
 //   clip_angle = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the cuboid.  Default: (no clipping)
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
-//   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
+//   p2 = If given with `p1`, defines the top back right corner point of the cuboid, so `p1` and `p2` together specify the cuboid by its bounds.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -4726,7 +4726,6 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
             caps=false, col_wrap=true, row_wrap=true, reverse=true
         )
     ) reorient(anchor,spin,orient, r=r, anchors=anchors, p=vnf);
-
 
 
 

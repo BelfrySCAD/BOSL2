@@ -62,67 +62,32 @@ include <../std.scad>
 
 assert_approx(lch(l=0, c=0, h=0), [0, 0, 0]);
 
-assert(approx(lch(l=1, c=0, h=137), [1, 1, 1],1e-6));
+assert(approx(lch(l=100, c=0, h=137), [1, 1, 1],1e-6));
 
 // Hue is irrelevant when chroma is zero.
-assert_approx(lch(l=.5, c=0, h=0),
-              lch(l=.5, c=0, h=137));
+assert_approx(lch(l=50, c=0, h=0),
+              lch(l=50, c=0, h=137));
 
 // Hue is periodic.
-assert_approx(lch(l=.5, c=40, h=0),
-              lch(l=.5, c=40, h=360));
+assert_approx(lch(l=50, c=40, h=0),
+              lch(l=50, c=40, h=360));
 
-// sat=1 gives the maximum in-gamut chroma.
-assert_approx(
-    lch(l=.5, sat=1, h=120),
-    lch(l=.5, c=max_chroma(.5,120), h=120)
-);
+assert(approx(lch(100,0,0),[1,1,1],eps=1e-6));
+assert(approx(lch(100-1e-6,0,0),[1,1,1],eps=1e-6));
+assert(approx(lch(60,45,120),[.500436,.603566,.286890],eps=1e-6));
+assert(lch(60,45,-240)==lch(60,45,120));
+assert(lch(60,45,120,clip=true)==lch(60,45,120));
+assert(lch(60,45,120,.3)==concat(lch(60,45,120),[.3]));
+assert(len(lch(60,45,120))==3);
+
+/// Chroma 90 lies in a second valid interval; chroma 70 is in the intervening gap.
+assert(approx(lch(94.91,90,101),[.997716,.965985,.150699],eps=1e-6));
+assert(approx(lch(94.91,70,101,clip=true),[1,.959592,.394009],eps=1e-6));
+assert(lch(94.91,90,101,clip=true)==lch(94.91,90,101));
+assert(approx(lch(50,150,0,clip=true),[1, 0, 0.49467754157347016],eps=1e-6));
+
+
 '''
-
-
-[[test]]
-name = "test_lch"
-expect_success = false
-script = '''
-include <../std.scad>
-
-lch(l=.5, c=max_chroma(.5,120)*1.01, h=120);
-
-'''
-
-
-[[test]]
-name = "test_max_chroma"
-script = '''
-include <../std.scad>
-
-
-// max_chroma()
-assert_approx(max_chroma(0, 0), 0);
-
-assert_approx(max_chroma(1, 137), 0);
-
-// There is nonzero chroma available in the interior of the gamut.
-assert(max_chroma(.5, 0) > 0);
-
-// The computed maximum lies on the gamut boundary.
-let(
-    l = .5,
-    h = 0,
-    c = max_chroma(l,h)
-)
-assert_approx(_gamut_violation(h,c,l), 0);
-
-// Slightly below the maximum must remain in gamut.
-let(
-    l = .5,
-    h = 120,
-    c = max_chroma(l,h)
-)
-assert(_gamut_violation(h,c*.999,l) <= 0);
-'''
-
-
 
 
 [[test]]

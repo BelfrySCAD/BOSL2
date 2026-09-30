@@ -668,7 +668,7 @@ function _ceilall(data) =
 //   Returns the value(s) in `v` limited to the range defined by `minval` and `maxval`.
 //   This operation is also known as "clamping" in other computer languages.
 // Arguments:
-//   m = Value(s) to constrain. Can be a numerical value, a 1D vector, a 2D rectangular matrix, or a list of different-length vectors.
+//   v = Value(s) to constrain. Can be a numerical value, a 1D vector, a 2D rectangular matrix, or a list of different-length vectors.
 //   minval = Minimum value to return. Set to `-INF` to unrestrict the minimum.
 //   maxval = Maximum value to return. Set to `INF` to unrestrict the maximum.
 // Example:
