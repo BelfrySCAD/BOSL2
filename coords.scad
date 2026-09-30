@@ -236,12 +236,15 @@ function xy_to_polar(x, y) =
 //   to perform 2D operations on a coplanar set of data.  After those operations are done you can return the data
 //   to 3D with `lift_plane()`.  You could also use this to force approximately coplanar data to be exactly coplanar.
 //   The parameter p can be a point, path, region, bezier patch or VNF.
+//   A VNF is returned as a VNF-like structure with 2D vertices.  This projected
+//   representation can be passed to {{lift_plane()}}, but is not a standard 3D VNF. An empty VNF is returned unchanged.
+//   Projection discards distance from the plane; lifting the result restores points on the plane, not their original depth.
 //   The plane can be specified as
 //   - A list of three points.  The planar coordinate system should have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
 //   - A list of non-collinear, coplanar points that define a plane.
 //   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
-//   If you omit the point specification then `project_plane()` returns a rotation matrix that maps the specified plane to the XY plane.
+//   If you omit the point specification then `project_plane()` returns a transformation matrix that maps the specified plane to the XY plane.
 //   Note that if you apply this transformation to data lying on the plane, it produces 3D points with the Z coordinate of zero.
 // Arguments:
 //   plane = plane specification or point list defining the plane
@@ -255,7 +258,7 @@ function xy_to_polar(x, y) =
 //   data = apply(M,path3d(circle(r=10, $fn=20)));
 //   move_copies(data) sphere(r=1);
 //   color("red") move_copies(project_plane(data, data)) sphere(r=1);
-// Example(3D,VPR=[70.40,0.00,18.70],VPD=292.71,VPT=[-3.65,16.28,13.46]): The arrows show the projection from the red circle to its projection in yellow.  Since we didn't use {{path3d()}} the projected curve is still a 3D curve with zero $z$ component.  
+// Example(3D,VPR=[70.40,0.00,18.70],VPD=292.71,VPT=[-3.65,16.28,13.46]): The arrows show the projection from the red circle to its projection in yellow.  Since we didn't use {{path2d()}} the projected curve is still a 3D curve with zero $z$ component.  
 //   xyzpath = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
 //   mat = project_plane(xyzpath);
 //   xypath = apply(mat, xyzpath);
@@ -273,7 +276,7 @@ function project_plane(plane,p) =
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
               x = unit(v-(v*y)*y)   // x axis 
           )            
-          frame_map(x,y) * move(-plane[0])
+          frame_map(x,y,reverse=true) * move(-plane[0])
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
           assert(_valid_plane(plane), "\nPlane is not valid.")
           let(
@@ -287,7 +290,7 @@ function project_plane(plane,p) =
           assert(is_def(plane), "\nPoint list is not coplanar.")
           project_plane(plane)
     : assert(is_def(p), str("Invalid plane specification: ",plane))
-      is_vnf(p) ? [project_plane(plane,p[0]), p[1]] 
+      is_vnf(p) ? (p[0]==[] ? p : [project_plane(plane,p[0]), p[1]])
     : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
            [for(plist=p) project_plane(plane,plist)]
     : assert(is_vector(p,3) || is_path(p,3), str("\nData must be a 3D point, path, region, vnf, or bezier patch."))
@@ -314,17 +317,19 @@ function project_plane(plane,p) =
 //   M =  lift_plane(plane);
 // Description:
 //   Converts the given 2D point on the plane to 3D coordinates of the specified plane.
-//   The parameter p can be a point, path, region, bezier patch or VNF.
+//   The parameter `p` can be a 2D point, path, region, bezier patch, or a projected VNF (a VNF with 2d vertices)
+//   returned by {{project_plane()}}. 
+//   Lifting a projection does not recover any distance from the plane that was discarded during projection.
 //   The plane can be specified as
 //   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
 //   - A list of non-collinear, coplanar points that define a plane.
 //   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
 //   If you do not supply `p` then you get a transformation matrix that operates in 3D, assuming that the Z coordinate of the points is zero.
-//   This matrix is a rotation, the inverse of the one produced by project_plane.
+//   This rotation matrix is the inverse of the one produced by {{project_plane()}}.
 // Arguments:
 //   plane = Plane specification or list of points to define a plane
-//   p = points, path, region, VNF, or bezier patch to transform. 
+//   p = 2D point, path, region, projected VNF, or bezier patch to transform.
 function lift_plane(plane, p) =
       is_matrix(plane,3,3) && is_undef(p) ? // no data, 3 p given
           let(
@@ -332,7 +337,7 @@ function lift_plane(plane, p) =
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
               x = unit(v-(v*y)*y)   // x axis 
           )            
-          move(plane[0]) * frame_map(x,y,reverse=true)
+          move(plane[0]) * frame_map(x,y)
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
           assert(_valid_plane(plane), "\nPlane is not valid.")
           let(
@@ -345,10 +350,10 @@ function lift_plane(plane, p) =
           let(plane = plane_from_points(plane, check_coplanar=true))
           assert(is_def(plane), "Point list is not coplanar")
           lift_plane(plane)
-    : is_vnf(p) ? [lift_plane(plane,p[0]), p[1]] 
-    : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
+    : _is_projected_vnf(p) ? (p[0]==[] ? p : [apply(lift_plane(plane),path3d(p[0])), p[1]])
+    : is_list(p) && is_list(p[0]) && is_vector(p[0][0],2) ?  // bezier patch or region
            [for(plist=p) lift_plane(plane,plist)]
-    : assert(is_vector(p,2) || is_path(p,2),"\nData must be a 2D point, path, region, vnf, or bezier patch.")
+    : assert(is_vector(p,2) || is_path(p,2),"\nData must be a 2D point, path, region, projected VNF, or bezier patch.")
       is_matrix(plane,3,3) ?
           let(
               v = plane[2]-plane[0],
@@ -356,6 +361,14 @@ function lift_plane(plane, p) =
               x = unit(v-(v*y)*y)  // x axis 
           ) move(plane[0],p * [x,y])
     : apply(lift_plane(plane),is_vector(p) ? point3d(p) : path3d(p));
+
+
+/// Recognize the 2D vertex/face representation without broadening is_vnf().
+/// Polygon faces have at least three indices, unlike the coordinate pairs in a 2D region or patch.
+function _is_projected_vnf(x) =
+    is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1])
+    && (x[0]==[] ? x[1]==[] : is_matrix(x[0],undef,2))
+    && (x[1]==[] || (is_vector(x[1][0]) && len(x[1][0])>=3));
 
 
 // Function: cylindrical_to_xyz()

@@ -154,7 +154,7 @@ module color_this(c="default", a=undef)
 //   seed = Optional finite numeric random seed passed to {{shuffle()}}.
 //   mutable = If true, use mutable attachable coloring. If false, color complete child geometry immutably. Default: true
 // Side Effects:
-//   Sets the color of each item using {{hsv()}} and {{recolor()}}.
+//   Sets the color of each item using recolor().
 //   Sets `$idx` to the index of the current item.
 //   Sets `$item` to the current item.
 // Example(2D,NoAxes):
@@ -381,7 +381,7 @@ module ghost_this()
 //   ---
 //   mutable = Module only. Specifies whether color applies to children mutably or immutably.  Default: true
 // Side Effects:
-//   The module sets `$color` through {{recolor()}}.
+//   The module sets `$color` through recolor().
 // Example:
 //   hsl(h=120,s=1,l=0.5) sphere(d=60);
 // Example:
@@ -555,7 +555,7 @@ function _lab_to_xyz(lab) =
 //   clip = If true, clamp out-of-gamut RGB components to [0,1]. Otherwise, assert an error for out-of-gamut colors beyond the roundoff tolerance. Default: false
 //   mutable = Module only. If true, use mutable attachable coloring; if false, color complete child geometry immutably. Default: true
 // Side Effects:
-//   The module sets `$color` through {{recolor()}}.
+//   The module sets `$color` through recolor().
 // Example:
 //   lch(l=60,c=45,h=120) sphere(d=60);
 // Example:

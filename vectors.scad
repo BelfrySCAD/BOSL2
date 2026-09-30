@@ -180,7 +180,7 @@ function v_round(v) =
 //   Works just like the built-in function [`lookup()`](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Mathematical_Functions#lookup), except that it can also interpolate between vector result values of the same length.
 // Arguments:
 //   x = The scalar value to look up.
-//   v = A list of [KEY,VAL] pairs. KEYs are scalars.  VALs should either all be scalar, or all be vectors of the same length.
+//   v = A list of [KEY,VAL] pairs with scalar KEYs sorted in increasing order. VALs should either all be scalars, or all be vectors of the same length.
 // Example:
 //   x = v_lookup(4.5, [[4, [3,4,5]], [5, [5,6,7]]]);  // Returns: [4,5,6]
 function v_lookup(x, v) =
@@ -345,7 +345,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 //   newv = vector_bisect(v1,v2);
 // Description:
 //   Returns a unit vector that exactly bisects the minor angle between two given vectors.
-//   If given two vectors that are directly opposed, returns `undef`.
+//   If the normalized vectors are approximately opposed, returns `undef`. Both inputs must be nonzero vectors of the same length.
 function vector_bisect(v1,v2) =
     assert(is_vector(v1))
     assert(is_vector(v2))
@@ -353,12 +353,7 @@ function vector_bisect(v1,v2) =
     assert(!approx(norm(v2),0), "\nZero length vector.")
     assert(len(v1)==len(v2), "\nVectors are of different sizes.")
     let( v1 = unit(v1), v2 = unit(v2) )
-    approx(v1,-v2)? undef :
-    let(
-        axis = vector_axis(v1,v2),
-        ang = vector_angle(v1,v2),
-        v3 = unit(rot(ang/2, v=axis, p=v1))
-    ) v3;
+    approx(v1,-v2)? undef : unit(v1+v2);
 
 
 // Function: vector_perp()
@@ -367,7 +362,8 @@ function vector_bisect(v1,v2) =
 // Usage:
 //   perp = vector_perp(v,w);
 // Description:
-//   Returns the component of vector w that is perpendicular to vector v.  Vectors must have the same length.  
+//   Returns the component of vector w that is perpendicular to vector v. Vectors must have the same length.
+//   The norm of the reference vector v must be at least 1e-9.
 // Arguments:
 //   v = reference vector
 //   w = vector whose perpendicular component is returned
@@ -380,7 +376,7 @@ function vector_bisect(v1,v2) =
 function vector_perp(v,w) =
     assert(is_vector(v) && is_vector(w) && len(v)==len(w), "\nInvalid or mismatched inputs")
     let(length=v*v)
-    assert(!approx(length,0), "\nZero length reference vector")
+    assert(length >= _EPSILON^2, "\nZero length reference vector")
     w - w*v*v/length;
 
 
@@ -394,13 +390,14 @@ function vector_perp(v,w) =
 // Usage:
 //   index = closest_point(pt, points);
 // Description:
-//   Given a list of `points`, finds the index of the closest point to `pt`.
+//   Given a nonempty list, `points`, finds the index of the closest member to `pt`.
+//   All entries in `points` must have the same dimension as `pt`.
 // Arguments:
 //   pt = The point to find the closest point to.
 //   points = The list of points to search.
 function closest_point(pt, points) =
     assert(is_vector(pt), "\nInvalid point." )
-    assert(is_path(points,dim=len(pt)), "\nInvalid pointlist or incompatible dimensions." )
+    assert(is_matrix(points,undef,len(pt)), "\nInvalid pointlist or incompatible dimensions." )
     min_index([for (p=points) norm(p-pt)]);
 
 
@@ -411,13 +408,14 @@ function closest_point(pt, points) =
 // Usage:
 //   index = furthest_point(pt, points);
 // Description:
-//   Given a list of `points`, finds the index of the furthest point from `pt`.
+//   Given a nonempty list, `points`, finds the index of the furthest member from `pt`.
+//   All points must have the same dimension as `pt`.
 // Arguments:
 //   pt = The point to find the farthest point from.
 //   points = The list of points to search.
 function furthest_point(pt, points) =
     assert( is_vector(pt), "\nInvalid point." )
-    assert(is_path(points,dim=len(pt)), "\nInvalid pointlist or incompatible dimensions." )
+    assert(is_matrix(points,undef,len(pt)), "\nInvalid pointlist or incompatible dimensions." )
     max_index([for (p=points) norm(p-pt)]);
 
 
@@ -432,17 +430,15 @@ function furthest_point(pt, points) =
 //   finds the points in `target` that match each query point. A match holds when the 
 //   distance between a point in `target` and a query point is less than or equal to `r`. 
 //   The returned list contains a list for each query point containing, in arbitrary 
-//   order, the indices of all points that match that query point. 
+//   order, the indices of all points that match that query point.
+//   You can also give a single query point; in that case the result is a list of matching indices.
 //   The `target` may be a simple list of points or a search tree.
-//   When `target` is a large list of points, a search tree is constructed to 
-//   speed up the search with an order around O(log n) per query point. 
-//   For small point lists, a direct search is done dispensing a tree construction. 
-//   Alternatively, `target` may be a search tree built with `vector_search_tree()`.
-//   In that case, that tree is parsed looking for matches.
-//   An empty list of query points returns a empty output list.
-//   An empty list of target points returns a output list with an empty list for each query point.
+//   When `target` is a raw list of more than 400 points, a search tree is constructed for this call.
+//   Shorter raw lists are searched directly. Search cost depends on the data distribution and number of matches.
+//   Alternatively, `target` may be a prepared search structure built with {{vector_search_tree()}},
+//   which is faster for repeated searches since the structure is not rebuilt.  
 // Arguments:
-//   query = list of points to find matches for.
+//   query = A query point, or a list of query points to find matches for.
 //   r = the search radius.
 //   target = list of the points to search for matches or a search tree.
 // Example(2D,Med): A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
@@ -530,24 +526,20 @@ function _bt_search(query, r, points, tree) =
 // Usage:
 //    tree = vector_search_tree(points,[leafsize],[treemin]);
 // Description:
-//    Construct a search tree for the given list of points to be used as input
-//    to the function `vector_search()`. The use of a tree speeds up the
-//    search process. The tree construction stops branching when 
-//    a tree node represents a number of points less or equal to `leafsize`.
-//    Search trees are ball trees. Constructing the
-//    tree should be O(n log n) and searches should be O(log n), although real life
-//    performance depends on how the data is distributed, and it deteriorates
-//    for high data dimensions.  This data structure is useful when you are
-//    performing many searches of the same data, so that the cost of constructing 
-//    the tree is justified. (See https://en.wikipedia.org/wiki/Ball_tree)
-//    For a small lists of points, the search with a tree may be more expensive
-//    than direct comparisons. The argument `treemin` sets the minimum length of 
-//    the point set for which a tree search will be done by `vector_search`.
+//    Constructs a search structure for use with {{vector_search()}} or {{vector_nearest()}}.
+//    At or above `treemin`, it builds a ball tree. Below `treemin`, it stores all points in a single leaf;
+//    subsequent searches treat this as a search structure and don't attempt to build another search tree.
+//    Subdivision stops when a node has at most `leafsize` points, or when all points in the node coincide.
+//    A leaf of coincident points may therefore exceed `leafsize`; every original point index is retained.
+//    Tree construction is typically O(n log n). Search cost is ideally O(log n), but real world performance
+//    will be better on highly structured data and poor on random data.  
+//    This structure is useful for repeated searches of the same data because the cost of constructing
+//    the tree is distributed over many searches.  
 //    For an empty list of points it returns an empty list.
 // Arguments:
 //    points = list of points to store in the search tree.
-//    leafsize = the size of the tree leaves. Default: 25
-//    treemin = the minimum size of the point list for which a tree search is done. Default: 400
+//    leafsize = Subdivision stops at this many points. Default: 25
+//    treemin = Minimum size of the point list for which a tree data structure is constructed. Below this, a single leaf is used, regardless of leavesize. Default: 400
 // Example(2D,Med): A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
@@ -565,15 +557,16 @@ function vector_search_tree(points, leafsize=25, treemin=400) =
     assert( is_matrix(points), "\nThe input list entries should be points." )
     assert( is_int(leafsize) && leafsize>=1,
             "\nThe tree leaf size should be an integer greater than zero.")
-    len(points)<treemin ? points :
-    [ points, _bt_tree(points, count(len(points)), leafsize) ];
+    [ points, len(points)<treemin ? [count(len(points))]
+              : _bt_tree(points, count(len(points)), leafsize) ];
 
 
 //Ball tree construction
 function _bt_tree(points, ind, leafsize=25) =
     len(ind)<=leafsize ? [ind] :
-    let( 
-        bounds = pointlist_bounds(select(points,ind)),
+    let(bounds = pointlist_bounds(select(points,ind)))
+    bounds[0]==bounds[1] ? [ind] :
+    let(
         coord  = max_index(bounds[1]-bounds[0]), 
         projc  = [for(i=ind) points[i][coord] ],
         meanpr = mean(projc), 
@@ -594,7 +587,7 @@ function _bt_tree(points, ind, leafsize=25) =
 // Description:
 //    Search `target` for the `k` points closest to point `query`.
 //    The input `target` is either a list of points to search or a search tree
-//    pre-computed by `vector_search_tree(). A list is returned containing the indices
+//    pre-computed by `vector_search_tree()`. A list is returned containing the indices
 //    of the points found in sorted order, closest point first.  
 // Arguments:
 //    query = point to search for
@@ -696,7 +689,7 @@ function pointlist_bounds(pts) =
 
 
 // Function: fit_to_box()
-// Synopsis: Scale the x, y, and/or z coordinantes of a list of points to span a range.
+// Synopsis: Scale the x, y, and/or z coordinates of a list of points to span a range.
 // Topics: Geometry, Bounding Boxes, Bounds, VNF Manipulation
 // See Also: fit_to_range()
 // Usage:
@@ -710,6 +703,8 @@ function pointlist_bounds(pts) =
 //   .
 //   While a range is typically `[min_value,max_value]`, the minimum and maximum values can be reversed,
 //   resulting in new coordinates being a rescaled mirror image of the original coordinates.
+//   VNF face winding is adjusted for reflections. A constant target interval collapses that coordinate.
+//   If a requested source coordinate is constant, its target interval must also be constant; otherwise an error is raised.
 // Arguments:
 //   pts = List of points, or a VNF structure.
 //   x = `[min,max]` of rescaled x coordinates. Default: undef
@@ -740,7 +735,6 @@ function fit_to_box(pts, x, y, z) =
     assert(is_undef(z) || is_vector(z,2), "\nz must be a 2-vector [min,max].")
     let(
         isvnf = is_vnf(pts),
-        p = isvnf ? pts[0] : pts,
         bounds = isvnf ? vnf_bounds(pts) : pointlist_bounds(pts),
         dim = len(bounds[0]),
         err = assert(is_undef(z) || (dim>2 && is_def(z)), "\n2D data detected with z range specified."),
@@ -749,9 +743,15 @@ function fit_to_box(pts, x, y, z) =
         ymin = bounds[0][1],
         zmin = dim>2 ? bounds[0][2] : 0,
         // new scales
-        xscale = whichdim.x ? (x[1]-x[0]) / (bounds[1][0]-xmin) : 1,
-        yscale = whichdim.y ? (y[1]-y[0]) / (bounds[1][1]-ymin) : 1,
-        zscale = whichdim.z ? (z[1]-z[0]) / (bounds[1][2]-zmin) : 1,
+        xscale = !whichdim.x ? 1 : x[0]==x[1] ? 0 :
+                 assert(bounds[1][0]!=xmin, "\nCannot fit constant x coordinates to a nonconstant target interval.")
+                 (x[1]-x[0]) / (bounds[1][0]-xmin),
+        yscale = !whichdim.y ? 1 : y[0]==y[1] ? 0 :
+                 assert(bounds[1][1]!=ymin, "\nCannot fit constant y coordinates to a nonconstant target interval.")
+                 (y[1]-y[0]) / (bounds[1][1]-ymin),
+        zscale = !whichdim.z ? 1 : z[0]==z[1] ? 0 :
+                 assert(bounds[1][2]!=zmin, "\nCannot fit constant z coordinates to a nonconstant target interval.")
+                 (z[1]-z[0]) / (bounds[1][2]-zmin),
         // new offsets
         xo = whichdim.x ? x[0] : xmin,
         yo = whichdim.y ? y[0] : ymin,
@@ -760,7 +760,7 @@ function fit_to_box(pts, x, y, z) =
         newpts = move(dim>2 ? [xo,yo,zo] : [xo,yo],
                       scale(dim>2 ? [xscale,yscale,zscale] : [xscale,yscale],
                              move(dim>2 ? -[xmin,ymin,zmin] : -[xmin,ymin], pts)))
-    ) isvnf ? [newpts[0], pts[1]] : newpts;
+    ) newpts;
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
