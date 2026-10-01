@@ -19,10 +19,11 @@ _BOSL2_HOOKS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Topics: Parts
 // See Also: prismoid(), rounded_prism(), ycyl()
 // Usage:
-//   ring_hook(base_size, hole_z, or, od=, [ir=], [hole=], [rounding=], [fillet=], [hole_rounding=], [anchor=], [spin=], [orient=])
+//   ring_hook(base_size, hole_z, [or], [od=], [ir=|id=], [wall=], [hole=], [rounding=], [fillet=], [hole_rounding=], [anchor=], [spin=], [orient=])
 // Description:
 //   Form a part that attaches a loop hook with a cylindrical hole a specified distance away from its mount point.
 //   You specify a rectangle defining the base a hole diameter or radius, and `hole_z`, a distance from the base to the hole.
+//   Specify exactly two of outer radius/diameter, inner radius/diameter, and wall thickness, unless supplying a custom hole path.
 //   You can set the hole diameter to zero to create a solid paddle with no hole.  
 //   .
 //   In order to calculate a tangent where the base joins the cylinder, 
@@ -35,17 +36,17 @@ _BOSL2_HOOKS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Arguments:
 //   base_size = 2-vector specifying x and y sizes of the base
 //   hole_z = distance in the z direction from the base to the center of the hole
-//   or = radius of the cylindrical portion of the part (or zero to create no hole)
+//   or = Radius of the cylindrical portion of the part.
 //   ---
 //   od = diameter of the cylindrical portion of the part
-//   ir / id = optional radius/diameter of the center hole
+//   ir / id = Radius/diameter of the center hole.  Set to zero for no hole.
 //   wall = set thickness of the wall around the central hole
 //   hole = Set to "circle" for a circle hole, "D" for a D-shaped (semicircular) hole or a path to create a custom hole.  Default: "circle"
 //   rounding = rounding of the vertical-ish edges of the prismoid and the exposed edges of the cylinder.  Default: 0
 //   fillet = base fillet.  If negative produces a rounded edge instead of a fillet.  Default: 0
 //   hole_rounding = rounding of the optional hole.  Default: 0
 //   outside_segments = number of segments to use for the outer curved part of the hook instead of using `$fn`, `$fa` and `$fs`.  
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: CENTER
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: BOTTOM
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: UP
 // Named anchors:
@@ -114,10 +115,10 @@ _BOSL2_HOOKS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //  ring_hook([30,10], hole_z=17, or=10, ir=0, rounding=1.5)
 //     attach("hole_front", BOT)
 //       cyl(d=10, h=14, rounding1=-2, rounding2=2);
-// Example(3D,VPR=[83.70,0.00,29.20]): Use the "inner" part to create a bar across the hole:
+// Example(3D,VPR=[83.70,0.00,29.20]): Use the "inside" part to create a bar across the hole:
 //   diff() 
 //   ring_hook([50, 20],30, 25, ir=10, hole_rounding=3, rounding=4) 
-//     attach_part("inner") 
+//     attach_part("inside") 
 //     prism_connector( circle(3, $fn=16), 
 //        parent(), LEFT, 
 //        parent(), RIGHT, fillet=1);
@@ -165,7 +166,9 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
     // when or > 0.5*base_size.x, need to move the anchor
     // use x^2 + y^2 = r^2, x = sqrt(r^2 - y^2)
     delta_y = z_offset;
-    mid_x = sqrt(or^2 - delta_y^2);
+    mid_height = (hole_z+or)/2;
+    mid_x = mid_height < tangent.y ? base_size.x/2 + mid_height*tan(angle)
+                                  : sqrt(max(0,or^2-delta_y^2));
     
     h = hole_z + or;
     w = base_size.y;
@@ -209,7 +212,7 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
     
     parts = is_undef(hole) ? undef
           :[
-            define_part("inner",
+            define_part("inside",
                         attach_geom(
                                     region=[ymove(z_offset,hole)], l=size.y), 
                                     T=xrot(90),

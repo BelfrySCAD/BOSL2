@@ -135,8 +135,8 @@ _modhose_waist = [1.7698, 1.8251, 3.95998];
 //    produce just one end to make a mount or end attachment to a modular hose,
 //    or you can make modular hose segments.  To make assembly possible with printed
 //    parts you can add clearances that make the ball end smaller and the socket end
-//    larger.  These work by simply increasing the radius of the whole end by the specified
-//    amount.  On a Prusa printer with PETG, a clearance of 0.05 allows the 3/4" hose parts to mate
+//    larger.  Clearance decreases the ball-end radii and increases the socket-end radii by the specified
+//    amounts.  On a Prusa printer with PETG, a clearance of 0.05 allows the 3/4" hose parts to mate
 //    with standard modular hose or itself.  A clearance of 0.05 to 0.1 allows the 1/2" parts to mate with
 //    standard hose, and with clearance 0 the 1/4" parts will mate with standard hose.  Note that clearance values
 //    are different for the different sizes.  You will have to experiment with your machine and materials.  Small
@@ -146,6 +146,9 @@ _modhose_waist = [1.7698, 1.8251, 3.95998];
 //    type = type of part to make, either "segment", "socket" (or "big"), or "ball" (or "small")
 //    clearance = clearance to make assembly possible.  Either a scalar to apply the same to both ends or a vector [small,large] to apply different clearances to the two ends.  Default: 0
 //    waist_len = size of central "waist" of the part.  Default: standard length.
+//    anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//    spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//    orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //    modular_hose(1/4,"segment");
 //    right(25)modular_hose(1/2,"segment");
@@ -200,12 +203,12 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
 // Usage:
 //   r = modular_hose_radius(size, [outer]);
 // Description:
-//   Returns the inner (or outer) diameter of the waist section
+//   Returns the inner (or outer) radius of the waist section
 //   of the modular hose to enable hollowing out connecting channels.
-//   Note: diameter is accurate to about 1e-4.  
+//   Note: radius is accurate to about 1e-4.  
 // Arguments:
 //   size = size of hose part, must be 1/4, 1/2 or 3/4
-//   outer = set to true to get the outer diameter. 
+//   outer = set to true to get the outer radius.  Default: false
 // Example(3D):
 //   $fn=64;
 //   back_half()

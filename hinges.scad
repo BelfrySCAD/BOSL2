@@ -21,7 +21,7 @@ include <screws.scad>
 // Topics: Hinges, Parts
 // See Also: living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
-//   knuckle_hinge(length, offset, segs, [inner], [arm_height=], [arm_angle=], [fill=], [clear_top=], [gap=], [round_top=], [round_bot=], [knuckle_diam=], [pin_diam=], [pin_fn=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   knuckle_hinge(length, segs, offset, [inner], [arm_height=], [arm_angle=], [fill=], [clear_top=], [gap=], [round_top=], [round_bot=], [knuckle_diam=], [pin_diam=], [pin_fn=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Construct standard knuckle hinge in two parts using a hinge pin that must be separately supplied,
 //   or a print-in-place knuckle hinge.  The default is configured to use a piece of 1.75 mm filament
@@ -31,7 +31,7 @@ include <screws.scad>
 //   of the hinge is its mount point, which, if clearance is not set, is in line with the hinge pin rotational center.
 //   In this case the hinge pin hole is the CENTER of the hinge. 
 //   The offset is the distance the base (the mounting point) to the center
-//   of the hinge pin.  The offset cannot be smaller than the knuckle diameter.
+//   of the hinge pin.  The offset cannot be smaller than the knuckle radius.
 //   The hinge barrel is held by an angled support and vertical support.  The
 //   length of the angled support is determined by its angle and the offset.  You specify the length
 //   of the vertical support with the arm_height parameter.
@@ -130,7 +130,7 @@ include <screws.scad>
 // Figure(2D,Med,NoScales): Top and bottom roundovers for smooth hinge attachment
 //   right(12)_knuckle_hinge_profile(6, 0, $fn=32,fill=false,round_top=1.5);
 //   _knuckle_hinge_profile(4, 0, $fn=32,fill=false,round_bot=1.5);
-//   right(12)fwd(11)color("blue")text("round_top=1.8",size=1);
+//   right(12)fwd(11)color("blue")text("round_top=1.5",size=1);
 //   right(.5)fwd(-3)color("blue")text("round_bot=1.5",size=1);
 // Arguments:
 //   length = total length of the entire hinge
@@ -142,19 +142,21 @@ include <screws.scad>
 //   arm_angle = angle of the arm down from the vertical.  Default: 45
 //   fill = if true fill in space between arm and mount surface.  Default: true
 //   clear_top = if true remove any excess arm geometry that appears above the top of the mount surface.  Default: false
+//   seg_ratio = Ratio of inner to outer knuckle lengths, excluding gaps.  Default: 1
 //   gap = gap between hinge segments.  Default: 0.2
 //   round_top = rounding amount to add where top of hinge arm joins the mount surface.  Generally only useful when fill=false.  Default: 0
 //   round_bot = rounding amount to add where bottom of hinge arm joins the mount surface.  Default: 0
 //   knuckle_diam = diameter of hinge barrel.  Default: 4
 //   pin_diam = for regular hinges, diameter of hinge pin hole as a numerical dimension or as a screw specification.  For print-in-place hinges, the diameter of the base of the interlocking cones inside the hinge.  Default: 1.75 for regular hinges, 1 less than knuckle_diameter for print-in-place hinges. 
-//   pin_fn = $fn value to use for the pin.
+//   pin_fn = Use this many segments for the pin hole instead of the count determined by `$fn`, `$fa`, and `$fs`.
 //   teardrop = Set to true or UP/DOWN/FWD/BACK to specify teardrop shape for the pin hole.  Default: false
-//   screw_head = screw head to use for countersink
+//   screw_head = Screw head type for the countersink or counterbore.  Default: "none"
 //   screw_tolerance = screw hole tolerance.  Default: "close"
-//   tap_depth = Don't make the tapped part of the screw hole larger than this.
+//   tap_depth = Limit the depth of the self-tapping portion of the screw hole.  Default: no limit
 //   in_place = If true create a print-in-place hinge with 45 deg angle interlocking cones.  If set to an angle, measures the angle from the vertical to the lower cone angle.  Default: false
 //   $slop = increases pin hole diameter
-//   clearance = raises pin hole to create clearance at the edge of the mounted surface.  Default: 0.15
+//   clip = Clip the support arm at this distance toward FWD from the hinge-pin center, leaving the barrel intact.
+//   clearance = raises pin hole to create clearance at the edge of the mounted surface.  Default: 0
 //   knuckle_clearance = clear space to create specified clearance for hinge knuckle of mating part.  Must use with {{diff()}}.  Default: 0 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -485,26 +487,37 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
 // Description:
 //   Creates a mask to be differenced away from a plate to create a "live" hinge, where a thin layer of plastic holds two parts together.  
 //   Center the mask at the bottom of the part you want to make a hinge in.
-//   The mask will leave  hinge material `2*layerheight` thick on the bottom of the hinge.
+//   The mask will leave  hinge material `2*layerheight` thick on the bottom of the hinge and
+//   extra material of the same thickness above its top.  
+//   The CENTER anchor is at the plate bottom and TOP is at the plate top.  All of the top 
+//   anchors follow the cut boundary at the plate top, not the mask's extra upward extent.
 // Arguments:
 //   l = Length of the hinge in mm.
 //   thick = Thickness in mm of the material to make the hinge in.
 //   ---
-//   layerheight = The expected printing layer height in mm.
+//   layerheight = The expected printing layer height in mm.  Default: 0.2
 //   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   hingegap = Gap at the bottom of the hinge (width of the part that flexes), before adding `2*$slop`.  Default: layerheight
 //   $slop = Increase size of hinge gap by double this amount
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   living_hinge_mask(l=100, thick=3, foldangle=60);
+// Example: 
+//   diff()
+//    cuboid([50,30,3])
+//      align(TOP,inside=true)
+//        living_hinge_mask(l=100, thick=3,
+//                          foldangle=60);
+
 module living_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
     hingegap = default(hingegap, layerheight)+2*get_slop();
     size = [l, hingegap, 2*thick];
-    size2 = [l, hingegap+2*thick*tan(foldangle/2)];
-    attachable(anchor,spin,orient, size=size, size2=size2) {
+    cut_half_width = hingegap/2 + (thick-2*layerheight)/tan(foldangle/2);
+    size2 = [l, 2*cut_half_width];
+    attachable(anchor,spin,orient, size=size, size2=size2){ 
         up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
         children();
     }
@@ -533,13 +546,13 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 // Arguments:
 //   thick = Thickness in mm of the material to make the hinge in.
 //   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hinges = List of [LENGTH, POSITION, SPIN] for each hinge to difference from the children.
-//   snaps = List of [POSITION, SPIN] for each central snaplock to add to the children.
-//   sockets = List of [POSITION, SPIN] for each outer snaplock sockets to add to the children.
-//   snaplen = Length of locking snaps.
-//   snapdiam = Diameter/width of locking snaps.
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
-//   layerheight = The expected printing layer height in mm.
+//   hinges = List of [LENGTH, POSITION, SPIN] for each hinge to difference from the children. 
+//   snaps = List of [POSITION, SPIN] for each central snaplock to add to the children.  
+//   sockets = List of [POSITION, SPIN] for each outer snaplock sockets to add to the children. 
+//   snaplen = Length of locking snaps.  Default: 5
+//   snapdiam = Diameter/width of locking snaps.  Default: 5
+//   hingegap = Gap at the bottom of the hinge (width of the part that flexes), before adding `2*$slop`.  Default: layerheight
+//   layerheight = The expected printing layer height in mm.  Default: 0.2
 //   ---
 //   $slop = increase hinge gap by twice this amount
 // Example(Med):
@@ -573,7 +586,7 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 //   }
 module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], sockets=[], snaplen=5, snapdiam=5, hingegap=undef, layerheight=0.2)
 {
-    hingegap = default(hingegap, layerheight)+2*get_slop();
+    hingegap = default(hingegap, layerheight);
     difference() {
         children();
         for (hinge = hinges) {
@@ -619,11 +632,11 @@ module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], 
 // Arguments:
 //   thick = Thickness in mm of the material to make the hinge in.
 //   ---
-//   snaplen = Length of locking snaps.
-//   snapdiam = Diameter/width of locking snaps.
-//   layerheight = The expected printing layer height in mm.
+//   snaplen = Length of locking snaps.  Default: 5
+//   snapdiam = Diameter/width of locking snaps.  Default: 5
+//   layerheight = The expected printing layer height in mm.  Default: 0.2
 //   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   hingegap = Gap at the bottom of the hinge (width of the part that flexes), before adding `2*$slop`.  Default: layerheight
 //   $slop = increase size of hinge gap by double this amount
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -659,11 +672,11 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 // Arguments:
 //   thick = Thickness in mm of the material to make the hinge in.
 //   ---
-//   snaplen = Length of locking snaps.
-//   snapdiam = Diameter/width of locking snaps.
-//   layerheight = The expected printing layer height in mm.
+//   snaplen = Length of locking snaps.  Default: 5
+//   snapdiam = Diameter/width of locking snaps.  Default: 5
+//   layerheight = The expected printing layer height in mm.  Default: 0.2
 //   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   hingegap = Gap at the bottom of the hinge, before adding `2*$slop`.  Default: layerheight
 //   $slop = Increase size of hinge gap by double this amount
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`

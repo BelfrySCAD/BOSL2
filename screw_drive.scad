@@ -26,9 +26,10 @@ include <structs.scad>
 //   Creates a mask for creating a Phillips drive recess given the Phillips size.  Each mask can
 //   be lowered to different depths to create different sizes of recess.  
 // Arguments:
-//   size = The size of the bit as an integer or string.  "#0", "#1", "#2", "#3", or "#4"
+//   size = The size of the bit as an integer or string.  "#0", "#1", "#2", "#3", or "#4".  Default: "#2"
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   $fn = Facet count for the drive mask.  Default: 36
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
@@ -146,12 +147,21 @@ function phillips_diam(size, depth) =
 // Topics: Screws, Masks
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), robertson_mask()
 // Usage:
-//   hex_drive_mask(size, length, [anchor], [spin], [orient], [$slop]) [ATTACHMENTS];
+//   hex_drive_mask(size, length, [anchor=], [spin=], [orient=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a mask for hex drive.  Note that the hex recess specs requires
 //   a slightly oversized recess.  You can use $slop to increase the size by 
 //   `2 * $slop` if necessary.  
 // 
+// Arguments:
+//   size = Nominal hex drive size across flats.
+//   length / l / h / height = Mask length.  Specify exactly one.
+//   ---
+//   $slop = Add twice this amount to the recess width, in addition to the built-in allowance.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: base center
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+
 module hex_drive_mask(size,length,l,h,height,anchor,spin,orient)
 {
    length = one_defined([length,height,l,h],"length,height,l,h");
@@ -173,10 +183,10 @@ function hex_drive_mask(size,length,l,h,height,anchor,spin,orient) = no_function
 // Description: Creates a torx bit tip.  The anchors are located on the circumscribing cylinder.  See {{torx_info()}} for allowed sizes.
 // Arguments:
 //   size = Torx size.
-//   l = Length of bit.
+//   l = Length of bit.  Default: 5
 //   center = If true, centers mask vertically.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
@@ -203,6 +213,9 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 // Description: Creates a torx bit 2D profile.  The anchors are located on the circumscribing circle.   See {{torx_info()}} for allowed sizes.
 // Arguments:
 //   size = Torx size.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
 //   torx_mask2d(size=30, $fa=1, $fs=1);
 module torx_mask2d(size,anchor=CENTER,spin) {
@@ -336,7 +349,7 @@ function torx_depth(size) = torx_info(size)[2];
 //   We determined the angle by doing print tests on a Prusa MK3S with $slop set to 0.05.
 // Arguments:
 //   size = The size of the square drive, as an integer from 0 to 4.
-//   extra = Extra length of drive mask to create.
+//   extra = Extra length of drive mask to create.  Default: 1
 //   ang = taper angle of each face.  Default: 2.5
 //   ---
 //   $slop = enlarge recess by this twice amount.  Default: 0
@@ -367,9 +380,8 @@ module robertson_mask(size, extra=1, ang=2.5,anchor=TOP,spin,orient) {
     Mslop=M+2*get_slop();
     Mtop = Mslop + 2*adj_ang_to_opp(F+extra,ang);
     Mbot = Mslop - 2*adj_ang_to_opp(T-F,ang);
-    anchors = [named_anchor("standard",[0,0,T-h/2], UP, 0)];
     default_tag("remove")
-      attachable(anchor,spin,orient,size=[Mbot,Mbot,T],size2=[Mtop,Mtop],anchors=anchors){
+      attachable(anchor,spin,orient,size=[Mbot,Mbot,T],size2=[Mtop,Mtop]){
         down(T/2)
             intersection(){
                 prismoid([Mbot,Mbot],[Mtop,Mtop],h=h,anchor=BOT);
