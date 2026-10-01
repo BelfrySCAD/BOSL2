@@ -24,15 +24,15 @@ _BOSL2_SLIDERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Arguments:
-//   l = Length (long axis) of slider.
-//   w = Width of slider.
-//   h = Height of slider.
+//   l = Length (long axis) of slider.  Default: 30
+//   w = Width of slider.  Default: 10
+//   h = Height of slider.  Default: 10
 //   ---
-//   base = Height of slider base.
-//   wall = Width of wall behind each side of the slider.
-//   ang = Overhang angle for slider, to facilitate supportless printig.
+//   base = Height of slider base.  Default: 10
+//   wall = Width of wall behind each side of the slider.  Default: 5
+//   ang = Overhang angle measured down from vertical, matching the rail.  Default: 30
 //   chamfer = Size of chamfer. Default: 2.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value to make parts fit just right.
@@ -46,7 +46,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTO
     full_width = w + 2*wall;
     full_height = h + base;
 
-    attachable(anchor,spin,orient, size=[full_width, l, full_height], offset=[0,0,-h/2]) {
+    attachable(anchor,spin,orient, size=[full_width, l, full_height], offset=[0,0,-base/2]) {
         zrot(0)
         down(base+h/2) {
             // Base
@@ -81,11 +81,11 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTO
 // Description:
 //   Creates a V-groove rail.
 // Arguments:
-//   l = Length (long axis) of slider.
-//   w = Width of slider.
-//   h = Height of slider.
-//   chamfer = Size of chamfer at end of rail.
-//   ang = Overhang angle for slider, to facilitate supportless printing.
+//   l = Length (long axis) of the rail.  Default: 30
+//   w = Width of the rail.  Default: 10
+//   h = Height of the rail.  Default: 10
+//   chamfer = Size of chamfer at end of rail.  Default: 1
+//   ang = Overhang angle measured down from vertical.  Default: 30
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -100,10 +100,9 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient
     attack_ang = 30;
     attack_len = 2;
 
-    fudge = 1.177;
     chamf = sqrt(2) * chamfer;
-    cosa = cos(ang*fudge);
-    sina = sin(ang*fudge);
+    cosa = cos(ang);
+    sina = sin(ang);
 
     z1 = h/2;
     z2 = z1 - chamf * cosa;
@@ -115,8 +114,8 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient
     x3 = x1 - chamf;
     x4 = x1 - attack_len * sin(attack_ang);
     x5 = x2 - attack_len * sin(attack_ang);
-    x6 = x1 - z1 * sina;
-    x7 = x4 - z1 * sina;
+    x6 = x1 - z1 * tan(ang);
+    x7 = x4 - z1 * tan(ang);
 
     y1 = l/2;
     y2 = y1 - attack_len * cos(attack_ang);

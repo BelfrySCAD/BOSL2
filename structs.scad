@@ -16,7 +16,7 @@ _BOSL2_STRUCTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 
 // Section: struct operations
 //
-// A struct is a data structure that associates arbitrary keys (of any type) with values (of any type).
+// A struct is a data structure that associates keys with defined values.
 // Structures are implemented as lists of [key, value] pairs.
 //
 // An empty list `[]` is an empty structure and can be used wherever a structure input is required.
@@ -35,8 +35,8 @@ _BOSL2_STRUCTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   that is also an error.  Note that key order will change when you change a key's value.
 // Arguments:
 //   struct = input structure.
-//   key = key to set or list of key,value pairs to set
-//   value = value to set the key to (when giving a single key and value)
+//   key = Key to set, or a flat alternating list `[key1,value1,key2,value2,...]`.
+//   value = Value to store when giving a single key and value.
 //   ---
 //   grow = Set to true to allow structure to grow, or false for new keys to generate an error.  Default: true
 // Example: Create a struct containing just one key-value pair
@@ -92,7 +92,7 @@ function struct_remove(struct, key) =
 // Topics: Data Structures, Dictionaries
 // See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
-//   val = struct_val(struct, key, default);
+//   val = struct_val(struct, key, [default]);
 // Description:
 //   Returns the value for the specified key in the structure, or default value if the key is not present
 // Arguments:
