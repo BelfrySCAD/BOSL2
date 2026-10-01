@@ -25,8 +25,8 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // See Also: dashed_stroke(), offset_stroke(), path_sweep()
 // Usage:
-//   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
-//   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
+//   stroke(path, [width], [closed], [endcaps=], [endcap_width=], [endcap_length=], [endcap_extent=], [trim=]);
+//   stroke(path, [width], [closed], [endcap1=], [endcap2=], [endcap_width1=], [endcap_width2=], [endcap_length1=], [endcap_length2=], [endcap_extent1=], [endcap_extent2=], [trim1=], [trim2=]);
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Joints and each endcap can be replaced with
 //   various marker shapes, and can be assigned different colors.  If passed a region instead of
@@ -35,7 +35,9 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   When drawing a closed path or region, there are no endcaps, so you cannot give the endcap parameters. 
 //   To facilitate debugging, stroke() accepts "paths" that have a single point.  These are drawn with
 //   the style of endcap1, but have their own scale parameter, `singleton_scale`, which defaults to 2
-//   so that singleton dots with endcap "round" are clearly visible.
+//   so that singleton dots with endcap "round" are clearly visible. An explicit "butt" singleton uses
+//   the "square" profile: a square in 2D, a cylinder when revolved in 3D, or an extruded marker
+//   when endcap_angle is specified. Setting the endcap to false suppresses the singleton marker.
 //   .
 //   In 2d the stroke module works by creating a sequence of rectangles (or trapezoids if line width varies) and
 //   filling in the gaps with rounded wedges.  This is fast and produces a good result.  In 3d the modules
@@ -65,10 +67,11 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   }
 // Arguments:
 //   path = The path to draw along.
-//   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
-//   closed = If true, draw an additional line from the end of the path to the start.
-//   joints  = Specifies the joint shape for each joint of the line.  If a 2D polygon is given, use that to draw custom joints.
-//   endcaps = Specifies the endcap type for both ends of the line.  If a 2D polygon is given, use that to draw custom endcaps.
+//   width = The width of the line to draw. If given as a list of widths (one for each path point), draws the line with varying thickness. Default: 1
+//   closed = If true, draw an additional line from the end of the path to the start. Default: true for regions, false for paths
+//   ---
+//   joints = Specifies the joint shape for each joint of the line. If a 2D polygon is given, use that to draw custom joints. Default: "round"
+//   endcaps = Specifies the endcap type for both ends of the line. If a 2D polygon is given, use that to draw custom endcaps. Default: "round"
 //   endcap1 = Specifies the endcap type for the start of the line.  If a 2D polygon is given, use that to draw a custom endcap.
 //   endcap2 = Specifies the endcap type for the end of the line.  If a 2D polygon is given, use that to draw a custom endcap.
 //   dots = Specifies both the endcap and joint types with one argument.  If given `true`, sets both to "dot".  If a 2D polygon is given, uses that to draw custom dots.
@@ -92,9 +95,9 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   endcap_angle1 = Extra rotation given to a starting endcap, in degrees.  If not given, the endcap is fully spun (for 3D lines).
 //   endcap_angle2 = Extra rotation given to a ending endcap, in degrees.  If not given, the endcap is fully spun (for 3D lines).
 //   dots_angle = Extra rotation given to both joints and endcaps, in degrees.  If not given, the endcap is fully spun (for 3D lines).
-//   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
-//   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
-//   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
+//   trim = Trim both ends, in multiples of appropriate line width, to avoid interference with custom endcaps.
+//   trim1 = Trim the start, in multiples of starting line width, to avoid interference with a custom endcap.
+//   trim2 = Trim the end, in multiples of ending line width, to avoid interference with a custom endcap.
 //   color = If given, sets the color of the line segments, joints and endcap.
 //   endcap_color = If given, sets the color of both endcaps.  Overrides `color=` and `dots_color=`.
 //   endcap_color1 = If give, sets the color of the starting endcap.  Overrides `color=`, `dots_color=`,  and `endcap_color=`.
@@ -102,7 +105,7 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   joint_color = If given, sets the color of the joints.  Overrides `color=` and `dots_color=`.
 //   dots_color = If given, sets the color of the endcaps and joints.  Overrides `color=`.
 //   singleton_scale = Change the scale of the endcap shape drawn for singleton paths.  Default: 2.  
-//   convexity = Max number of times a line could intersect a wall of an endcap.
+//   convexity = Max number of times a line could intersect a wall of an endcap. Default: 10
 // Example(2D): Drawing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20);
@@ -267,7 +270,7 @@ module stroke(
       assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2))
       assert(is_bool(joints)  || is_string(joints)  || is_path(joints));
 
-    endcap1_dflts = _shape_defaults(endcap1);
+    endcap1_dflts = _shape_defaults(endcap1=="butt" ? "square" : endcap1);
     endcap2_dflts = _shape_defaults(endcap2);
     joint_dflts   = _shape_defaults(joints);
 
@@ -317,16 +320,17 @@ module stroke(
                    assert(is_num(width) || len(width)==len(path),
                           "width must be a number or a vector the same length as the path (or all components of a region)")];
 
-    attachable(two_d=len(path[0])==2)
+    attachable(two_d=paths!=[] && len(paths[0][0])==2)
     {
-      for (path = paths) {
-          path = deduplicate( closed? list_wrap(path) : path );
+      for (input_path = paths) {
+          wrapped_path = closed ? list_wrap(input_path) : input_path;
+          path = deduplicate(wrapped_path);
           width = is_num(width)? [for (x=path) width]
-                : closed? list_wrap(width)
+                : len(wrapped_path)>len(input_path) ? [each width, width[0]]
                 : width;
-          check4a=assert(len(width)==len(path), "path had duplicated points and width was given as a list: this is not allowd");
+          check4a=assert(len(width)==len(path), "path had duplicated points and width was given as a list: this is not allowed");
 
-          endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
+          endcap_shape1 = _shape_path(len(path)==1 && endcap1=="butt" ? "square" : endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
           endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
 
           trim1 = width[0] * first_defined([
@@ -357,8 +361,8 @@ module stroke(
               } else {
                   // Endcap1
                   setcolor(endcap_color1) {
-                      translate(path[0]) {
-                          $fn = segs(width[0]/2);
+                      translate(path[0]) scale(singleton_scale) {
+                          $fn = segs(singleton_scale*width[0]/2);
                           if (is_undef(endcap_angle1)) {
                               rotate_extrude(convexity=convexity,angle=360) {
                                   right_half(planar=true) {
@@ -367,7 +371,7 @@ module stroke(
                               }
                           } else {
                               rotate([90,0,endcap_angle1]) {
-                                  linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
+                                  linear_extrude(height=max(width[0],0.001), center=true, convexity=convexity) {
                                       polygon(endcap_shape1);
                                   }
                               }
@@ -510,7 +514,7 @@ module stroke(
                           translate(path2[i]) {
                               if (joints != undef && joints != "round") {
                                   joint_shape = _shape_path(
-                                      joints, width[i],
+                                      joints, widths[i],
                                       joint_width,
                                       joint_length,
                                       joint_extent
@@ -620,11 +624,11 @@ module stroke(
 //   a function the dash pattern applies as you specify it.  
 // Arguments:
 //   path = The path or region to subdivide into dashes.
-//   dashpat = A list of alternating dash lengths and space lengths for the dash pattern.  This will be scaled by the width of the line.
+//   dashpat = Alternating dash and space lengths. The module scales these by width; the function uses them directly. Default: [3,3]
 //   ---
 //   width = The width of the dashed line to draw.  Module only.  Default: 1
 //   closed = If true, treat path as a closed polygon.  Default: false
-//   fit = If true, shrink or stretch the dash pattern so that the path ends ofter a logical dash.  Default: true
+//   fit = If true, shrink or stretch the dash pattern so that the path ends after a complete dash.  Default: true
 //   roundcaps = (Module only) If true, draws dashes with rounded caps.  This often looks better.  Default: true
 //   mindash = (Function only) Specifies the minimal dash length to return at the end of a path when fit is false.  Default: 0.5
 // Example(2D): Open Path
@@ -640,7 +644,7 @@ module stroke(
 function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5) =
     is_region(path) ? [
         for (p = path)
-        each dashed_stroke(p, dashpat, closed=true, fit=fit)
+        each dashed_stroke(p, dashpat, closed=true, fit=fit, mindash=mindash)
     ] : 
     let(
         path = closed? list_wrap(path) : path,
@@ -664,13 +668,13 @@ function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5)
             for (i = idx(dashes))
             if (i % 2 == 0)
             let( dash = dashes[i] )
-            if (i < dcnt-1 || path_length(dash) > mindash)
+            if (fit || i < dcnt-1 || path_length(dash) > mindash)
             dashes[i]
         ]
     ) evens;
 
 
-module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, roundcaps=false) {
+module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, roundcaps=true) {
     no_children($children);
     segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed, fit=fit, mindash=0.5*width);
     for (seg = segs)
@@ -904,16 +908,16 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                    : [
                        if (wedge) cp, 
                        points[dir ? 0 : 1],
-                       each select(arc(n,cp=cp,r=r,angle=ang_range,_minpts=_minpts),1,-2),
+                       each slice(arc(n,cp=cp,r=r,angle=ang_range,_minpts=_minpts),1,-2),
                        points[dir ? 1 : 0]
                      ]
         )
         arcpts;
 
 
-module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, rounding, anchor=CENTER, spin=0)
+module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, rounding, anchor=CENTER, spin=0, long=false, cw=false, ccw=false)
 {
-    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, rounding=rounding, _minpts=3);
+    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, long=long, cw=cw, ccw=ccw, rounding=rounding, _minpts=3);
     assert(len(path[0])==2 || sum(v_abs(column(path,2)))==0, "Module form of arc() only works with 2D inputs.");
     path2d = path2d(path);
     attachable(anchor,spin, two_d=true, path=path2d, extent=false) {
@@ -951,7 +955,7 @@ function _rounded_arc(radius, rounding=0, angle, n) =
         
         edge_gap1=radius-arc1_cut-radius_of_ctrpt_edge,
         edge_gap2=radius-arc2_cut-radius_of_ctrpt_edge,
-        angle_span1 = rounding[1]>0 ? [-dir*90, dir*arc1_angle] : -[dir*90, dir*180 - arc1_angle],
+        angle_span1 = rounding[1]>0 ? [-dir*90, dir*arc1_angle] : -dir*[90, 180 - arc1_angle],
         angle_span2 = [angle-dir*arc2_angle + (rounding[2]<0 ? dir*180 : 0), angle+dir*90]
     )
     assert(arc1_angle + arc2_angle<=abs(angle), "Roundings are too large: they interfere with each other on the arc")   
@@ -974,18 +978,21 @@ function _rounded_arc(radius, rounding=0, angle, n) =
 
 
 
-// Function: catenary()
+// Function&Module: catenary()
 // Synopsis: Returns a 2D Catenary chain or arch path.
 // SynTags: Path
 // Topics: Paths
 // See Also: circle(), stroke()
 // Usage:
-//   path = catenary(width, droop=|angle=, n=);
+//   path = catenary(width, droop=|angle=, [n=]);
+// Usage: As a module
+//   catenary(width, droop=|angle=, [n=], [anchor=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Returns a 2D Catenary path, which is the path a chain held at both ends will take.
+//   Returns a 2D catenary path, which is the path a chain held at both ends will take.
+//   The module draws the filled region bounded by this path and its closing segment.
 //   The path will have the endpoints at `[±width/2, 0]`, and the middle of the path will droop
-//   towards Y- if the given droop= or angle= is positive.  It will droop towards Y+ if the
-//   droop= or angle= is negative.  You *must* specify one of droop= or angle=.
+//   towards Y- if the given `droop=` or `angle=` is positive.  It will arch up towards Y+ if 
+//   `droop=` or `angle=` is negative.  You *must* specify one of `droop=` or `angle=`.
 // Arguments:
 //   width = The straight-line distance between the endpoints of the path.
 //   droop = If given, specifies the height difference between the endpoints and the hanging middle of the path.  If given a negative value, returns an arch *above* the Y axis.
@@ -999,7 +1006,7 @@ function _rounded_arc(radius, rounding=0, angle, n) =
 // Example(2D): By Angle
 //   stroke(catenary(100, angle=30));
 // Example(2D): Upwards Arch by Angle
-//   stroke(catenary(100, angle=30));
+//   stroke(catenary(100, angle=-30));
 // Example(2D): Upwards Arch by Height Delta
 //   stroke(catenary(100, droop=-30));
 // Example(2D): Specifying Vertex Count
@@ -1058,7 +1065,7 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 
 
 // Function: helix()
-// Synopsis: Creates a 2d spiral or 3d helical path.
+// Synopsis: Creates a 3D helical path, including flat spirals.
 // SynTags: Path
 // Topics: Path Generators, Paths, Drawing Tools
 // See Also: pie_slice(), stroke(), thread_helix(), path_sweep()
@@ -1066,16 +1073,16 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 // Usage:
 //   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
 // Description:
-//   Returns a 3D helical path on a cone, including the degerate case of flat spirals.
+//   Returns a 3D helical path on a cone, including the degenerate case of flat spirals.
 //   You can specify start and end radii.  You can give the length, the helix angle, or the number of turns: two
 //   of these three parameters define the helix.  For a flat helix you must give length 0 and a turn count.
 //   Helix will be right handed if turns is positive and left handed if it is negative.
-//   The angle is calculateld based on the radius at the base of the helix.
+//   The angle is calculated based on the radius at the base of the helix.
 // Arguments:
 //   h/l = Height/length of helix, zero for a flat spiral
 //   ---
 //   turns = Number of turns in helix, positive for right handed
-//   angle = helix angle
+//   angle = Helix angle at the starting radius. With length supplied, its sign relative to length determines handedness; the path still ends at the supplied length.
 //   r = Radius of helix
 //   r1 = Radius of bottom of helix
 //   r2 = Radius of top of helix
@@ -1087,7 +1094,7 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 // Example(3D):  Helix that turns the other way
 //   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
 // Example(3D): Flat helix (note points are still 3d)
-//   stroke(helix(h=0,r1=50,r2=25,l=0, turns=4));
+//   stroke(helix(h=0,r1=50,r2=25, turns=4));
 module helix(l,h,turns,angle, r, r1, r2, d, d1, d2) {no_module();}
 function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
     let(
@@ -1097,16 +1104,21 @@ function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
     )
     assert(num_defined([length,turns,angle])==2,"Must define exactly two of l/h, turns, and angle")
     assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
+    assert(is_undef(turns) || (is_finite(turns) && turns!=0), "turns must be finite and nonzero")
+    assert(is_undef(length) || is_finite(length), "Helix length must be finite")
+    assert(is_undef(angle) || (is_finite(angle) && angle!=0 && abs(angle)<90 && r1>0),
+           "angle must be nonzero and strictly between -90 and 90, with a positive starting radius")
     let(
         // length advances dz for each turn
         dz = is_def(angle) && length!=0 ? 2*PI*r1*tan(angle) : length/abs(turns),
 
         maxtheta = is_def(turns) ? 360*turns : 360*length/dz,
+        endheight = is_def(length) ? length : abs(turns)*dz,
         N = segs(max(r1,r2))
     )
     [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
        let(R=lerp(r1,r2,theta/maxtheta))
-       [R*cos(theta), R*sin(theta), abs(theta)/360 * dz]];
+       [R*cos(theta), R*sin(theta), theta/maxtheta * endheight]];
 
 
 function _normal_segment(p1,p2) =
@@ -1129,7 +1141,7 @@ function _normal_segment(p1,p2) =
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
 //   .
-//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, the current default angle,
+//   The turtle state is a list with four entries: the path constructed so far, the current step as a 2-vector, the current default angle,
 //   and the current arcsteps setting.  
 //   .
 //   Commands     | Arguments          | What it does
@@ -1142,7 +1154,7 @@ function _normal_segment(p1,p2) =
 //   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if ytarget is not reachable.
 //   "jump"       | point              | Move the turtle to the specified point
 //   "xjump"      | x                  | Move the turtle's x position to the specified value
-//   "yjump       | y                  | Move the turtle's y position to the specified value
+//   "yjump"      | y                  | Move the turtle's y position to the specified value
 //   "turn"       | [angle]            | Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.
 //   "left"       | [angle]            | Same as "turn"
 //   "right"      | [angle]            | Same as "turn", -angle
@@ -1241,15 +1253,15 @@ function _normal_segment(p1,p2) =
 
 module turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) {no_module();}
 function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
+    assert(is_int(repeat) && repeat>=0, "turtle repeat argument must be a nonnegative integer")
     let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
         repeat == 1?
             _turtle(commands,state,full_state) :
             _turtle_repeat(commands, state, full_state, repeat);
 
 function _turtle_repeat(commands, state, full_state, repeat) =
-    repeat==1?
-        _turtle(commands,state,full_state) :
-        _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
+    repeat==0 ? (full_state ? state : state[0]) :
+    _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
 
 function _turtle_command_len(commands, index) =
     let( one_or_two_arg = ["arcleft","arcright", "arcleftto", "arcrightto"] )
@@ -1272,7 +1284,7 @@ function _turtle(commands, state, full_state, index=0) =
 
 function _turtle_command(command, parm, parm2, state, index) =
     command == "repeat"?
-        assert(is_num(parm),str("\"repeat\" command requires a numeric repeat count at index ",index))
+        assert(is_int(parm) && parm>=0,str("\"repeat\" command requires a nonnegative integer repeat count at index ",index))
         assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
         _turtle_repeat(parm2, state, true, parm) :
     let(
@@ -1328,7 +1340,8 @@ function _turtle_command(command, parm, parm2, state, index) =
     command=="length" ? list_set(state, step, parm*unit(state[step])) :
     command=="scale" ?  list_set(state, step, parm*state[step]) :
     command=="addlength" ?  list_set(state, step, state[step]+unit(state[step])*parm) :
-    command=="arcsteps" ? list_set(state, arcsteps, parm) :
+    command=="arcsteps" ? assert(is_int(parm) && parm>=0, "arcsteps must be a nonnegative integer")
+                          list_set(state, arcsteps, parm) :
     command=="arcleft" || command=="arcright" ?
         assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
         let(
@@ -1339,7 +1352,7 @@ function _turtle_command(command, parm, parm2, state, index) =
             steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
             arcpath = myangle == 0 || radius == 0 ? []
                     : arc(
-                           steps,
+                           steps+1,
                            points = [
                                lastpt,
                                rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
@@ -1365,7 +1378,7 @@ function _turtle_command(command, parm, parm2, state, index) =
             end_angle = posmod(parm2,360),
             delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
             arcpath = delta_angle == 0 || radius==0 ? [] : arc(
-                steps,
+                steps+1,
                 points = [
                     lastpt,
                     rot(cp=center, p=lastpt, a=sign(radius)*delta_angle/2),
@@ -1392,7 +1405,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 // See Also: debug_region(), debug_vnf(), debug_bezier()
 //
 // Usage:
-//   debug_polygon(points, paths, [vertices=], [edges=], [convexity=], [size=]);
+//   debug_polygon(points, [paths], [vertices=], [edges=], [convexity=], [size=]);
 // Description:
 //   A drop-in replacement for `polygon()` that renders and labels the path points and
 //   edges.  The start of each path is marked with a blue circle and the end with a pink diamond.
@@ -1403,8 +1416,8 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   ---
 //   vertices = if true display vertex labels and start/end markers.  Default: true
 //   edges = if true display edge labels.  Default: true
-//   convexity = The max number of walls a ray can pass through the given polygon paths.
-//   size = The base size of the line and labels.
+//   convexity = The max number of walls a ray can pass through the given polygon paths. Default: 2
+//   size = The base size of the line and labels. Default: 1
 // Example(Big2D):
 //   debug_polygon(
 //       points=concat(
@@ -1431,8 +1444,8 @@ module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size
     }
     if (vertices)
       _debug_poly_verts(points,size);
-    if (edges)
-      for (j = [0:1:len(paths)-1]) _debug_poly_edges(j, points, paths[j], vertices, size);
+    if (vertices || edges)
+      for (j = [0:1:len(paths)-1]) _debug_poly_edges(j, points, paths[j], vertices, size, edges);
 }
 
 
@@ -1457,7 +1470,7 @@ module _debug_poly_verts(points, size)
 }
 
 
-module _debug_poly_edges(j,points, path,vertices,size)
+module _debug_poly_edges(j,points, path,vertices,size,edges=true)
 {  
        path = default(path, count(len(points)));
        if (vertices){
@@ -1468,7 +1481,7 @@ module _debug_poly_edges(j,points, path,vertices,size)
                 color("pink") up(0.11) cylinder(d=size*1.5, h=0.01, center=false, $fn=4);
             }
         }
-        for (i = [0:1:len(path)-1]) {
+        if (edges) for (i = [0:1:len(path)-1]) {
             midpt = (points[path[i]] + points[path[(i+1)%len(path)]])/2;
             color("blue") {
                 up(0.2) {

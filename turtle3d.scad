@@ -81,7 +81,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   be "arcright" again.  (Note that "reverse" is the only command that appears by itself with no argument.)
 //   .
 //   By default you get a simple path (like the 2d turtle) which ignores growing/shrinking or twisting in the
-//   transformation.  If you select transform=true then you will get a list of transformations returned.  Some of
+//   transformation.  If you select transforms=true then you will get a list of transformations returned.  Some of
 //   of the commands are likely to produce transformation lists that are invalid for sweep.  The "jump" commands
 //   can move in directions not perpendicular to the current direction of movement, which may produce bad results.
 //   The turning commands like "left" or "up" can rotate the frame so that a sweep operation is invalid.
@@ -104,19 +104,20 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "move"     |x | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.  
 //   "xmove"    |  | [dist]             | Move turtle scale*dist units in the x direction. Default dist=1.  Does not change turtle direction.
 //   "ymove"    |  | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.  Does not change turtle direction.
-//   "zmove"    |  | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.  Does not change turtle direction.
+//   "zmove"    |  | [dist]             | Move turtle scale*dist units in the z direction. Default dist=1.  Does not change turtle direction.
 //   "xyzmove"  |  | vector             | Move turtle by the specified vector.  Does not change turtle direction. 
 //   "untilx"   |x | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
 //   "untily"   |x | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if ytarget is not reachable.
 //   "untilz"   |x | ztarget            | Move turtle in turtle direction until z==ztarget.  Produces an error if ztarget is not reachable.
 //   "jump"     |  | point              | Move the turtle to the specified point
 //   "xjump"    |  | x                  | Move the turtle's x position to the specified value
-//   "yjump     |  | y                  | Move the turtle's y position to the specified value
-//   "zjump     |  | z                  | Move the turtle's z position to the specified value
+//   "yjump"    |  | y                  | Move the turtle's y position to the specified value
+//   "zjump"    |  | z                  | Move the turtle's z position to the specified value
 //   "left"     |  | [angle]            | Turn turtle left by specified angle or default angle
 //   "right"    |  | [angle]            | Turn turtle to the right by specified angle or default angle
 //   "up"       |  | [angle]            | Turn turtle up by specified angle or default angle
 //   "down"     |  | [angle]            | Turn turtle down by specified angle or default angle
+//   "roll"     |  | [angle]            | Roll the turtle about its forward axis by the specified angle or default angle (initially 90)
 //   "xrot"     |x | [angle]            | Turn turtle around x-axis by specified angle or default angle
 //   "yrot"     |x | [angle]            | Turn turtle around y-axis by specified angle or default angle
 //   "zrot"     |x | [angle]            | Turn turtle around z-axis by specified angle or default angle
@@ -156,7 +157,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "lrollto"    | vector             | Roll left until the UP direction of the turtle is aligned as much as possible with the given vector direction
 //   "rrollto"    | vector             | Roll right until the UP direction of the turtle is aligned as much as possible with the given vector direction
 //   "steps"      | count              | Divide arc or segment into this many steps.  Default is 1 for segments without roll or twist, arcsteps otherwise
-//   "reverse"    |                    | For "move" only: If given then reverses the turtle after the move
+//   "reverse"    |                    | For "move" only: Reverse the turtle before moving, so this move and subsequent moves go backward relative to the previous heading
 //   "right"      | angle              | For "arc" only: Turn to the right by specified angle
 //   "left"       | angle              | For "arc" only: Turn to the left by specified angle
 //   "up"         | angle              | For "arc" only: Turn up by specified angle
@@ -171,12 +172,16 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   change the path the turtle traces.  The "roll" subcommand, on the other hand, changes the turtle frame orientation, so it can alter the path.
 //   The "xrot", "yrot" and "zrot" subcommands can make turns larger than 180 degrees, and even larger than 360 degrees.  If you use "up",
 //   "down", "left" or "right" alone then you can give any angle, but if you combine "up"/"down" with "left"/"right" then the specified
-//   angles must be smaller than 180 degrees.  (This is because the algorithm decodes the rotation into an angle smaller than 180, so
+//   angles must be smaller than 180 degrees in absolute value.  (This is because the algorithm decodes the rotation into an angle smaller than 180, so
 //   the results are very strange if larger angles are permitted.)
+//   .
+//   With a positive radius and movement scale, negative arc angles reverse the turn direction,
+//   not the initial direction of travel. Absolute-axis arcs retain the ascent or descent of
+//   the current heading for either rotation direction. Simple and compound forms use the same convention.
 // Arguments:
 //   commands = List of turtle3d commands
 //   state = Starting turtle direction, starting turtle transformation (e.g. move(pt)), or full turtle state (from a previous call).  Default: RIGHT
-//   transforms = If true teturn list of transformations instead of points.  Default: false
+//   transforms = If true return list of transformations instead of points.  Default: false
 //   full_state = If true return full turtle state for continuing the path in subsequent turtle calls.  Default: false
 //   repeat = Number of times to repeat the command list.  Default: 1
 // Example(3D): Angled rectangle
@@ -485,7 +490,9 @@ function _turtle3d_command_len(commands, index) =
     in_list(commands[index],["repeat","arctodir","arcrot"]) ? 3 :   // Repeat, arctodir and arcrot commands require 2 args
     // For these, the first arg is required, second arg is present if it is not a string or list
     in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) && !is_list(commands[index+2])  ? 3 :  
-    is_string(commands[index+1]) || is_list(commands[index])? 1 :  // If 2nd item is a string it must be a new command; 
+    is_string(commands[index+1]) || is_list(commands[index]) ||
+       (in_list(commands[index],["move","xmove","ymove","zmove","left","right","up","down","xrot","yrot","zrot","roll"])
+        && is_list(commands[index+1])) ? 1 :  // If 2nd item is a string it must be a new command; 
                                                                    // If first item is a list it's a compound command
     2;                                 // Otherwise we have command and arg
        
@@ -527,12 +534,14 @@ function _turtle3d_command(command, parm, parm2, state, index) =
         movestep=2,
         angle=3,
         arcsteps=4,
-        parm = !is_string(parm) ? parm : undef,
+        parm = is_string(parm) || (is_list(parm) &&
+               in_list(command,["move","xmove","ymove","zmove","left","right","up","down","xrot","yrot","zrot","roll"]))
+               ? undef : parm,
         parm2 = command=="arctodir" || command=="arcrot" ? parm2 
               : !is_string(parm2) && !is_list(parm2) ? parm2 : undef,
         needvec = ["jump", "xyzmove","setdir"],
         neednum = ["untilx","untily","untilz","xjump","yjump","zjump","angle","length","scale","addlength"],
-        numornothing = ["right","left","up","down","xrot","yrot","zrot", "roll", "move"],
+        numornothing = ["right","left","up","down","xrot","yrot","zrot", "roll", "move", "xmove", "ymove", "zmove"],
         needtran = ["rot"],
         chvec = !in_list(command,needvec) || is_vector(parm,3),
         chnum = (!in_list(command,neednum) || is_num(parm))
@@ -567,14 +576,14 @@ function _turtle3d_command(command, parm, parm2, state, index) =
     command=="xjump" ? _tupdate(state,[move([parm,lastpt.y,lastpt.z]-lastpt)*lastT],[lastPre]):
     command=="yjump" ? _tupdate(state,[move([lastpt.x,parm,lastpt.z]-lastpt)*lastT],[lastPre]):
     command=="zjump" ? _tupdate(state,[move([lastpt.x,lastpt.y,parm]-lastpt)*lastT],[lastPre]):
-    command=="angle" ? assert(parm!=0,str("\"",command,"\" requires nonnegative argument at index ",index))
+    command=="angle" ? assert(parm!=0,str("\"",command,"\" requires nonzero argument at index ",index))
                        list_set(state, angle, parm) :
     command=="length" ? list_set(state, movestep, parm) :
     command=="scale" ?  list_set(state, movestep, parm*state[movestep]) :
     command=="addlength" ?  list_set(state, movestep, state[movestep]+parm) :
-    command=="arcsteps" ?  assert(is_int(parm) && parm>0, str("\"",command,"\" requires a postive integer argument at index ",index))
+    command=="arcsteps" ?  assert(is_int(parm) && parm>=0, str("\"",command,"\" requires a nonnegative integer argument at index ",index))
                            list_set(state, arcsteps, parm) :
-    command=="roll" ? list_set(state, trlist, concat(list_head(state[trlist]), [lastT*xrot(parm)])):
+    command=="roll" ? list_set(state, trlist, concat(list_head(state[trlist]), [lastT*xrot(default(parm,state[angle]))])):
     in_list(command,["right","left","up","down"]) ? 
         list_set(state, trlist, concat(list_head(state[trlist]), [lastT*_turtle3d_rotation(command,default(parm,state[angle]))])):
     in_list(command,["xrot","yrot","zrot"]) ?
@@ -606,7 +615,7 @@ function _turtle3d_command(command, parm, parm2, state, index) =
         assert(myangle!=0, str("\"",command,"\" command requires a nonzero angle at index ",index))
         let(
             length = 2*PI*radius * abs(myangle)/360, 
-            center = [0,
+            center = sign(myangle)*[0,
                       command=="arcleft"?radius:command=="arcright"?-radius:0,
                       command=="arcdown"?-radius:command=="arcup"?radius:0],
             steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps]
@@ -631,7 +640,7 @@ function _turtle3d_command(command, parm, parm2, state, index) =
                 : command=="arcyrot" ? BACK
                 : UP,
             projv = v - (dir*v)*dir,
-            center = sign(myangle) * radius * cross(dir,projv),
+            center = sign(myangle) * radius * unit(cross(dir,projv),CENTER),
             slope = dir*v / norm(projv),
             vshift = dir*slope*length
         )
@@ -657,7 +666,7 @@ function _turtle3d_command(command, parm, parm2, state, index) =
             length = 2*PI*radius * myangle/360, 
             vshift = dir*slope*length,
             steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
-            center = radius * cross(dir,projv)
+            center = radius * unit(cross(dir,projv),CENTER)
         )
         assert(!all_zero(projv), str("Rotation acts as twist, which does not produce a valid arc, at index ",index))
         _tupdate(state,
@@ -769,6 +778,9 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
         zrotangle = struct_val(keys,"zrot"),
         rot = struct_val(keys,"rot"),
         todir = struct_val(keys,"todir"),
+        Trot = _rotpart(lastT),
+        shift = _transpart(lastT),
+        v = apply(Trot,RIGHT),           // Current direction
         // Compute rotation angle and axis for the absolute rotation (or undef if no absolute rotation is given)
         abs_angle_axis =
             command[0]=="move" ? [undef,CENTER] :
@@ -785,13 +797,10 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
         absangle = abs_angle_axis[0],
         absaxis = abs_angle_axis[1],
         // Computes the extra shift and center with absolute rotation
-        Trot = _rotpart(lastT),  
-        shift = _transpart(lastT), 
-        v = apply(Trot,RIGHT),           // Current direction
         projv = v - (absaxis*v)*absaxis, // Component of rotation axis orthogonal to v
-        abscenter = is_undef(absangle) ? undef : sign(absangle) * radius * cross(absaxis,projv),    // absangle might be undef if command is "move"
+        abscenter = is_undef(absangle) ? undef : sign(absangle) * radius * unit(cross(absaxis,projv),CENTER),    // absangle might be undef if command is "move"
         slope = absaxis*v / norm(projv),       // This computes the shift in the direction along the rotational axis
-        vshift = is_undef(absangle) ? undef : absaxis*slope* 2*PI*radius*absangle/360
+        vshift = is_undef(absangle) ? undef : absaxis*slope* 2*PI*radius*abs(absangle)/360
     )
     // At this point angle is nonzero if and only if a relative angle command (left, right, up down) was given,
     //               absangle is defined if and only if an absolute angle command was given

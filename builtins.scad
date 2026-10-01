@@ -39,6 +39,7 @@ module _multmatrix(m) multmatrix(m) children();
 module _translate(v) translate(v) children();
 module _rotate(a,v) rotate(a=a,v=v) children();
 module _scale(v) scale(v) children();
+module _mirror(v) mirror(v) children();                        
 
 module _linear_extrude(height, v, scale, center, twist, slices, segments, convexity, h) {
     if (is_undef(h)) {
@@ -64,7 +65,25 @@ module _linear_extrude(height, v, scale, center, twist, slices, segments, convex
 
 module _hull() hull() children();
 
-module _rotate_extrude() rotate_extrude(angle,start,convexity,a) children();
+module _rotate_extrude(angle, start, convexity, a) {
+    if (is_undef(start) && is_undef(a))
+        rotate_extrude(angle=angle, convexity=convexity) children();
+    else if (is_undef(a))
+        rotate_extrude(angle=angle, convexity=convexity,
+                       start=start) children();
+    else if (is_undef(start))
+        rotate_extrude(angle=angle, convexity=convexity,
+                       a=a) children();
+    else
+        rotate_extrude(angle=angle, convexity=convexity,
+                       start=start, a=a) children();
+}
+
+module _rotate_extrude(angle,start,convexity,a){
+   rotate_extrude(angle,start,convexity,a) children();
+}
+
+
 module _polyhedron(points, faces, convexity) polyhedron() children();
 module _polgon(points, paths, convexity) polygon() children();
 module _surface(file,center,convexity,invert) surface() children();
