@@ -893,9 +893,9 @@ function _pin_size(size) =
 //    thickness = thickness of the pin walls
 //    clearance = how far to shrink the pin away from the socket walls.  Default: 0.2
 //    preload = amount to move the nub towards the pin base, which can create tension from the misalignment with the socket.  Default: 0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `FRONT`
+//    anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT`
+//    spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//    orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `FRONT`
 // Example: Pin in native orientation
 //    snap_pin("standard", anchor=CENTER, orient=UP, thickness = 1, $fn=40);
 // Example: Pins oriented for printing
