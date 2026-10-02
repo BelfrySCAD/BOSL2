@@ -3071,4 +3071,22 @@ module shell2d(thickness, or=0, ir=0)
 }
 
 
+module polygon(points, paths, convexity)
+  attachable(two_d=true){
+    if ($children>0)
+      _polygon(points=points, paths=paths, convexity=convexity) children();
+    else 
+      _polygon(points=points, paths=paths, convexity=convexity);
+    union(){};
+  }
+
+
+
+module projection(cut,convexity)
+  attachable(){
+    _projection(cut=cut,convexity=convexity) children();
+    union(){}
+  }
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
