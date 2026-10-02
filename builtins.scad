@@ -79,15 +79,23 @@ module _rotate_extrude(angle, start, convexity, a) {
                        start=start, a=a) children();
 }
 
-module _rotate_extrude(angle,start,convexity,a){
-   rotate_extrude(angle,start,convexity,a) children();
-}
+module _polygon(points, paths, convexity)
+  if ($children>0) polygon(points=points, paths=paths, convexity=convexity) children();
+  else polygon(points=points, paths=paths, convexity=convexity);
 
-
-module _polyhedron(points, faces, convexity) polyhedron() children();
-module _polgon(points, paths, convexity) polygon() children();
-module _surface(file,center,convexity,invert) surface() children();
-module _projection(cut,convexity) projection() children();
+module _polyhedron(points, faces, convexity)
+  if ($children>0) polyhedron(points=points, faces=faces, convexity=convexity) children();
+  else polyhedron(points=points, faces=faces, convexity=convexity);
+  
+module _surface(file,center,convexity,invert)
+  if ($children>0) surface(file=file,center=center,convexity=convexity,invert=invert) children();
+  else surface(file=file,center=center,convexity=convexity,invert=invert);
+  
+module _projection(cut,convexity) projection(cut=cut,convexity=convexity) children();
+  if ($children>0) projection(cut=cut,convexity=convexity) children();
+  else projection(cut=cut,convexity=convexity);                                
+                                  
 // import?                                  
-                                              
+// resize?
+                                  
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

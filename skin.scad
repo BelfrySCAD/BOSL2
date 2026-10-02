@@ -882,6 +882,26 @@ function _make_all_linear_sweep_anchors(path, midpath, toppath, h, shift=[0,0], 
     ];
 
 
+
+module linear_extrude(height, v, scale, center, twist, slices, segments, convexity, h)
+{
+  attachable(){
+     _linear_extrude(height=height, h=h, v=v, center=center, convexity=convexity,
+                     twist=twist, slices=slices, segments=segments, scale=scale) children();
+     union(){};
+  }
+}
+
+
+module rotate_extrude(angle, start, convexity, a)
+{
+    attachable(){
+      _rotate_extrude(angle=angle, convexity=convexity,start=start, a=a) children();
+      union(){}
+    }
+}  
+
+     
 function linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
