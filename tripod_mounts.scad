@@ -18,14 +18,18 @@ _BOSL2_TRIPOD_MOUNTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) |
 // Topics: Parts
 // See Also: threaded_rod()
 // Usage:
-//   manfrotto_rc2_plate([chamfer],[anchor],[orient],[spin]) [ATTACHMENTS];
+//   manfrotto_rc2_plate([chamfer], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a Manfrotto RC2 quick release mount plate to mount to a tripod.  The chamfer argument
 //   lets you control whether the model edges are chamfered.  By default all edges are chamfered,
 //   but you can set it to "bot" to chamfer only the bottom, so that connections to a model larger
-//   than the plate doin't have a V-groove at the junction.  The plate is 10.5 mm thick.
+//   than the plate don't have a V-groove at the junction.  The plate is 10.5 mm thick.
 // Arguments:
 //   chamfer = "none" for no chamfer, "all" for full chamfering, and "bot" or "bottom" for bottom chamfering.  Default: "all".
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: CENTER
+//   spin = Rotate this many degrees around the Z axis. See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top towards. See [orient](attachments.scad#subsection-orient). Default: UP
 // Examples:
 //   manfrotto_rc2_plate();
 //   manfrotto_rc2_plate("bot");
