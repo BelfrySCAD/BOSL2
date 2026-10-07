@@ -97,7 +97,7 @@ _NO_ARG = [true,[123232345],false];
 //   .
 //   The functional form of `move()` can also be invoked as `translate()`.  
 // Arguments:
-//   v = An [X,Y,Z] vector to translate by.  For function form with `p` a point list or VNF, can be "centroid", "mean" or "box".  
+//   v = A 2D or 3D translation vector.  For function form with `p` a point list or VNF, can be "centroid", "mean" or "box".  Default: [0,0,0]
 //   p = (function only) A point, list of points or VNF to be translated. 
 //
 // Example:
@@ -127,7 +127,7 @@ _NO_ARG = [true,[123232345],false];
 // Example(NORENDER):
 //   pt1 = move([0,20,30], [15,23,42]);       // Returns: [15, 43, 72]
 //   pt2 = move([0,3,1], [[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
-//   mat2d = move([2,3]);    // Returns: [[1,0,2],[0,1,3],[0,0,1]]
+//   mat = move([2,3]);      // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,0],[0,0,0,1]]
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], p) {
     req_children($children);  
@@ -142,8 +142,8 @@ function move(v=[0,0,0], p=_NO_ARG) =
         assert(is_vnf(p) || is_path(p),"String movements only work with point lists and VNFs")
         let(
              center = v=="centroid" ? centroid(p)
-                    : v=="mean" ? mean(p)
-                    : v=="box" ? mean(pointlist_bounds(p))
+                    : v=="mean" ? mean(is_vnf(p) ? p[0] : p)
+                    : v=="box" ? mean(pointlist_bounds(is_vnf(p) ? p[0] : p))
                     : assert(false,str("Unknown string movement ",v))
         )
         move(-center,p=p)
@@ -179,7 +179,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
-//   x = Scalar amount to move left.
+//   x = Scalar amount to move left.  Default: 0
 //   p = (function only) A point, list of points or VNF to be translated.
 //
 // Example:
@@ -226,7 +226,7 @@ function left(x=0, p=_NO_ARG) =
 //   . 
 //   You can also call this as `xmove()`.  
 // Arguments:
-//   x = Scalar amount to move right.
+//   x = Scalar amount to move right.  Default: 0
 //   p = (function only) A point, list of points or VNF to be translated.
 //
 // Example:
@@ -282,7 +282,7 @@ function xmove(x=0, p=_NO_ARG) =
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 // Arguments:
-//   y = Scalar amount to move forward.
+//   y = Scalar amount to move forward.  Default: 0
 //   p = (function only) A point, list of points or VNF to be translated.
 //
 // Example:
@@ -322,14 +322,14 @@ function fwd(y=0, p=_NO_ARG) =
 //   mat = back(y);
 //
 // Description:
-//   Moves geometry or data forward (in the Y+ direction) by the specified amount.  (If `y` is negative motion is forward.)
-//   * If called as a module, moves all children forward.
+//   Moves geometry or data backward (in the Y+ direction) by the specified amount.  (If `y` is negative motion is forward.)
+//   * If called as a module, moves all children backward.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix.
 //   .
 //   You can also call this as `ymove()`.  
 // Arguments:
-//   y = Scalar amount to move back.
+//   y = Scalar amount to move back.  Default: 0
 //   p = (function only) A point, list of points or VNF to be translated.
 //
 // Example:
@@ -380,13 +380,13 @@ function ymove(y=0,p=_NO_ARG) =
 //   mat = down(z);
 //
 // Description:
-//   Moves geometry or data dwon (in the Z- direction) by the specified amount.  (If `z` is negative motion is upward.)
+//   Moves geometry or data down (in the Z- direction) by the specified amount.  (If `z` is negative motion is upward.)
 //   * If called as a module, moves all children down.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
-//   z = Scalar amount to move down
+//   z = Scalar amount to move down.  Default: 0
 //   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
@@ -431,7 +431,7 @@ function down(z=0, p=_NO_ARG) =
 //   .
 //   You can also call this as `zmove()`.  
 // Arguments:
-//   z = Scalar amount to move up.
+//   z = Scalar amount to move up.  Default: 0
 //   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
@@ -504,7 +504,7 @@ function zmove(z=0, p=_NO_ARG) =
 //   * `rot(30, [1,1,0])` or `rot(a=30, v=[1,1,0])` rotates 30 degrees around the axis vector `[1,1,0]` (in the right-hand direction).  
 //   * `rot(from=[0,0,1], to=[1,0,0])` rotates the `from` vector to line up with the `to` vector, in this case the top to the right and hence equivalent to `rot(a=90,v=[0,1,0]`.  The axis of rotation is perpendicular to the two given vectors.  
 //   * `rot(from=[0,1,1], to=[1,1,0], a=45)` rotates 45 degrees around the `from` vector ([0,1,1]) and then rotates the `from` vector to align with the `to` vector.  Equivalent to `rot(from=[0,1,1],to=[1,1,0]) rot(a=45,v=[0,1,1])`.  You can also regard `a` as as post-rotation around the `to` vector.  For this form, `a` must be a scalar.
-//   * If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.  So `rot(args...,cp=[1,2,3])` is equivalent to `move(-[1,2,3])rot(args...)move([1,2,3])`.
+//   * If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.  So `rot(args...,cp=[1,2,3])` is equivalent to `move([1,2,3])rot(args...)move(-[1,2,3])`.
 //   * If the `reverse` argument is true, then the rotations performed is exactly reversed.
 //   .
 //   The behavior and return value varies depending on how `rot()` is called:
@@ -599,7 +599,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG) =
 //   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = Rotation angle in degrees. 
+//   a = Rotation angle in degrees.  Default: 0
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
 //   cp = center point to rotate around. Default: [0,0,0]
@@ -644,7 +644,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 //   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = Rotation angle in degrees.
+//   a = Rotation angle in degrees.  Default: 0
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
 //   cp = center point to rotate around. Default: [0,0,0]
@@ -689,7 +689,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 //   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = Rotation angle in degrees.
+//   a = Rotation angle in degrees.  Default: 0
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
 //   cp = centerpoint to rotate around. Default: [0,0,0]
@@ -728,12 +728,12 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   M = tilt(to, [reverse=], [cp=]);
 //
 // Description:
-//   This is shorthand for `rot(from=UP,to=x)` and operates similarly.  It tilts things that point UP until they point in the direction of the given `to` vector.
+//   This is shorthand for `rot(from=UP,to=to)` and operates similarly.  It tilts things that point UP until they point in the direction of the given `to` vector.
 //   * If the `cp` centerpoint argument is given, then the tilt/rotation is performed around that centerpoint.  So `tilt(...,cp=[1,2,3])` is equivalent to `move([1,2,3]) tilt(...) move([-1,-2,-3])`.
 //   * If the `reverse` argument is true, then the tilt/rotation is reversed. 
 //   .
 //   The behavior and return value varies depending on how `tilt()` is called:
-//   * Ifc called as a module, tilts all children.
+//   * If called as a module, tilts all children.
 //   * If called as a function with the `p` argument, returns the tilted version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
@@ -814,8 +814,8 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   pt1 = scale(3, [3,1,4]);        // Returns: [9,3,12]
 //   pt2 = scale([2,3,4], [3,1,4]);  // Returns: [6,3,16]
 //   pt3 = scale([2,3,4], [[1,2,3],[4,5,6]]);  // Returns: [[2,6,12], [8,15,24]]
-//   mat2d = scale([2,3]);    // Returns: [[2,0,0],[0,3,0],[0,0,1]]
-//   mat3d = scale([2,3,4]);  // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
+//   mat2d = scale([2,3]);      // Returns: [[2,0,0,0],[0,3,0,0],[0,0,1,0],[0,0,0,1]]
+//   mat3d = scale([2,3,4]);    // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
 //
 // Example(2D):
 //   path = circle(d=50,$fn=12);
@@ -863,7 +863,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0],dir) =
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
-//   x = Factor to scale by, along the X axis.
+//   x = Factor to scale by, along the X axis.  Default: 1
 //   p = (function only) A point, list of points, Bezier patch or VNF to be scaled.
 //   ---
 //   cp = If given as a point, centers the scaling on the point `cp`.  If given as a scalar, centers scaling on the point `[cp,0,0]`
@@ -916,7 +916,7 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
-//   y = Factor to scale by, along the Y axis.
+//   y = Factor to scale by, along the Y axis.  Default: 1
 //   p = (function only) A point, list of points, Bezier patch or VNF to be scaled.
 //   ---
 //   cp = If given as a point, centers the scaling on the point `cp`.  If given as a scalar, centers scaling on the point `[0,cp,0]`
@@ -969,7 +969,7 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
-//   z = Factor to scale by, along the Z axis.
+//   z = Factor to scale by, along the Z axis.  Default: 1
 //   p = (function only) A point, list of points, Bezier patch or VNF to be scaled.
 //   ---
 //   cp = If given as a point, centers the scaling on the point `cp`.  If given as a scalar, centers scaling on the point `[0,0,cp]`
@@ -1116,7 +1116,7 @@ function mirror(v, p=_NO_ARG) =
 //   color("red", 0.333) yrot(90) cylinder(d1=10, d2=0, h=20);
 module xflip(p, x=0) {
     req_children($children);        
-    assert(is_undef(p), "Module form `zflip()` does not accept p= argument.");
+    assert(is_undef(p), "Module form `xflip()` does not accept p= argument.");
     translate([x,0,0])
         mirror([1,0,0])
             translate([-x,0,0]) children();
@@ -1260,14 +1260,14 @@ function zflip(p=_NO_ARG, z=0) =
 // Description:
 //   Maps one coordinate frame to another.  You must specify two or
 //   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
-//   specify x=[1,1] then the x axis is mapped to the line y=x.  If you
+//   specify x=[1,1,0] then the x axis is mapped to the line y=x.  If you
 //   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
-//   coordinate system.  If the vectors you give are orthogonal the result is a rotation and the
+//   coordinate system.  For orthogonal right-handed axes the result is a rotation, and the
 //   `reverse` parameter supplies the inverse map, which enables you to map two arbitrary
 //   coordinate systems to each other by using the canonical coordinate system as an intermediary.
 //   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
-//   of the specified vectors matters: the transformation does not apply scaling, though it can
-//   skew if your provide non-orthogonal axes.
+//   of the specified vectors matters: each destination axis has unit length.  Non-orthogonal
+//   axes can still change the lengths of other vectors and can skew the object.
 //   .
 //   You can use `frame_map()` as a module, or as a function.  In the functional form, you 
 //   need to provide the points to be transformed with the `p=` named argument (except in the
@@ -1317,9 +1317,9 @@ function frame_map(x,y,z, p=_NO_ARG, reverse=false) =
         x = is_undef(x)? undef : unit(x,RIGHT),
         y = is_undef(y)? undef : unit(y,BACK),
         z = is_undef(z)? undef : unit(z,UP),
-        map = is_undef(x)? [cross(y,z), y, z] :
-            is_undef(y)? [x, cross(z,x), z] :
-            is_undef(z)? [x, y, cross(x,y)] :
+        map = is_undef(x)? [unit(cross(y,z)), y, z] :
+            is_undef(y)? [x, unit(cross(z,x)), z] :
+            is_undef(z)? [x, y, unit(cross(x,y))] :
             [x, y, z]
     )
     reverse? (
@@ -1489,16 +1489,18 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 // Description:
 //   Applies the specified transformation matrix `transform` to a point, point list, bezier patch or VNF.
 //   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 
-//   matrix&mdash;the 4x4 matrix with its final row removed.  When the data is 2D the matrix must not operate on the Z axis,
-//   except possibly by scaling it.  When points contains 2D data you can also supply the transform as
+//   matrix&mdash;the 4x4 matrix with its final row removed.
+//   For 2D data the matrix may not move or mix Z (no Z translation, and no shear or
+//   rotation that changes Z); a Z scale is ignored if the matrix also changes X or Y, but
+//   rejected if it's the only change.  When points contains 2D data you can also supply the transform as
 //   a 3x3 affine transformation matrix or the corresponding 2x3 matrix with the last row deleted.
 //   .
 //   Any other combination of matrices produces an error, including acting with a 2D matrix (3x3) on 3D data.
 //   The output of apply is always the same dimension as the input&mdash;projections are not supported.
 //   .
 //   Note that a matrix with a negative determinant such as any mirror reflection flips the orientation of faces.
-//   If the transform matrix is square then apply() checks the determinant and if it is negative, apply() reverses the face order so that
-//   the transformed VNF has faces with the same winding direction as the original VNF.  This adjustment applies
+//   For either a 4x4 or 3x4 transform, apply() checks the determinant of the effective linear transformation
+//   and reverses each face's vertex order when it is negative, preserving the VNF's winding convention.  This adjustment applies
 //   only to VNFs, not to beziers or point lists.  
 //
 // Arguments:
@@ -1530,9 +1532,14 @@ function apply(transform,points) =
     points==[] ? []
   : is_vector(points) ? _apply(transform, [points])[0]    // point
   : is_vnf(points) ?                                      // vnf
+        points[0]==[] ? points :
         let(
             newvnf = [_apply(transform, points[0]), points[1]],
-            reverse = (len(transform)==len(transform[0])) && determinant(transform)<0
+            // Use the same homogeneous normalization as _apply().  A 3x4
+            // matrix has an implicit final row [0,0,0,1].
+            linear = [for (i=[0:2]) [for (j=[0:2]) transform[i][j]]]
+                     / (len(transform)==4 ? transform[3][3] : 1),
+            reverse = determinant(linear)<0
         )
         reverse ? vnf_reverse_faces(newvnf) : newvnf
   : is_list(points) && is_list(points[0]) && is_vector(points[0][0])    // bezier patch
@@ -1601,6 +1608,15 @@ module scale(v,cp=[0,0,0],dir)
     $transform = $transform * s3;
     _scale(v) children();
   }  
+}
+
+
+module mirror(v=[1,0,0])
+{
+    m = is_vector(v) && (len(v)==2 || len(v)==3) && norm(v)>0
+      ? affine3d_mirror(v) : IDENT;
+    $transform = $transform * m;
+    _mirror(v) children();
 }
 
 

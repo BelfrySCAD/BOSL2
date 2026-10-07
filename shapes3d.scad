@@ -5483,7 +5483,23 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
     }
 }
 
+module polyhedron(points, faces, convexity)
+  attachable(){
+     if ($children>0)
+        _polyhedron(points=points, faces=faces, convexity=convexity) children();
+     else
+        _polyhedron(points=points, faces=faces, convexity=convexity);       
+     union(){}
+  }
 
+module surface(file,center,convexity,invert)
+  attachable(){
+    if ($children>0)
+       _surface(file=file,center=center,convexity=convexity,invert=invert) children();
+    else
+       _surface(file=file,center=center,convexity=convexity,invert=invert);
+    union(){}
+  }
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

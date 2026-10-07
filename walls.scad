@@ -27,9 +27,9 @@ _BOSL2_WALLS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   the need for support material in 3D printing.
 //
 // Arguments:
-//   h = height of strut wall.
-//   l = length of strut wall.
-//   thick = thickness of strut wall.
+//   h = height of strut wall.  Default: 50
+//   l = length of strut wall.  Default: 100
+//   thick = thickness of strut wall.  Default: 4
 //   ---
 //   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
 //   strut = the width of the cross-braces. Default: 5
@@ -90,11 +90,11 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 //   the need for support material in 3D printing.
 //
 // Arguments:
-//   size = The `[X,Y]` size of the outer rectangle.
+//   size = The `[X,Y]` size of the outer rectangle.  Default: [50,100]
 //   ---
-//   maxang = maximum overhang angle of cross-braces.
-//   strut = the width of the cross-braces.
-//   max_bridge = maximum bridging distance between cross-braces.
+//   maxang = maximum overhang angle of cross-braces.  Default: 30
+//   strut = the width of the cross-braces.  Default: 5
+//   max_bridge = maximum bridging distance between cross-braces.  Default: 20
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
@@ -154,7 +154,7 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
 // Usage:
-//   sparse_cuboid(size, [dir], [maxang=], [struct=]
+//   sparse_cuboid(size, [dir], [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
 // Description:
 //   Makes an open rectangular cuboid with X-shaped cross-bracing to reduce the need for material in 3d printing.
 //   The direction of the cross bracing can be aligned with the X, Y or Z axis.  This module can be
@@ -163,7 +163,7 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 //   to the Y axis, and the angle is measured relative to the X direction.  
 // Arguments:
 //   size = The size of sparse wall, a number or length 3 vector.
-//   dir = direction of holes through the cuboid, must be a vector parallel to the X, Y or Z axes, or one of "X", "Y" or "Z".  Default: "Y"
+//   dir = direction of holes through the cuboid, must be a vector parallel to the X, Y or Z axes, or one of "X", "Y" or "Z".  Default: RIGHT (the X axis)
 //   ---
 //   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
 //   strut = the width of the cross-braces. Default: 5
@@ -225,7 +225,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 // Usage:
-//   hex_panel(shape, wall, spacing, [frame=], [bevel=], [bevel_frame=], [shift=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
+//   hex_panel(shape, strut, spacing, [frame=], [bevel=], [bevel_frame=], [shift=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
 // Description:
 //   Produces a panel with a honeycomb interior that can be rectangular with optional beveling, or
 //   an arbitrary polygon shape without beveling. The panel consists of a frame containing
@@ -249,7 +249,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   The other option is to provide a 2D path as the shape argument. The path must not intersect
 //   itself.  You must give the height argument in this case and you cannot give the bevel argument.
 //   The panel is made from a linear extrusion of the specified shape.  In this case, anchoring
-//   is done as usual for linear sweeps.  The shape appears by default on its base and you can
+//   is done as usual for linear sweeps.  The shape appears centered in Z by default and you can
 //   choose "hull" or "intersect" anchor types.  
 // Arguments:
 //   shape = 3D size vector or a 2D path
@@ -259,7 +259,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   frame = width of the frame around the honeycomb.  Default: same as strut
 //   bevel = list of edges to bevel on rectangular case when shape is a size vector; allowed options are RIGHT, LEFT, BACK, or FRONT, or those directions with BOTTOM added.  Default: []
 //   bevel_frame = width of the frame applied at bevels.  Default: same as frame
-//   shift = 2D vector [x,y] to shift the hex grid pattern.  Useful for aligning hex patterns across adjacent panels.  Default: [0,0]
+//   shift = 2D phase shift of the repeating hex grid.  Useful for aligning patterns across adjacent panels.  Default: [0,0]
 //   h / height / l / length = thickness of the panel when shape is a path 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER` for rectangular panels, `"zcenter"` for extrusions.  
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -346,7 +346,7 @@ module hex_panel(
       assert(!(in_list(BACK,  bevel) && in_list(BACK+BOTTOM,  bevel)), "conflicting BACK bevels")
       assert(!(in_list(RIGHT, bevel) && in_list(RIGHT+BOTTOM, bevel)), "conflicting RIGHT bevels")
       assert(!(in_list(LEFT,  bevel) && in_list(LEFT+BOTTOM,  bevel)), "conflicting LEFT bevels")
-      assert(is_undef(h) || is_path(shape), "cannot give h with a size vector")
+      assert(is_path(shape) || num_defined([h,l,height,length])==0, "cannot give h, l, height, or length with a size vector")
       assert(is_vector(shift,2), "shift must be a 2D vector");
     shp = is_path(shape) ? shape : square([shape.x, shape.y], center = true);
     ht = is_path(shape) ? one_defined([h,l,height,length],"height,length,l,h")
@@ -362,9 +362,9 @@ module hex_panel(
     if (len(bevel) > 0) {
          size1 = [bevpaths[0][0].x-bevpaths[0][1].x, bevpaths[0][2].y-bevpaths[0][1].y,ht];
          size2 = [bevpaths[1][0].x-bevpaths[1][1].x, bevpaths[1][2].y-bevpaths[1][1].y];
-         shift = point2d(centroid(bevpaths[1])-centroid(bevpaths[0]));
+         bevel_shift = point2d(centroid(bevpaths[1])-centroid(bevpaths[0]));
          offset = (centroid(bevpaths[0]));
-         attachable(anchor,spin,orient,size=size1,size2=size2,shift=shift,offset=offset){
+         attachable(anchor,spin,orient,size=size1,size2=size2,shift=bevel_shift,offset=offset){
              down(ht/2)
                  intersection() {
                      union() {
@@ -413,9 +413,13 @@ module _honeycomb(shape, spacing=10, hex_wall=1, shift=[0,0])
         hex = hexagon(id=spacing-hex_wall, spin=180/6);
         bounds = pointlist_bounds(shape);
         size = bounds[1] - bounds[0] + 2*[spacing,spacing];
-        hex_rgn2 = grid_copies(spacing=spacing, size=size, stagger=true, p=hex);
+        periods = [spacing, 2*spacing*sin(60)];
+        phase = [for(i=[0:1]) posmod(shift[i]+periods[i]/2,periods[i])-periods[i]/2];
+        /// Pad by whole lattice periods to preserve the original grid phase.
+        n = v_floor(v_div(size,polar_to_xy(spacing,60))) + [5,5];
+        hex_rgn2 = grid_copies(spacing=spacing, n=n, stagger=true, p=hex);
         center = (bounds[0] + bounds[1]) / 2;
-        hex_rgn = move(center + shift, p=hex_rgn2);
+        hex_rgn = move(center + phase, p=hex_rgn2);
         difference(){
             polygon(shape);
             region(hex_rgn);
@@ -474,12 +478,12 @@ module _bevelWall(shape, bevel, thickness) {
 //   providing support strength.  Designed with 3D printing in mind.
 //
 // Arguments:
-//   h = height of strut wall.
-//   l = length of strut wall.
-//   thick = thickness of strut wall.
+//   h = height of strut wall.  Default: 50
+//   l = length of strut wall.  Default: 100
+//   thick = thickness of strut wall.  Default: 5
 //   ---
-//   strut = the width of the frame.
-//   wall = thickness of corrugations.
+//   strut = the width of the frame.  Default: 5
+//   wall = thickness of corrugations.  Default: 2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -533,14 +537,17 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
 //   Makes a rectangular wall along the Y axis which thins to a smaller width in the center,
 //   with angled supports to prevent critical overhangs.  
 //
+//   The border and bevel must leave a positive-sized inner section.  For a rectangular wall this requires
+//   `strut+(thick-wall)/(2*tan(ang)) < min(h,l)/2`; a trapezoidal wall must also have positive inner widths
+//   at both ends.  The inner wall thickness must be positive and smaller than `thick`.
 // Arguments:
-//   h = Height of wall.
-//   l = Length of wall (y dimension).  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
-//   thick = Thickness of wall (x dimension).
+//   h = Height of wall.  Default: 50
+//   l = Length of wall (y dimension).  If given as a vector of two numbers, specifies bottom and top lengths, respectively.  Default: 100
+//   thick = Thickness of wall (x dimension).  Default: 5
 //   ---
-//   ang = Maximum overhang angle of diagonal brace.
-//   braces = If true, adds diagonal crossbraces for strength.
-//   strut = The width of the borders and diagonal braces.  Default: `thick/2`
+//   ang = Maximum overhang angle of diagonal brace.  Default: 30
+//   braces = If true, adds diagonal crossbraces for strength.  Default: false
+//   strut = The width of the borders and diagonal braces.  Default: min(h,l1,l2,thick)/2
 //   wall = The thickness of the thinned portion of the wall.  Default: `thick/2`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -561,6 +568,9 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
     strut = is_num(strut)? strut : min(h,l1,l2,thick)/2;
     wall = is_num(wall)? wall : thick/2;
 
+    check = assert(all_positive([h,l1,l2,thick,strut,wall]), "Wall dimensions, strut, and wall must be positive.")
+            assert(wall<thick, "wall must be smaller than thick.")
+            assert(is_finite(ang) && ang>0 && ang<90, "ang must be between 0 and 90 degrees.");
     bevel_h = strut + (thick-wall)/2/tan(ang);
     cp1 = circle_2tangents(strut, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
     cp2 = circle_2tangents(bevel_h, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
@@ -577,6 +587,8 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
     x4 = l1/2;
     x5 = cp4.x;
     x6 = cp3.x;
+    fit_check = assert(all_positive([z3,x3,x6],eps=_EPSILON),
+                       "The border and bevel do not fit: reduce thick or strut, increase wall or ang, or enlarge the wall.");
 
     y1 = thick/2;
     y2 = wall/2;
@@ -719,15 +731,15 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
 //   the center, with angled supports to prevent critical overhangs.
 //
 // Arguments:
-//   h = height of wall.
-//   l = length of wall.
-//   thick = thickness of wall.
+//   h = height of wall.  Default: 50
+//   l = length of wall.  Default: 100
+//   thick = thickness of wall.  Default: 5
 //   ---
-//   ang = maximum overhang angle of diagonal brace.
-//   strut = the width of the diagonal brace.
-//   wall = the thickness of the thinned portion of the wall.
-//   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.
-//   center = If true, centers shape.  If false, overrides `anchor` with `UP+BACK`.
+//   ang = maximum overhang angle of diagonal brace.  Default: 30
+//   strut = the width of the diagonal brace.  Default: 5
+//   wall = the thickness of the thinned portion of the wall.  Default: 3
+//   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.  Default: false
+//   center = If true, centers shape.  If false, overrides `anchor` with `BOT+FRONT`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -790,12 +802,12 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   overhangs.
 //
 // Arguments:
-//   w = Width (thickness) of the strut.
-//   l = Length of the strut.
-//   wall = height of rectangular portion of the strut.
+//   w = Width (thickness) of the strut.  Default: 10
+//   l = Length of the strut.  Default: 100
+//   wall = height of rectangular portion of the strut.  Default: 5
 //   ---
-//   ang = angle that the trianglar side will converge at.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   ang = angle that the trianglar side will converge at.  Default: 30
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //

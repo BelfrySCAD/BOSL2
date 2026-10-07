@@ -27,6 +27,7 @@ _BOSL2_TRIGONOMETRY = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) ||
 //   Applies the Law of Cosines for an arbitrary triangle.  Given three side lengths, returns the
 //   reference angle in degrees for the corner opposite of the third side.  Given two side lengths, and the
 //   reference angle between them, returns the length of the third side.
+//   Impossible combinations of positive side lengths, or a positive included angle above 180 degrees, produce an error.
 // Figure(2D;NoAxes;VPD=200;VPT=[0,25,20]):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true, width=2);
 //   color("black") {
@@ -49,8 +50,12 @@ function law_of_cosines(a, b, c, C) =
     // Triangle Law of Cosines:
     //   c^2 = a^2 + b^2 - 2*a*b*cos(C)
     assert(num_defined([c,C]) == 1, "Must give exactly one of c= or C=.")
-    is_undef(c) ? sqrt(a*a + b*b - 2*a*b*cos(C)) :
-    acos(constrain((a*a + b*b - c*c) / (2*a*b), -1, 1));
+    is_undef(c) ?
+        assert(!(all_positive([a,b,C])) || C<=180, "The included angle cannot exceed 180 degrees.")
+        sqrt(a*a + b*b - 2*a*b*cos(C)) :
+    let(cosC = (a*a + b*b - c*c) / (2*a*b))
+    assert(!all_positive([a,b,c]) || abs(cosC)<=1+_EPSILON, "Side lengths do not form a triangle.")
+    acos(constrain(cosC, -1, 1));
 
 
 // Function: law_of_sines()
@@ -61,10 +66,10 @@ function law_of_cosines(a, b, c, C) =
 //   B = law_of_sines(a, A, b);
 //   b = law_of_sines(a, A, B=);
 // Description:
-//   Applies the Law of Sines for an arbitrary triangle.  Given two triangle side lengths and the
-//   reference angle between them, returns the reference angle of the corner opposite of the second side.  Given a side
-//   length, the opposing reference angle, and a second reference angle, returns the length of the side opposite of the
-//   second reference angle.
+//   Applies the Law of Sines for an arbitrary triangle.  Given side lengths `a` and `b` and the angle `A`
+//   opposite `a`, returns the principal angle `B` opposite `b`.  A supplementary solution `180-B` may also
+//   form a triangle when `A+(180-B)<180`.  Given `a`, its opposite angle `A`, and a second angle `B`,
+//   returns the side opposite `B`.  Impossible combinations of positive sides and angles produce an error.
 // Figure(2D;NoAxes;VPD=200;VPT=[0,25,0]):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true, width=2);
 //   color("black") {
@@ -88,8 +93,13 @@ function law_of_sines(a, A, b, B) =
     //   a/sin(A) = b/sin(B) = c/sin(C)
     assert(num_defined([b,B]) == 1, "Must give exactly one of b= or B=.")
     let( r = a/sin(A) )
-    is_undef(b) ? r*sin(B) :
-    asin(constrain(b/r, -1, 1));
+    is_undef(b) ?
+        assert(!all_positive([a,A,B]) || A+B<180, "Triangle angles must sum to less than 180 degrees.")
+        r*sin(B) :
+    let(sinB = b/r, angleB = asin(constrain(sinB, -1, 1)))
+    assert(!all_positive([a,A,b]) || (A<180 && sinB<=1+_EPSILON && A+angleB<180),
+           "Side lengths and angle do not form a triangle.")
+    angleB;
 
 
 
@@ -435,7 +445,7 @@ function opp_ang_to_hyp(opp,ang) =
 //   ang = The reference reference angle of the right triangle in degrees
 //   opp = The length of the side of the right triangle that is opposite from the reference reference angle.
 // Example:
-//   hyp = opp_ang_to_hyp(30,4);  // Returns: 8
+//   hyp = ang_opp_to_hyp(30,4);  // Returns: 8
 function ang_opp_to_hyp(ang,opp) = opp_ang_to_hyp(opp,ang);
 
 

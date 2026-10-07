@@ -35,7 +35,7 @@ include <screws.scad>
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
@@ -98,9 +98,9 @@ module linear_bearing_housing(d=15, l=24, tab=8, gap=5, wall=3, tabwall=5, screw
 // Description:
 //   Creates a rough model of a generic linear ball bearing cartridge.
 // Arguments:
-//   l/length = The length of the linear bearing cartridge.
-//   od = The outer diameter of the linear bearing cartridge.
-//   id = The inner diameter of the linear bearing cartridge.
+//   l/length = The length of the linear bearing cartridge.  Default: 24
+//   od = The outer diameter of the linear bearing cartridge.  Default: 15
+//   id = The inner diameter of the linear bearing cartridge.  Default: 8
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -133,14 +133,14 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 // Description:
 //   Creates a model of a clamp to hold a standard sized lmXuu linear bearing cartridge.
 // Arguments:
-//   size = Standard lmXuu inner size.
+//   size = Standard lmXuu inner size.  Default: 8
 //   tab = Clamp tab height.  Default: 7
 //   tabwall = Clamp Tab thickness.  Default: 5
 //   wall = Wall thickness of clamp housing.  Default: 3
 //   gap = Gap in clamp.  Default: 5
 //   screwsize = Size of screw to use to tighten clamp.  Default: 3
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
@@ -164,7 +164,7 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 // Description:
 //   Creates a model of an lmXuu linear ball bearing cartridge.
 // Arguments:
-//   size = Standard lmXuu inner size.
+//   size = Standard lmXuu inner size.  Default: 8
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`

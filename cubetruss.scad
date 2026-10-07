@@ -30,11 +30,11 @@ $cubetruss_clip_thickness = 1.6;
 // Description:
 //   Creates a cubetruss truss, assembled out of one or more cubical segments.
 // Arguments:
-//   extents = The number of cubes in length to make the truss.  If given as a [X,Y,Z] vector, specifies the number of cubes in each dimension.
-//   clips = List of vectors pointing towards the sides to add clips to.
+//   extents = Scalar length in cubes of the truss, or for a vector, 2- or 3-vector of cube counts.  An omitted Z count is 1.  Default: 6
+//   clips = A side direction or list of side directions to add clips to.  Default: []
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -103,11 +103,11 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 // Description:
 //   Creates a corner cubetruss with extents jutting out in one or more directions.
 // Arguments:
-//   h = The number of cubes high to make the base and horizontal extents.
-//   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.  If the vector is shorter than length 5 the extra cube counts are taken to be zero.  
+//   h = The number of cubes high to make the base and horizontal extents.  Default: 1
+//   extents = Cube counts extending right, back, left, front, and up from the corner.  A vector may omit trailing zero counts.  A scalar extends right, back, and up equally.  Default: [1,1,0,0,1]
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -180,7 +180,7 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
 //   Creates a single cubetruss support.
 // Arguments:
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   extents = If given as an integer, specifies the number of vertical segments for the support.  If given as a list of 3 integers, specifies the number of segments in the X, Y, and Z directions.  Default: 1.
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -209,7 +209,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
     w = (size-strut) * extents.x + strut;
     l = (size-strut) * extents.y + strut;
     h = (size-strut) * extents.z + strut;
-    attachable(anchor,spin,orient, size=[w,l,h], size2=[l,0], shift=[0,l/2], axis=DOWN) {
+    attachable(anchor,spin,orient, size=[w,l,h], size2=[w,0], shift=[0,l/2], axis=DOWN) {
         xcopies(size-strut, n=extents.x) {
             difference() {
                 half_of(BACK/extents.y + UP/extents.z, s=size*(max(extents)+1))
@@ -248,7 +248,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 // Arguments:
 //   w = The number of cube segments to span between the clips.  Default: 1
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   $slop = make fit looser to allow for printer overextrusion
@@ -329,7 +329,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 //   w = The number of cube segments to span between the clips.  Default: 1
 //   vert = If true, add vertical risers to clip to the ends of the cubetruss trusses.  Default: true
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   $slop = Make fit looser by this amount to allow for printer overextrusion
@@ -399,7 +399,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 // Arguments:
 //   dual = If true, create a clip to clip around two adjacent struts.  If false, just fit around one strut.  Default: true
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   $slop = Make fit looser by this amount
@@ -450,7 +450,7 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 //   Creates a single cubetruss cube segment.
 // Arguments:
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -521,9 +521,9 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 // Description:
 //   Creates a pair of clips to add onto the end of a truss.
 // Arguments:
-//   extents = How many cubes to separate the clips by.
+//   extents = How many cubes to separate the clips by.  Default: 1
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 //   clipthick = The thickness of the clip.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   $slop = allowance for printer overextrusion
@@ -588,10 +588,10 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 // Description:
 //   Function to calculate the length of a cubetruss truss.
 // Arguments:
-//   cubes = The number of cubes along the truss's length.
-//   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.
+//   cubes = The number of cubes along the truss's length.  Default: 0
+//   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.  Default: 0
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 4)
 function cubetruss_dist(cubes=0, gaps=0, size, strut) =
     let(
         size = is_undef(size)? $cubetruss_size : size,
