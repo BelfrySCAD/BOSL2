@@ -158,7 +158,7 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
                 translate(t[1]) {
                     frame_map(y=delt, z=UP)
                         rotate(-sign(ang)*extra_ang/2)
-                            rotate_extrude(angle=ang+sign(ang)*extra_ang)
+                            rotate_extrude(angle=ang+sign(ang)*extra_ang, convexity=convexity)
                                 if (ang<0)
                                     right_half(planar=true,s=s) children();
                                 else
@@ -170,12 +170,12 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
             bseg = select(path,0,1);
             move(bseg[0])
                 rot(from=BACK, to=bseg[0]-bseg[1])
-                    rotate_extrude(angle=180)
+                    rotate_extrude(angle=180, convexity=convexity)
                         right_half(planar=true,s=s) children();
             eseg = select(path,-2,-1);
             move(eseg[1])
                 rot(from=BACK, to=eseg[1]-eseg[0])
-                    rotate_extrude(angle=180)
+                    rotate_extrude(angle=180, convexity=convexity)
                         right_half(planar=true,s=s) children();
         }
       }
@@ -194,7 +194,7 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 // Description:
 //   Extrudes 2D children along a 3D path.  This may be slow and can have problems with twisting.  
 // Arguments:
-//   path = Array of points for the bezier path to extrude along.
+//   path = Array of 3D points defining the polyline to extrude along.
 //   convexity = Maximum number of walls a ray can pass through.
 //   clipsize = Increase if artifacts are left.  Default: 100
 // Example(FlatSpin,VPD=600,VPT=[75,16,20]):
@@ -209,7 +209,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
        ) rot(from=vec1,to=vec2)
     ]);
     // This adds a rotation midway between each item on the list
-    interp = rot_resample(rotmats,n=2,method="count");
+    interp = len(rotmats)==1 ? rotmats : rot_resample(rotmats,n=2,method="count");
     epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
     ptcount = len(path);
     attachable(){
@@ -264,9 +264,10 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   the actual height of the children, which is why it defaults to 1000. If you set `size` to a scalar then
 //   that only changes the X value and the Y value remains at the default of 1000.
 //   .
-//   When performing the wrap, the X=0 line of the children maps to the Y- axis and the facets are centered on the Y- axis.
-//   This is not consistent with how cylinder() creates its facets.  If `$fn` is a multiple of 4 then the facets will line
-//   up with a cylinder.  Otherwise you must rotate a cylinder by 90 deg in the case of `$fn` even or `90-360/$fn/2` if `$fn` is odd.
+//   When performing the wrap, the X=0 line of the children maps to the Y- axis. The strip grid is fixed by
+//   the facet count and does not shift when size changes. Odd facet counts center a facet on Y-; even counts place a seam there.
+//   The full-wrap facets align with a cylinder rotated 90 degrees around Z. When the facet count is
+//   a multiple of 4, that rotation does not change the facet alignment.
 // Arguments:
 //   ir = The inner radius to extrude from.
 //   or = The outer radius to extrude to.
@@ -301,20 +302,26 @@ module cylindrical_extrude(ir, or, od, id, size, convexity=10, spin=0, orient=UP
     check1 = assert(is_vector(size,2) && all_positive(size), "Size must be a positive number or 2-vector");
     sides = segs(or);
     step = circumf / sides;
-    steps = ceil(size.x / step);
-    scalefactor = sides/PI*sin(180/sides); // Scale from circle to polygon, which has shorter length
+    phase = sides%2==0 ? 0.5 : 0;
+    first_strip = floor(-size.x/2/step-phase+0.5);
+    last_strip = ceil(size.x/2/step-phase-0.5);
+    // A tiny strip overlap survives rounding of 2D coordinates at the extrusion seams.
+    scalefactor = sides/PI*sin(180/sides) + pow(2,-14)/step;
     attachable() {
       rot(from=UP, to=orient) rot(spin) {
-          for (i=[0:1:steps-1]) {
-              x = (i+0.5-steps/2) * step;
+          for (i=[first_strip:1:last_strip]) {
+              x = (i+phase) * step;
               zrot(360 * x / circumf) {
                   fwd(or*cos(180/sides)) {
                       xrot(-90) {
-                          linear_extrude(height=or-ir, scale=[ir/or,1], center=false, convexity=convexity) {
+                          linear_extrude(height=(or-ir)*cos(180/sides), scale=[ir/or,1], center=false, convexity=convexity) {
                               yflip()
                               xscale(scalefactor)
                               intersection() {
-                                  left(x) children();
+                                  left(x) intersection() {
+                                      children();
+                                      rect(size);
+                                  }
                                   rect([quantup(step,pow(2,-15)),size.y]);
                               }
                           }
@@ -372,7 +379,7 @@ module bounding_box(excess=0, planar=false) {
                         hull()
                             children();
         } else {
-            xs = excess<.1? 1: excess;
+            xs = excess<=.1? 1: excess;
             linear_extrude(xs, center=true)
                 projection()
                     rotate([90,0,0])
@@ -467,11 +474,11 @@ module chain_hull()
     req_children($children);
     attachable(){
         if ($children == 1) {
-            children();
+            let($idx=0,$primary=true) children();
         }
         else {
             for (i =[1:1:$children-1]) {
-                $idx = i;
+                $idx = i-1;
                 hull() {
                     let($primary=true) children(i-1);
                     let($primary=false) children(i);
@@ -587,9 +594,9 @@ module offset3d(r, size=1000, convexity=10) {
 // See Also: offset3d(), minkowski_difference()
 // Usage:
 //   round3d(r) CHILDREN;
-//   round3d(or) CHILDREN;
-//   round3d(ir) CHILDREN;
-//   round3d(or, ir) CHILDREN;
+//   round3d(or=) CHILDREN;
+//   round3d(ir=) CHILDREN;
+//   round3d(or=, ir=) CHILDREN;
 // Description:
 //   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`

@@ -146,7 +146,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 //   Takes a {{path}} and removes unnecessary sequential collinear {{points}}.  When `closed=true` either of the path
 //   endpoints may be removed.  
 // Usage:
-//   newpath = path_merge_collinear(path, [eps]);
+//   newpath = path_merge_collinear(path, [closed], [eps]);
 // Arguments:
 //   path = A path of any dimension or a 1-region
 //   closed = treat as closed polygon.  Default: false for paths, true for 1-regions
@@ -157,12 +157,12 @@ function path_merge_collinear(path, closed, eps=_EPSILON) =
     assert(is_bool(closed))
     assert( is_path(path,undef), "\nInvalid path in path_merge_collinear.")
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
-    let(path = deduplicate(path, closed=closed))
+    let(path = deduplicate(path, closed=closed, eps=eps))
     len(path)<=2 ? path :
     [
       if(!closed) path[0],
       for(triple=triplet(path,wrap=closed))
-        if (!is_collinear(triple,eps=eps)) triple[1],
+        if (!is_collinear(triple,eps=eps) || (triple[1]-triple[0])*(triple[2]-triple[1])<0) triple[1],
       if(!closed) last(path)
     ];
 
@@ -179,7 +179,7 @@ function path_merge_collinear(path, closed, eps=_EPSILON) =
 //   list `[0,...,len(list)-1]`.  This is useful if you need to remove collinear points from list A and then
 //   remove corresponding points from list B.  
 // Usage:
-//   ind = path_merge_collinear(path, [eps]);
+//   ind = path_merge_collinear_indexed(path, [indices], [closed], [eps]);
 // Arguments:
 //   path = A path of any dimension or a 1-region
 //   indices = Index list that indexes into `path`.  Default: `count(path)`
@@ -197,12 +197,13 @@ function path_merge_collinear_indexed(path, indices, closed, eps=_EPSILON) =
     assert( is_vector(indices), "\nindices must be a list of indices values")
     assert( min(indices)>=0, "\nIndices list has negative entry")
     assert( max(indices)<len(path), "\nIndices list has entry beyond the end of the list")
-    let(indices = deduplicate_indexed(path, indices, closed=closed))
+    let(indices = deduplicate_indexed(path, indices, closed=closed, eps=eps))
     len(indices)<=2 ? indices :
     [
       if(!closed) indices[0],
       for(triple=triplet(indices,wrap=closed))
-        if (!is_collinear(select(path,triple),eps=eps)) triple[1],
+        let(pts=select(path,triple))
+        if (!is_collinear(pts,eps=eps) || (pts[1]-pts[0])*(pts[2]-pts[1])<0) triple[1],
       if(!closed) last(indices)
     ];
 
@@ -388,7 +389,7 @@ function _sum_preserving_round(data, index=0) =
 //   You can specify the point count using the `n` option, where
 //   you give the number of points you want in the output, or you can use
 //   the `refine` option, where you specify a resampling factor.  If `refine=3` then
-//   the number of points would increase by a factor of three, so a four point square would
+//   the number of points is multiplied by three, so a four point square would
 //   have 12 points after subdivision.  With point-count subdivision, the new points can be distributed
 //   proportional to length (`method="length"`), which is the default, or they can be divided up evenly among all the path segments
 //   (`method="segment"`).  If the extra points don't fit evenly on the path then the
@@ -412,14 +413,14 @@ function _sum_preserving_round(data, index=0) =
 //   path there is an extra point at the end, so the number of points is sum(n)+1.
 //   .
 //   If you use the `maxlen` option then you specify the maximum length segment allowed in the output.
-//   Each segment is subdivided into the largest number of segments meeting your requirement.  As above,
+//   Each segment is subdivided into the fewest segments meeting your requirement.  As above,
 //   the sampling is uniform on each segment, independent of the other segments.  With the `maxlen` option
 //   you cannot specify `method` or `exact`.    
 // Arguments:
 //   path = path in any dimension or a 1-region
-//   n = scalar total number of points desired or with `method="segment"` can be a vector requesting `n[i]-1` new points added to segment i.
+//   n = Integer total point count, at least the input point count. With `method="segment"`, a vector of positive integers requests `n[i]-1` new points on segment i.
 //   ---
-//   refine = increase total number of points by this factor (specify only one of n, refine and maxlen)
+//   refine = Multiply point count by this factor, at least 1 (specify only one of n, refine and maxlen).
 //   maxlen = maximum length segment in the output (specify only one of n, refine and maxlen)
 //   closed = set to false if the path is open.  Default: true
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  (Not allowed with maxlen.) Default: true
@@ -467,14 +468,24 @@ function _sum_preserving_round(data, index=0) =
 function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
     let(path = force_path(path))
     assert(is_path(path,undef), "\nInvalid path or 1-region.")
-    assert(num_defined([n,refine,maxlen]), "\nMust give exactly one of n, refine, and maxlen.")
+    assert(num_defined([n,refine,maxlen])==1, "\nMust give exactly one of n, refine, and maxlen.")
+    assert(is_bool(closed), "\nclosed must be Boolean.")
+    assert(is_undef(exact) || is_bool(exact), "\nexact must be Boolean.")
+    assert(is_undef(method) || in_list(method,["length","segment"]), "\nUnknown subdivision method.")
+    assert(is_undef(n) || (is_int(n) && n>=len(path))
+           || (is_vector(n,len(path)-(closed?0:1)) && all_integer(n) && min(n)>=1),
+           "\nPoint counts must be integers and must not remove input vertices.")
+    assert(is_undef(refine) || (is_finite(refine) && refine>=1), "\nrefine must be at least 1.")
+    assert(is_undef(maxlen) || (is_finite(maxlen) && maxlen>0), "\nmaxlen must be positive.")
+    assert(is_undef(maxlen) || (is_undef(method) && is_undef(exact)),
+           "\nCannot give method or exact with maxlen.")
     refine==1 || n==len(path) ? path :
     is_def(maxlen) ?
         assert(is_undef(method), "\nCannot give method with maxlen.")
         assert(is_undef(exact), "\nCannot give exact with maxlen.")
         [
          for (p=pair(path,closed))
-           let(steps = ceil(norm(p[1]-p[0])/maxlen))
+           let(steps = max(1,ceil(norm(p[1]-p[0])/maxlen)))
            each lerpn(p[0], p[1], steps, false),
          if (!closed) last(path)
         ]               
@@ -596,7 +607,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
     let(
         lens = [for (subpath = subpaths) path_length(subpath)],
         part_ns = is_undef(n)
-          ? [for (i=idx(subpaths)) max(1,round(lens[i]/spacing)-1)]
+          ? [for (i=idx(subpaths)) max(0,round(lens[i]/spacing)-1)]
           : let(
                 ccnt = len(corners),
                 parts = [for (l=lens) (n-ccnt) * l/plen]
@@ -639,6 +650,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   reduction you want. A smaller value of `maxerr` returns more detail in the output, and a larger value
 //   causes details to be lost. For paths such as coastlines, a `maxerr` value less than 1% of the maximum
 //   bounding box dimension is a good starting value.
+//   If a closed polygon would collapse to fewer than three noncollinear vertices, the original polygon is returned.
 //   .
 //   For unclosed paths (where `closed=false`) the endpoints of the path are preserved. When `closed=true`,
 //   the path is treated as continuous and only dominant features that happen to be near the endpoints are
@@ -692,29 +704,33 @@ function simplify_path(path, maxerr, closed=true) =
     let(path = force_path(path))
     assert(is_bool(closed))
     assert(is_path(path,undef), "\nInvalid path or 1-region.")
-    assert(is_num(maxerr) && maxerr>0, "\nParameter 'maxerr' must be a positive number.")
+    assert(is_finite(maxerr) && maxerr>0, "\nParameter 'maxerr' must be a positive number.")
+    let(n=len(path))
+    n<=2 ? path :
+    let(unclosed=_err_resample(path,maxerr,n))
+    !closed ? [for(i=unclosed) path[i]] :
     let(
-        n = len(path),
-        unclosed = _err_resample(path, maxerr, n) // get simplified path including original endpoints
-    ) closed ? let( // search for new corners between the corners found on either side of the end points
-        nu = len(unclosed),
-        cornerpath = [
-            for(i=[unclosed[nu-2]:n-1]) path[i],
-            for(i=[0:unclosed[1]]) path[i]
+        nu=len(unclosed),
+        cornerpath=[
+            for(i=[unclosed[nu-2]:1:n-1]) path[i],
+            for(i=[0:1:unclosed[1]]) path[i]
         ],
-        corner_resample = _err_resample(cornerpath, maxerr, len(cornerpath)),
-        nc = len(corner_resample)
-    ) [
-        for(i=[1:nu-2]) path[unclosed[i]], // exclude endpoints
-        if(nc>2) for(i=[1:nc-2]) cornerpath[corner_resample[i]] // insert new corners if any
-    ]
-    : [ for(i=unclosed) path[i] ];
+        corners=_err_resample(cornerpath,maxerr,len(cornerpath)),
+        result=deduplicate([
+            for(i=[1:1:nu-2]) path[unclosed[i]],
+            for(i=[1:1:len(corners)-2]) cornerpath[corners[i]]
+        ],closed=true)
+    )
+    len(result)<3 || is_collinear(result) ? path : result;
 
 /// return a resampled path based on error deviation, retaining path endpoints (i.e. assume path is not closed)
 function _err_resample(path, maxerr, n, i1=0, i2=2, resultidx=[0], iter=0) =
-    n <= 2 ? path :
+    n <= 2 ? count(n) :
     i2 >= n || i2-i1<2 ? concat(resultidx, [n-1]) : let(
-        dists = [ for(i=[i1+1:i2-1]) let(j=i%n) point_line_distance(path[j], [path[i1], path[i2%n]]) ],
+        chord=[path[i1],path[i2%n]],
+        has_line=_valid_line(chord),
+        dists=[for(i=[i1+1:1:i2-1])
+                   has_line ? point_line_distance(path[i%n],chord) : norm(path[i%n]-chord[0])],
         imaxdist = max_index(dists),
         newfound = dists[imaxdist] >= maxerr,
         newidx1 = newfound ? i1+imaxdist+1 : i1,
@@ -864,7 +880,8 @@ function path_normals(path, tangents, closed) =
          tangents = default(tangents, path_tangents(path,closed)),
          dim=len(path[0])
     )
-    assert(is_path(tangents) && len(tangents[0])==dim,"\nDimensions of path and tangents must match.")
+    assert(is_path(tangents) && len(tangents)==len(path) && len(tangents[0])==dim,
+           "\nPath and tangents must have the same length and dimension.")
     [
      for(i=idx(path))
          let(
@@ -940,7 +957,7 @@ function path_torsion(path, closed=false) =
 //   normals = surface_normals(surf, [col_wrap=], [row_wrap=]);
 // Description:
 //   Numerically estimate the normals to a surface defined by a 2D array of 3d {{points}}, which can
-//   also be regarded as an array of {{paths}} (all of the same length).  
+//   also be regarded as an array of {{paths}} (all of the same length). Returned normals have unit length.
 // Arguments:
 //   surf = surface in 3d defined by a 2D array of points
 //   ---
@@ -954,7 +971,7 @@ function surface_normals(surf, col_wrap=false, row_wrap=false) =
   )
   [for(y=[0:1:len(surf)-1])
      [for(x=[0:1:len(surf[0])-1])
-         cross(colderivs[x][y],rowderivs[y][x])]];
+         unit(cross(colderivs[x][y],rowderivs[y][x]))]];
 
 
 
@@ -975,7 +992,7 @@ function surface_normals(surf, col_wrap=false, row_wrap=false) =
 //   If the input path is closed then the final path includes the
 //   original starting {{point}}.  The list of cut distances must be
 //   in ascending order and should not include the endpoints: 0 
-//   or `len(path)`.  If you repeat a distance, you get an
+//   or the total path length. If you repeat a distance, you get an
 //   empty list in that position in the output.  If you give an
 //   empty cutdist array, you get the input path as output
 //   (without the final vertex doubled in the case of a closed path).
@@ -992,6 +1009,8 @@ function path_cut(path,cutdist,closed) =
   is_1region(path) ? path_cut(path[0], cutdist, default(closed,true)):
   let(closed=default(closed,false))
   assert(is_bool(closed))
+  assert(is_path(path,undef), "\nInvalid path.")
+  cutdist==[] ? [path] :
   assert(is_vector(cutdist))
   assert(last(cutdist)<path_length(path,closed=closed)-_EPSILON,"\nCut distances must be smaller than the path length.")
   assert(cutdist[0]>_EPSILON, "\nCut distances must be strictly positive.")
@@ -1059,8 +1078,12 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
 //   path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
 //   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
-//   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
-function path_cut_points(path, cutdist, closed=false, direction=false) =
+//   // path_cut_points(square, [0,0.8,1.6,2.4,3.2]); // Error: the open path has length 3, less than 3.2.
+function path_cut_points(path, cutdist, closed, direction=false) =
+    is_1region(path) ? path_cut_points(path[0],cutdist,default(closed,true),direction) :
+    let(closed=default(closed,false))
+    assert(is_path(path,undef), "\nInvalid path.")
+    assert(is_bool(closed) && is_bool(direction))
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "\nTwo points needed to define a path." : "\nClosed path must include three points.")
     is_num(cutdist) ? path_cut_points(path, [cutdist], closed, direction)[0] :
@@ -1189,7 +1212,7 @@ function split_path_at_self_crossings(path, closed=true, eps=_EPSILON) =
     assert(is_path(path,2), "\nMust give a 2D path.")
     assert(is_bool(closed))
     let(
-        path = list_unwrap(path, eps=eps),
+        path = closed ? list_unwrap(path, eps=eps) : path,
         isects = deduplicate(
             eps=eps,
             concat(
@@ -1217,20 +1240,38 @@ function split_path_at_self_crossings(path, closed=true, eps=_EPSILON) =
     ];
 
 
+/// Cached boundary data for local side probes: start, direction, squared length.
+function _boundary_probe_data(paths) =
+    [for(path=paths, seg=pair(path,true))
+        let(v=seg[1]-seg[0], len2=v*v)
+        if(len2>0) [seg[0],v,len2]];
+
+/// Stay clear of other boundaries; ignore segments containing the probe midpoint.
+function _boundary_probe_distance(point, segment, data, eps) =
+    let(
+        v=segment[1]-segment[0],
+        distances2=[for(edge=data)
+            let(w=point-edge[0], t=max(0,min(1,w*edge[1]/edge[2])),
+                delta=w-t*edge[1], d2=delta*delta)
+            if(d2>eps*eps) d2]
+    ) sqrt(min([v*v, each distances2]))/4;
+
+
 function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=_EPSILON) =
     let(
         subpaths = split_path_at_self_crossings(
-            path, closed=true, eps=eps
-        )
+            path, closed=closed, eps=eps
+        ),
+        probe_data=_boundary_probe_data([path])
     ) [
         for (subpath = subpaths) let(
             seg = select(subpath,0,1),
             mp = mean(seg),
-            n = line_normal(seg) / 2048,
+            n = line_normal(seg) * _boundary_probe_distance(mp,seg,probe_data,eps),
             p1 = mp + n,
             p2 = mp - n,
-            p1in = point_in_polygon(p1, path, nonzero=nonzero) >= 0,
-            p2in = point_in_polygon(p2, path, nonzero=nonzero) >= 0,
+            p1in = point_in_polygon(p1, path, nonzero=nonzero,eps=eps) >= 0,
+            p2in = point_in_polygon(p2, path, nonzero=nonzero,eps=eps) >= 0,
             tag = (p1in && p2in)? "I" : "O"
         ) [tag, subpath]
     ];
@@ -1246,7 +1287,8 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=_EPSILON) =
 // Description:
 //   Given a possibly self-intersecting 2D {{polygon}}, constructs a representation of the original polygon as a list of
 //   non-intersecting simple polygons.  If nonzero is set to true then it uses the nonzero method for defining polygon membership.
-//   For simple cases, such as the pentagram, this produces the outer perimeter of a self-intersecting polygon.  
+//   For simple cases, such as the pentagram, this produces the outer perimeter of a self-intersecting polygon.
+//   Features in the polygon should be larger than `eps`.  
 // Arguments:
 //   poly = a 2D polygon or 1-region
 //   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
@@ -1432,7 +1474,7 @@ function _assemble_path_fragments(fragments, eps=_EPSILON, _finished=[]) =
         l_area = abs(polygon_area(result_l[0])),
         r_area = abs(polygon_area(result_r[0])),
         result = l_area < r_area? result_l : result_r,
-        newpath = list_unwrap(result[0]),
+        newpath = list_unwrap(result[0],eps=eps),
         remainder = result[1],
         finished = min(l_area,r_area)<eps ? _finished : concat(_finished, [newpath])
     ) _assemble_path_fragments(

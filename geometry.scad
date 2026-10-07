@@ -16,6 +16,9 @@ _BOSL2_GEOMETRY = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BO
 
 
 // Section: Lines, Rays, and Segments
+//   At large coordinate magnitudes, use well-separated points to define a line. Near-coincident
+//   defining points are rejected when their separation is at most `eps` times the larger endpoint
+//   distance from the origin (default `eps=1e-9`).  
 
 // Function: is_point_on_line()
 // Synopsis: Determine if a point is on a line, ray or segment. 
@@ -49,7 +52,7 @@ function _is_point_on_line(point, line, bounded=false, eps=_EPSILON) =
     ) 
     norm_crossprod <= eps*norm(v1) 
     && (!bounded[0] || t>=-eps) 
-    && (!bounded[1] || t<1+eps) ;
+    && (!bounded[1] || t<=1+eps) ;
 
 
 ///Internal - distance from point `d` to the line passing through the origin with unit direction n
@@ -63,7 +66,7 @@ function _valid_line(line,dim,eps=_EPSILON) =
     && norm(line[1]-line[0])>eps*max(norm(line[1]),norm(line[0]));
 
 //Internal
-function _valid_plane(p, eps=_EPSILON) = is_vector(p,4) && ! approx(norm(p),0,eps);
+function _valid_plane(p, eps=_EPSILON) = is_vector(p,4) && norm([p.x,p.y,p.z])>0;
 
 
 /// Internal Function: _is_at_left()
@@ -89,7 +92,7 @@ function _is_at_left(pt,line,eps=_EPSILON) = _tri_class([pt,line[0],line[1]],eps
 ///   tri = A list of three 2d points
 ///   eps = Tolerance in the geometrical tests.
 function _degenerate_tri(tri,eps) =
-    max(norm(tri[0]-tri[1]), norm(tri[1]-tri[2]), norm(tri[2]-tri[0])) < eps ;
+    min(norm(tri[0]-tri[1]), norm(tri[1]-tri[2]), norm(tri[2]-tri[0])) <= eps ;
     
 
 /// Internal Function: _tri_class()
@@ -254,7 +257,7 @@ function _general_line_intersection(s1,s2,eps=_EPSILON) =
     let(
         denominator = cross(s1[0]-s1[1],s2[0]-s2[1])
     )
-    approx(denominator,0,eps=eps) ? undef :
+    abs(denominator)<=eps*norm(s1[1]-s1[0])*norm(s2[1]-s2[0]) ? undef :
     let(
         t = cross(s1[0]-s2[0],s2[0]-s2[1]) / denominator,
         u = cross(s1[0]-s2[0],s1[0]-s1[1]) / denominator
@@ -423,7 +426,7 @@ function line_closest_point(line, pt, bounded=false) =
 //   means minimal perpendiclular point-line distances, not minimal vertical distances as one would get with least-squares fitting).
 // Arguments:
 //   points = The list of points to find the line through.
-//   check_collinear = If true, don't verify that all points are collinear.  Default: false
+//   check_collinear = If true, verify that all points are collinear within eps. Default: false
 //   eps = How much variance is allowed in testing each point against the line.  Default: 1e-9
 // Example(FlatSpin,VPD=250): A line fitted to a cloud of points.
 //   points = rot(45, v=[-0.5,1,0],
@@ -479,7 +482,7 @@ function is_coplanar(points, eps=_EPSILON) =
       : let( ip = _noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
         let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]) )
-        _pointlist_greatest_distance(points,plane) < eps;
+        _pointlist_greatest_distance(points,plane) <= eps;
 
 
 
@@ -519,7 +522,7 @@ function plane3pt(p1, p2, p3) =
 //   Given a list of 3d points, and the indices of three of those points,
 //   generates the normalized cartesian equation of a plane that those points all
 //   lie on. If the points are not collinear, returns [A,B,C,D] where Ax+By+Cz=D is the equation of a plane.
-//   If they are collinear, returns [].
+//   If they are collinear, returns undef.
 // Arguments:
 //   points = A list of points.
 //   i1 = The index into `points` of the first point on the plane.
@@ -593,12 +596,15 @@ function _eigenvec_symm_3(M,evals,i=0) =
 // finds the eigenvector corresponding to the smallest eigenvalue of the covariance matrix of a pointlist
 // returns the mean of the points, the eigenvector and the greatest eigenvalue
 function _covariance_evec_eval(points, eigenvalue_id) =
-    let(  pm    = sum(points)/len(points), // mean point
-          Y     = [ for(i=[0:len(points)-1]) points[i] - pm ],
-          M     = transpose(Y)*Y ,     // covariance matrix
-          evals = _eigenvals_symm_3(M), // eigenvalues in decreasing order
-          evec  = _eigenvec_symm_3(M,evals,i=eigenvalue_id) )
-    [pm, evec, evals[0] ];
+    let(
+        pm=sum(points)/len(points),
+        Y=[for(pt=points) pt-pm],
+        M=transpose(Y)*Y,
+        scale=norm_fro(M),
+        normalized=scale==0 ? M : M/scale,
+        evals=_eigenvals_symm_3(normalized),
+        evec=_eigenvec_symm_3(normalized,evals,i=eigenvalue_id)
+    ) [pm,evec,evals[0]*scale];
     
 
 // Function: plane_from_points()
@@ -630,20 +636,22 @@ function _covariance_evec_eval(points, eigenvalue_id) =
 //       %linear_extrude(0.1) square(100, center=true);
 //   }
 function plane_from_points(points, check_coplanar=false, eps=_EPSILON, fast) =
-    assert( is_path(points,dim=3), "\nImproper 3d point list." )
+    assert(is_path(points,dim=3) && len(points)>=3, "\nAt least three 3D points are required.")
     assert( is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
+    let(
+        dep=is_def(fast),
+        check=dep ? echo("In plane_from_points() the 'fast' parameter is deprecated; use 'check_coplanar' instead.") fast : check_coplanar
+    )
+    check && _noncollinear_triple(points,error=false,eps=eps)==[] ? undef :
     len(points) == 3
       ? plane3pt(points[0],points[1],points[2]) 
       : let(
-            dep = is_def(fast) ? echo("In plane_from_points() the 'fast' parameter is deprecated; use 'check_coplanar' instead.") true : false,
-            check = dep ? fast : check_coplanar,
             covmix = _covariance_evec_eval(points,2),
             pm     = covmix[0], // point mean
             evec   = covmix[1], // eigenvector corresponding to smallest eigenvalue
-            eval0  = covmix[2], // smallest eigenvalue
             plane  = [ each evec, pm*evec]
         )
-        check && _pointlist_greatest_distance(points,plane)>eps*eval0 ? undef :
+        check && _pointlist_greatest_distance(points,plane)>eps ? undef :
         plane ;
 
 
@@ -656,10 +664,10 @@ function plane_from_points(points, check_coplanar=false, eps=_EPSILON, fast) =
 // Description:
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane. 
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
-//   If not all the points in the polygon are coplanar, then [] is returned.
-//   If `check_coplanar=true` and the points in the list are collinear or not coplanar, then `undef` is returned.
-//   if `check_coplanar=false`, then the coplanarity test is skipped and a plane passing through 3 non-collinear arbitrary points is returned.
-//   The normal direction is determined by the order of the points and the right hand rule.
+//   If `check_coplanar=true` and the points are collinear or not coplanar, returns `undef`.
+//   If `check_coplanar=false`, skips the coplanarity test and uses the polygon normal with a plane
+//   passing through the first point. A zero-area polygon has no normal and returns `undef`.
+//   When viewed from the side toward which the normal points, the polygon winds clockwise.
 // Arguments:
 //   poly = The planar 3D polygon to find the plane of.
 //   check_coplanar = If false, doesn't verify that all points in the polygon are coplanar.  Default: true
@@ -723,14 +731,15 @@ function plane_offset(plane) =
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=_EPSILON) =
     let(
-        a = plane*[each line[0],-1],         //  evaluation of the plane expression at line[0]
-        b = plane*[each(line[1]-line[0]),0]  // difference between the plane expression evaluation at line[1] and at line[0]
+        normal=point3d(plane),
+        direction=line[1]-line[0],
+        a=plane*[each line[0],-1],
+        b=normal*direction,
+        nrm=norm(normal)
     )
-    approx(b,0,eps)                          // is  (line[1]-line[0]) "parallel" to the plane ?
-      ? approx(a,0,eps)                      // is line[0] on the plane ?
-        ? [line,undef]                       // line is on the plane
-        : undef                              // line is parallel but not on the plane
-      : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
+    abs(b)<=eps*nrm*norm(direction)
+      ? (abs(a)<=eps*nrm ? [line,undef] : undef)
+      : [line[0]-a/b*direction,-a/b];
 
 
 /// Internal Function: normalize_plane()
@@ -786,7 +795,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=_EPSILON) =
 //   Compute the point that is the intersection of the three planes, or the line intersection of two planes.
 //   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
 //   is returned as a list of two points on the line of intersection.  If any two input planes are parallel
-//   or coincident then returns undef.
+//   or coincident, or three planes do not have a unique intersection point, returns undef.
 // Arguments:
 //   plane1 = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   plane2 = The [A,B,C,D] coefficients for the second plane equation `Ax+By+Cz=D`.
@@ -799,7 +808,8 @@ function plane_intersection(plane1,plane2,plane3) =
             matrix = [for(p=[plane1,plane2,plane3]) point3d(p)],
             rhs = [for(p=[plane1,plane2,plane3]) p[3]]
         )
-        linear_solve(matrix,rhs)
+        let(result=linear_solve(matrix,rhs))
+        result==[] ? undef : result
       : let( normal = cross(plane_normal(plane1), plane_normal(plane2)) )
         approx(norm(normal),0) ? undef :
         let(
@@ -841,8 +851,8 @@ function plane_line_angle(plane, line) =
 // Usage:
 //   pts = plane_closest_point(plane, points);
 // Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
-//   3d points, return the closest 3D orthogonal projection of the points on the plane.
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 3D
+//   points, return the closest 3D orthogonal projection of the points on the plane.
 //   In other words, for every point given, returns the closest point to it on the plane.
 //   If points is a single point then returns a single point result.  
 // Arguments:
@@ -920,7 +930,7 @@ function are_points_on_plane(points, plane, eps=_EPSILON) =
     assert( _valid_plane(plane), "\nInvalid plane." )
     assert( is_matrix(points,undef,3) && len(points)>0, "\nInvalid pointlist." ) // using is_matrix it accepts len(points)==1
     assert( is_finite(eps) && eps>=0, "\nThe tolerance should be a positive number." )
-    _pointlist_greatest_distance(points,plane) < eps;
+    _pointlist_greatest_distance(points,plane) <= eps;
 
 
 /// Internal Function: is_point_above_plane()
@@ -948,12 +958,12 @@ function _is_point_above_plane(plane, point) =
 // Description:
 //   Display a rectangular portion of the specified plane for debugging or visualization purposes.
 //   The size parameter specifies the size of the plane when projected along the coordinate axis that is closest to
-//   the plane's normal vector.  The offset parameter shifts the plane location perpendicular to the normal vector.
-//   This object is a non-manifold VNF (it has edges) so it will not render.
+//   the plane's normal vector. The offset shifts the rectangle in that coordinate projection
+//   before lifting it onto the same plane.  This object is a non-manifold VNF (it has edges) so it will not render.
 // Arguments:
 //   plane = Plane to display
 //   size = scalar or 2-vector size parameter
-//   offset = scalar of 2-vector offset
+//   offset = Scalar or 2-vector offset in the selected coordinate projection. A scalar offsets its first coordinate. Default: 0
 // Example(3D):
 //   sphere(r=15,$fn=48);
 //   plane = plane_from_normal([2,-3,9],[4,-5,12]);
@@ -1068,7 +1078,7 @@ function _circle_or_sphere_line_intersection(r, cp, line, bounded=false, d, eps=
 // Description:
 //   Compute the intersection points of two circles.  Returns a list of the intersection points, which
 //   contains two points in the general case, one point for tangent circles, or returns an empty list
-//   if the circles do not intersect.
+//   if the circles do not intersect. Identical circles are not permitted.
 // Arguments:
 //   r1 = Radius of the first circle.
 //   cp1 = Centerpoint of the first circle.
@@ -1115,7 +1125,11 @@ function circle_circle_intersection(r1, cp1, r2, cp2, eps=_EPSILON, d1, d2) =
     let(
         r1 = get_radius(r1=r1,d1=d1),
         r2 = get_radius(r1=r2,d1=d2),
-        d = norm(cp2-cp1),
+        d = norm(cp2-cp1)
+    )
+    assert(!approx(d,0,eps) || !approx(r1,r2,eps), "circles are identical")
+    approx(d,0,eps) ? [] :
+    let(
         a = (cp2-cp1)/d,
         b = [-a.y,a.x],
         L = (r1^2-r2^2+d^2)/2/d,
@@ -1261,7 +1275,7 @@ function circle_3points(pt1, pt2, pt3) =
       : assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3)
                 && max(len(pt1),len(pt2),len(pt3))<=3 && min(len(pt1),len(pt2),len(pt3))>=2,
                 "\nInvalid point(s)." )
-        is_collinear(pt1,pt2,pt3)? [undef,undef,undef] :
+        is_collinear(point3d(pt1),point3d(pt2),point3d(pt3))? [undef,undef,undef] :
         let(
             v  = [ point3d(pt1), point3d(pt2), point3d(pt3) ], // triangle vertices
             ed = [for(i=[0:2]) v[(i+1)%3]-v[i] ],    // triangle edge vectors
@@ -1417,13 +1431,13 @@ function circle_circle_tangents(r1, cp1, r2, cp2, d1, d2) =
 ///   to be the point farthest off the line.  The points do not necessarily having the
 ///   same winding direction as the polygon so they cannot be used to determine the
 ///   winding direction or the direction of the normal.  
-///   If all points are collinear returns [] when `error=true` or an error otherwise .
+///   If all points are collinear, raises an error when error=true; otherwise returns [].
 /// Arguments:
 ///   points = List of input points.
 ///   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`.
 ///   eps = Tolerance for collinearity test. Default: 1e-9.
 function _noncollinear_triple(points,error=true,eps=_EPSILON) =
-    assert( is_path(points), "\nInvalid input points." )
+    assert( is_path(points,undef), "\nInvalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     len(points)<3 ? [] :
     let(
@@ -1438,7 +1452,7 @@ function _noncollinear_triple(points,error=true,eps=_EPSILON) =
         n = (pb-pa)/nrm,
         distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]
     )
-    max(distlist) < eps*nrm ?
+    max(distlist) <= eps*nrm ?
         assert(!error, "\nCannot find three noncollinear points in pointlist.") [] :
     [0, b, max_index(distlist)];
 
@@ -1917,15 +1931,20 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
     assert(_valid_line(line,dim=len(poly[0]),eps=eps), "\nLine invalid or does not match polygon dimension." )
     let(
         bounded = force_list(bounded,2),
-        poly = deduplicate(poly)
+        poly = deduplicate(poly,eps=eps)
     )
     len(poly[0])==2 ?  // planar case
        let( 
             linevec = unit(line[1] - line[0]),
-            bound = 100*max(v_abs(flatten(pointlist_bounds(poly)))),
-            boundedline = [line[0] + (bounded[0]? 0 : -bound) * linevec,
-                           line[1] + (bounded[1]? 0 :  bound) * linevec],
-            parts = split_region_at_region_crossings(boundedline, [poly], closed1=false)[0][0],
+             projections=[for(pt=poly) (pt-line[0])*linevec],
+             margin=max(1, max(projections)-min(projections)),
+             lo=bounded[0] ? 0 : min(projections)-margin,
+             hi=bounded[1] ? norm(line[1]-line[0]) : max(projections)+margin
+        )
+        hi<lo ? undef :
+        let(
+             boundedline=[line[0]+lo*linevec,line[0]+hi*linevec],
+             parts=split_region_at_region_crossings(boundedline,[poly],closed1=false,eps=eps)[0][0],
             inside = [
                       if(point_in_polygon(parts[0][0], poly, nonzero=nonzero, eps=eps) == 0)
                          [parts[0][0]],   // Add starting point if it is on the polygon
@@ -1938,7 +1957,7 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
         )
         (len(inside)==0 ? undef : _merge_segments(inside, [inside[0]], eps))
     : // 3d case
-       let(indices = _noncollinear_triple(poly))
+       let(indices = _noncollinear_triple(poly,error=false,eps=eps))
        indices==[] ? undef :   // Polygon is collinear
        let(
            plane = plane3pt(poly[indices[0]], poly[indices[1]], poly[indices[2]]),
@@ -2060,7 +2079,7 @@ function polygon_triangulate(poly, ind, error=true, eps=_EPSILON) =
       : len(poly[ind[0]]) == 3 
           ? // find a representation of the polygon as a 2d polygon by projecting it on its own plane
             let( 
-                ind = deduplicate_indexed(poly, ind, eps) 
+                ind = deduplicate_indexed(poly, ind, closed=true, eps=eps) 
             )
             len(ind)<3 ? [] :
             let(
@@ -2092,7 +2111,8 @@ function polygon_triangulate(poly, ind, error=true, eps=_EPSILON) =
 // CW polygons.
 function _triangulate(poly, ind,  error, eps=_EPSILON, tris=[]) =
     len(ind)==3 
-    ?   _degenerate_tri(select(poly,ind),eps) 
+    ?   (_degenerate_tri(select(poly,ind),eps)
+             || abs(cross(poly[ind[1]]-poly[ind[0]],poly[ind[2]]-poly[ind[0]]))<=2*eps)
         ?   tris // if last 3 pts perform a degenerate triangle, ignore it
         :   concat(tris,[ind]) // otherwise, include it
     :   let( ear = _get_ear(poly,ind,eps) )
@@ -2241,7 +2261,7 @@ function reverse_polygon(poly) =
 // Topics: Geometry, Polygons
 // See Also: reindex_polygon(), align_polygon(), are_polygons_equal()
 // Usage:
-//   newpoly = reindex_polygon(reference, poly);
+//   newpoly = reindex_polygon(reference, poly, [return_error=]);
 // Description:
 //   Rotates and possibly reverses the point order of a 2d or 3d polygon path to optimize its pairwise point
 //   association with a reference polygon.  The two polygons must have the same number of vertices and be the same dimension.
@@ -2254,6 +2274,8 @@ function reverse_polygon(poly) =
 // Arguments:
 //   reference = reference polygon path
 //   poly = input polygon to reindex
+//   ---
+//   return_error = Return [reindexed_polygon, error], where error is the sum of paired vertex distances. Default: false
 // Example(2D):  The red dots show the 0th entry in the two input path lists.  Note that the red dots are not near each other.  The blue dot shows the 0th entry in the output polygon
 //   pent = subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30);
 //   circ = circle($fn=30,r=2.2);
@@ -2297,7 +2319,7 @@ function reindex_polygon(reference, poly, return_error=false) =
 // Topics: Geometry, Polygons
 // See Also: reindex_polygon(), align_polygon(), are_polygons_equal()
 // Usage:
-//   newpoly = align_polygon(reference, poly, [angles], [cp], [tran], [return_ind]);
+//   newpoly = align_polygon(reference, poly, [angles], [cp], [trans=], [return_ind=]);
 // Description:
 //   Find the best alignment of a specified 2D polygon with a reference 2D polygon over a set of
 //   transformations.  You can specify a list or range of angles and a centerpoint or you can
@@ -2311,7 +2333,7 @@ function reindex_polygon(reference, poly, return_error=false) =
 //   angles = list or range of angles to test
 //   cp = centerpoint for rotations
 //   ---
-//   tran = list of 2D transformation matrices to optimize over
+//   trans = list of 2D transformation matrices to optimize over
 //   return_ind = if true, return the best angle (if you specified angles) or the index into tran otherwise of best alignment
 // Example(2D): Rotating the poorly aligned light gray triangle by 105 degrees produces the best alignment, shown in blue:
 //   ellipse = yscale(3,circle(r=10, $fn=32));
@@ -2391,7 +2413,7 @@ function are_polygons_equal(poly1, poly2, eps=_EPSILON) =
     [for (i=maybes) if (_are_polygons_equal(poly1, poly2, eps, i)) 1] != [];
 
 function _are_polygons_equal(poly1, poly2, eps, st) =
-    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<=eps*eps;
 
 
 /// Function: _is_polygon_in_list()
@@ -2959,7 +2981,8 @@ function _support_diff(p1,p2,d) =
 //   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
 //   than the centerpoint you used to construct the transformation.
 //   .
-//   If you set `long` to true then return the reversed rotation, with the angle in [180,360].
+//   If you set `long` to true, nonzero rotations use the reversed rotation, with the angle in [180,360].
+//   Identity rotations and pure translations still return angle zero.
 // Arguments:
 //   rotation = rigid transformation to decode
 //   long = if true return the "long way" around, with the angle in [180,360].  Default: false

@@ -132,7 +132,7 @@ function lerp(a,b,u) =
 // Arguments:
 //   a = First value or vector.
 //   b = Second value or vector.
-//   n = The number of values to return.
+//   n = Nonnegative integer number of values to return. Zero returns an empty list; one is allowed only with endpoint=false.
 //   endpoint = If true, the last value equals `b`.  If false, the last value is one step less. Default: true
 // Example:
 //   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
@@ -141,10 +141,12 @@ function lerp(a,b,u) =
 //   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
 function lerpn(a,b,n,endpoint=true) =
     assert(same_shape(a,b), "\nBad or inconsistent inputs to lerpn.")
-    assert(is_int(n))
+    assert(is_int(n) && n>=0, "\nn must be a nonnegative integer.")
     assert(is_bool(endpoint))
-    let( d = n - (endpoint? 1 : 0) )
-    [for (i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
+    assert(n!=1 || !endpoint, "\nAt least two samples are required when endpoint=true.")
+    n==0 ? [] :
+    let(d = n - (endpoint? 1 : 0))
+    [for(i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
 
 
 // Function: bilerp()
@@ -227,7 +229,7 @@ function slerp(v1, v2, u) =
 // Arguments:
 //   v1 = First 3D vector, needn't be unit size.
 //   v2 = Second 3D vector, needn't be unit size.
-//   n = The number of values to return.
+//   n = Nonnegative integer number of values to return. Zero returns an empty list; one is allowed only with endpoint=false.
 //   endpoint = If true, the last value is `v2`. If false, the last value is one step less. Default: true
 // Example(3D,VPD=220,VPT=[0,0,0]): Seven points interpolated along a great-circle arc.
 //   radius = 40;
@@ -236,8 +238,11 @@ function slerp(v1, v2, u) =
 //   %sphere(radius);
 function slerpn(v1, v2, n, endpoint=true) =
     assert(is_vector(v1,3) && is_vector(v2,3), "\nv1 and v2 must be 3-vectors.")
-    assert(is_int(n))
+    assert(is_int(n) && n>=0, "\nn must be a nonnegative integer.")
     assert(is_bool(endpoint))
+    assert(n!=1 || !endpoint, "\nAt least two samples are required when endpoint=true.")
+    n==0 ? [] :
+    n==1 ? [unit(v1)] :
     let(
         a = unit(v1),
         b = unit(v2),
@@ -246,7 +251,7 @@ function slerpn(v1, v2, n, endpoint=true) =
         sin_theta = sin(theta),
         d = n - (endpoint ? 1 : 0)
     ) [
-    for(i=[0:n-1]) let(u=i/d)
+    for(i=[0:1:n-1]) let(u=i/d)
         sin_theta < _EPSILON ? unit(a+b) // fallback
         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta
 ];
@@ -404,7 +409,7 @@ function _lcm(a,b) =
 
 // Computes lcm for a list of values
 function _lcmlist(a) =
-    len(a)==1 ? a[0] :
+    len(a)==1 ? _lcm(a[0],1) :
     _lcmlist(concat(lcm(a[0],a[1]),list_tail(a,2)));
 
 
@@ -426,26 +431,36 @@ function lcm(a,b=[]) =
         assert(len(arglist)>0, "\nInvalid call to lcm with empty list(s).")
         _lcmlist(arglist);
 
-// Function rational_approx()
+// Function: rational_approx()
+// Synopsis: Returns a bounded-denominator continued-fraction approximation.
+// Topics: Math
 // Usage:
 //   pq = rational_approx(x, maxq);
 // Description:
-//   Finds the best rational approximation p/q to the number x so that q<=maxq.  Returns
-//   the result as `[p,q]`.  If the input is zero, then returns `[0,1]`.  
+//   Returns a `[p,q]` such that `p / q` is approximately equal to `x`, with `1 <= q <= maxq`.
+//   Increasing `maxq` may simply return the same approximation unless you increase it by
+//   a sufficient amount that a better one is available.  
+//   The result is not necessarily the closest fraction among all denominators up to `maxq`.
+//   If the input is zero, returns `[0,1]`.
+// Arguments:
+//   x = Finite number to approximate.
+//   maxq = Positive integer upper bound on the denominator.  
 // Example:
 //   pq1 = rational_approx(PI,10);        // Returns: [22,7]
 //   pq2 = rational_approx(PI,10000);     // Returns: [355, 113]
 //   pq3 = rational_approx(221/323,500);  // Returns: [13,19]
 //   pq4 = rational_approx(0,50);         // Returns: [0,1]
 function rational_approx(x, maxq, cfrac=[], p, q) =
+  assert(is_finite(x), "x must be finite")
+  assert(is_int(maxq) && maxq>=1, "maxq must be a positive integer")
   let(
        next = floor(x),
        fracpart = x-next,
        cfrac = [each cfrac, next],
        pq = _cfrac_to_pq(cfrac)
   )
-    approx(fracpart,0) ? pq 
-  : pq[1]>maxq ? [p,q]
+    pq[1]>maxq ? [p,q]
+  : approx(fracpart,0) ? pq
   : rational_approx(1/fracpart,maxq,cfrac, pq[0], pq[1]);
 
 
@@ -504,7 +519,9 @@ function tanh(x) =
 // Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
 function asinh(x) =
     assert(is_finite(x), "\nThe input must be a finite number.")
-    ln(x+sqrt(x*x+1));
+    let(a=abs(x))
+    a<1e-4 ? x*(1-x*x/6) :
+    sign(x)*(a>1e8 ? ln(a)+ln(2) : ln(a+sqrt(a*a+1)));
 
 
 // Function: acosh()
@@ -642,8 +659,8 @@ function _floorall(data) =
 //   k = quantup(10.5,3);  // Returns: 12
 //   l = quantup(11,3);    // Returns: 12
 //   m = quantup(12,3);    // Returns: 12
-//   n = quantdn(11,2.5);  // Returns: 12.5
-//   o = quantdn(12,2.5);  // Returns: 12.5
+//   n = quantup(11,2.5);  // Returns: 12.5
+//   o = quantup(12,2.5);  // Returns: 12.5
 //   p = quantup([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,16,16,16,16,16,16]
 //   q = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   r = quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
@@ -766,8 +783,10 @@ function mean_angle(angle1,angle2) =
 // Usage:
 //   a = fit_to_range(M, minval, maxval);
 // Description:
-//   Given a vector or list of vectors, scale the values so that they span the full range from `minval` to
+//   Given a vector or list of vectors, scale and offset the values so they span the full range from `minval` to
 //   `maxval`. If `minval>maxval`, then the output is a rescaled mirror image of the input.
+//   A constant target interval maps all values to that constant. Constant input requires a constant
+//   target interval; attempting to expand constant input to a nonconstant interval raises an error.
 // Arguments:
 //   M = vector or list of vectors to scale. A list of vectors needn't be a rectangular matrix; the vectors can have different lengths.
 //   minval = Minimum value of the rescaled data range.
@@ -808,7 +827,10 @@ function fit_to_range(M, minval, maxval) =
         v = is_vec ? M : flatten(M),
         a = min(v),
         b = max(v)
-    ) a==b ? M
+    )
+    assert(is_finite(minval) && is_finite(maxval), "\nTarget bounds must be finite.")
+    assert(a!=b || minval==maxval, "\nCannot fit constant data to a nonconstant target interval.")
+    minval==maxval ? (is_vec ? repeat(minval,len(M)) : [for(row=M) repeat(minval,len(row))])
     : is_vec ? add_scalar(add_scalar(M,-a) * ((maxval-minval)/(b-a)), minval)
     : [ for(row=M)
         add_scalar(add_scalar(row, -a) * ((maxval-minval)/(b-a)), + minval)
@@ -1115,13 +1137,13 @@ function rand_int(minval, maxval, n, seed=undef) =
 //    The `scale` may be a number, in which case the random data lies in a cube,
 //    or a vector with dimension `dim`, in which case each dimension has its own scale.  
 // Arguments:
-//    n = number of points to generate. Default: 1
-//    dim = dimension of the points. Default: 2
+//    n = Nonnegative integer number of points to generate.
+//    dim = Positive integer dimension of the points.
 //    scale = the scale of the point coordinates. Default: 1
 //    seed = an optional seed for the random generation.
 function random_points(n, dim, scale=1, seed) =
     assert( is_int(n) && n>=0, "\nThe number of points should be a non-negative integer.")
-    assert( is_int(dim) && dim>=1, "\nThe point dimensions should be an integer greater than 1.")
+    assert( is_int(dim) && dim>=1, "\nThe point dimension must be a positive integer.")
     assert( is_finite(scale) || is_vector(scale,dim), "\nThe scale should be a number or a vector with length equal to d.")
     let( 
         rnds =   is_undef(seed) 
@@ -1139,30 +1161,36 @@ function random_points(n, dim, scale=1, seed) =
 // Usage:
 //   arr = gaussian_rands([n],[mean], [cov], [seed]);
 // Description:
-//   Returns a random number or vector with a Gaussian/normal distribution.
+//   Returns a list of samples with a Gaussian/normal distribution. A scalar mean produces
+//   numeric samples; a vector mean produces vectors of the same dimension, including one-dimensional vectors.
 // Arguments:
-//   n = the number of points to return.  Default: 1
+//   n = Nonnegative integer number of samples to return. Default: 1
 //   mean = The average of the random value (a number or vector).  Default: 0
 //   cov = covariance matrix of the random numbers, or variance in the 1D case. Default: 1
 //   seed = If given, sets the random number seed.
 function gaussian_rands(n=1, mean=0, cov=1, seed=undef) =
-    assert(is_num(mean) || is_vector(mean))
+    assert(is_int(n) && n>=0, "\nn must be a nonnegative integer.")
+    assert(is_finite(mean) || is_vector(mean), "\nmean must be a number or vector.")
     let(
-        dim = is_num(mean) ? 1 : len(mean)
+        scalar=is_num(mean),
+        dim=scalar ? 1 : len(mean),
+        variance=is_num(cov) ? cov : cov[0][0]
     )
-    assert((dim==1 && is_num(cov)) || is_matrix(cov,dim,dim),"\nmean and covariance matrix not compatible.")
+    assert((dim==1 && is_finite(cov)) || is_matrix(cov,dim,dim),
+           "\nmean and covariance matrix not compatible.")
     assert(is_undef(seed) || is_finite(seed))
     let(
-         nums = is_undef(seed)? rands(0,1,dim*n*2) : rands(0,1,dim*n*2,seed),
-         rdata = [for (i = count(dim*n,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
+        nums=is_undef(seed)? rands(0,1,dim*n*2) : rands(0,1,dim*n*2,seed),
+        rdata=[for(i=count(dim*n,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
     )
-    dim==1 ? add_scalar(sqrt(cov)*rdata,mean) :
-    assert(is_matrix_symmetric(cov),"\nSupplied covariance matrix is not symmetric.")
-    let(
-        L = cholesky(cov)
-    )
+    dim==1 ?
+        assert(is_finite(variance) && variance>=0, "\nVariance must be nonnegative.")
+        [for(x=rdata) scalar ? mean+sqrt(variance)*x : [mean[0]+sqrt(variance)*x]] :
+    assert(is_matrix_symmetric(cov), "\nSupplied covariance matrix is not symmetric.")
+    let(L=cholesky(cov))
     assert(is_def(L), "\nSupplied covariance matrix is not positive definite.")
-    move(mean,list_to_matrix(rdata,dim)*transpose(L));
+    let(LT=transpose(L))
+    [for(row=list_to_matrix(rdata,dim)) row*LT+mean];
 
 
 // Function: exponential_rands()
@@ -1255,7 +1283,7 @@ function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
         randang = function(seed)
                      let (
                           rand = is_undef(seed) ? rands(0,ang_space,n) : rands(0,ang_space,n,seed=seed),
-                          angs = sort(rand)+lerpn(0,1,n)*(360-ang_space),
+                          angs = sort(rand)+lerpn(0,1,n,endpoint=false)*(360-ang_space),
                           dang = [each deltas(angs),angs[0]-last(angs)+360]
                      )
                      max(dang)<180 ? angs : randang(seed=u_add(seed,angs[0])),
@@ -1303,9 +1331,9 @@ function deriv(data, h=1, closed=false) =
         (data[(i+1)%L]-data[(L+i-1)%L])/2/h
       ]
     : let(
-        first = L<3 ? data[1]-data[0] : 
+        first = L<3 ? 2*(data[1]-data[0]) : 
                 3*(data[1]-data[0]) - (data[2]-data[1]),
-        last = L<3 ? data[L-1]-data[L-2]:
+        last = L<3 ? 2*(data[L-1]-data[L-2]):
                (data[L-3]-data[L-2])-3*(data[L-2]-data[L-1])
          ) 
       [
@@ -1497,7 +1525,7 @@ function _c_mul(z1,z2) =
 //   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
 function c_div(z1,z2) = 
     assert( is_vector(z1,2) && is_vector(z2,2), "\nComplex numbers should be represented by 2D vectors.")
-    assert( !approx(z2,0), "\nThe divisor `z2` cannot be zero.") 
+    assert(z2!=[0,0], "\nThe divisor `z2` cannot be zero.") 
     let(den = z2.x*z2.x + z2.y*z2.y)
     [(z1.x*z2.x + z1.y*z2.y)/den, (z1.y*z2.x - z1.x*z2.y)/den];
 
@@ -1640,6 +1668,8 @@ function polynomial(p,z,k,total) =
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
   is_undef(q) ?
+    assert(is_list(p) && len(p)>0, "\nAt least one polynomial is required.")
+    len(p)==1 ? assert(is_vector(p[0]), "\nInvalid polynomial.") _poly_trim(p[0]) :
     len(p)==2 
         ? poly_mult(p[0],p[1]) 
     : poly_mult(p[0], poly_mult(list_tail(p)))
@@ -1671,7 +1701,7 @@ function poly_div(n,d) =
     : _poly_div(n,d,q=[]);
 
 function _poly_div(n,d,q) =
-    len(n)<len(d) ? [q,_poly_trim(n)] : 
+    len(n)<len(d) ? [_poly_trim(q),_poly_trim(n)] : 
     let(
       t = n[0] / d[0], 
       newq = concat(q,[t]),
@@ -1796,21 +1826,21 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   the imaginary part is closed to zero.  By default it uses a computed
 //   error bound from the polynomial solver to decide whether imaginary
 //   parts are zero.  You can specify eps, in which case the test is
-//   z.y/(1+norm(z)) < eps.  Because
+//   abs(z.y)/(1+norm(z)) < eps.  Because
 //   of poor convergence and higher error for repeated roots, such roots may
 //   be missed by the algorithm because error can make their imaginary parts
 //   large enough to appear non-zero.  
 // Arguments:
 //   p = polynomial to solve as coefficient list, highest power term first
-//   eps = used to determine whether imaginary parts of roots are zero
-//   tol = tolerance for the complex polynomial root finder
+//   eps = Relative imaginary-part tolerance. Default: use the root solver's error estimates
+//   tol = Tolerance for the complex polynomial root finder. Default: 1e-14
 
 function real_roots(p,eps=undef,tol=1e-14) =
     assert( is_vector(p), "\nInvalid polynomial.")
     let( p = _poly_trim(p,eps=0) )
     assert( p!=[0], "\nInput polynomial cannot be zero.")
     let( 
-       roots_err = poly_roots(p,error_bound=true),
+       roots_err = poly_roots(p,tol=tol,error_bound=true),
        roots = roots_err[0],
        err = roots_err[1]
     )

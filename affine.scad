@@ -53,7 +53,7 @@ function affine2d_identity() = ident(3);
 //   //     [0, 0,  1]
 //   //   ]
 function affine2d_translate(v=[0,0]) =
-    assert(is_vector(v),2)
+    assert(is_vector(v,2))
     [
         [1, 0, v.x],
         [0, 1, v.y],

@@ -203,7 +203,7 @@ _BOSL2_ROUNDING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BO
 //   ---
 //   radius/r = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
 //   cut = rounding cut distance, compatible with all methods.  Can be a number or vector.
-//   joint = rounding joint distance, compatible with `method="chamfer"` and `method="smooth"`.  Can be a number or vector.
+//   joint = rounding joint distance, compatible with all methods.  Can be a number or vector.
 //   width = width of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number or vector. 
 //   k = continuous curvature smoothness parameter for `method="smooth"`.  Can be a number or vector.  Default: 0.5
 //   closed = if true treat the path as a closed polygon, otherwise treat it as open.  Default: true.
@@ -558,20 +558,21 @@ function _rounding_offsets(edgespec,z_dir=1) =
                 chamf_angle = struct_val(edgespec, "angle"),
                 cheight = struct_val(edgespec, "chamfer_height"),
                 cwidth = struct_val(edgespec, "chamfer_width"),
-                chamf_width = first_defined([!all_defined([cut,chamf_angle]) ? undef : cut/cos(chamf_angle),
-                                             cwidth,
-                                             !all_defined([cheight,chamf_angle]) ? undef : cheight*tan(chamf_angle)]),
-                chamf_height = first_defined([
-                                              !all_defined([cut,chamf_angle]) ? undef : cut/sin(chamf_angle),
-                                              cheight,
-                                              !all_defined([cwidth, chamf_angle]) ? undef : cwidth/tan(chamf_angle)]),
+                chamf_width = edgetype!="chamfer" ? undef
+                            : is_def(cut) ? cut/cos(chamf_angle)
+                            : is_def(cwidth) ? cwidth : cheight*tan(chamf_angle),
+                chamf_height = edgetype!="chamfer" ? undef
+                             : is_def(cut) ? cut/sin(chamf_angle)
+                             : is_def(cheight) ? cheight : cwidth/tan(chamf_angle),
                 joint = first_defined([
                         struct_val(edgespec,"joint"),
                         all_defined([cut,k]) ? 16*cut/sqrt(2)/(1+4*k) : undef
                 ]),
                 points = struct_val(edgespec, "points"),
                 argsOK = in_list(edgetype,["circle","teardrop"])? is_def(radius) :
-                        edgetype == "chamfer"? chamf_angle>0 && chamf_angle<90 && num_defined([chamf_height,chamf_width])==2 :
+                        edgetype == "chamfer"? (is_undef(cut) || num_defined([cheight,cwidth])==0)
+                              && (all_defined([cheight,cwidth]) || (is_finite(chamf_angle) && chamf_angle>0 && chamf_angle<90))
+                              && is_finite(chamf_height) && is_finite(chamf_width) :
                         edgetype == "smooth"? num_defined([k,joint])==2 :
                         edgetype == "profile"? points[0]==[0,0] :
                         false
@@ -593,7 +594,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                 _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
                         )
         )
-        quant(extra > 0 && len(offsets)>0 ? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
+        quant(extra > 0 ? concat(offsets, [(offsets==[] ? [0,0] : last(offsets))+[0,z_dir*extra]]) : offsets, 1/1024);
 
 
 
@@ -912,7 +913,7 @@ function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
       repjoint = is_num(joint) || (is_vector(joint,2) && len(paths)!=3),
       joint = repjoint ? repeat(joint,N) : joint
   )
-  assert(all_nonnegative(k), "k must be nonnegative")
+  assert(all_nonnegative(k) && max(k)<=1, "k must be in the interval [0,1]")
   assert(len(joint)==N,str("Input joint must be scalar or length ",N))
   let(
       bad_j = [for(j=idx(joint)) if (!is_num(joint[j]) && !is_vector(joint[j],2)) j]
@@ -1038,9 +1039,9 @@ function _smooth_bezier_cap(v1,v2,k=0.8,r) =
 //      - "k": curvature smoothness parameter for roundovers, default 0.75
 //   .
 //   Function helpers for defining ends, prefixed by "os" for offset_stroke, are:
-//      - os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
+//      - os_flat(angle|abs_angle): specify a flat end either relative to the path or relative to the x-axis
 //      - os_pointed(dist, [loc]): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
-//      - os_round(cut, [angle|absangle], [k]).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details on
+//      - os_round(cut, [angle|abs_angle], [k]).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details on
 //        continuous curvature rounding.  
 //   .
 //   Note that `offset_stroke()` attempts to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike `round_corners()`, which works only on a segment adjacent to a corner.  If you specify an overly extreme angle, it fails to find an intersection with the stroke and display an error.  When you specify an angle, the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
@@ -1470,7 +1471,8 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   .
 //   This module offers four anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
-//   then use "surf_hull" or "intersect_hull". 
+//   then use "surf_hull" or "surf_intersect".
+//   For regions, surface anchors and their centerpoint calculations use the filled outer shapes, without subtracting holes. 
 // Arguments:
 //   path = 2d path (list of points) to extrude or a region for the module form
 //   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
@@ -1672,7 +1674,7 @@ module _offset_sweep_region(region, height,
                     offset_sweep(path=reg[0], height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
                                  offset=offset, r=r, steps=steps,
                                  quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
-                                 chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true)];
+                                 chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, anchor="zcenter", _return_height=true)];
 
     final_height = vnf_h_list[0][1];   // Need height for anchoring.  All heights are the same, so take the first one.
     vnf_list = column(vnf_h_list,0);
@@ -1689,7 +1691,6 @@ module _offset_sweep_region(region, height,
     geom = in_list(atype,["hull","intersect"]) ? attach_geom(region=region,h=final_height,cp=cp,anchors=anchors,extent=atype=="hull")
                                                : attach_geom(vnf=vnf_join(vnf_list), cp=cp,anchors=anchors, extent = atype=="surf_hull");
     attachable(anchor,spin,orient,geom=geom){
-            down(final_height/2)
               for(i=idx(holes))
                 difference(){
                    polyhedron(vnf_list[i][0],vnf_list[i][1],convexity=convexity);
@@ -1697,7 +1698,7 @@ module _offset_sweep_region(region, height,
                        offset_sweep(path=path, height=height, h=h, l=l, length=length, top=top_hole, bottom=bottom_hole, 
                                     offset=offset, r=r, steps=steps,
                                     quality=quality, check_valid=check_valid, extra=extra+0.2, cut=cut, chamfer_width=chamfer_width,
-                                    chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _flipdir=true,convexity=convexity);
+                                    chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, anchor="zcenter", _flipdir=true,convexity=convexity);
                 } 
             children();
         
@@ -1747,6 +1748,21 @@ function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality,
         );  
 
 
+/// End-specific chamfer dimensions replace a conflicting inherited dimension mode.
+function _os_merge_spec(defaults, spec) =
+    let(
+        local=struct_set([],spec),
+        type=struct_val(local,"type",struct_val(defaults,"type")),
+        cut=struct_val(local,"cut"),
+        dims=num_defined([struct_val(local,"chamfer_height"),struct_val(local,"chamfer_width")]),
+        clean=type!="chamfer" ? defaults
+            : is_def(cut) ? struct_set(defaults,["chamfer_height",undef,"chamfer_width",undef])
+            : dims>0 ? struct_set(defaults,["cut",undef])
+            : defaults
+    )
+    struct_set(clean,spec,grow=false);
+
+
 function _struct_valid(spec, func, name) =
         spec==[] ? true :
         assert(is_list(spec) && len(spec)>=2 && spec[0]=="for",str("Specification for \"", name, "\" is an invalid structure"))
@@ -1793,8 +1809,8 @@ function offset_sweep(
         bottom_temp = one_defined([ends,bottom,bot],"ends,bottom,bot",dflt=[]),
         dummy1 = _struct_valid(top_temp,"offset_sweep","top"),
         dummy2 = _struct_valid(bottom_temp,"offset_sweep","bottom"),
-        top = struct_set(argspec, top_temp, grow=false),
-        bottom = struct_set(argspec, bottom_temp, grow=false),
+        top = _os_merge_spec(argspec, top_temp),
+        bottom = _os_merge_spec(argspec, bottom_temp),
         offsetsok = in_list(struct_val(top, "offset"),["round","delta","chamfer"])
                     && in_list(struct_val(bottom, "offset"),["round","delta","chamfer"])
     )
@@ -1878,7 +1894,7 @@ module offset_sweep(path, height,
         vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
                              offset=offset, r=r, steps=steps,
                              quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
-                             chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true, _flipdir=_flipdir);
+                             chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, anchor="zcenter", _return_height=true, _flipdir=_flipdir);
         vnf = vnf_h[0];
         height = vnf_h[1];
         anchors = [
@@ -1888,11 +1904,11 @@ module offset_sweep(path, height,
             ];
         if (in_list(atype,["hull","intersect"]))
             attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
-                down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+                polyhedron(vnf[0],vnf[1],convexity=convexity);
                 children();
             }
         else
-            attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+            attachable(anchor,spin,orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
                 vnf_polyhedron(vnf,convexity=convexity);
                 children();
             }
@@ -1916,7 +1932,7 @@ function os_circle(r,cut,h,height,clip_angle,extra,check_valid, quality,steps, o
                                 : is_def(cut) ?  cut/(sqrt(2)-1)
                                 : undef
                          )
-                         is_def(r) ? [r, is_def(h) ? assert(h<=r, "height cannot be larger than radius") asin(h/r) : 90]
+                         is_def(r) ? [r, is_def(h) ? assert(is_finite(h) && h>=0 && h<=abs(r), "height must be nonnegative and no larger than abs(radius)") (r==0 ? 90 : asin(h/abs(r))) : 90]
                                    : [h, 90]
         )
         _remove_undefined_vals([
@@ -1947,7 +1963,8 @@ function os_teardrop(r,cut,extra,check_valid, quality,steps, offset) =
         ]);
 
 function os_chamfer(height, width, cut, angle, extra,check_valid, quality,steps, offset) =
-        let(ok = (is_def(cut) && num_defined([height,width])==0) || num_defined([height,width])>0)
+        assert(is_undef(cut) || num_defined([height,width])==0, "Cannot combine cut with height or width")
+        let(ok = is_def(cut) || num_defined([height,width])>0)
         assert(ok, "Must define `cut`, or one or both of `width` and `height`")
         _remove_undefined_vals([
                 "for", "offset_sweep",
@@ -2130,8 +2147,8 @@ module convex_offset_extrude(
                 ["k", k],
                 ["points", []],
         ];
-        top = struct_set(argspec, top, grow=false);
-        bottom = struct_set(argspec, bottom, grow=false);
+        top = _os_merge_spec(argspec, top);
+        bottom = _os_merge_spec(argspec, bottom);
 
         offsets_bot = _rounding_offsets(bottom, -1);
         offsets_top = _rounding_offsets(top, 1);
@@ -2294,7 +2311,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   .
 //   This module offers five anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
-//   then use "surf_hull" or "intersect_hull".  Lastly, in the special case of a prism with four sides, you can use "prismoid" anchoring
+//   then use "surf_hull" or "surf_intersect".  Lastly, in the special case of a prism with four sides, you can use "prismoid" anchoring
 //   which attempts to assign standard prismoid anchors to the shape by assigning as RIGHT the face that is closest to the RIGHT direction,
 //   and defining the other anchors around the shape based on that choice.  
 //   .
@@ -2453,8 +2470,8 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
                     topbounds = pointlist_bounds(top),
                     allz = column(concat(bottom,top),2),
                     height = max(allz)-min(allz),
-                    size = [botbounds[1].x-botbounds[0].x, botbounds[1].x-botbounds[0].x, height],
-                    size2 = [topbounds[1].x-topbounds[0].x, topbounds[1].x-topbounds[0].x],
+                    size = [botbounds[1].x-botbounds[0].x, botbounds[1].y-botbounds[0].y, height],
+                    size2 = [topbounds[1].x-topbounds[0].x, topbounds[1].y-topbounds[0].y],
                     shift = point2d(mean(topbounds)-mean(botbounds))
                 )    
                 attach_geom(size=size, size2=size2, shift=shift,anchors=result[2], override=result[3])
@@ -2502,7 +2519,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
            top,
      bottom = len(bottom[0])==2 ? path3d(bottom,-height/2) : bottom,
      jssingleok = (is_num(joint_sides) && joint_sides >= 0) || (is_vector(joint_sides,2) && joint_sides[0]>=0 && joint_sides[1]>=0),
-     jsvecok = is_list(joint_sides) && len(joint_sides)==N && []==[for(entry=joint_sides) if (!(is_num(entry) || is_vector(entry,2))) entry]
+     jsvecok = is_list(joint_sides) && len(joint_sides)==N && []==[for(entry=joint_sides) if (!((is_num(entry) && entry>=0) || (is_vector(entry,2) && all_nonnegative(entry)))) entry]
    )
    assert(is_num(joint_top) || is_vector(joint_top,2))
    assert(is_num(joint_bot) || is_vector(joint_bot,2))
@@ -3930,8 +3947,9 @@ function _prism_line_isect(poly_pairs, line, ref) =
        isect2d = ilist[ind][0],
        isect_ind = ilist[ind][1],
        isect_u = ilist[ind][2],
-       slope = (line[1].z-line[0].z)/norm(line2d[1]-line2d[0]),
-       z = slope * norm(line2d[0]-isect2d) + line[0].z
+       dir = line2d[1]-line2d[0],
+       t = ((isect2d-line2d[0])*dir)/(dir*dir),
+       z = lerp(line[0].z,line[1].z,t)
    )
    [point3d(isect2d,z),isect_ind, isect_u];
 
@@ -4549,7 +4567,7 @@ function _get_obj_type(ind,geom,anchor,prof,edge_r,edge_joint,edge_k) =
      geom[0]=="spheroid" ? "sphere"
    : geom[0]=="conoid" ? let(
                              axis = geom[5],
-                             anchor = rot(from=axis, to=UP, p=anchor),
+                             anchor = rot(from=axis, to=UP, p=is_string(anchor) ? _find_anchor(anchor,geom)[2] : anchor),
                              errtxt = is_undef(ind) ? ""
                                     : str(" from desc",ind)
                          )
@@ -4559,7 +4577,7 @@ function _get_obj_type(ind,geom,anchor,prof,edge_r,edge_joint,edge_k) =
                          assert(anchor.z==0,str("Anchor for cylinder",errtxt," is on the cylinder's edge.  This is not supported."))
                          "cyl"
    : in_list(geom[0],["prismoid","vnf_extent","vnf_isect"]) ?
-                           assert(geom[0]!="prismoid" || sum(v_abs(anchor))<3, "Cannot give a corner anchor for prismoid geometry")
+                           assert(geom[0]!="prismoid" || is_string(anchor) || sum(v_abs(anchor))<3, "Cannot give a corner anchor for prismoid geometry")
                            let(
                                 anch = _find_anchor(anchor, geom),
                                 edge_angle = len(anch)==5 ? struct_val(anch[4],"edge_angle") : undef
@@ -4806,7 +4824,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
     profile = force_path(profile,"profile");
     dummy0 = assert(is_path(profile,2), "profile must be a 2d path")
              assert(num_defined([edge_r1,edge_joint1])<=1, "Cannot give both edge_r1 (edge_r) and edge_joint1 (edge_joint)")
-             assert(num_defined([edge_r2,edge_joint2])<=2, "Cannot give both edge_r2 (edge_r) and edge_joint2 (edge_joint)")
+             assert(num_defined([edge_r2,edge_joint2])<=1, "Cannot give both edge_r2 (edge_r) and edge_joint2 (edge_joint)")
              assert(is_undef(edge_r1) || all_nonnegative([edge_r1]), "edge_r1 (edge_r) must be nonnegative")
              assert(is_undef(edge_r2) || all_nonnegative([edge_r2]), "edge_r2 (edge_r) must be nonnegative")      
              assert(is_undef(edge_joint1) || all_nonnegative([edge_joint1]), "edge_joint1 (edge_joint) must be nonnegative")
@@ -5033,9 +5051,9 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 //   edge_r = when attaching to an edge, assume it has a circular rounding with this radius
 //   edge_joint = when attaching to an edge, assume it has a smooth bezier rounding with this joint length
 //   edge_k = when attaching to an edge with a bezier rounding, use this k parameter value.  Default: 0.5 (matches rounded_prism)
-//   n = number of facets to use for fillets and roundings
-//   n_base = number of facets to use for fillets at the base
-//   n_end = number of facets to use for roundings at the end
+//   n = Number of facets for fillets and end roundings. Default: 15
+//   n_base = Number of facets for the base fillet. Default: n
+//   n_end = Number of facets for the end rounding. Default: n
 //   k = rounding curvature parameter for base and end.  Default: 0.7
 //   k_base = rounding curvature parameter for base.  Default: 0.7
 //   k_end = rounding curvature parameter for end.  Default: 0.7
@@ -5143,7 +5161,6 @@ module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, leng
             assert(is_undef(endpoint) || is_vector(endpoint,3), "endpoint must be a 3d point")
             assert(is_matrix(T,4,4), "T must be a 4x4 transformation matrix")
             assert(is_undef(length) || all_positive([length]), "length/height must be a positive value")
-            assert(point3d(anchor)!=CTR, "CENTER anchor is not permitted")
             assert(num_defined([edge_r,edge_joint])<=1, "Cannot give both edge_r and edge_joint")
             ;
     n_base = first_defined([n_base,n,15]);
@@ -5155,6 +5172,7 @@ module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, leng
 
 
     for(anchor=anchor_list){
+      assert(is_string(anchor) || (is_vector(anchor) && point3d(anchor)!=CTR), "CENTER anchor is not permitted; expected a named anchor or nonzero vector");
       anchor = is_string(anchor) ? anchor : point3d(anchor);
       type = _get_obj_type(undef,$parent_geom,anchor,profile,edge_r,edge_joint,edge_k);
       offset = in_list(type,["cyl","sphere"]) ? (inside?-1:1)*$parent_geom[1] : 0;

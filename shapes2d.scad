@@ -39,10 +39,10 @@ use <builtins.scad>
 //   When called as the built-in module, creates a 2D square or rectangle of the given size.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
-//   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
+//   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size. Default: 1
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
 //   square(40);
@@ -87,9 +87,9 @@ module square(size=1, center, anchor, spin) {
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: square()
 // Usage: As Module
-//   rect(size, [rounding], [chamfer], ...) [ATTACHMENTS];
+//   rect(size, [rounding=], [chamfer=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   path = rect(size, [rounding], [chamfer], ...);
+//   path = rect(size, [rounding=], [chamfer=], ...);
 // Description:
 //   When called as a module, creates a 2D rectangle of the given size, with optional rounding or chamfering.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
@@ -252,9 +252,11 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 //   If `corner=` is given three 2D points, centers the circle so that it will be tangent to both segments of the path, on the inside corner.
 //   If `points=` is given three 2D points, centers and sizes the circle so that it passes through all three points.
 // Arguments:
-//   r = The radius of the circle to create.
+//   r = The radius of the circle to create. Default: 1 when not fitted through points.
 //   d = The diameter of the circle to create.
 //   ---
+//   points = Three non-collinear 2D points through which the circle passes. Cannot be combined with corner, r, or d.
+//   corner = Three 2D points defining a corner to which the circle is tangent. Cannot be combined with points.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
@@ -273,6 +275,19 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 //   path = circle(d=50, anchor=FRONT, spin=45);
 //   stroke(path,closed=true);
 function circle(r, d, points, corner, anchor=CENTER, spin=0) =
+    let(
+        data = _circle_center_radius(r,d,points,corner),
+        cp = data[0],
+        r = data[1]
+    )
+    assert(r>0, "Radius/diameter must be positive")
+    let(
+        sides = segs(r),
+        path = [for(i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+    ) move(cp, reorient(anchor,spin, two_d=true, r=r, p=path));
+
+/// Resolve fitted-circle inputs without applying placement or requiring a nonempty solid.
+function _circle_center_radius(r, d, points, corner) =
     assert(is_undef(corner) || (is_path(corner,[2]) && len(corner) == 3))
     assert(is_undef(points) || is_undef(corner), "Cannot specify both points and corner.")
     let(
@@ -297,46 +312,18 @@ function circle(r, d, points, corner, anchor=CENTER, spin=0) =
             let(
                 cp = [0, 0],
                 r = get_radius(r=r, d=d, dflt=1)
-            ) [cp, r],
-        cp = data[0],
-        r = data[1]
-    )
-    assert(r>0, "Radius/diameter must be positive")
-    let(
-        sides = segs(r),
-        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]+cp]
-    ) reorient(anchor,spin, two_d=true, r=r, p=path);
+            ) [cp, r]
+    ) data;
 
 module circle(r, d, points, corner, anchor=CENTER, spin=0) {
-    if (is_path(points)) {
-        c = circle_3points(points);
-        check = assert(c!=undef && c[0] != undef, "Points must not be collinear.");
-        cp = c[0];
-        r = c[1];
-        translate(cp) {
-            attachable(anchor,spin, two_d=true, r=r) {
-                if (r>0) _circle(r=r);
-                children();
-            }
-        }
-    } else if (is_path(corner)) {
-        r = get_radius(r=r, d=d, dflt=1);
-        c = circle_2tangents(r=r, pt1=corner[0], pt2=corner[1], pt3=corner[2]);
-        check = assert(c != undef && c[0] != undef, "Points must not be collinear.");
-        cp = c[0];
-        translate(cp) {
-            attachable(anchor,spin, two_d=true, r=r) {
-                if (r>0) _circle(r=r);
-                children();
-            }
-        }
-    } else {
-        r = get_radius(r=r, d=d, dflt=1);
+    data = _circle_center_radius(r,d,points,corner);
+    cp = data[0];
+    r = data[1];
+    translate(cp)
         attachable(anchor,spin, two_d=true, r=r) {
             if (r>0) _circle(r=r);
             children();
         }
-    }
 }
 
 
@@ -359,14 +346,14 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  You cannot
 //   combine `circum=true` and `uniform=true`.
 //   .
-//   When the `realign` parameter is false the shape appears with its first vertex on the X+ axis and points moving counterclockwise from there.
+//   When the `realign` parameter is false the shape appears with its first vertex on the X+ axis and points moving clockwise from there.
 //   If `realign` is true then the midpoint of an edge is on the X+ axis and the first point of the polygon is below the X+ axis.  By default,
 //   `realign` is false when `circum` is false and true if `circum` is true.  This means that when `$fn` is a multiple of four the ellipse always
 //   has exactly correct dimensions on the X and Y axes regardless of the setting for circum, and it also means that circles match "octa"
 //   style spheroids on any of the coordinate planes.  For circles, `realign` just rotates the circle.  But for noncircular ellipses with `uniform=true`
 //   setting `realign=true` completely changes the shape compared to `realign=false`.  
 // Arguments:
-//   r = Radius of the circle or pair of semiaxes of ellipse 
+//   r = Radius of the circle or pair of semiaxes of ellipse. Default: 1
 //   ---
 //   d = Diameter of the circle or a pair giving the width and height of the ellipse.
 //   realign = If false a vertex is on the X+ axis.  If true the midpoint of an edge is on the X+ axis.  Default: false if `circum=false` and true if `circum=true`
@@ -559,7 +546,7 @@ function ellipse(r, d, realign, circum=false, uniform=false, anchor=CENTER, spin
 //   When called as a function, returns a 2D path for a regular N-sided polygon.
 //   When called as a module, creates a 2D regular N-sided polygon.
 // Arguments:
-//   n = The number of sides.
+//   n = The number of sides. Default: 6
 //   r/or = Outside radius, at points.
 //   ---
 //   d/od = Outside diameter, at points.
@@ -621,7 +608,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
             ),
         path4 = rounding==0? ellipse(r=r, $fn=n) : (
             let(
-                steps = floor(segs(r)/n),
+                steps = max(2,floor(segs(r)/n)),
                 step = 360/n/steps,
                 path2 = [
                     for (i = [0:1:n-1]) let(
@@ -1250,7 +1237,7 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
         );
     anchors = [
         for (i = [0:1:n-1]) let(
-            a1 = 360 - i*360/n - (realign? 180/n : 0),
+            a1 = 360 - i*360/n,
             a2 = a1 - 180/n,
             a3 = a1 - 360/n,
             p1 = apply(mat, polar_to_xy(r,a1)),
@@ -1498,6 +1485,8 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 //   d1 = diameter of the left-hand circle
 //   d2 = diameter of the right-hand circle
 //   D = diameter of the joining arcs
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin). Default: `0`
 // Named Anchors:
 //   "left" = center of the left circle
 //   "right" = center of the right circle
@@ -1655,10 +1644,10 @@ module ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness
 
 function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness,start, long=false, full=true, cw=false,ccw=false) =
     let(
-        r1 = is_def(r1) ? assert(is_undef(d),"Cannot define r1 and d1")r1
+        r1 = is_def(r1) ? assert(is_undef(d1),"Cannot define r1 and d1")r1
            : is_def(d1) ? d1/2
            : undef,
-        r2 = is_def(r2) ? assert(is_undef(d),"Cannot define r2 and d2")r2
+        r2 = is_def(r2) ? assert(is_undef(d2),"Cannot define r2 and d2")r2
            : is_def(d2) ? d2/2
            : undef,
         r = is_def(r) ? assert(is_undef(d),"Cannot define r and d")r
@@ -1669,7 +1658,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
     assert(is_undef(start) || is_def(angle), "start requires angle")
     assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
     assert(!is_vector(angle,2) || abs(angle[1]-angle[0]) <= 360, "angle gives more than 360 degrees")
-    assert(is_undef(points) || is_path(points,2), str("Points must be a 2d vector",points))
+    assert(is_undef(points) || is_path(points,2) || (is_list(points) && len(points)==1 && is_vector(points[0],2)), str("Points must be a 2d vector",points))
     assert(!any_defined([points,thickness,width]) || num_defined([r1,r2])==0, "Cannot give r1, r2, d1, or d2 with points, width or thickness")
     is_def(width) && is_def(thickness)?
        assert(!any_defined([cp,points,angle,start]), "Can only give 'ring_width', 'r' or 'd' with 'width' and 'thickness'")
@@ -2858,7 +2847,7 @@ function supershape(step=0.5, n, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CEN
         path = [for (i=idx(angs)) scale*rvals[i]*[cos(angs[i]), sin(angs[i])]]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=atype=="hull");
 
-module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
+module supershape(step=0.5,n,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
     check = assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     path = supershape(step=step,n=n,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
     attachable(anchor,spin,extent=atype=="hull", two_d=true, path=path) {

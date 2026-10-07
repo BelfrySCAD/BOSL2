@@ -81,18 +81,21 @@ function _unique_groups(m) = [
 //   .
 //   **Choosing the size of your polyhedron:**
 //   The default is to create a polyhedron whose smallest edge has length 1.  You can specify the
-//   smallest edge length with the size option.  Alternatively you can specify the size of the
-//   inscribed sphere, midscribed sphere, or circumscribed sphere using `ir`, `mr` and `cr` respectively.
-//   If you specify `cr=3` then the outermost points of the polyhedron will be 3 units from the center.
+//   smallest edge length with the side option.  Alternatively you can specify the size of the
+//   inscribed sphere, midscribed sphere, or circumscribed sphere using `ir`, `mr` and `or` respectively.
+//   If you specify `or=3` then the outermost points of the polyhedron will be 3 units from the center.
 //   If you specify `ir=3` then the innermost faces of the polyhedron will be 3 units from the center.
 //   For the platonic solids every face meets the inscribed sphere and every corner touches the
 //   circumscribed sphere.  For the Archimedean solids the inscribed sphere will touch only some of
 //   the faces and for the Catalan solids the circumscribed sphere meets only some of the corners.
+//   The midscribed sphere or midsphere is tangent to the center of every edge for all three types
+//   of regular polyhedra.  For the Platonic and Archimedean solids, the tangent point is the center
+//   of every edge; this is not the case for the Catalan solids.  
 //   .
 //   **Orientation:**
 //   Orientation is controled by the facedown parameter.  Set this to false to get the canonical orientation.
 //   Set it to true to get the largest face oriented down.  If you set it to a number the module searches for
-//   a face with the specified number of vertices and orients that face down.
+//   a face with the specified number of vertices in the resulting (possibly stellated) solid and orients that face down.
 //   .
 //   **Rounding:**
 //   If you specify the rounding parameter the module makes a rounded polyhedron by first creating an
@@ -105,7 +108,7 @@ function _unique_groups(m) = [
 //   positioned so that the origin is the center of the face.  If `rotate_children` is true (default)
 //   then the coordinate system is oriented so the z axis is normal to the face, which lies in the xy
 //   plane.  If you give `repeat=true` (default) the children are cycled through to cover all faces.
-//   With `repeat=false` each child is used once.  You can specify `draw=false` to suppress drawing of
+//   With `repeat=false` each child is used once; extra children beyond the face count are ignored with an informational message.  You can specify `draw=false` to suppress drawing of
 //   the polyhedron, e.g. to use for `difference()` operations.  The module sets various parameters
 //   you can use in your children (see the side effects list below).
 //   .
@@ -116,7 +119,8 @@ function _unique_groups(m) = [
 //   height of the pyramid is given by the `stellate` argument.  If `stellate` is `false` or `0` then
 //   no stellation is performed.  Otherwise stellate gives the pyramid height as a multiple of the
 //   edge length.  A negative pyramid height can be used to perform excavation, where a pyramid is
-//   removed from each face.
+//   removed from each face.  Size specifications for a stellated polyhedron refer to the base,
+//   unstellated shape, before pyramids are added or removed.  
 //   .
 //   **Special Polyhedra:**
 //   These can be selected only by name and may require different parameters, or ignore some standard
@@ -144,17 +148,17 @@ function _unique_groups(m) = [
 //   name = Name of polyhedron to create.
 //   ---
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
-//   faces = Number of faces.
+//   faces = Number of faces. For trapezohedra, an even integer of at least 6.
 //   facetype = Scalar or vector listing required type of faces as vertex count.  Polyhedron must have faces of every type listed and no other types.
 //   hasfaces = Scalar of vector list face vertex counts.  Polyhedron must have at least one of the listed types of face.
 //   index = Index to select from polyhedron list.  Default: 0.
 //   side = Length of the smallest edge of the polyhedron.  Default: 1 (if no radius or diameter is given).  
 //   ir = inner radius.  Polyhedron is scaled so it has the specified inner radius. 
-//   mr = middle radius.  Polyhedron is scaled so it has the specified middle radius.  
+//   mr = Scale the underlying polyhedron so its minimum center-to-edge distance equals this value.  
 //   or / r / d = outer radius.   Polyhedron is scaled so it has the specified outer radius. 
 //   anchor = Side of the origin to anchor to.  The bounding box of the polyhedron is aligned as specified.  Default: `CENTER`
 //   facedown = If false display the solid in native orientation.  If true orient it with a largest face down.  If set to a vertex count, orient it so a face with the specified number of vertices is down.  Default: true.
-//   rounding = Specify a rounding radius for the shape.  Note that depending on $fn the dimensions of the shape may have small dimensional errors.
+//   rounding = Rounding radius; after facet compensation it must be smaller than the in-radius. Dimensions may have small facet errors. Default: 0.
 //   repeat = If true then repeat the children to fill all the faces.  If false use only the available children and stop.  Default: true.
 //   draw = If true then draw the polyhedron.  If false, draw the children but not the polyhedron.  Default: true.
 //   rotate_children = If true then orient children normal to their associated face.  If false orient children to the parent coordinate system.  Default: true.
@@ -165,7 +169,7 @@ function _unique_groups(m) = [
 // Side Effects:
 //   `$faceindex` - Index number of the face
 //   `$face` - Coordinates of the face (2d if rotate_children==true, 3d if not)
-//   `$center` - Face center in the child coordinate system
+//   `$center` - Position of the polyhedron center in the child coordinate system. The child origin is at the center of its assigned face.
 //
 // Examples: All of the available polyhedra by name in their native orientation
 //   regular_polyhedron("tetrahedron", facedown=false);
@@ -347,6 +351,7 @@ module regular_polyhedron(
             else {
                 fn = segs(rounding);
                 rounding = rounding/cos(180/fn);
+                assert(rounding<in_radius, "Rounding after facet compensation must be smaller than the in-radius");
                 adjusted_scale = 1 - rounding / in_radius;
                 minkowski(){
                     sphere(r=rounding, $fn=fn);
@@ -355,17 +360,19 @@ module regular_polyhedron(
             }
         }
         if ($children>0) {
-            maxrange = repeat ? len(faces)-1 : $children-1;
+            if (!repeat && $children>len(faces))
+                echo(str("regular_polyhedron(): ignoring ",$children-len(faces)," extra child(ren)"));
+            maxrange = repeat ? len(faces)-1 : min($children,len(faces))-1;
             for(i=[0:1:maxrange]) {
                 // Would like to orient so an edge (longest edge?) is parallel to x axis
                 facepts = select(scaled_points, faces[i]);
-                $center = -mean(facepts);
-                cfacepts = move($center, p=facepts);
-                $face = rotate_children
-                          ? path2d(frame_map(z=face_normals[i], x=facepts[0]-facepts[1], reverse=true, p=cfacepts))
-                          : cfacepts;
+                face_center = mean(facepts);
+                cfacepts = move(-face_center, p=facepts);
+                to_child = frame_map(z=face_normals[i], x=facepts[0]-facepts[1], reverse=true);
+                $center = rotate_children ? apply(to_child,-face_center) : -face_center;
+                $face = rotate_children ? path2d(apply(to_child,cfacepts)) : cfacepts;
                 $faceindex = i;
-                translate(-$center)
+                translate(face_center)
                 if (rotate_children) {
                     frame_map(z=face_normals[i], x=facepts[0]-facepts[1])
                     children(i % $children);
@@ -581,7 +588,7 @@ _stellated_polyhedra_ = [
 //     * `"faces"`: list of faces for the selected polyhedron, where each entry on the list is a list of point index values to be used with the vertex list
 //     * `"face normals"`: list of normal vectors for each face
 //     * `"in_radius"`: in-sphere radius for the selected polyhedron
-//     * `"mid_radius"`: mid-sphere radius for the selected polyhedron
+//     * `"mid_radius"`: midsphere radius, the minimum distance from the polyhedron center to an edge segment.
 //     * `"out_radius"`: circumscribed sphere radius for the selected polyhedron
 //     * `"index set"`: index set selected by your specifications; use its length to determine the valid range for `index`.
 //     * `"face vertices"`: number of vertices on the faces of the selected polyhedron (always a list)
@@ -589,6 +596,10 @@ _stellated_polyhedra_ = [
 //     * `"center"`: center for the polyhedron
 //     * `"type"`: polyhedron type, one of "platonic", "archimedean", "catalan", or "trapezohedron"
 //     * `"name"`: name of selected polyhedron
+//   With stellation, the sizing arguments and the "edge length", "in_radius", "mid_radius", and "out_radius"
+//   queries describe the underlying unstellated polyhedron. Vertex and face queries describe the resulting geometry.
+//   "mid_radius" is the midsphere radius when a centered sphere touches every edge. For trapezohedra, it may
+//   touch only the nearer edge family. Radius measurements use the solid's own center, not the anchored origin.
 //   If you specify an impossible selection of polyhedrons, then `[]` is returned.  
 //
 // Arguments:
@@ -596,13 +607,13 @@ _stellated_polyhedra_ = [
 //   name = Name of polyhedron to create.
 //   ---
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
-//   faces = Number of faces.
+//   faces = Number of faces. For trapezohedra, an even integer of at least 6.
 //   facetype = Scalar or vector listing required type of faces as vertex count.  Polyhedron must have faces of every type listed and no other types.
 //   hasfaces = Scalar of vector list face vertex counts.  Polyhedron must have at least one of the listed types of face.
 //   index = Index to select from polyhedron list.  Default: 0.
 //   side = Length of the smallest edge of the polyhedron.  Default: 1 (if no radius or diameter is given).
 //   or / r / d = outer radius.   Polyhedron is scaled so it has the specified outer radius or diameter. 
-//   mr = middle radius.  Polyhedron is scaled so it has the specified middle radius.  
+//   mr = Scale the underlying polyhedron so its minimum center-to-edge distance equals this value.  
 //   ir = inner radius.  Polyhedron is scaled so it has the specified inner radius. 
 //   anchor = Side of the origin to anchor to.  The bounding box of the polyhedron is aligned as specified.  Default: `CENTER`
 //   facedown = If false display the solid in native orientation.  If true orient it with a largest face down.  If set to a vertex count, orient it so a face with the specified number of vertices is down.  Default: true.
@@ -642,7 +653,8 @@ function regular_polyhedron_info(
         or = get_radius(r=r,r1=or,d=d),
         stellate_index = search([name], _stellated_polyhedra_, 1, 0)[0],
         name = stellate_index==[] ? name : _stellated_polyhedra_[stellate_index][1],
-        stellate = stellate_index==[] ? stellate : _stellated_polyhedra_[stellate_index][2],
+        selected_stellate = stellate_index==[] ? stellate : _stellated_polyhedra_[stellate_index][2],
+        stellate = selected_stellate==0 ? false : selected_stellate,
         indexlist = (
             name=="trapezohedron" ? [0] : [  // dumy list of one item
                 for(i=[0:1:len(_polyhedra_)-1]) (
@@ -682,10 +694,10 @@ function regular_polyhedron_info(
                     indexlist[0]]
             )
         ),
-        valid_facedown = is_bool(facedown) || in_list(facedown, entry[facevertices])
+        valid_facedown = is_bool(facedown) || in_list(facedown, stellate==false ? entry[facevertices] : [3])
     )
     assert(name == "trapezohedron" || num_defined([longside,h,height])==0, "The 'longside', 'h' and 'height' parameters are only allowed with trapezohedrons")
-    assert(valid_facedown,str("'facedown' set to ",facedown," but selected polygon only has faces with size(s) ",entry[facevertices]))
+    assert(valid_facedown,str("'facedown' set to ",facedown," but resulting polyhedron only has faces with size(s) ",stellate==false ? entry[facevertices] : [3]))
     let(
         scalefactor = (
             name=="trapezohedron" ? 1 : (
@@ -753,7 +765,7 @@ function _stellate_faces(scalefactor,stellate,vertices,faces_normals) =
 
 
 function _trapezohedron(faces, r, side, longside, h, height, d) =
-    assert(faces%2==0, "Must set 'faces' to an even number for trapezohedron")
+    assert(is_int(faces) && faces>=6 && faces%2==0, "Must set faces to an even integer at least 6 for trapezohedron")
     assert(is_undef(h) || is_undef(height), "Cannot define both 'h' and 'height'")
     let(
         r = get_radius(r=r, d=d),
@@ -762,6 +774,8 @@ function _trapezohedron(faces, r, side, longside, h, height, d) =
         parmcount = num_defined([r,side,longside,h])
     )
     assert(parmcount==2,"Must define exactly two of 'r' (or 'd'), 'side', 'longside', and 'h' (or 'height')")
+    assert(all([for(x=[r,side,longside,h]) is_undef(x) || (is_finite(x) && x>0)]),
+           "Impossible trapezohedron specification")
     let(       
         separation = (     // z distance between non-apex vertices that aren't in the same plane
             !is_undef(h) ? 2*h*sqr(tan(90/N)) :
@@ -770,7 +784,7 @@ function _trapezohedron(faces, r, side, longside, h, height, d) =
             2*sqr(sin(90/N))*sqrt((sqr(side) + 2*sqr(longside)*(cos(180/N)-1)) / (cos(180/N)-1) / (cos(180/N)+cos(360/N)))
         )
     )
-    assert(separation==separation, "Impossible trapezohedron specification")
+    assert(is_finite(separation) && separation>0, "Impossible trapezohedron specification")
     let(
         h = !is_undef(h) ? h : 0.5*separation / sqr(tan(90/N)),
         r = (
@@ -778,14 +792,17 @@ function _trapezohedron(faces, r, side, longside, h, height, d) =
             !is_undef(side) ? sqrt((sqr(separation) - sqr(side))/2/(cos(180/N)-1)) :
             sqrt(sqr(longside) - sqr(h-separation/2))
         ),
+        dimensions_valid = assert(is_finite(h) && h>separation/2 && is_finite(r) && r>0,
+                                  "Impossible trapezohedron specification"),
         top = [for(i=[0:1:N-1]) [r*cos(360/N*i), r*sin(360/N*i),separation/2]],
         bot = [for(i=[0:1:N-1]) [r*cos(180/N+360/N*i), r*sin(180/N+360/N*i),-separation/2]],
         vertices = concat([[0,0,h],[0,0,-h]],top,bot)
     ) [  
         "trapezohedron", "trapezohedron", faces, [4],
-        !is_undef(side)? side : sqrt(sqr(separation)-2*r*(cos(180/N)-1)),  // actual side length
+        !is_undef(side)? side : sqrt(sqr(separation)-2*r*r*(cos(180/N)-1)),  // actual side length
         h*r/sqrt(r*r+sqr(h+separation/2)),     // in_radius
-        h*r/sqrt(r*r+sqr(h-separation/2)),     // mid_radius
+        min(norm(line_closest_point([[0,0,h],top[0]],CTR,bounded=true)),
+            norm(line_closest_point([top[0],bot[0]],CTR,bounded=true))),  // mid_radius
         max(h,sqrt(r*r+sqr(separation/2))),  // out_radius
         undef,                               // volume
         vertices
