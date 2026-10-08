@@ -38,9 +38,9 @@ use <builtins.scad>
 //   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
 //   size = The size of the cube.  Default: 1
-//   center = A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.  Default: `anchor=CENTER`
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.  Default: `anchor=FRONT+LEFT+BOTTOM`
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Simple cube.
@@ -382,11 +382,13 @@ module cuboid(
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
-                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=-[1,1,1]) children();
+                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners,
+                       teardrop=teardrop, clip_angle=clip_angle, anchor=-[1,1,1], spin=spin, orient=orient) children();
             }
         } else {
             translate(p1) {
-                cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=-[1,1,1]) children();
+                cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners,
+                       teardrop=teardrop, clip_angle=clip_angle, anchor=-[1,1,1], spin=spin, orient=orient) children();
             }
         }
     } else {
@@ -746,7 +748,7 @@ module prismoid(
 }
 
 function prismoid(
-    size1, size2, h, shift=[0,0],
+    size1, size2, h, shift=[undef,undef],
     rounding=0, rounding1, rounding2,
     chamfer=0, chamfer1, chamfer2,
     l, height, length, center,
@@ -980,7 +982,7 @@ module regular_prism(n,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    realign=false, shift=[0,0],
+    realign=false, shift,
     teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
@@ -989,8 +991,11 @@ module regular_prism(n,
     tex_taper, style,
     anchor, spin=0, orient=UP
 )
-{ 
-    vnf_anchors_ovr = regular_prism(n=n,h=h,r=r,center=center, l=l,length=length,height=height,
+{
+    anchor = assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+             assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+             get_anchor(anchor,center,BOT,CENTER);
+    vnf_anchors_ovr = regular_prism(n=n,h=h,r=r,anchor="origin", l=l,length=length,height=height,
                                   r1=r1,r2=r2,ir=ir,ir1=ir1,ir2=ir2,or=or,or1=or1,or2=or2,side=side,side1=side1,side2=side2,
                                   d=d,d1=d1,d2=d2,id=id,id1=id1,id2=id2,od=od,od1=od1,od2=od2,ang=ang,
                                   chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
@@ -1019,7 +1024,7 @@ function regular_prism(n,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign=false, shift,
     teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
@@ -1031,7 +1036,9 @@ function regular_prism(n,
     assert(is_integer(n) && n>2, "\nn must be an integer 3 or greater.")
     assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center")
+    assert(num_defined([ang,shift])<2, "\nCannot give both shift and ang")
     let(
+        shift = default(shift,[0,0]),
         style = default(style,"min_edge"),
         tex_depth = default(tex_depth,1),
         height = one_defined([l, h, length, height],"l,h,length,height",dflt=undef),
@@ -1058,7 +1065,6 @@ function regular_prism(n,
     )
 
     assert(is_undef(ang) || (is_finite(ang) && ang>0 && ang<180), "\nang must be a number between 0 and 180")
-    assert(num_defined([ang,shift]), "\nCannot give both shift and ang")
     assert(is_undef(ang) || num_true([is_def(height), r1def, r2def])<3, "\nCannot give ang with specification for r1, r2 and height")
     assert(num_defined([side,od,id,or,ir])<=1, "\nCan define only one of side, id, od, ir, and or.")
     let(
@@ -1226,10 +1232,10 @@ function regular_prism(n,
 //   ysize = The Y axis length of the trapezoidal prism
 //   w1 = The X axis width of the front end of the trapezoidal prism.
 //   w2 = The X axis width of the back end of the trapezoidal prism
-//   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
+//   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `ysize`, `w1`, or `w2` to allow the freedom to control the angles. 
 //   shift = Scalar value to shift the back of the trapezoidal prism along the X axis by.  Cannot be combined with ang.  Default: 0
 //   h / height / thickness = The thickness in the Z direction of the base that the texture sits on.  Default: 0.1 or for inset textures 0.1 more than the inset depth
-//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes are scaled somewhat to fit evenly on the available surface. Default: `[5,5]`
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes are scaled somewhat to fit evenly on the available surface. Supply either tex_size or tex_reps.
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
@@ -1238,7 +1244,7 @@ function regular_prism(n,
 //   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if `tex_reps=[1,1]`, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM` if `astyle` is "tex", `CENTER` otherwise
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM` if `atype` is "tex", `CENTER` otherwise
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(3D,NoScales,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
@@ -1305,12 +1311,12 @@ module textured_tile(
     tex_skip=0,
     style="min_edge",
     atype="tex",
-    anchor, spin=0, orient=UP
+    anchor, spin=0, orient=UP, thickness
 )
 {
     anchor = default(anchor, atype=="tex" ? BOTTOM : CENTER);
     vnf_data = textured_tile(size=size,
-                        ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
+                        ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, thickness=thickness, 
                         texture=texture, tex_size=tex_size, tex_reps=tex_reps,tex_extra=tex_extra, 
                         tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,tex_skip=tex_skip,
                         style=style, atype="std",_return_anchor=true);
@@ -1378,7 +1384,7 @@ function textured_tile(
                         assert(num_defined([ysize, w1, w2, ang]) == 3, "\nMust give exactly 3 of the arguments ysize, w1, w2, and angle.")
                         assert(is_undef(shift) || is_finite(shift))
                         assert(num_defined([shift,ang])<2, "\nCannot specify shift and ang together.")
-                        _trapezoid_dims(ysize,w1,w2,shift,ang),
+                        _trapezoid_dims(ysize,w1,w2,shift,force_list(ang,2)),
         ysize=h_w1_w2_shift[0],
         w1=h_w1_w2_shift[1],
         w2=h_w1_w2_shift[2],
@@ -1391,7 +1397,7 @@ function textured_tile(
         
         tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
                  : let(tex_size=force_list(tex_size,2))
-                   [round(size.x/tex_size.x), round(size.y/tex_size.y)],
+                   [max(1,round(size.x/tex_size.x)), max(1,round(size.y/tex_size.y))],
         extra = is_undef(tex_extra)? tex_reps == [1,1] ? [0,0] : [1,1]
                                    : force_list(tex_extra,2), 
         skip = force_list(tex_skip,2), 
@@ -1896,12 +1902,15 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
         right_dir = unit(hypot_dir+RIGHT),
         hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK)),
         topedge_dir = [0, each unit(unit([size.z,size.y])+[-1,0])],
+        botedge_dir = [0, each unit(unit([size.z,size.y])+[0,-1])],
         anchors = [
             named_anchor("hypot", CTR, hypot_dir, 180),
             named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
             named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
             named_anchor("top_edge", [0,-size.y/2,size.z/2], topedge_dir, _compute_spin(topedge_dir,RIGHT),
-                         info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]])
+                         info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]]),
+            named_anchor("bot_edge", [0,size.y/2,-size.z/2], botedge_dir, _compute_spin(botedge_dir,RIGHT),
+                         info=[["edge_angle",atan2(size.z,size.y)],["edge_length",size.x]])
         ]
     )
     reorient(anchor,spin,orient, size=size, anchors=anchors, p=vnf);
@@ -2323,7 +2332,7 @@ function _cyl_path(
         unscale = noscale ? scale : 1, 
         chamf1r = !_chamf1? 0
                 : !_fromend1? unscale * _chamf1
-                : unscale * law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
+                : unscale * law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf1)*vang)),
         chamf2r = !_chamf2? 0
                 : !_fromend2? unscale * _chamf2
                 : unscale * law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
@@ -2397,6 +2406,7 @@ function cyl(
     anchor, spin=0, orient=UP
 ) =
     let(
+        simple = !any_defined([chamfer,chamfer1,chamfer2,rounding,rounding1,rounding2,texture,extra,extra1,extra2]),
         legacy = is_bool(r2) && is_undef(center),
         edummy = !legacy?0:
           echo("You gave a boolean value for r2.  Assuming you gave this value as the 3rd positional parameter.")
@@ -2437,8 +2447,8 @@ function cyl(
     assert(is_finite(r2) && r2>=0, "\nr2 or d2 must be a non-negative number.")
     assert(is_vector(shift,2), "\nshift must be a 2D vector.")
     let(
-        vnf = !any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2])
-          ? zrot(circum?180/sides/2:0,cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides))
+        vnf = simple && r1>0 && r2>0 && l>0
+          ? cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides)
           : let(
                  cpath = _cyl_path(r1, r2, l, 
                                    chamfer, chamfer1, chamfer2,
@@ -2629,7 +2639,7 @@ function xcyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2638,11 +2648,15 @@ function xcyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = let(
+) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+    let(
+    anchor = get_anchor(anchor,center,-RIGHT,CENTER),
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(l=l,r1=r1,r2=r1, center=center,
+    vnf=cyl(l=l,r1=r1,r2=r2, 
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
         rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -2654,8 +2668,8 @@ function xcyl(
         tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
         tex_taper=tex_taper, style=style, tex_style=tex_style,
         extra=extra, extra1=extra1, extra2=extra2, 
-        anchor=CENTER, spin=0, orient=RIGHT)
-    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=RIGHT);
+        anchor="origin", spin=0, orient=RIGHT)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, shift=shift, axis=RIGHT);
 
 module xcyl(
     h, r, center,
@@ -2673,14 +2687,16 @@ module xcyl(
     tex_scale, tex_depth, tex_samples,
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
-    anchor=CENTER, spin=0
+    anchor, spin=0
 ) {
+    anchor = assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+             assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+             get_anchor(anchor,center,-RIGHT,CENTER);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=RIGHT) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, shift=shift, axis=RIGHT) {
         cyl(
-            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
@@ -2693,7 +2709,7 @@ module xcyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=CENTER, spin=0, orient=RIGHT
+            anchor="origin", spin=0, orient=RIGHT
         );
         children();
     }
@@ -2740,20 +2756,24 @@ function ycyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = let(
+) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+    let(
+    anchor = get_anchor(anchor,center,-BACK,CENTER),
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(l=l, center=center,
+    vnf=cyl(l=l, 
         r1=r1,r2=r2,
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
@@ -2766,8 +2786,8 @@ function ycyl(
         tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
         tex_taper=tex_taper, style=style, tex_style=tex_style,
         extra=extra, extra1=extra1, extra2=extra2, 
-        anchor=CENTER, spin=0, orient=BACK)
-    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=BACK);
+        anchor="origin", spin=0, orient=BACK)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, shift=shift, axis=BACK);
 
 
 
@@ -2789,12 +2809,14 @@ module ycyl(
     extra, extra1, extra2, 
     anchor, spin=0
 ) {
+    anchor = assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+             assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+             get_anchor(anchor,center,-BACK,CENTER);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=BACK) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, shift=shift, axis=BACK) {
         cyl(
-            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
@@ -2807,7 +2829,7 @@ module ycyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=CENTER, spin=0, orient=BACK
+            anchor="origin", spin=0, orient=BACK
         );
         children();
     }
@@ -2850,20 +2872,24 @@ function zcyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = let(
+) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+    let(
+    anchor = get_anchor(anchor,center,-UP,CENTER),
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
     l = one_defined([l,h,length,height],"l,h,length,height",1),
-    vnf=cyl(center=center,
+    vnf=cyl(
         l=l, r1=r1, r2=r2,
         chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
         chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
@@ -2876,8 +2902,8 @@ function zcyl(
         tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
         tex_taper=tex_taper, style=style, tex_style=tex_style,
         extra=extra, extra1=extra1, extra2=extra2, 
-        anchor=CENTER, spin=0, orient=UP)
-    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=UP);
+        anchor="origin", spin=0, orient=UP)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, shift=shift, axis=UP);
 
 
 module zcyl(
@@ -2897,12 +2923,14 @@ module zcyl(
     extra, extra1, extra2, 
     anchor, spin=0
 ) {
+    anchor = assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+             assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
+             get_anchor(anchor,center,-UP,CENTER);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, shift=shift) {
         cyl(
-            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
@@ -2915,7 +2943,7 @@ module zcyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=CENTER, spin=0, orient=UP
+            anchor="origin", spin=0, orient=UP
         );
         children();
     }
@@ -3316,7 +3344,7 @@ function _hemicyl_end_profile(flat_x, x_max, length, bottom, top, extra, smoothn
 //
 // Arguments:
 //   h / l / height / length = height of tube. Default: 1
-//   or = Outer radius. Default: 1
+//   or = Outer radius.
 //   ir = Inner radius.
 //   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`. Default: `anchor=CENTER`
 //   ---
@@ -3672,14 +3700,14 @@ module tube(
     parts = [
         define_part(
             "inside",
-            attach_geom(r1=ir1, r2=ir2, l=h),
+            attach_geom(r1=ir1, r2=ir2, l=h, shift=shift),
             inside=true
         )
     ];
 
     attachable(
         anchor,spin,orient,
-        r1=r1,r2=r2,l=h,
+        r1=r1,r2=r2,l=h,shift=shift,
         parts=parts
     ) {
         down(h/2)
@@ -3720,17 +3748,17 @@ module tube(
 //   pie_slice(l|h, r, ang, ...) ATTACHMENTS;
 //
 // Arguments:
-//   h / l / height / length = height of pie slice.
-//   r = radius of pie slice.
-//   ang = pie slice angle in degrees.
-//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=CENTER`
+//   h / l / height / length = height of pie slice. Default: 1
+//   r = radius of pie slice. Default: 10
+//   ang = pie slice angle in degrees. Default: 30
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=BOTTOM`
 //   ---
 //   r1 = bottom radius of pie slice.
 //   r2 = top radius of pie slice.
 //   d = diameter of pie slice.
 //   d1 = bottom diameter of pie slice.
 //   d2 = top diameter of pie slice.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
@@ -4179,8 +4207,8 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                          minr = min(r),
                          scale = r/minr
                      )
-                     scale(scale,spheroid(minr, style=style, circum=circum, anchor=anchor,
-                                          spin=spin, orient=orient))
+                     reorient(anchor,spin,orient, r=r,
+                         p=scale(scale,spheroid(minr, style=style, circum=circum, anchor="origin")))
   : let(
         hsides = segs(min(r)),
         vsides = max(2,ceil(hsides/2)),
@@ -4272,11 +4300,17 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         lv = len(verts),
         faces = circum && style=="stagger" ?
                      let(ptcount=2*hsides)
+                     vsides==2 ? [
+                         [for(i=[ptcount-2:-2:0]) i],
+                         for(j=[0:1:hsides-1])
+                             [2*j, (2*j+2)%ptcount, (2*j+3)%ptcount, 2*j+1],
+                         [for(i=[1:2:ptcount-1]) i]
+                     ] :
                      [
                        [for(i=[ptcount-2:-2:0]) i],
                        for(j=[0:hsides-1])
                            [j*2, (j*2+2)%ptcount,ptcount+(j*2+2)%ptcount,ptcount+(j*2+3)%ptcount,ptcount+j*2],
-                       for(i=[1:vsides-3])
+                       for(i=[1:1:vsides-3])
                            let(base=ptcount*i)
                            for(j=[0:hsides-1])
                                i%2==0 ? [base+2*j, base+(2*j+1)%ptcount, base+(2*j+2)%ptcount,
@@ -4568,6 +4602,8 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
     dummy=assert(is_finite(length) && length>0, "\nlength must be positive.");
     r1 = get_radius(r=r, r1=r1, d=d, d1=d1);
     r2 = get_radius(r=r, r1=r2, d=d, d1=d2);
+    cap_h1 = first_defined([cap_h1,cap_h]);
+    cap_h2 = first_defined([cap_h2,cap_h]);
     tip_y1 = r1/cos(90-ang);
     tip_y2 = r2/cos(90-ang);
     _cap_h1 = min(default(cap_h1, tip_y1), tip_y1);
@@ -4637,7 +4673,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
             ],
             caps=true, col_wrap=true, reverse=true
         )
-    ) reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors, p=vnf);
+    ) reorient(anchor,spin,orient, r1=r1, r2=r2, l=length, axis=BACK, anchors=anchors, p=vnf);
 
 
 // Function&Module: onion()
@@ -4690,7 +4726,8 @@ module onion(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, sp
 {
     r = get_radius(r=r, d=d, dflt=1);
     xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h, circum=circum, realign=realign);
-    tip_h = max(column(xyprofile,1));
+    uncapped = is_undef(cap_h) ? xyprofile : teardrop2d(r=r, ang=ang, circum=circum, realign=realign);
+    tip_h = max(column(uncapped,1));
     _cap_h = min(default(cap_h,tip_h), tip_h);
     anchors = [
         ["cap", [0,0,_cap_h], UP, 0],
@@ -4708,12 +4745,13 @@ module onion(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, sp
 }
 
 
-function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
+function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP, circum=false, realign=false) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        xyprofile = right_half(p=teardrop2d(r=r, ang=ang, cap_h=cap_h))[0],
+        xyprofile = right_half(p=teardrop2d(r=r, ang=ang, cap_h=cap_h, circum=circum, realign=realign))[0],
         profile = xrot(90, p=path3d(xyprofile)),
-        tip_h = max(column(xyprofile,1)),
+        uncapped = is_undef(cap_h) ? xyprofile : teardrop2d(r=r, ang=ang, circum=circum, realign=realign),
+        tip_h = max(column(uncapped,1)),
         _cap_h = min(default(cap_h,tip_h), tip_h),
         anchors = [
             ["cap", [0,0,_cap_h], UP, 0],
@@ -4771,8 +4809,8 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   language = The language the text is in.  Default: `"en"`
 //   script = The script the text is in.  Default: `"latin"`
 //   atype = Change vertical center between "baseline" and "ycenter".  Default: "baseline"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
-//   center = Center the text.  Equivalent to `atype="center", anchor=CENTER`.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `LEFT`
+//   center = Center the text.  Equivalent to `atype="ycenter", anchor=CENTER`.  Default: false
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Anchor Types:
@@ -5024,8 +5062,8 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
                      table = [
                               ["baseline", 0],
                               ["top", -ascent],
-                              ["bottom", descent],
-                              ["center", (descent-ascent)/2]
+                              ["bottom", -descent],
+                              ["center", -(ascent+descent)/2]
                              ],
                      match = [for(i=idx(table)) if (starts_with(valign,table[i][0])) i]
                 )
@@ -5071,7 +5109,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
             frame_map(
               x=point3d(tangent-adjustment),
               y=point3d(usetop ? toppts[i] : -normpts[i])
-            ) left(lsize[i]/2) {
+            ) back(vadjustment) left(lsize[i]/2) {
                 text(text[i], font=font, size=size, language=language, script=script);
             }
         }
@@ -5114,7 +5152,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //   d = Diameter of the fillet.
 //   d1 = Bottom diameter of fillet.
 //   d2 = Top diameter of fillet.
-//   excess = Extra size for the fillet.  Defaults: .1
+//   excess = Extra size for the fillet.  Default: .01
 //   rounding = Radius of roundong along ends.  Default: 0
 //   rounding1 = Radius of rounding along bottom end
 //   rounding2 = Radius of rounding along top end
@@ -5164,11 +5202,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //      cuboid([22,22,2]);
 //  }
 
-module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP)
-{
-    deprecate("fillet");
-    fillet(l,r,ang,overlap,d,length,h,height,anchor,spin,orient);
-}
+
 
 
 function fillet(l, r, ang, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("fillet");
@@ -5217,17 +5251,15 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 //   y = A list or range of values for y
 //   ---
 //   zclip = A vector `[zmin,zmax]' that constrains the output of function to these bounds. Cannot be used with `zspan`.
-//   zspan = Rescale and shift the function values so the minimum value of f appears at zspan[0] and the maximum at zspan[1].  Cannot be used with `zclip`.
+//   zspan = Rescale and shift the function values so the minimum value of f appears at zspan[0] and the maximum at zspan[1].  
 //   base = Amount of extra thickness to add at the bottom of the model.  If set to zero, produce a non-manifold zero-thickness VNF.  Default: 1
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
-//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top toward.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 4
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "box"
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -5253,9 +5285,10 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 //   plot3d(f, [10:.3:40], [4:.3:37],zspan=[0,25],anchor=BOT);
 
 module plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", convexity=4, style="default")
-   vnf_polyhedron(plot3d(f,x,y,zclip, zspan,base, style=style), atype=atype, orient=orient, anchor=anchor, cp=cp, convexity=convexity) children();
+   vnf_polyhedron(plot3d(f,x,y,zclip, zspan,base, style=style), atype=atype, orient=orient, spin=spin, anchor=anchor, cp=cp, convexity=convexity) children();
    
 function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", style="default") =
+   assert(in_list(atype, _ANCHOR_TYPES), "\nAnchor type must be hull or intersect.")
    assert(is_finite(base) && base>=0, "\nbase must be a nonnegative number.")
    assert(is_vector(x) || valid_range(x), "\nx must be a vector or nonempty range.")
    assert(is_vector(y) || valid_range(y), "\ny must be a vector or nonempty range.")
@@ -5271,24 +5304,24 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
        minval = min(column(flatten(data),2)),
        maxval = max(column(flatten(data),2)),
        sdata = is_undef(zspan) ? data
-             : let(
+              : assert(maxval>minval, "\nCannot rescale constant plot data with zspan.")
+               let(
                     scale = (zspan[1]-zspan[0])/(maxval-minval)
                )
                [for(row=data) [for (entry=row) [entry.x,entry.y,scale*(entry.z-minval)+zspan[0]]]]
    )
-   base==0 ? vnf_vertex_array(sdata,style=style)
- : 
    let(
-       minval = min(column(flatten(sdata),2)),
-       maxval = max(column(flatten(sdata),2)),
-       bottom = is_def(zspan) ? zspan[0]-base : minval-base,
-       data = [ [for(p=sdata[0]) [p.x,p.y,bottom]],
-                each sdata,
-                [for(p=last(sdata)) [p.x,p.y,bottom]]
-              ],
-       vnf = vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style, reverse=true)
-   )
-   reorient(anchor,spin,orient, vnf=vnf, p=vnf);
+       vnf = base==0 ? vnf_vertex_array(sdata,style=style)
+           : let(
+               minval = min(column(flatten(sdata),2)),
+               bottom = is_def(zspan) ? zspan[0]-base : minval-base,
+               data = [
+                   [for(p=sdata[0]) [p.x,p.y,bottom]],
+                   each sdata,
+                   [for(p=last(sdata)) [p.x,p.y,bottom]]
+               ]
+             ) vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style, reverse=true)
+   ) reorient(anchor,spin,orient, vnf=vnf, p=vnf, cp=cp, extent=atype=="hull");
 
 
 
@@ -5346,11 +5379,9 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   path = path to revolve to produce the shape.  (If omitted you must supply cylinder parameters.)
 //   rclip = A vector `[rmin,rmax]' that constrains the output of function to these bounds, which may be infinite. Cannot be used with `rspan`.
 //   rspan = Rescale and shift the function values so the minimum value of f appears at rspan[0] and the maximum at rspan[1].  Cannot be used with `rclip`.
-//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
-//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top toward.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 4
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
@@ -5392,17 +5423,18 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4,
                          anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false)
   vnf_polyhedron(plot_revolution(f=f,angle=angle,z=z,arclength=arclength,path=path, rclip=rclip, rspan=rspan, horiz=horiz, style=style, reverse=reverse,
-                                 r=r,d=d,r1=r1,d1=d1,r2=r2,d2=d2), anchor=anchor, orient=orient, spin=spin, atype=atype, cp=cp);
+                                 r=r,d=d,r1=r1,d1=d1,r2=r2,d2=d2), anchor=anchor, orient=orient, spin=spin, atype=atype, cp=cp, convexity=convexity) children();
  
 function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,
                          anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false) =
+   assert(in_list(atype, _ANCHOR_TYPES), "\nAnchor type must be hull or intersect.")
    assert(num_defined([angle,arclength])==1, "\nMust define exactly one of angle and arclength.")
    assert(is_undef(z) || is_vector(z) || valid_range(z), "\nz must be a vector or nonempty range.")
    assert(is_undef(path) || num_defined([r1,r2,d1,d2,r,d,z])==0, "\nCannot define the z parameter or any radius or diameter parameters in combination with path.")
    assert(num_defined([rclip,rspan])<2, "\nCannot give both rclip and rspan.")
-   assert(is_undef(rclip) || (is_list(rclip) && len(rclip)==2 && is_finite(rclip[0]) && rclip[0]>0 && is_num(rclip[1])),
-          "\nrclip must be a list of two values (r[1] may be infinite).")
-   assert(is_undef(rspan) || (is_vector(rspan,2) && rspan[0]>0 && rspan[0]<rspan[1]) ,"rspan must be a 2-vector whose first entry is smaller than the second")
+   assert(is_undef(rclip) || (is_list(rclip) && len(rclip)==2 && is_num(rclip[0]) && is_num(rclip[1]) && rclip[0]<=rclip[1]),
+          "\nrclip must be an ordered pair of bounds, which may be infinite.")
+   assert(is_undef(rspan) || (is_vector(rspan,2) && rspan[0]<rspan[1]) ,"rspan must be a 2-vector whose first entry is smaller than the second")
    let(
        r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
        r2 = get_radius(r1=r2, r=r, d1=d2, d=d),
@@ -5428,10 +5460,11 @@ function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1
        minval = min(flatten(rdata)),
        maxval = max(flatten(rdata)),
        sdata = is_undef(rspan) ? rdata
-             : let(
+              : assert(maxval>minval, "\nCannot rescale constant plot data with rspan.")
+               let(
                     scale = (rspan[1]-rspan[0])/(maxval-minval)
                )
-               [for(row=rdata) [for (entry=row) scale*(entry.z-minval)+rspan[0]]],
+               [for(row=rdata) [for (entry=row) scale*(entry-minval)+rspan[0]]],
        closed = is_def(angle) && last(thetarange)-thetarange[0]==360,
        final = [for(i=idx(path))
                   let(
@@ -5444,9 +5477,9 @@ function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1
                    for(j=idx(sdata[0]))
                        cylindrical_to_xyz(max(rmin,path[i].x+sdata[i][j]*normals[i].x), angscale*thetarange[j], path[i].y+sdata[i][j]*normals[i].y)
                    ]
-               ]
-   )
-   vnf_vertex_array(final, col_wrap=true, caps=true,reverse=!reverse, style=style);
+               ],
+        vnf = vnf_vertex_array(final, col_wrap=true, caps=true,reverse=!reverse, style=style)
+    ) reorient(anchor,spin,orient, vnf=vnf, p=vnf, cp=cp, extent=atype=="hull");
 
 
 

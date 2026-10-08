@@ -173,7 +173,7 @@ function all_integer(x) =
 //   bool = is_nan(42);     // Returns: false
 //   bool = is_nan("foo");  // Returns: false
 //   bool = is_nan(NAN);    // Returns: true
-function is_nan(x) = (x!=x);
+function is_nan(x) = !is_list(x) && (x!=x);
 
 
 // Function: is_finite()
@@ -281,7 +281,7 @@ function is_func(x) = version_num()>20210000 && is_function(x);
 //   is_consistent([3,4,5], 0);            // Returns true
 //   is_consistent([3,4,undef], 0);        // Returns false
 //   is_consistent([[3,4],[4,5]], [1,1]);  // Returns true
-//   is_consistent([[3,"a"],[4,true]], [1,undef]);  // Returns true
+//   is_consistent([[3,"a"],[4,true]], [1,undef]);  // Returns false
 //   is_consistent([[3,4], 6, [4,5]], [1,1]);  // Returns false
 //   is_consistent([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returns true
 //   is_consistent([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returns false
@@ -301,13 +301,14 @@ function _list_pattern(list) =
 
 
 // Function: same_shape()
-// Synopsis: Returns true if the argument lists are numeric and of the same shape.
+// Synopsis: Checks that the second argument is numeric and matches the first argument's structure.
 // Topics: Type Checking, Testing
 // See Also: is_homogeneous(), is_consistent()
 // Usage:
 //   bool = same_shape(a,b);
 // Description:
-//   Tests whether the inputs `a` and `b` are both numeric and are the same shaped list.
+//   Uses `a` as a structural pattern and checks that `b` has the same structure and finite numeric contents.
+//   The contents of `a` are not validated; check them separately when both inputs must be numeric.
 // Example:
 //   same_shape([3,[4,5]],[7,[3,4]]);   // Returns true
 //   same_shape([3,4,5], [7,[3,4]]);    // Returns false
@@ -719,13 +720,15 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   r = get_radius(r1=undef, r2=8, d=6, dflt=1);    // Returns: 8
 //   r = get_radius(r1=undef, d=6, dflt=1);          // Returns: 3
 //   r = get_radius(d1=7, d=6, dflt=1);              // Returns: 3.5
-//   r = get_radius(d1=7, d2=8, d=6, dflt=1);        // Returns: 3.5
+//   // get_radius(d1=7, d2=8, d=6, dflt=1);  // Error: conflicting specific diameters.
 //   r = get_radius(d1=undef, d2=8, d=6, dflt=1);    // Returns: 4
 //   r = get_radius(r1=8, d=6, dflt=1);              // Returns: 8
 function get_radius(r1, r2, r, d1, d2, d, dflt) = 
     assert(num_defined([r1,d1,r2,d2])<2, "Conflicting or redundant radius/diameter arguments given.")
     assert(num_defined([r,d])<2, "Conflicting or redundant radius/diameter arguments given.")
     let(
+        value = first_defined([r1,d1,r2,d2,r,d,dflt]),
+        valid = assert(is_undef(value) || is_finite(value) || is_vector(value), "Invalid radius or diameter."),
         rad = !is_undef(r1) ?  r1 
             : !is_undef(d1) ?  d1/2
             : !is_undef(r2) ?  r2
@@ -734,7 +737,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
             : !is_undef(d)  ?  d/2
             : dflt
     )
-    assert(is_undef(dflt) || is_finite(rad) || is_vector(rad), "Invalid radius." )
+    assert(is_undef(rad) || is_finite(rad) || is_vector(rad), "Invalid radius." )
     rad;
 
 
@@ -749,7 +752,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   same way that OpenSCAD expands short vectors in some contexts, e.g. cube(10) or rotate([45,90]).  
 //   If `v` is a scalar, and `dflt==undef`, returns `[v, v, v]`.
 //   If `v` is a scalar, and `dflt!=undef`, returns `[v, dflt, dflt]`.
-//   if `v` is a list of length 3 or more then returns `v`
+//   If `v` is a list of length 3 or more, returns its first three entries.
 //   If `v` is a list and dflt is defined, returns a length 3 list by padding with `dflt`
 //   If `v` is a list and dflt is undef, returns a length 3 list by padding with 0
 //   If `v` is `undef`, returns `undef`.
@@ -918,7 +921,7 @@ function _valstr(x) =
 //   Tests if the value gotten is what was expected, plus or minus 1e-9.  If not, then
 //   the expected and received values are printed to the console and
 //   an assertion is thrown to stop execution.
-//   Returns false if both 'got' and 'expected' are 'nan'.
+//   Fails when both inputs are NaN.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
@@ -951,7 +954,7 @@ module assert_approx(got, expected, info) {
 // Description:
 //   Tests if the value gotten is what was expected.  If not, then the expected and received values
 //   are printed to the console and an assertion is thrown to stop execution.
-//   Returns true if both 'got' and 'expected' are 'nan'.
+//   Fails when both inputs are NaN.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
@@ -1048,12 +1051,12 @@ module shape_compare(eps=1/1024) {
 //           looping(state);
 //           
 //           state = loop_while(state, i < len(l)),
-//           total = total +
+//           total = total + (
 //               loop_done(state) ? 0 :
 //               let( x = l[i] )
-//               is_list(x) ? flat_sum(x) : x,
+//               is_list(x) ? flat_sum(x) : x),
 //           i = i + 1
-//       ) if (loop_done(state)) total;
+//       ) if (loop_done(state)) total
 //   ].x;
 //   ```
 

@@ -124,18 +124,13 @@ function is_matrix_symmetric(A,eps=1e-12) =
 //   dim = if set, specify dimension in which the transform operates (2 or 3)
 //   centered = if true then require rotation to be around the origin.  Default: false
 function is_rotation(A,dim,centered=false) =
-    let(n=len(A))
     is_matrix(A,square=true)
-    && ( n==3 || n==4 && (is_undef(dim) || dim==n-1))
-    &&
-    (
-      let(
-          rotpart =  [for(i=[0:n-2]) [for(j=[0:n-2]) A[j][i]]]
-      )
-      approx(determinant(rotpart),1)
-    )
-    && 
-    (!centered || [for(row=[0:n-2]) if (!approx(A[row][n-1],0)) row]==[]);
+    && (let(n=len(A))
+        (n==3 || n==4) && (is_undef(dim) || dim==n-1)
+        && approx(A[n-1], [for(i=[0:1:n-2]) 0, 1])
+        && (let(R=submatrix(A,[0:n-2],[0:n-2]))
+            approx(transpose(R)*R,ident(n-1)) && approx(determinant(R),1))
+        && (!centered || [for(i=[0:n-2]) if(!approx(A[i][n-1],0)) i]==[]));
   
 
 // Function&Module: echo_matrix()
@@ -381,8 +376,9 @@ function transpose(M, reverse=false) =
 // Description:
 //    Returns a matrix where columns i and j are swapped.  The input must be a list of lists where each row has the same length.  
 // Arguments:
-//    M = matrix to transpose
-//    reverse = if true reflect across secondary diagonal.  Default: false
+//    M = Matrix whose columns to swap.
+//    i = First column index.
+//    j = Second column index.
 // Example:
 //    M = [
 //          [1, 2, 3, 0, 1], 
@@ -566,7 +562,7 @@ function block_matrix(M) =
 // Topics: Matrices, Linear Algebra
 // See Also: linear_solve3(), matrix_inverse(), rot_inverse(), back_substitute(), cholesky()
 // Usage:
-//   solv = linear_solve(A,b,[pivot])
+//   solv = linear_solve(A,b,[pivot],[method]);
 // Description:
 //   Solves the linear system Ax=b.  By default, uses the QR factorization, which is the slowest but most flexible
 //   solution method.  If `A` is square and non-singular the unique solution is returned.  If `A` is overdetermined
@@ -658,7 +654,7 @@ function linear_solve3(A,b) =
 // Usage:
 //    mat = matrix_inverse(A)
 // Description:
-//    Compute the matrix inverse of the square matrix `A`.  If `A` is singular, returns `undef`.
+//    Compute the matrix inverse of the square matrix `A`.  If `A` is singular, returns `[]`.
 //    Note that if you just want to solve a linear system of equations you should NOT use this function.
 //    Instead use {{linear_solve()}}, or use {{qr_factor()}}.  The computation
 //    will be faster and more accurate.  
@@ -684,7 +680,7 @@ function rot_inverse(T) =
         rotpart =  [for(i=[0:n-2]) [for(j=[0:n-2]) T[j][i]]],
         transpart = [for(row=[0:n-2]) T[row][n-1]]
     )
-    assert(approx(determinant(T),1),"Matrix is not a rotation")
+    assert(is_rotation(T),"Matrix is not a rotation")
     concat(hstack(rotpart, -rotpart*transpart),[[for(i=[2:n]) 0, 1]]);
 
 
@@ -695,10 +691,13 @@ function rot_inverse(T) =
 // Topics: Matrices, Linear Algebra
 // See Also: linear_solve(), linear_solve3(), matrix_inverse(), rot_inverse(), back_substitute(), cholesky()
 // Usage:
-//   x = null_space(A)
+//   x = null_space(A, [eps]);
 // Description:
 //   Returns an orthonormal basis for the null space of `A`, namely the vectors {x} such that Ax=0.
-//   If the null space is just the origin then returns an empty list. 
+//   If the null space is just the origin then returns an empty list.
+// Arguments:
+//   A = Matrix whose null space to compute.
+//   eps = Absolute tolerance for identifying zero rows of the pivoted QR factor. Default: 1e-12
 function null_space(A,eps=1e-12) =
     assert(is_matrix(A))
     let(
@@ -719,7 +718,7 @@ function null_space(A,eps=1e-12) =
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
 //   used to solve linear systems of equations.  The factorization is `A = Q*R*transpose(P)`.  If pivot is false (the default)
 //   then P is the identity matrix and A = Q*R.  If pivot is true then column pivoting results in an R matrix where the diagonal
-//   is non-decreasing.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
+//   has non-increasing magnitudes.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
 //   for rank estimation or computation of the null space, but it may be slower.  
 function qr_factor(A, pivot=false) =
     assert(is_matrix(A), "Input must be a matrix." )
@@ -749,12 +748,15 @@ function _makeP(p) =
 
 
 function _qr_factor(A, Q, p, pivot, col, m, n) =
-    col >= min(m-1, n) ? [Q, A, p] :
+    col >= min(m, n) ? [Q, A, p] :
     let(
         swapind = !pivot ? undef
                 : col+max_index([for(i=[col:n-1]) norm(slice(A[i],col,m-1))]),
         A = pivot ? list_swap(A,col,swapind) : A,
-        p = pivot ? list_swap(p,col,swapind) : p,
+        p = pivot ? list_swap(p,col,swapind) : p
+    )
+    col==m-1 ? [Q,A,p] :
+    let(
         x = slice(A[col],col,m-1),
         alpha = (x[0] <= 0 ? 1 : -1) * norm(x),
         u = x - concat([alpha], repeat(0, len(x)-1)),
@@ -814,12 +816,12 @@ function _lu_factor(L,U,perm,k)=
    let(
        n = len(U)
    )
-   k==n-1? [[each L,[each repeat(0,n-1),1]],U,perm]
+   k==n-1? (abs(U[k][k]) < _EPSILON ? undef : [[each L,[each repeat(0,n-1),1]],U,perm])
  :
    let(
-       p = k==0 ? 0 : k + max_index([for(i=[k:n-1]) abs(U[i][k])]),
+       p = k + max_index([for(i=[k:n-1]) abs(U[i][k])]),
        U = _swap_entries(U,p,k),
-       L = p==k ? L : L * _swap_matrix(n,p,k),
+       L = p==k || k==0 ? L : L * _swap_matrix(n,p,k),
        perm = _swap_entries(perm,p,k)
    )
    abs(U[k][k]) < _EPSILON ? undef
@@ -889,12 +891,16 @@ function _back_substitute(R, b, x=[]) =
 // Topics: Matrices, Linear Algebra
 // See Also: linear_solve(), linear_solve3(), matrix_inverse(), rot_inverse(), back_substitute(), cholesky()
 // Usage:
-//   L = cholesky(A);
+//   L = cholesky(A, [transpose]);
 // Description:
 //   Compute the cholesky factor, L, of the symmetric positive definite matrix A.
 //   The matrix L is lower triangular and `L * transpose(L) = A`.  If the A is
 //   not symmetric then an error is displayed.  If the matrix is symmetric but
-//   not positive definite then undef is returned.  
+//   not positive definite then undef is returned.
+//   With `transpose=true`, returns the upper triangular factor `U`, where `transpose(U)*U = A`.
+// Arguments:
+//   A = Symmetric positive definite matrix.
+//   transpose = Return the upper triangular factor instead of the lower triangular factor. Default: false
 function cholesky(A,transpose=false) =
   assert(is_matrix(A,square=true),"A must be a square matrix")
   assert(is_matrix_symmetric(A),"Cholesky factorization requires a symmetric matrix")

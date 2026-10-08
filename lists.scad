@@ -408,6 +408,7 @@ function list_bset(indexset, valuelist, dflt=0) =
     let( trueind = search([true], indexset,0)[0] )
     assert( !(len(trueind)>len(valuelist)), str("List `valuelist` too short; its length should be ",len(trueind)) )
     assert( !(len(trueind)<len(valuelist)), str("List `valuelist` too long; its length should be ",len(trueind)) )
+    trueind==[] ? repeat(dflt,len(indexset)) :
     concat(
         list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
         repeat(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
@@ -448,7 +449,7 @@ function list(l) = is_list(l)? l : [for (x=l) x];
 //   - If `value` is not a list, and `fill` is given, then a list `n` items long will be returned where `value` will be the first item, and the rest will contain the value of `fill`.
 // Arguments:
 //   value = The value or list to coerce into a list.
-//   n = The number of items in the coerced list.  Default: 1
+//   n = Nonnegative integer number of items in the coerced list. Zero returns an empty list. Default: 1
 //   fill = The value to pad the coerced list with, after the first value.  Default: undef (pad with copies of `value`)
 // Example:
 //   x = force_list([3,4,5]);  // Returns: [3,4,5]
@@ -457,6 +458,8 @@ function list(l) = is_list(l)? l : [for (x=l) x];
 //   w = force_list(4, n=3, fill=1);  // Returns: [4,1,1]
 function force_list(value, n=1, fill) =
     is_list(value) ? value :
+    assert(is_int(n) && n>=0, "n must be a nonnegative integer")
+    n==0 ? [] :
     is_undef(fill)? [for (i=[1:1:n]) value] : [value, for (i=[2:1:n]) fill];
 
 
@@ -633,15 +636,15 @@ function list_pad(list, minlen, fill) =
 //   list = List to set items in.  Default: []
 //   indices = List of indices into `list` to set.
 //   values = List of values to set.
-//   dflt = Default value to store in sparse skipped indices.
-//   minlen = Minimum length to expand list to.
+//   dflt = Default value to store in sparse skipped indices. Default: 0
+//   minlen = Minimum length to expand list to. Default: 0
 // Example:
 //   a = list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   b = list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) =
     assert(is_list(list))
     !is_list(indices)?
-        assert(is_finite(indices))
+        assert(is_int(indices), "Index must be an integer")
         let(
             index = indices<0 ? indices+len(list) : indices
         )
@@ -658,8 +661,8 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
         )
   : indices==[] && values==[]
       ? concat(list, repeat(dflt, minlen-len(list)))
-  : assert(is_vector(indices) && is_list(values) && len(values)==len(indices),
-           "Index list and value list must have the same length")
+  : assert(is_vector(indices) && all_integer(indices) && is_list(values) && len(values)==len(indices),
+           "Indices must be integers, and index/value lists must have the same length")
     let(  indices = [for(ind=indices) ind<0 ? ind+len(list) : ind],
           midx = max(len(list)-1, max(indices))
     )
@@ -687,7 +690,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 // Description:
 //   Takes the input list and returns a new list where `list[i]` and `list[j]` have switched values.  
 // Arguments:
-//   list = List to set items in.  Default: []
+//   list = List whose items to swap.
 //   i = first index to swap. 
 //   j = second index to swap. 
 // Example:
@@ -720,17 +723,17 @@ function list_swap(list,i,j) =
 function list_insert(list, indices, values) = 
     assert(is_list(list))
     !is_list(indices) ?
-        assert(is_finite(indices), "Invalid indices." )
+        assert(is_int(indices), "Index must be an integer." )
         let(indices = indices<0 ? indices+len(list) : indices)
-        assert(indices>=0, "Index is too small, must be >= len(list)")
+        assert(indices>=0, "Index is too small, must be >= -len(list)")
         assert( indices<=len(list), "Indices must be <= len(list) ." )
         [
           for (i=idx(list)) each ( i==indices?  [ values, list[i] ] : [ list[i] ] ),
           if (indices==len(list)) values
         ] :
     indices==[] && values==[] ? list :
-    assert( is_vector(indices) && is_list(values) && len(values)==len(indices),
-           "Index list and value list must have the same length")
+    assert( is_vector(indices) && all_integer(indices) && is_list(values) && len(values)==len(indices),
+           "Indices must be integers, and index/value lists must have the same length")
     assert( max(indices)<=len(list), "Indices must be <= len(list)." )
     let(
         indices = [for(ind=indices) ind<0 ? ind+len(list) : ind],
@@ -739,9 +742,10 @@ function list_insert(list, indices, values) =
     )
     assert(minidx>=0, "Index list contains values that are too small")
     assert(maxidx<=len(list), "Index list contains values that are too large")
+    assert(maxidx<len(list) || len(search(maxidx,indices,0))==1, "Repeated indices are not allowed.")
     [
         for (i=[0:1:minidx-1] ) list[i],
-        for (i=[minidx : min(maxidx, len(list)-1)] )
+        for (i=[minidx : 1 : min(maxidx, len(list)-1)] )
             let(
                 j = search(i,indices,0),
                 k = j[0],
@@ -771,7 +775,8 @@ function list_insert(list, indices, values) =
 //   c = list_remove([3,6],3);           // Returns: [3,6]
 function list_remove(list, ind) =
     assert(is_list(list), "Invalid list in list_remove")
-    is_finite(ind) ?
+    is_num(ind) ?
+        assert(is_int(ind), "Index must be an integer")
         (
          (ind<0 || ind>=len(list)) ? list
          :                                        
@@ -781,7 +786,7 @@ function list_remove(list, ind) =
             ]
         )
     :   ind==[] ? list
-    :   assert( is_vector(ind), "Invalid index list in list_remove")
+    :   assert( is_vector(ind) && all_integer(ind), "Indices in list_remove must be integers")
         let(sres = search(count(list),ind,1))
         [
             for(i=idx(list))
@@ -848,7 +853,7 @@ function list_remove_values(list,values=[],all=false) =
              allind==[] ? list : list_remove(list,allind)
            )
      )
-    :!all ? list_remove_values(list_remove_values(list, values[0],all=all), list_tail(values),all=all)
+    :!all ? list_remove_values(list_remove_values(list, [values[0]],all=all), list_tail(values),all=all)
     :    
     [
       for(i=idx(list))
@@ -1032,7 +1037,7 @@ function permutations(l,n=2) =
 //   groups = list_to_matrix(v, cnt, [dflt]);
 // Description:
 //   Takes a flat list of values, and groups items in sets of `cnt` length.
-//   The opposite of this is `flatten()`.
+//   The opposite of this is `flatten()`. Existing `undef` entries are also replaced by `dflt`.
 // Arguments:
 //   v = The list of items to group.
 //   cnt = The number of items to put in each grouping. 
@@ -1085,6 +1090,14 @@ function full_flatten(l) =
 
 // Section: Set Manipulation
 
+/// Whole-element index lookup; only misleading native search hits need a second search.
+function _set_search(value, items) =
+    let(hit=search([value],items,1)[0])
+    hit==[] || items[hit]==value ? hit :
+    let(hits=[for(i=search([value],items,0)[0]) if(items[i]==value) i])
+    hits==[] ? [] : hits[0];
+
+
 // Function: set_union()
 // Synopsis: Merges two lists, returning a list of unique items.
 // Topics: Set Handling, List Handling
@@ -1110,8 +1123,8 @@ function full_flatten(l) =
 function set_union(a, b, get_indices=false) =
     assert( is_list(a) && is_list(b), "Invalid sets." )
     let(
-        found1 = search(b, a),
-        found2 = search(b, b),
+        found1 = [for(value=b) _set_search(value,a)],
+        found2 = [for(value=b) _set_search(value,b)],
         c = [ for (i=idx(b))
                 if (found1[i] == [] && found2[i] == i)
                     b[i] 
@@ -1121,7 +1134,7 @@ function set_union(a, b, get_indices=false) =
     ! get_indices ? nset :
     let(
         la = len(a),
-        found3 = search(b, c),
+        found3 = [for(value=b) _set_search(value,c)],
         idxs =  [ for (i=idx(b))
                     (found1[i] != [])? found1[i] : la + found3[i]
                 ]
@@ -1146,7 +1159,7 @@ function set_union(a, b, get_indices=false) =
 //   // set_d now equals [7,11]
 function set_difference(a, b) =
     assert( is_list(a) && is_list(b), "Invalid sets." )
-    let( found = search(a, b, num_returns_per_match=1) )
+    let( found = [for(value=a) _set_search(value,b)] )
     [ for (i=idx(a)) if(found[i]==[]) a[i] ];
 
 
@@ -1168,7 +1181,7 @@ function set_difference(a, b) =
 //   // set_i now equals [2,3,5]
 function set_intersection(a, b) =
     assert( is_list(a) && is_list(b), "Invalid sets." )
-    let( found = search(a, b, num_returns_per_match=1) )
+    let( found = [for(value=a) _set_search(value,b)] )
     [ for (i=idx(a)) if(found[i]!=[]) a[i] ];
 
 
