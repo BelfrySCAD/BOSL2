@@ -1887,20 +1887,20 @@ module bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoin
 //   "end-centroid" = When `closed==false`, the centroid of the shape, on the ending face of the object
 // Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=29.7,VPT=[7.86,-4.31,7.11]): In this case the bezier path is constructed so that its end faces in the Z direction, but you can see a gap appears when the shape is mated to a cylinder because the angle at the end is not accurate.
 //    bezpath = flatten([
-//        bez_begin([0,0,0], UP, 3),
-//        bez_tang([0,0,1],UP,8,p=52),
-//        bez_end  ([8,9,3], FWD,10)
+//        bez_begin([0,0,0], UP, 1),
+//        bez_tang([0,0,1],UP, 1, 4),
+//        bez_end  ([8,9,8], FWD,10)
 //    ]);
-//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    cyl(r=2,h=3,anchor=TOP,$fn=12);
 //    path_sweep(circle(r=2,$fn=12),
 //            bezpath_curve(bezpath));
 // Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=29.7,VPT=[7.86,-4.31,7.11]): When the above example is implemented using `bezpath_sweep` the gap vanishes.
 //    bezpath = flatten([
-//        bez_begin([0,0,0], UP, 3),
-//        bez_tang([0,0,1],UP,8,p=52),
-//        bez_end  ([8,9,3], FWD,10)
+//        bez_begin([0,0,0], UP, 1),
+//        bez_tang([0,0,1],UP, 1, 4),
+//        bez_end  ([8,9,8], FWD,10)
 //    ]);
-//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    cyl(r=2,h=3,anchor=TOP,$fn=12);
 //    bezpath_sweep(circle(r=2,$fn=12),
 //                  bezpath);
 
