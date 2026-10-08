@@ -783,7 +783,7 @@ function is_path_simple(path, closed, eps=_EPSILON) =
 // Topics: Paths
 // See Also: point_line_distance(), line_closest_point()
 // Usage:
-//   index_pt = path_closest_point(path, pt);
+//   index_pt = path_closest_point(path, pt, [closed]);
 // Description:
 //   Finds the closest {{path}} segment, and {{point}} on that segment to the given point.
 //   Returns `[SEGNUM, POINT]`

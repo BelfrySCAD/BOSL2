@@ -501,7 +501,7 @@ module chain_hull()
 // Topics: Miscellaneous
 // See Also: offset3d(), round3d()
 // Usage:
-//   minkowski_difference() { BASE; DIFF1; DIFF2; ... }
+//   minkowski_difference([planar]) { BASE; DIFF1; DIFF2; ... }
 // Description:
 //   Takes a 3D base shape and one or more 3D diff shapes, carves out the diff shapes from the
 //   surface of the base shape, in a way complementary to how `minkowski()` unions shapes to the
@@ -593,10 +593,10 @@ module offset3d(r, size=1000, convexity=10) {
 // Topics: Rounding, Miscellaneous
 // See Also: offset3d(), minkowski_difference()
 // Usage:
-//   round3d(r) CHILDREN;
-//   round3d(or=) CHILDREN;
-//   round3d(ir=) CHILDREN;
-//   round3d(or=, ir=) CHILDREN;
+//   round3d(r, [size=]) CHILDREN;
+//   round3d(or=, [size=]) CHILDREN;
+//   round3d(ir=, [size=]) CHILDREN;
+//   round3d(or=, ir=, [size=]) CHILDREN;
 // Description:
 //   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`

@@ -110,7 +110,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Usage: Chamfered Cubes
 //   cuboid(size, [chamfer=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Rounded Cubes
-//   cuboid(size, [rounding=], [teardrop=], [edges=], [except=], [trimcorners=], ...);
+//   cuboid(size, [rounding=], [clip_angle=], [teardrop=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Attaching children
 //   cuboid(...) ATTACHMENTS;
 //
@@ -857,7 +857,10 @@ function prismoid(
 // Usage: Textured prisms
 //   regular_prism(n, h, r, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_inset=], ...);
 // Usage: Called as a function to get a VNF
-//   vnf = rounded_prism(...);
+//   vnf = regular_prism(...);
+// Usage: Angle-defined prisms
+//   regular_prism(n, h, r1=|d1=, ang=, ...) [ATTACHMENTS];
+//   regular_prism(n, r1=|d1=, r2=|d2=, ang=, ...) [ATTACHMENTS];
 // Description:
 //   Creates a prism whose ends are similar `n`-sided regular polygons, with optional rounding, chamfers or textures.
 //   You can specify the size of the ends using diameter or radius measured either inside or outside.  Alternatively
@@ -893,6 +896,7 @@ function prismoid(
 //   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
 //   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Arguments:
+//   n = Number of sides of each polygonal end.
 //   l / h / length / height = Length of prism
 //   r = Outer radius of prism.  
 //   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default is `anchor=CENTER`.
@@ -1176,9 +1180,14 @@ function regular_prism(n,
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators, Textures
 // See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep(), plot3d()
-// Usage:
-//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
-//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [tex_extra=], [tex_skip=], ...);
+// Usage: Rectangular base
+//   textured_tile(texture, size, tex_size=|tex_reps=, [tex_depth=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
+// Usage: Trapezoidal base
+//   textured_tile(texture, ysize=, w1=, w2=, [shift=], [h=|height=|thickness=], tex_size=|tex_reps=, [tex_depth=], [atype=], [diff=], ...) [ATTACHMENTS];
+//   textured_tile(texture, ysize=, w1=|w2=, ang=, [h=|height=|thickness=], tex_size=|tex_reps=, [tex_depth=], [atype=], [diff=], ...) [ATTACHMENTS];
+// Usage: As a Function
+//   vnf = textured_tile(texture, size, tex_size=|tex_reps=, [tex_depth=], [atype=], [tex_extra=], [tex_skip=], ...);
+//   vnf = textured_tile(texture, ysize=, w1=, w2=, [shift=], [h=|height=|thickness=], tex_size=|tex_reps=, [tex_depth=], [atype=], ...);
 // Description:
 //   Creates a cuboid or trapezoidal prism and places a texture on the top face.
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
@@ -1244,6 +1253,7 @@ function regular_prism(n,
 //   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if `tex_reps=[1,1]`, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
+//   atype = Anchor type: "tex" anchors around the texture alone; "std" anchors around the base object, ignoring the texture. Default: "tex"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM` if `atype` is "tex", `CENTER` otherwise
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2141,11 +2151,11 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //  }
 // Arguments:
 //   l / h / length / height = Length of cylinder along oriented axis.  Default: 1
-//   r = Radius of cylinder.  Default: 1
+//   r = Radius of cylinder, or radius of the negative end when r2 is given.  Default: 1
+//   r2 = Radius of the positive (X+, Y+, Z+) end of cylinder.
 //   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
 //   ---
 //   r1 = Radius of the negative (X-, Y-, Z-) end of cylinder.
-//   r2 = Radius of the positive (X+, Y+, Z+) end of cylinder.
 //   d = Diameter of cylinder.
 //   d1 = Diameter of the negative (X-, Y-, Z-) end of cylinder.
 //   d2 = Diameter of the positive (X+, Y+, Z+) end of cylinder.
@@ -3883,10 +3893,12 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: sphere()
-// Usage: Typical
-//   spheroid(r|d, [circum], [style]) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = spheroid(r|d, [circum], [style]);
+// Usage: As a Module
+//   spheroid(r, [style], [circum=]) [ATTACHMENTS];
+//   spheroid(d=, [style=], [circum=]) [ATTACHMENTS];
+// Usage: As a Function
+//   vnf = spheroid(r, [style], [circum=]);
+//   vnf = spheroid(d=, [style=], [circum=]);
 // Description:
 //   Creates a spheroid object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.  The `r` or `d` value can
@@ -4363,20 +4375,22 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: spheroid(), cyl()
 //
-// Usage: As Module
-//   torus(r_maj|d_maj, r_min|d_min, [center], ...) [ATTACHMENTS];
-//   torus(or|od, ir|id, ...) [ATTACHMENTS];
-//   torus(r_maj|d_maj, or|od, ...) [ATTACHMENTS];
-//   torus(r_maj|d_maj, ir|id, ...) [ATTACHMENTS];
-//   torus(r_min|d_min, or|od, ...) [ATTACHMENTS];
-//   torus(r_min|d_min, ir|id, ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = torus(r_maj|d_maj, r_min|d_min, [center], ...);
-//   vnf = torus(or|od, ir|id, ...);
-//   vnf = torus(r_maj|d_maj, or|od, ...);
-//   vnf = torus(r_maj|d_maj, ir|id, ...);
-//   vnf = torus(r_min|d_min, or|od, ...);
-//   vnf = torus(r_min|d_min, ir|id, ...);
+// Usage: As a Module
+//   torus(r_maj, r_min, [center], ...) [ATTACHMENTS];
+//   torus(r_maj=|d_maj=, r_min=|d_min=, [center=], ...) [ATTACHMENTS];
+//   torus(or=|od=, ir=|id=, ...) [ATTACHMENTS];
+//   torus(r_maj=|d_maj=, or=|od=, ...) [ATTACHMENTS];
+//   torus(r_maj=|d_maj=, ir=|id=, ...) [ATTACHMENTS];
+//   torus(r_min=|d_min=, or=|od=, ...) [ATTACHMENTS];
+//   torus(r_min=|d_min=, ir=|id=, ...) [ATTACHMENTS];
+// Usage: As a Function
+//   vnf = torus(r_maj, r_min, [center], ...);
+//   vnf = torus(r_maj=|d_maj=, r_min=|d_min=, [center=], ...);
+//   vnf = torus(or=|od=, ir=|id=, ...);
+//   vnf = torus(r_maj=|d_maj=, or=|od=, ...);
+//   vnf = torus(r_maj=|d_maj=, ir=|id=, ...);
+//   vnf = torus(r_min=|d_min=, or=|od=, ...);
+//   vnf = torus(r_min=|d_min=, ir=|id=, ...);
 //
 // Description:
 //   Creates an attachable toroidal shape.
@@ -4540,6 +4554,8 @@ function torus(
 //   ---
 //   circum = produce a circumscribing teardrop shape.  Default: false
 //   bot_corner = create a bottom corner the specified distance below the given radius.  Default: 0
+//   bot_corner1 = Bottom-corner distance below the circular radius at the front end. Overrides bot_corner.
+//   bot_corner2 = Bottom-corner distance below the circular radius at the back end. Overrides bot_corner.
 //   r1 = Radius of circular portion of the front end of the teardrop shape.
 //   r2 = Radius of circular portion of the back end of the teardrop shape.
 //   d = Diameter of circular portion of the teardrop shape.
@@ -4774,7 +4790,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP, circum=fal
 // Topics: Attachments, Text
 // See Also: path_text(), text() 
 // Usage:
-//   text3d(text, [h], [size], [font], [em=], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
+//   text3d(text, [h], [size], [font], [em=], [spacing=], [center=], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
 // Description:
 //   Creates a 3D text block that supports anchoring and single-parameter attachment to attachable objects.  You cannot attach children to text.
 //   .
@@ -4886,8 +4902,10 @@ function _cut_interp(pathcut, path, data) =
 // SynTags: Geom
 // Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
 // See Also, text(), text2d()
-// Usage:
-//   path_text(path, text, [size], [thickness], [font], [lettersize=], [offset=], [reverse=], [normal=], [top=], [textmetrics=], [kern=])
+// Usage: Along a 2D path
+//   path_text(path, text, size, [font=], [lettersize=], [center=], [top=], [textmetrics=], [valign=], [kern=], [language=], [script=]);
+// Usage: Along a 3D path
+//   path_text(path, text, size, [thickness], [font], [lettersize=], [offset=], [reverse=], [normal=|top=], [center=], [textmetrics=], [valign=], [kern=], [language=], [script=]);
 // Description:
 //   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
 //   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
@@ -5016,7 +5034,7 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
 //   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false,
+module path_text(path, text, size, thickness, font, lettersize, offset=0, reverse=false, normal, top, center=false,
                  textmetrics=false, kern=0, height,h, valign="baseline", language, script)
 {
   no_children($children);
@@ -5330,13 +5348,15 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 // SynTags: Geom, VNF
 // Topics: Function Plotting
 // See Also: plot3d()
-// Usage: To create a cylinder or cone (by angle)
-//   plot_revolution(f, angle, z, [r=/d=] [r1=/d1], [r2=/d2=], [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
-// Usage: To create a cylinder or cone (by arclength)
-//   plot_revolution(f, arclength=, z=, [r=/d=] [r1=/d1], [r2=/d2=], [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
-// Usage: To create a surface of revolution
-//   plot_revolution(f, [angle], [arclength=], path=, [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
-// Usage: As Function
+// Usage: Around a cylinder
+//   plot_revolution(f, angle, z, r=|d=, [rclip=|rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+//   plot_revolution(f, arclength=, z=, r=|d=, [rclip=|rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: Around a cone
+//   plot_revolution(f, angle, z, r1=|d1=, r2=|d2=, [rclip=|rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+//   plot_revolution(f, arclength=, z=, r1=|d1=, r2=|d2=, [rclip=|rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: Revolving a profile
+//   plot_revolution(f, angle=|arclength=, path=, [rclip=|rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: As a Function
 //   vnf = plot_revolution(...);
 // Description:
 //   Given a function literal, `f`, sets `r=f(theta,z)` over a range of theta and z values, and uses the
@@ -5377,6 +5397,7 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   r2 / d2 = radius or diameter of top end (not allowed with `path`)
 //   arclength = list or range of arc length values where the function is calculated 
 //   path = path to revolve to produce the shape.  (If omitted you must supply cylinder parameters.)
+//   horiz = If true, apply the plotted displacement radially; otherwise apply it along the profile normal. Default: false
 //   rclip = A vector `[rmin,rmax]' that constrains the output of function to these bounds, which may be infinite. Cannot be used with `rspan`.
 //   rspan = Rescale and shift the function values so the minimum value of f appears at rspan[0] and the maximum at rspan[1].  Cannot be used with `rclip`.
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"

@@ -139,8 +139,12 @@ _BOSL2_ROUNDING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BO
 // SynTags: Path
 // Topics: Rounding, Paths
 // See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
-// Usage:
-//   rounded_path = round_corners(path, [method], [radius=], [cut=], [joint=], [closed=], [verbose=]);
+// Usage: Circular rounding (the default method)
+//   rounded_path = round_corners(path, radius=|r=|cut=|joint=, [closed=], [verbose=]);
+// Usage: Chamfering
+//   rounded_path = round_corners(path, "chamfer", width=|cut=|joint=, [closed=], [verbose=]);
+// Usage: Continuous-curvature rounding
+//   rounded_path = round_corners(path, "smooth", cut=|joint=, [k=], [closed=], [verbose=]);
 // Description:
 //   Takes a 2D or 3D path as input and rounds each corner
 //   by a specified amount.  The rounding at each point can be different and some points can have zero
@@ -2026,7 +2030,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 // Topics: Rounding, Offsets
 // See Also: offset_sweep(), rounded_prism(), bent_cutout_mask(), join_prism(), linear_sweep()
 // Usage: Basic usage.  See below for full options
-//   convex_offset_extrude(height, [bottom], [top], ...) 2D-CHILDREN;
+//   convex_offset_extrude(height, [bottom], [top], [offset=], [steps=], [extra=], [convexity=], ...) 2D-CHILDREN;
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -2986,6 +2990,11 @@ Access to the derivative smoothing parameter?
 //   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 // Usage: As function
 //   vnf = join_prism( ... );
+// Usage: Joining a cylinder or sphere
+//   join_prism(polygon, "cyl", base_r=|base_d=, length=|height=|l=|h=, fillet=, [base_T=], ...) [ATTACHMENTS];
+//   join_prism(polygon, "sphere", base_r=|base_d=, length=|height=|l=|h=, fillet=, [base_T=], ...) [ATTACHMENTS];
+// Usage: Between two analytic surfaces
+//   join_prism(polygon, "cyl", base_r=|base_d=, aux="sphere", aux_r=|aux_d=, fillet=, [base_T=], [aux_T=], ...) [ATTACHMENTS];
 // Description:
 //   This function creates a smooth fillet between one or both ends of an arbitrary prism and various other shapes: a plane, a sphere, a cylinder,
 //   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is general
@@ -4199,7 +4208,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Topics: Rounding, Extrusion, Sweep, Descriptions
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
-//   prism_connector(profile, desc1, anchor1, desc2, anchor2, [fillet=], [fillet1=], [fillet2=], [spin_align=], [scale=], [shift1=], [shift2]=, [shift=], [n=], [n1=], [n2=], [k=], [k1=], [k2=], [uniform=], [uniform1=], [uniform2=], [overlap=], [overlap1=], [overlap2=], [smooth_normals=], [smooth_normals=], [smooth_normals1]=, [smooth_normals2=], [debug=], [debug_pos=]);
+//   prism_connector(profile, desc1, anchor1, desc2, anchor2, [fillet=], [fillet1=], [fillet2=], [spin_align=], [scale=], [shift1=], [shift2=], [shift=], [n=], [n1=], [n2=], [k=], [k1=], [k2=], [uniform=], [uniform1=], [uniform2=], [overlap=], [overlap1=], [overlap2=], [smooth_normals=], [smooth_normals1=], [smooth_normals2=], [debug=], [debug_pos=]);
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface

@@ -28,7 +28,7 @@ function _is_liststr(s) = is_list(s) || is_str(s);
 // Arguments:
 //   str = string to operate on
 //   pos = starting index of substring, or vector of first and last position.  Default: 0
-//   len = length of substring, or omit it to get the rest of the string.  If len is zero or less then the emptry string is returned.
+//   len = length of substring, or omit it to get the rest of the string.  If len is zero or less then the empty string is returned.
 // Example:
 //   s1=substr("abcdefg",3,3);     // Returns "def"
 //   s2=substr("abcdefg",2);       // Returns "cdefg"
@@ -45,7 +45,7 @@ function _substr(str,pos,len) =
     assert(pos>=0,"\npos value for substr() must be nonnegative.")
     len <= 0 || pos>=len(str) ? ""
   :
-    chr([for(i=[pos:pos+len-1]) ord(str[i])]);
+    chr([for(i=[pos:1:min(pos+len-1,len(str)-1)]) ord(str[i])]);
                               
 
 // Function: suffix()
@@ -74,19 +74,22 @@ function suffix(str,len) =
 // Usage:
 //   ind = str_find(str,pattern,[last=],[all=],[start=]);
 // Description:
-//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
+//   Searches `str` for `pattern` and returns the index or indices of the matches. Strings and lists
+//   are accepted; list patterns are compared by element equality.
 //   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
-//   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
+//   For an empty pattern, the first match is at zero and the last is at `len(str)`. 
 //   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
 //   and `last` is true then the search finds the pattern if it begins at index `start`. If no match exists, returns `undef`.
+//   .
 //   If you set `all` to true then `str_find()` returns all of the matches as a list, or an empty list if there are no matches.
+//   You cannot set `start` in this case.  The empty string matches every index position.
 // Arguments:
-//   str = String to search.
-//   pattern = string pattern to search for
+//   str = String or list to search.
+//   pattern = String or list pattern to search for
 //   ---
 //   last = set to true to return the last match. Default: false
 //   all = set to true to return all matches as a list.  Overrides last.  Default: false
-//   start = index where the search starts
+//   start = index where the search starts. Cannot be combined with `all=true`.
 // Example:
 //   a=str_find("abc123def123abc","123");   // Returns 3
 //   b=str_find("abc123def123abc","b");     // Returns 1
@@ -107,9 +110,10 @@ function suffix(str,len) =
 function str_find(str,pattern,start=undef,last=false,all=false) =
     assert(_is_liststr(str), "\nstr must be a string or list.")
     assert(_is_liststr(pattern), "\npattern must be a string or list.")
+    assert(!all || is_undef(start), "\nCannot combine start with all=true.")
     all? _str_find_all(str,pattern) :
     let( start = first_defined([start,last?len(str)-len(pattern):0]) )
-    pattern==""? start :
+    len(pattern)==0? start :
     last? _str_find_last(str,pattern,start) :
     _str_find_first(str,pattern,len(str)-len(pattern),start);
 
@@ -133,11 +137,13 @@ function _str_find_all(str, pattern) =
     let(n = len(str), m = len(pattern))
     m == 0 ? count(n)
     : m > n ? [] : let( // get candidate test positions based on OpenSCAD search()
-        candidates = search(pattern[0], str, num_returns_per_match=0)[0]
+        candidates = is_string(str) && is_string(pattern)
+            ? search(pattern[0], str, num_returns_per_match=0)[0]
+            : [for (i=[0:1:n-m]) if (str[i]==pattern[0]) i]
     ) is_undef(candidates) ? []
     : m==1 ? candidates
     : let(m1=m-1) [ for(p = candidates)
-        if (str[p+m1] == pattern[m1]) // test last char in pattern before rest of pattern
+        if (p<=n-m && str[p+m1] == pattern[m1]) // test last char before the rest of the pattern
             if(m==2 || _substr_match_recurse(str,p+1,pattern,m1,1)) p ];
 
 
@@ -146,17 +152,17 @@ function _str_find_all(str, pattern) =
 // Synopsis: Returns true if the string `pattern` matches the string `str`.
 // Topics: Strings
 // See Also: suffix(), str_find(), substr_match(), starts_with(), ends_with(), str_split(), str_join(), str_strip()
-// Usage
+// Usage:
 //   bool = substr_match(str,start,pattern);
 // Description:
-//   Returns true if the string `pattern` matches the string `str` starting
-//   at `str[start]`.  If the string is too short for the pattern, or
+//   Returns true if `pattern` matches `str` starting at `str[start]`. Strings and lists are
+//   accepted; list patterns are compared by element equality. If the input is too short for the pattern, or
 //   `start` is out of bounds – either negative or beyond the end of the
 //   string – then substr_match returns false.
 // Arguments:
-//   str = String to search
+//   str = String or list to search
 //   start = Starting index for search in str
-//   pattern = String pattern to search for
+//   pattern = String or list pattern to search for
 // Example:
 //   a=substr_match("abcde",2,"cd");   // Returns true
 //   b=substr_match("abcde",2,"cx");   // Returns false
@@ -171,7 +177,7 @@ function _str_find_all(str, pattern) =
 function substr_match(str,start,pattern) =
      assert(_is_liststr(str), "\nstr must be a string or list.")
      assert(_is_liststr(pattern), "\npattern must be a string or list.")
-     len(str)-start <len(pattern)? false
+     start<0 || len(str)-start <len(pattern)? false
    : _substr_match_recurse(str,start,pattern,len(pattern));
 
 function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
@@ -220,24 +226,28 @@ function ends_with(str,pattern) = _is_liststr(str) && substr_match(str,len(str)-
 
 
 // Function: str_split()
-// Synopsis: Splits a longer string wherever a given substring occurs.
+// Synopsis: Splits a string at delimiter characters.
 // Topics: Strings
 // See Also: suffix(), str_find(), substr_match(), starts_with(), ends_with(), str_split(), str_join(), str_strip()
 // Usage:
 //   string_list = str_split(str, sep, [keep_nulls]);
 // Description:
-//   Breaks an input string into substrings using a separator or list of separators.  If keep_nulls is true
+//   Breaks an input string into substrings using single character deliminters.  If keep_nulls is true
 //   then two sequential separator characters produce an empty string in the output list.  If keep_nulls is false
 //   then no empty strings are included in the output list.
 //   .
 //   If sep is a single string then each character in sep is treated as a delimiting character and the input string is
 //   split at every delimiting character.  Empty strings can occur whenever two delimiting characters are sequential.
-//   If sep is a list of strings then the input string is split sequentially using each string from the list in order.
+//   If sep is a list, each entry is a set of delimiter characters for each successive split.  The first
+//   occurrence of any character in any entry defines a splitting point.  Then the next string is used to provide delimiters
+//   for the next split and so on.  Delimiters are always single characters: a list of strings does **not** provide multi-character
+//   delimiting strings, so "<=" always means either "<" or "=" can be deliminters and never that the string "<=" is sought as a delimiter.  
+//   Characters within each separator string should be distinct.
 //   If keep_nulls is true then the output length is equal to `len(sep)+1`, possibly with trailing null strings
 //   if the string runs out before the separator list.
 // Arguments:
 //   str = String to split.
-//   sep = a string or list of strings to use for the separator
+//   sep = A set of delimiter characters, or a list of character sets used for successive splits.
 //   keep_nulls = boolean value indicating whether to keep null strings in the output list.  Default: true
 // Example:
 //   s1=str_split("abc+def-qrs*iop","*-+");     // Returns ["abc", "def", "qrs", "iop"]
@@ -256,7 +266,7 @@ function _str_split_recurse(str,sep,i,result) =
     i == len(sep) ? concat(result,[str]) :
     let(
         pos = search(sep[i], str),
-        end = pos==[] ? len(str) : pos[0]
+        end = pos==[] ? len(str) : min(pos)
     )
     _str_split_recurse(
         substr(str,end+1),
@@ -273,7 +283,7 @@ function _remove_empty_strs(list) =
 
 
 // Function: str_join()
-// Synopsis: Joints a list of strings into a single string.
+// Synopsis: Joins a list of strings into a single string.
 // Topics: Strings
 // See Also: suffix(), str_find(), substr_match(), starts_with(), ends_with(), str_split(), str_join(), str_strip()
 // Usage:
@@ -345,7 +355,7 @@ function str_strip(s,c,start,end) =
 // Topics: Strings
 // See Also: suffix(), str_find(), substr_match(), starts_with(), ends_with(), str_split(), str_join(), str_strip()
 // Usage:
-//   padded = str_pad(str, length, char, [left]);
+//   padded = str_pad(str, length, [char], [left]);
 // Description:
 //   Pad the given string `str` with to length `length` with the specified character,
 //   which must be a length 1 string.  If left is true then pad on the left, otherwise
@@ -383,10 +393,10 @@ function str_pad(str,length,char=" ",left=false) =
 //   .
 // Arguments:
 //   str = string to process
-//   search = single character string to search for
+//   search = substring to search for
 //   replace = string that replaces all copies of `search`
 // Example:
-//   s1 = str_replace_char("abcdefgabcdefg","bc","XYZ");     // Returns: "aXYZdefgaXYZdefg"
+//   s1 = str_replace("abcdefgabcdefg","bc","XYZ");     // Returns: "aXYZdefgaXYZdefg"
 
 /// Tested to be 2 orders of magnitude faster than using a version with substr().
 function str_replace(str, search, replace) =
@@ -451,7 +461,7 @@ function str_replace_char(str,char,replace) =
 // Topics: Strings
 // See Also: str_strip()
 // Usage:
-//   newstr = str_collapse_char(str, char);
+//   newstr = str_collapse_char(str, [char]);
 // Description:
 //  Collapse any repeated sequences of a specified character in the input string into a single character.
 //  This is useful to collapse multiple sequental spaces in a string that spans multiple indented lines in your source code.
@@ -470,7 +480,7 @@ function str_collapse_char(str, char=" ") =
     assert(is_str(str))
     assert(is_str(char) && len(char)==1, "\nSearch pattern 'char' must be a single character string.")
     let(oc = ord(char), n=len(str)-1)
-        chr([for(i=[0:n]) let(c=ord(str[i]))
+        chr([for(i=[0:1:n]) let(c=ord(str[i]))
             if (c!=oc || i==0 || ord(str[i-1])!=c) c]);
 
 
@@ -549,7 +559,7 @@ function rand_str(n, charset, seed) =
 //   upper case or lower case.
 // Arguments:
 //   str = String to convert.
-//   base = Base for conversion, from 2-16.  Default: 10
+//   base = Integer base for conversion, from 2-16.  Default: 10
 // Example:
 //   parse_int("349");        // Returns 349
 //   parse_int("-37");        // Returns -37
@@ -561,6 +571,7 @@ function rand_str(n, charset, seed) =
 //   parse_int("CEDE", 16);   // Returns 52958
 //   parse_int("");           // Returns 0
 function parse_int(str,base=10) =
+    assert(is_int(base) && base>=2 && base<=16, "\nbase must be an integer from 2 to 16.")
     str==undef ? undef
   : assert(is_str(str))
     len(str)==0 ? 0
@@ -570,6 +581,7 @@ function parse_int(str,base=10) =
   : _parse_int_recurse(str,base,len(str)-1);
 
 function _parse_int_recurse(str,base,i) =
+    i<0 ? NAN :
     let(
         digit = search(str[i],"0123456789abcdef"),
         last_digit = digit == [] || digit[0] >= base ? (0/0) : digit[0]
@@ -596,17 +608,25 @@ function _parse_int_recurse(str,base,i) =
 //   parse_float("-44.9E2");  // Returns -4490
 //   parse_float("7.342e-4"); // Returns 0.0007342
 //   parse_float("");         // Returns 0
+
 function parse_float(str) =
     str==undef ? undef
   : assert(is_str(str))
-    len(str) == 0 ? 0
-  : in_list(str[1], ["+","-"]) ? (0/0)  // Don't allow --3, or +-3
-  : str[0]=="-" ? -parse_float(substr(str,1))
-  : str[0]=="+" ?  parse_float(substr(str,1))
-  : let(esplit = str_split(str,"eE") )
-    len(esplit)==2 ? parse_float(esplit[0]) * pow(10,parse_int(esplit[1]))
-  : let( dsplit = str_split(str,["."]))
-    parse_int(dsplit[0])+parse_int(dsplit[1])/pow(10,len(dsplit[1]));
+    str=="" ? 0
+  : let(
+        negative = str[0]=="-",
+        body = negative || str[0]=="+" ? substr(str,1) : str,
+        esplit = str_split(body,"eE"),
+        dsplit = str_split(esplit[0],"."),
+        whole = dsplit[0],
+        frac = len(dsplit)==2 ? dsplit[1] : "",
+        exponent = len(esplit)==2 ? esplit[1] : "0"
+    )
+    len(esplit)>2 || len(dsplit)>2 || exponent=="" ||
+    (whole=="" && frac=="") ||
+    (whole!="" && !is_digit(whole)) || (frac!="" && !is_digit(frac)) ? NAN :
+    (negative ? -1 : 1) *
+        (parse_int(whole) + parse_int(frac)/pow(10,len(frac))) * pow(10,parse_int(exponent));
 
 
 // Function: parse_frac()
@@ -645,25 +665,27 @@ function parse_float(str) =
 //   parse_frac("-2 12/4",signed=false);   // Returns nan
 //   parse_frac("-2 12/4",mixed=false);    // Returns nan
 //   parse_frac("2 1/4",mixed=false);      // Returns nan
+
 function parse_frac(str,mixed=true,improper=true,signed=true) =
-    str == undef ? undef
+    str==undef ? undef
   : assert(is_str(str))
-    len(str)==0 ? 0
-  : str[0]==" " ? NAN
-  : signed && str[0]=="-" ? -parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
-  : signed && str[0]=="+" ?  parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
-  : mixed && (str_find(str," ")!=undef || str_find(str,"/")==undef)?   // Mixed allowed and there is a space or no slash
-        let(whole = str_split(str,[" "]))
-        _parse_int_recurse(whole[0],10,len(whole[0])-1) + parse_frac(whole[1], mixed=false, improper=improper, signed=false)
-  : let(split = str_split(str,"/"))
-    len(split)!=2 ? NAN
+    str=="" ? 0
   : let(
-        numerator =  _parse_int_recurse(split[0],10,len(split[0])-1),
-        denominator = _parse_int_recurse(split[1],10,len(split[1])-1)
+        has_sign = str[0]=="-" || str[0]=="+",
+        sgn = str[0]=="-" ? -1 : 1,
+        body = has_sign ? substr(str,1) : str,
+        whole = str_split(body," ")
     )
-    !improper && numerator>=denominator? NAN
-  : denominator<0 ? NAN
-  : numerator/denominator;
+    (!signed && has_sign) || body=="" || len(whole)>2 ? NAN :
+    len(whole)==2 ?
+        (!mixed || !is_digit(whole[0]) || whole[1]=="" ? NAN :
+         sgn * (parse_int(whole[0]) + parse_frac(whole[1],mixed=false,improper=improper,signed=false))) :
+    let(parts = str_split(body,"/"))
+    len(parts)==1 ? (mixed && is_digit(body) ? sgn*parse_int(body) : NAN) :
+    len(parts)!=2 || !is_digit(parts[0]) || !is_digit(parts[1]) ? NAN :
+    let(numerator=parse_int(parts[0]), denominator=parse_int(parts[1]))
+    !improper && numerator>=denominator ? NAN :
+    sgn * numerator/denominator;
 
 
 // Function: parse_num()
@@ -673,7 +695,8 @@ function parse_frac(str,mixed=true,improper=true,signed=true) =
 // Usage:
 //   num = parse_num(str);
 // Description:
-//   Converts a string to a number.  The string can be either a fraction (two integers separated by a "/") or a floating point number.
+//   Converts a string to a number. The string can be a fraction (two integers separated by a "/" like "3/4"), a mixed fraction (an integer followed
+//   by a space and then a fraction like "4 2/3"), or a floating point number.
 //   Returns NaN if the conversion fails.
 // Arguments:
 //   str = string to process
@@ -708,14 +731,30 @@ function parse_num(str) =
 //   format_int(123456789012345);  // Returns "123456789012345"
 //   format_int(-123456789012345); // Returns "-123456789012345"
 //   format_int(12,3);             // Returns 012
+
 function format_int(i,mindigits=1) =
-    i<0? str("-", format_int(-i,mindigits)) :
-    let(i=floor(i), e=floor(log(i)))
-    i==0? chr([for (j=[0:1:mindigits-1]) 48]) :
+    assert(is_finite(i), "\nInput must be a finite number.")
+    assert(is_int(mindigits) && mindigits>=0, "\nmindigits must be a nonnegative integer.")
+    i<0 ? str("-", format_int(-i,mindigits)) :
+    let(i=floor(i))
+    i==0 ? chr([for (j=[0:1:max(1,mindigits)-1]) 48]) :
+    let(e=_str_decimal_parts(i)[0])
     chr([
           for (j=[0:1:mindigits-e-2]) 48,
           for (j=[e:-1:0]) 48+(floor(i/pow(10,j)%10))
         ]);
+
+
+/// Return the decimal exponent and a significand in [1,10), without
+/// overflowing the normalization factor for very small finite inputs.
+function _str_decimal_parts(f) =
+    let(
+        e = floor(log(f)),
+        m = e < -300 ? (f*1e300)/pow(10,e+300)
+          : e > 300 ? (f/1e300)/pow(10,e-300)
+          : f/pow(10,e)
+    )
+    m>=10 ? [e+1,m/10] : m<1 ? [e-1,m*10] : [e,m];
 
 
 // Function: format_fixed()
@@ -728,10 +767,10 @@ function format_int(i,mindigits=1) =
 //   Given a floating point number, formats it into a string with the given number of digits after the decimal point.
 // Arguments:
 //   f = The floating point number to format.
-//   digits = The number of digits after the decimal to show.  Default: 6
+//   digits = Nonnegative number of digits after the decimal to show. Zero omits the decimal point. Default: 6
+
 function format_fixed(f,digits=6) =
-    assert(is_int(digits))
-    assert(digits>0)
+    assert(is_int(digits) && digits>=0, "\ndigits must be a nonnegative integer.")
     is_list(f)? str("[",str_join(sep=", ", [for (g=f) format_fixed(g,digits=digits)]),"]") :
     str(f)=="nan"? "nan" :
     str(f)=="inf"? "inf" :
@@ -739,10 +778,12 @@ function format_fixed(f,digits=6) =
     assert(is_num(f))
     let(
         sc = pow(10,digits),
-        scaled = floor(f * sc + 0.5),
-        whole = floor(scaled/sc),
-        part = floor(scaled-(whole*sc))
-    ) str(format_int(whole),".",format_int(part,digits));
+        whole = floor(f),
+        part = floor((f-whole)*sc + 0.5),
+        carry = part>=sc ? 1 : 0
+    )
+    assert(is_finite(sc), "\nRequested precision is too large.")
+    str(format_int(whole+carry), digits==0 ? "" : str(".",format_int(carry ? 0 : part,digits)));
 
 
 // Function: format_float()
@@ -754,7 +795,7 @@ function format_fixed(f,digits=6) =
 // Description:
 //   Formats the given floating point number `f` into a string with `sig` significant digits.
 //   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
-//   If possible, the number is represented in `sig` significant digits without a mantissa.
+//   If possible, the number is represented in `sig` significant digits without an exponent.
 //   If given a list of numbers, recursively prints each item in the list, returning a string like `[3,4,5]`
 // Arguments:
 //   f = The floating point number to format.
@@ -762,6 +803,7 @@ function format_fixed(f,digits=6) =
 // Example:
 //   format_float(PI,12);  // Returns: "3.14159265359"
 //   format_float([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
+
 function format_float(f,sig=12) =
     assert(is_int(sig))
     assert(sig>0)
@@ -772,25 +814,20 @@ function format_float(f,sig=12) =
     f<0? str("-",format_float(-f,sig=sig)) :
     assert(is_num(f))
     let(
-        e = floor(log(f)),
-        mv = sig - e - 1
-    ) mv == 0? format_int(floor(f + 0.5)) :
-    (e<-sig/2||mv<0)? str(format_float(f*pow(10,-e),sig=sig),"e",e) :
-    let(
-        ff = f + pow(10,-mv)*0.5,
-        whole = floor(ff),
-        part = floor((ff-whole) * pow(10,mv))
+        parts = _str_decimal_parts(f),
+        e = parts[0],
+        mv = sig-e-1
     )
-    str_join([
-        str(whole),
-        str_strip(end=true,
-            str_join([
-                ".",
-                format_int(part, mindigits=mv)
-            ]),
-            "0."
-        )
-    ]);
+    (e<-sig/2 || mv<0) ?
+        let(mantissa = format_float(parts[1],sig=sig))
+        mantissa=="10" ? str("1e",format_int(e+1)) : str(mantissa,"e",format_int(e)) :
+    let(
+        fixed = format_fixed(f,digits=mv),
+        dot = str_find(fixed,".")
+    )
+    is_undef(dot) ? fixed :
+    let(frac = str_strip(substr(fixed,dot+1),"0",end=true))
+    str(substr(fixed,0,dot), frac=="" ? "" : str(".",frac));
 
 
 /// Function: _format_matrix()
@@ -855,6 +892,8 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
 //   s = format(fmt, vals);
 // Description:
 //   Given a format string and a list of values, inserts the values into the placeholders in the format string and returns it.
+//   The first `}` after an opening `{` ends that placeholder. Other `}` characters are literal text;
+//   an opening `{` without a closing `}` is an error.
 //   Formatting placeholders have the following syntax:
 //   - A leading `{` character to show the start of the placeholder.
 //   - An integer index into the `vals` list to specify which value should be formatted at that place. If not given, the first placeholder uses index `0`, the second uses index `1`, etc.
@@ -871,8 +910,8 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
 //   - `i` or `d`: Formats numeric values as integers.
 //   - `f`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `nan` and `inf`.
 //   - `F`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `NAN` and `INF`.
-//   - `g`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `nan` and `inf`.  Mantissas are demarked by `e`.
-//   - `G`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `NAN` and `INF`.  Mantissas are demarked by `E`.
+//   - `g`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `nan` and `inf`.  Exponents are marked by `e`.
+//   - `G`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `NAN` and `INF`.  Exponents are marked by `E`.
 //   - `b`: If the value logically evaluates as true, it shows as `true`, otherwise `false`.
 //   - `B`: If the value logically evaluates as true, it shows as `TRUE`, otherwise `FALSE`.
 // Arguments:
@@ -894,11 +933,10 @@ function format(fmt, vals) =
         let(
             found_brace = i==0 || [for (c=parts[i]) if(c=="}") c] != [],
             err = assert(found_brace, "\nUnbalanced { in format string."),
-            p = i==0? [undef,parts[i]] : str_split(parts[i],"}"),
+            p = i==0? [undef,parts[i]] : str_split(parts[i],["}"]),
             fmta = p[0],
             raw = p[1]
         ) each [
-            assert(i<99)
             is_undef(fmta)? "" : let(
                 fmtb = str_split(fmta,":"),
                 num = is_digit(fmtb[0])? parse_int(fmtb[0]) : (i-1),
@@ -917,7 +955,7 @@ function format(fmt, vals) =
                 unpad = typ=="s"? (
                         let( sval = str(val) )
                         is_undef(prec)? sval :
-                        substr(sval, 0, min(len(sval)-1, prec))
+                        substr(sval, 0, min(len(sval), prec))
                     ) :
                     (typ=="d" || typ=="i")? format_int(val) :
                     typ=="b"? (val? "true" : "false") :

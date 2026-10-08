@@ -2011,7 +2011,7 @@ module show_only(tags)
 // Synopsis: Shows all children and clears tags.
 // See Also: tag(), recolor(), show_only(), show_int(), diff(), intersect()
 // Topics: Attachments
-// Usage;
+// Usage:
 //   show_all() CHILDREN;
 // Description:
 //   Shows all children.  Clears the list of hidden tags and shown tags so that all child objects are
@@ -2553,8 +2553,8 @@ function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 //   mat = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...);
 //   vnf = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], p=, ...);
 // Usage: Spheroid/Ovoid Geometry
-//   mat = reorient(anchor, spin, [orient], r|d=, ...);
-//   vnf = reorient(anchor, spin, [orient], r|d=, p=, ...);
+//   mat = reorient(anchor, spin, [orient], r=|d=, ...);
+//   vnf = reorient(anchor, spin, [orient], r=|d=, p=, ...);
 // Usage: Extruded Path/Polygon Geometry
 //   mat = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], ...);
 //   vnf = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], p=, ...);
@@ -2655,8 +2655,8 @@ function reorient(
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Usage:
-//   a = named_anchor(name, pos, [orient], [spin]);
-//   a = named_anchor(name, [pos], rot=, [flip=]);
+//   a = named_anchor(name, pos, [orient], [spin], [info=]);
+//   a = named_anchor(name, [pos], rot=, [flip=], [info=]);
 // Description:
 //   Creates an anchor data structure.  You can specify the position, orient direction and spin directly.
 //   Alternatively for the 3D case you can give a 4×4 rotation matrix, which can specify the orient and spin, and optionally
@@ -2761,7 +2761,7 @@ module change_anchors(named=undef, alias=undef, remove=undef)
 // Usage: Cylindrical Geometry
 //   geom = attach_geom(r=|d=, l=|h=, [axis=], ...);
 // Usage: Conical Geometry
-//   geom = attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
+//   geom = attach_geom(r1=|d1=, r2=|d2=, l=, [axis=], ...);
 // Usage: Spheroid/Ovoid Geometry
 //   geom = attach_geom(r=|d=, ...);
 // Usage: Extruded 2D Path/Polygon/Region Geometry
@@ -4734,7 +4734,8 @@ module restore(desc)
 // Topics: Descriptions, Attachments
 // See Also: parent(), desc_dist()
 // Usage:
-//   point = desc_point(desc,[p],[anchor]);
+//   point = desc_point(desc, [p]);
+//   point = desc_point(desc, anchor=);
 // Description:
 //   Computes the coordinates of the specified point or anchor point in the given description relative to the current transformation state.
 // Arguments:
@@ -4777,7 +4778,8 @@ function desc_point(desc, p, anchor) =
 // Topics: Descriptions, Attachment
 // See Also: parent(), desc_point()
 // Usage:
-//   dir = desc_dir(desc,[dir], [anchor]);
+//   dir = desc_dir([desc], [dir]);
+//   dir = desc_dir(desc, anchor=);
 // Description:
 //   Computes the direction in the current context of a direction in the context of the description.  You can specify
 //   the direction by giving a direction vector, or you can give an anchor that is interpreted from the description.

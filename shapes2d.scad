@@ -87,9 +87,9 @@ module square(size=1, center, anchor, spin) {
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: square()
 // Usage: As Module
-//   rect(size, [rounding=], [chamfer=], ...) [ATTACHMENTS];
+//   rect(size, [rounding=], [chamfer=], [corner_flip=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   path = rect(size, [rounding=], [chamfer=], ...);
+//   path = rect(size, [rounding=], [chamfer=], [corner_flip=], ...);
 // Description:
 //   When called as a module, creates a 2D rectangle of the given size, with optional rounding or chamfering.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
@@ -539,9 +539,11 @@ function ellipse(r, d, realign, circum=false, uniform=false, anchor=CENTER, spin
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: debug_polygon(), circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
 // Usage:
-//   regular_ngon(n, r|d=|or=|od=, [realign=]) [ATTACHMENTS];
-//   regular_ngon(n, ir=|id=, [realign=]) [ATTACHMENTS];
-//   regular_ngon(n, side=, [realign=]) [ATTACHMENTS];
+//   regular_ngon(n, r|d=|or=|od=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
+//   regular_ngon(n, ir=|id=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
+//   regular_ngon(n, side=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
+// Usage: As a Function
+//   path = regular_ngon(...);
 // Description:
 //   When called as a function, returns a 2D path for a regular N-sided polygon.
 //   When called as a module, creates a 2D regular N-sided polygon.
@@ -680,9 +682,9 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), regular_ngon(), hexagon(), octagon(), ellipse(), star()
 // Usage:
-//   pentagon(or|od=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
-//   pentagon(ir=|id=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
-//   pentagon(side=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
+//   pentagon(or|od=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
+//   pentagon(ir=|id=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
+//   pentagon(side=, [realign=], [rounding=], [align_tip=|align_side=]) [ATTACHMENTS];
 // Usage: as function
 //   path = pentagon(...);
 // Description:
@@ -1564,13 +1566,16 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 // Usage: ring or partial ring from radius and ring width
 //   region=ring(n, ring_width, r=|d=, [full=], [angle=], [start=]);
 // Usage: ring or partial ring passing through three points
-//   region=ring(n, [ring_width], [r=,d=], points=[P0,P1,P2], [full=]);
+//   region=ring(n, [ring_width], [r=|d=], points=[P0,P1,P2], [full=]);
 // Usage: ring or partial ring from tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
 //   region=ring(n, corner=[P0,P1,P2], r1=|d1=, r2=|d2=, [full=]);
 // Usage: ring or partial ring based on setting a width at the X axis and height above the X axis
 //   region=ring(n, [ring_width], [r=|d=], width=, thickness=, [full=]);
 // Usage: as a module
 //   ring(...) [ATTACHMENTS];
+// Usage: Center and two endpoints
+//   shape = ring(n, ring_width, cp=, points=[P0,P1], [full=], [long=], [cw=], [ccw=]);
+//   shape = ring(n, r=|d=, cp=, points=[P0,P1], [full=], [long=], [cw=], [ccw=]);
 // Description:
 //   If called as a function, returns a region or path for a ring or part of a ring.  If called as a module, creates the corresponding 2D ring or partial ring shape.
 //   The geometry of the ring can be specified using any of the methods supported by {{arc()}}.  If `full` is true (the default) the ring will be complete and the
@@ -2869,7 +2874,8 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Topics: Attachments, Text
 // See Also: text3d(), attachable()
 // Usage:
-//   text(text, [size], [font], ...);
+//   text(text, [size], [font], [halign=], [valign=], [spacing=], ...);
+//   text(text, em=, [font=], [halign=], [valign=], [spacing=], ...);
 // Description:
 //   Creates a 3D text block that can be attached to other attachable objects.
 //   You cannot attach children to text.

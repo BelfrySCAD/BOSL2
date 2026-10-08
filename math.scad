@@ -154,7 +154,7 @@ function lerpn(a,b,n,endpoint=true) =
 // Topics: Interpolation, Math
 // See Also: lerp()
 // Usage:
-//   x = bilerp(pts, x, y);
+//   x = bilerp(points, x, y);
 // Description:
 //   Compute bilinear interpolation between four values using two
 //   coordinates that are meant to lie in [0,1].  (If they are outside
@@ -960,13 +960,13 @@ function cumsum(v) =
 // Topics: Math, Statistics
 // See Also: sum(), mean(), median(), product(), cumsum()
 // Usage:
-//   x = product(v);
+//   x = product(list);
 // Description:
 //   Returns the product of all entries in the given list.
 //   If passed a list of vectors of same length, returns a vector of the component-wise products of the input.
 //   If passed a list of square matrices, returns the resulting product matrix.  Matrices are multiplied in the order they appear in the list.
 // Arguments:
-//   v = The list to get the product of.
+//   list = The list to get the product of.
 // Example:
 //   product([2,3,4]);  // returns 24.
 //   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
@@ -1114,7 +1114,7 @@ function sum_of_sines(a, sines) =
 // Arguments:
 //   minval = Minimum integer value to return.
 //   maxval = Maximum integer value to return.
-//   N = Number of random integers to return.
+//   n = Number of random integers to return.
 //   seed = If given, sets the random number seed.
 // Example:
 //   ints = rand_int(0,100,3);

@@ -451,7 +451,7 @@ function num_true(l, func) =
 // Topics: Undef Handling
 // See Also: first_defined(), one_defined(), num_defined()
 // Usage:
-//   val = default(val, dflt);
+//   val = default(v, dflt);
 // Description:
 //   Returns the value given as `v` if it is not `undef`.
 //   Otherwise, returns the value of `dflt`.

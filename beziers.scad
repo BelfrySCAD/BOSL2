@@ -277,9 +277,9 @@ function bezier_tangent(bezier, u) =
 // Topics: Bezier Curves
 // See Also: bezier_tangent(), bezier_derivative(), bezier_points()
 // Usage:
-//   crv = bezier_curvature(curve, u);
-//   crvlist = bezier_curvature(curve, LIST);
-//   crvlist = bezier_curvature(curve, RANGE);
+//   crv = bezier_curvature(bezier, u);
+//   crvlist = bezier_curvature(bezier, LIST);
+//   crvlist = bezier_curvature(bezier, RANGE);
 // Description:
 //   Returns the curvature value for the given parameters `u` on the bezier curve with control points `bezier`. 
 //   The curvature is the inverse of the radius of the tangent circle at the given point.
@@ -1704,6 +1704,9 @@ function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=u
 //   bezier_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
 //   vnf = bezier_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+// Usage: With a texture
+//   bezier_sweep(shape, bezier, texture=, [tex_size=|tex_reps=], [tex_depth=], ...) [ATTACHMENTS];
+//   vnf = bezier_sweep(shape, bezier, texture=, [tex_size=|tex_reps=], [tex_depth=], ...);
 // Description:
 //   Takes as input `shape`, a 2D polygon path (list of points), and `bezier`, a list of bezier control points (2d or 3d), and 
 //   constructs a polyhedron by sweeping the shape along the bezier curve. The bezier curve is sampled into `splinesteps` segments.
@@ -1717,6 +1720,7 @@ function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=u
 //   splinesteps = number of segments to create on the bezier curve.  Default: 16
 //   method = one of "incremental", "natural" or "manual".  Default: "incremental"
 //   ---
+//   endpoint = Include the final endpoint when sampling the Bezier curve. Default: true
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
 //   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
@@ -1828,6 +1832,9 @@ module bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoin
 //   bezpath_sweep(shape, bezpath, [splinesteps], [N], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
 //   vnf = bezpath_sweep(shape, bezpath, [splinesteps], [N], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+// Usage: With a texture
+//   bezpath_sweep(shape, bezpath, texture=, [tex_size=|tex_reps=], [tex_depth=], ...) [ATTACHMENTS];
+//   vnf = bezpath_sweep(shape, bezpath, texture=, [tex_size=|tex_reps=], [tex_depth=], ...);
 // Description:
 //   Takes as input `shape` (a 2D polygon path) and `bezpath`, a bezier path in 2d or 3d, and
 //   constructs a polyhedron by sweeping the shape along the bezier path. The bezier curve is sampled into `splinesteps` segments.
@@ -1841,6 +1848,7 @@ module bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoin
 //   N = Degree of the bezier path.  Default: 3
 //   method = one of "incremental", "natural" or "manual".  Default: "incremental"
 //   ---
+//   endpoint = Include the final endpoint when sampling the Bezier path. Default: true
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
 //   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
