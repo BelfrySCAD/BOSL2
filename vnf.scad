@@ -38,7 +38,10 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
-//   vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=],...) [ATTACHMENTS];
+//   vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=], [convexity=], ...) [ATTACHMENTS];
+// Usage: With a texture
+//   vnf = vnf_vertex_array(points, texture=, [tex_size=|tex_reps=], [tex_depth=], ...);
+//   vnf_vertex_array(points, texture=, [tex_size=|tex_reps=], [tex_depth=], [convexity=], ...) [ATTACHMENTS];
 // Description:
 //   Creates a VNF structure from a rectangular vertex list, creating edges that connect the adjacent vertices in the vertex list
 //   and creating the faces defined by those edges.  You can optionally create the edges and faces to wrap the last column
@@ -634,7 +637,7 @@ function vnf_vertex_array(
 // See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_merge_points()
 // Usage:
 //   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=])
-//   vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=],...) [ATTACHMENTS];
+//   vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=], [convexity=], ...) [ATTACHMENTS];
 // Description:
 //   Produces a VNF from an array of points where each row length can differ from the adjacent rows by
 //   any amount. This enables the construction of triangular or even irregular VNF patches. The
@@ -955,7 +958,7 @@ function vnf_join(vnfs) =
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_vertex_array(), vnf_from_region()
 // Usage:
-//   vnf = vnf_from_polygons(polygons, [eps]);
+//   vnf = vnf_from_polygons(polygons, [fast], [eps]);
 // Description:
 //   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
@@ -1212,6 +1215,8 @@ function is_vnf(x) =
 // Topics: VNF Manipulation
 // See Also: is_vnf(), vnf_vertices(), vnf_faces()
 //
+// Usage:
+//   bool = is_vnf_list(x);
 // Description: Returns true if the given value looks passingly like a list of VNF structures.
 function is_vnf_list(x) = is_list(x) && all([for (v=x) is_vnf(v)]);
 
@@ -1220,6 +1225,8 @@ function is_vnf_list(x) = is_list(x) && all([for (v=x) is_vnf(v)]);
 // Synopsis: Returns the list of vertex points from a VNF.
 // Topics: VNF Manipulation
 // See Also: is_vnf(), is_vnf_list(), vnf_faces()
+// Usage:
+//   vertices = vnf_vertices(vnf);
 // Description: Given a VNF structure, returns the list of vertex points.
 function vnf_vertices(vnf) = vnf[0];
 
@@ -1228,6 +1235,8 @@ function vnf_vertices(vnf) = vnf[0];
 // Synopsis: Returns the list of faces from a VNF.
 // Topics: VNF Manipulation
 // See Also: is_vnf(), is_vnf_list(), vnf_vertices()
+// Usage:
+//   faces = vnf_faces(vnf);
 // Description: Given a VNF structure, returns the list of faces, where each face is a list of indices into the VNF vertex list.
 function vnf_faces(vnf) = vnf[1];
 
@@ -1588,8 +1597,8 @@ function _slice_3dpolygons(polys, dir, cuts) =
 // Topics: VNF Manipulation
 // See Also: vnf_wireframe()
 // Usage:
-//   vnf_polyhedron(vnf) [ATTACHMENTS];
-//   vnf_polyhedron([VNF, VNF, VNF, ...]) [ATTACHMENTS];
+//   vnf_polyhedron(vnf, [convexity=]) [ATTACHMENTS];
+//   vnf_polyhedron([VNF, VNF, VNF, ...], [convexity=]) [ATTACHMENTS];
 // Description:
 //   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
 //   .
@@ -2547,7 +2556,7 @@ module _show_faces(vertices, faces, size=1, filter) {
 // Topics: VNF Manipulation, Debugging
 // See Also: vnf_validate()
 // Usage:
-//   debug_vnf(vnfs, [faces=], [vertices=], [opacity=], [size=], [convexity=], [filter=]);
+//   debug_vnf(vnf, [faces=], [vertices=], [opacity=], [size=], [convexity=], [filter=]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their

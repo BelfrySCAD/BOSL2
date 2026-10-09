@@ -21,7 +21,7 @@ _BOSL2_NEMA_STEPPERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) |
 // Topics: Parts, Motors
 // See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
-//   nema_stepper_motor(size, h, shaft_len, [$slop=], ...) [ATTACHMENTS];
+//   nema_stepper_motor(size, h, shaft_len, [details=], [$slop=], ...) [ATTACHMENTS];
 // Description:
 //   Creates a model of a NEMA standard stepper motor.
 // Arguments:
@@ -127,7 +127,7 @@ module nema_stepper_motor(size=17, h=24, shaft_len=20, details=true, atype="body
 // Topics: Parts, Motors
 // See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
-//   nema_mount_mask(size, depth, l, [$slop], ...);
+//   nema_mount_mask(size, depth, l, [$slop=], ...);
 // Description: Creates a mask to use when making standard NEMA stepper motor mounts.
 // Arguments:
 //   size = The standard NEMA motor size to make a mount for.

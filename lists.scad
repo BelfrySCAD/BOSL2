@@ -26,7 +26,7 @@ _BOSL2_LISTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Topics: List Handling, Type Checking
 // See Also: is_vector(), is_matrix()
 // Usage:
-//   bool = is_homogeneous(list, [depth]);
+//   bool = is_homogeneous(l, [depth]);
 // Description:
 //   Returns true when the list has elements of same type up to the depth `depth`.
 // Arguments:
@@ -225,7 +225,7 @@ function select(list, start, end) =
 // Topics: List Handling
 // See Also: select(), column(), last()
 // Usage:
-//   list = slice(list, s, e);
+//   list = slice(list, start, end);
 // Description:
 //   Returns a slice of a list, from the first position `s` up to and including the last position `e`.
 //   The first item in the list is at index 0.  Negative indexes are counted back from the end, with

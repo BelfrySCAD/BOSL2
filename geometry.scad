@@ -660,7 +660,7 @@ function plane_from_points(points, check_coplanar=false, eps=_EPSILON, fast) =
 // Topics: Geometry, Planes, Polygons
 // See Also: plane3pt(), plane3pt_indexed(), plane_from_normal(), plane_from_points(), plane_from_polygon()
 // Usage:
-//   plane = plane_from_polygon(points, [check_coplanar], [eps]);
+//   plane = plane_from_polygon(poly, [check_coplanar], [eps]);
 // Description:
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane. 
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
@@ -2995,12 +2995,12 @@ function _support_diff(p1,p2,d) =
 //          // Returns: [33, [-1,0,0], [0,0,0], [-12,0,0]]
 //   info = rot_decode(translate([3,4,5]));
 //          // Returns: [0, [0,0,1], [0,0,0], [3,4,5]]
-function rot_decode(M,long=false) =
-    assert(is_matrix(M,4,4) && approx(M[3],[0,0,0,1]), "\nInput matrix must be a 4×4 matrix representing a 3d transformation.")
-    let(R = submatrix(M,[0:2],[0:2]))
+function rot_decode(rotation,long=false) =
+    assert(is_matrix(rotation,4,4) && approx(rotation[3],[0,0,0,1]), "\nInput matrix must be a 4×4 matrix representing a 3d transformation.")
+    let(R = submatrix(rotation,[0:2],[0:2]))
     assert(approx(det3(R),1) && approx(norm_fro(R * transpose(R)-ident(3)),0),"\nInput matrix is not a rotation.")
     let(
-        translation = [for(row=[0:2]) M[row][3]],   // translation vector
+        translation = [for(row=[0:2]) rotation[row][3]],   // translation vector
         largest  = max_index([R[0][0], R[1][1], R[2][2]]),
         axis_matrix = R + transpose(R) - (matrix_trace(R)-1)*ident(3),   // Each row is on the rotational axis
             // Construct quaternion q = c * [x sin(theta/2), y sin(theta/2), z sin(theta/2), cos(theta/2)]

@@ -155,6 +155,8 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 // See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
 // Usage:
 //   sparse_cuboid(size, [dir], [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
+// Usage: With edge rounding or chamfers
+//   sparse_cuboid(size, [dir], rounding=|chamfer=, [edges=], [except=], ...) [ATTACHMENTS];
 // Description:
 //   Makes an open rectangular cuboid with X-shaped cross-bracing to reduce the need for material in 3d printing.
 //   The direction of the cross bracing can be aligned with the X, Y or Z axis.  This module can be

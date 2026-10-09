@@ -3799,7 +3799,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Topics: Extrusion, Textures
 // See Also: linear_sweep(), rotate_sweep(), cyl(), vnf_vertex_array(), sweep(), path_sweep(), textured_tile()
 // Usage:
-//   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
+//   tx = texture(tex, [n=], [border=], [gap=], [roughness=]);
 // Description:
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
 //   - Heightfield textures, which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.

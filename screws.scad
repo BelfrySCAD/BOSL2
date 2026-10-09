@@ -748,7 +748,7 @@ module screw(spec, head, drive, thread, drive_size,
 // Topics: Threading, Screws
 // See Also: screw()
 // Usage:
-//   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [teardrop=], [head_oversize], [tolerance=], [$slop=], [blunt_start=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
+//   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [teardrop=], [head_oversize=], [tolerance=], [$slop=], [blunt_start=], [anchor=], [atype=], [orient=], [spin=], [counterbore=]) [ATTACHMENTS];
 // Description:
 //   Create a screw hole mask.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The screw hole can be threaded to receive a screw or it can be an unthreaded clearance hole.  
@@ -1456,7 +1456,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
-//    screw_head(screw_info, [details],[counterbore],[flat_height],[teardrop],[internal])
+//   screw_head(screw_info, [details=], [counterbore=], [flat_height=], [teardrop=], [slop=]);
 // Description:
 //    Draws the screw head described by the data structure `screw_info`, which
 //    should have the fields produced by {{screw_info()}}.  See that function for
@@ -1579,7 +1579,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 //   .
 //   By default all nuts have the internal holes beveled and hex nuts have their corners beveled.  Square nuts get no outside bevel by default.
 //   ASME specifies that small square nuts should not be beveled, and many square nuts are beveled only on one side.   The bevel angle, specified with bevang,
-//   gives the angle for the bevel.  The default of 15 is shallow and may not be printable.  Internal hole are beveled at 45 deg by the depth of one thread.  
+//   gives the angle for the bevel.  The default of 15 is shallow and may not be printable.  Internal bevels are sized from the thread depth and limited by nut thickness and wall. See {{generic_threaded_nut()}}.  
 //   .
 //   The tolerance determines the actual thread sizing based on the nominal size in accordance with standards.  
 //   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
@@ -1591,13 +1591,13 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 //   nutwidth = width of nut (overrides table values)
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   hole_oversize = amount to increase hole diameter.  Default: 0
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 15
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -1784,7 +1784,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
-//   nut_trap_inline(length|l|height|h, [spec], [shape], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
+//   nut_trap_inline(length|l|height|h, [spec], [shape], [$slop=], [anchor=], [orient=], [spin=], [nutwidth=]) [ATTACHMENTS];
 // Description:
 //   Create a nut trap that extends along the axis of the screw.  The nut width
 //   will be increased by `2*$slop` to allow adjusting the fit of the trap for your printer.

@@ -611,9 +611,9 @@ module stroke(
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
 // Usage: As a Module
-//   dashed_stroke(path, dashpat, [width=], [closed=]);
+//   dashed_stroke(path, [dashpat], [width=], [closed=], [fit=], [roundcaps=]);
 // Usage: As a Function
-//   dashes = dashed_stroke(path, dashpat, [closed=]);
+//   dashes = dashed_stroke(path, [dashpat], [closed=], [fit=], [mindash=]);
 // Description:
 //   Given a path (or region) and a dash pattern, creates a dashed line that follows that
 //   path or region boundary with the given dash pattern.
@@ -692,19 +692,19 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // See Also: pie_slice(), stroke(), ring()
 //
 // Usage: 2D arc from 0º to `angle` degrees.
-//   path=arc(n, r|d=, angle);
+//   path=arc(n, r|d=, angle, [endpoint=]);
 // Usage: 2D arc from START to END degrees.
-//   path=arc(n, r|d=, angle=[START,END]);
+//   path=arc(n, r|d=, angle=[START,END], [endpoint=]);
 // Usage: 2D arc from `start` to `start+angle` degrees.
-//   path=arc(n, r|d=, start=, angle=);
+//   path=arc(n, r|d=, start=, angle=, [endpoint=]);
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
-//   path=arc(n, width=, thickness=);
+//   path=arc(n, width=, thickness=, [endpoint=]);
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   path=arc(n, cp=, points=[P0,P1], [long=], [cw=], [ccw=]);
+//   path=arc(n, cp=, points=[P0,P1], [long=], [cw=], [ccw=], [endpoint=]);
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
-//   path=arc(n, points=[P0,P1,P2]);
+//   path=arc(n, points=[P0,P1,P2], [endpoint=]);
 // Usage: 2D or 3D arc, fron tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
-//   path=arc(n, corner=[P0,P1,P2], r=);
+//   path=arc(n, corner=[P0,P1,P2], r=, [endpoint=]);
 // Usage: Create a wedge using any other arc parameters
 //   path=arc(wedge=true,[rounding=],...)
 // Usage: as module
