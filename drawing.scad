@@ -564,9 +564,11 @@ module stroke(
                                       untapered[(i+segcount-1)%segcount] && untapered[i%segcount],
                           before = directions[(i+segcount-1)%segcount],
                           after = directions[i%segcount],
-                          turn = vector_angle(before,after)
+                          bend_sine = norm(cross(before,after))
                       )
-                      !has_joint || approx(turn,0) || approx(turn,180)
+                      // Test the normalized cross product, not an acos-derived
+                      // angle: roundoff can make parallel vectors appear bent.
+                      !has_joint || approx(bend_sine,0)
                           ? undef : unit(before+after)];
 
                   setcolor(color) {
@@ -630,11 +632,17 @@ module stroke(
                               } else {
                                   v1 = path2[i]-path2[i-1];
                                   v2 = path2[i+1]-path2[i];
-                                  ang = vector_angle(v1,v2);
-                                  // Straight vertices need no wedge.  Exact
-                                  // reversals retain the existing no-wedge behavior.
-                                  if (!approx(ang,0) && !approx(ang,180)) {
-                                      joint_frame = frame_map(x=-v1, z=unit(cross(v1,v2)));
+                                  d1 = unit(v1);
+                                  d2 = unit(v2);
+                                  axis = cross(d1,d2);
+                                  bend_sine = norm(axis);
+                                  // A straight joint or reversal has no bend axis.
+                                  // Use the same scale-independent test as the clips
+                                  // before normalizing the axis.  atan2 remains
+                                  // accurate for small but nonzero bends.
+                                  if (!approx(bend_sine,0)) {
+                                      ang = atan2(bend_sine,d1*d2);
+                                      joint_frame = frame_map(x=-v1, z=axis/bend_sine);
                                       to_profile = zrot(-90)*transpose(joint_frame)*
                                                    rotmats[i-1]*zrot(twist_at[i]);
                                       ring = apply(to_profile, path3d(circle_path));
