@@ -1994,12 +1994,16 @@ module debug_bezier(bezpath, width=1, N=3) {
       assert(is_int(N) && N>0, "N must be a positive integer")
       assert(len(bezpath)>N && (len(bezpath)-1)%N == 0, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."));
     $fn=8;
+    echo("A");
     stroke(bezpath_curve(bezpath, N=N), width=width, color="cyan");
+    echo("B");
     color("green")
-      if (N!=3) 
-           stroke(bezpath, width=width);
-      else 
-           for(i=[1:3:len(bezpath)]) stroke(select(bezpath,max(0,i-2), min(len(bezpath)-1,i)), width=width);
+      if (N!=3) {echo("C");
+           stroke(bezpath, width=width);}
+      else {echo("D");
+   for(i=[1:3:len(bezpath)])     echo(path=select(bezpath,max(0,i-2), min(len(bezpath)-1,i)));
+           for(i=[1:3:len(bezpath)]) echo(i)stroke(select(bezpath,max(0,i-2), min(len(bezpath)-1,i)), width=width);}
+    echo("E");
     twodim = len(bezpath[0])==2;
     color("red") move_copies(bezpath)
       if ($idx % N !=0)
