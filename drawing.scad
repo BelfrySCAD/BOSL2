@@ -63,7 +63,10 @@ _BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   This module has many parameters for tuning its behavior describe below in the argument list.
 //   Parameters begining with `dots_` provide shared settings for both joints and endcaps.  Corresponding
 //   `joint_` and `endcap_` parameters override them.  The joints and endcaps can be chosen from a list of
-//   standard shapes or you can give custom 2D polygons.  
+//   standard shapes or you can give custom 2D polygons.
+//   .
+//   Especially with closed shapes which create twist, the stroke() may have degenerate polygons which
+//   do not export properly in STL files.  If this occurs use 3MF instead.  
 //   
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=255): Joing and endcap Types
 //   cap_pairs = [
