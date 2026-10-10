@@ -485,7 +485,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   dist_ba=0;
 //   gear_ba=0;
 //   xdistribute(spacing=25){
-//      xflip()yrot(-tilt)  
+//      xrot(180)yrot(-tilt)  
 //      union(){
 //       color("lightgreen")
 //         xrot(90) 
@@ -3004,7 +3004,7 @@ function enveloping_worm(
         vnf1 = vnf_vertex_array(transpose(rows), col_wrap=true, caps=true),
         m = product([
             zrot(gear_spin),
-            if (left_handed) xflip(),
+            if (!left_handed) xflip(),
             zrot(90),
         ]),
         vnf = apply(m, vnf1)
