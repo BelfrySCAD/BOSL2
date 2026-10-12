@@ -296,11 +296,11 @@ function _get_write_data(w) = object(
 //   #### Font sizes
 //   There are several mutually-exclusive font size parameters to choose from.
 //   * `size` is exactly the same as the `size` parameter in OpenSCAD's `text()` module.
-//   * `cap_height` sets the font size by specifying height of the capital letter specified by $refchar_cap, which is `H` by default.
-//   * `nom_height` specifies the nominal height of common characters (e.g. A-Z, a-z, 0-9, punctuation) including ascenders, descenders, and common diacritic marks. This is useful for creating labels with mixed-case text.
-//   * `full_height` specifies the maximum height occupied by the font's character set. This would include characters with double diacritics and drawing characters like vertical bars. This size specification typically results in somewhat smaller glyphs than `nom_height` to account for fitting taller characters in the specified vertical space.
-//   * `line_height` lets you specify a font size in terms of the font's internal interline height, which is typically, but not always, equal or greater than the maximum glyph height.
-//   * `em` is the standard em unit size in typography, the size of the design box for the glyphs.
+//   * `size_by_cap` sets the font size by specifying height of the capital letter specified by $refchar_cap, which is `H` by default.
+//   * `size_by_nom` specifies the nominal height of common characters (e.g. A-Z, a-z, 0-9, punctuation) including ascenders, descenders, and common diacritic marks. This is useful for creating labels with mixed-case text.
+//   * `size_by_full` specifies the maximum height occupied by the font's character set. This would include characters with double diacritics and drawing characters like vertical bars. This size specification typically results in somewhat smaller glyphs than `size_by_nom` to account for fitting taller characters in the specified vertical space.
+//   * `size_by_iline` lets you specify a font size in terms of the font's internal interline height, which is typically, but not always, equal or greater than the maximum glyph height.
+//   * `em` is the standard em unit size in typography, the size of the design box for the glyphs. OpenSCAD also lets you specify `em` rather than `size`.
 //   .
 //   If no font size is specified, then `write()` sets it for you, according to the table above.
 //   .
@@ -325,32 +325,36 @@ function _get_write_data(w) = object(
 //   when letterspacing is added. Common ligatures in Latin fonts include `\uFB01` (ﬁ), `\uFB02`
 //   (ﬂ), `\uFB03` (ﬃ), `\uFB05` (ﬅ), `\u00E6` (æ), `\u00C6` (Æ), `\u0153` (œ), and `\u0152` (Œ).
 //   .
-//   #### Concatenating
-//   When concatenating multiple `write()` in a parent-child fashion, the text in each call is
-//   rendered along a common baseline. The beginning of each child's baseline connects to the end of
-//   the parent's baseline. For example:
+//   #### Anchors and concatenation
+//   The usual anchors `LEFT`, `RIGHT`, `CENTER`, `FWD`, `BACK` apply to the anchor box, which are
+//   the bounds you specify, defaulting to the text bounding box for any bound not specified.
+//   Mutiline text can use named anchors (see argument list), and a named anchor is the **only** way
+//   to position the baseline of the text onto the origin.
+//   . 
+//   Text produced by `write()` is anchored to CENTER by default with an important exception: if
+//   `write()` appears as a child of another `write()`, then the text concatenates along its
+//   baseline to the parent text. Concatenation is disabled if you give an explicit `anchor=`, or if
+//   you use {{attach()}}, {{align()}}, or {{position()}}. In those cases the child `write()` is
+//   positioned as you specify. An example of concatenation:
 //   ````
-//     write("Hello ", size=12)
+//     write("Hello ", size=12, anchor=BACK)
 //         write("there ", size=8)
 //             write("world", size=12);
 //   ````
-//   This displays "Hello there world" with a smaller size for "there". Spaces should be included if
-//   spaces are needed. Only the first instance of `write()` may have an anchor specified, and the
-//   position of each successive child depends on its parent. If you need to do something with a
-//   chain of `write()` calls other than concatenate them, you can use {{align()}}, {{attach()}}, or
-//   {{position()}} as usual in front of the child, causing the parent's end-of-line offset for
-//   concatenation to be disregarded.
+//   This displays "Hello there world" with a smaller size for "there", with the text continuing
+//   along the baseline. Include spaces explicitly to prevent the text from running together.
+//   Because `anchor=` disables concatenation, only the first `write()` can be given an anchor.
 // Arguments:
 //   text = The text to display. May be a simple string, string with newline (`\n`) characters, or a list of strings (which can also contain newline characters). The alias `{ }` is treated as the nonbreaking space character `\u00a0`.
 //   max_width = Constrains text to fit within a maximum horizontal width. If no font size is given then the size is chosen for the line of text (or longest line in an array) to span this width. If a font size is given, the text is wrapped to fit within this constraint. As a positional argument, this is a `[width,height]` vector in lieu of specifying `max_width` and `max_height` separately. Default: `INF`
-//   max_height = Maximum vertical height the text can occupy. If no font size is given, a `nom_height` font size is chosen so that the text spans this height top to bottom, accounting for `wrap_spacing` and `block_spacing` if specified. If a font size is given, the text is wrapped to produce the shortest horizontal width constrained by this height. Omit this if you already specified `[width,height]` together in the prior positional parameter. Default: `INF`
+//   max_height = Maximum vertical height the text can occupy. If no font size is given, a `size_by_nom` font size is chosen so that the text spans this height top to bottom, accounting for `wrap_spacing` and `block_spacing` if specified. If a font size is given, the text is wrapped to produce the shortest horizontal width constrained by this height. Omit this if you already specified `[width,height]` together in the prior positional parameter. Default: `INF`
 //   ---
-//   size = Set font size; identical to the OpenSCAD `size` used in `text()`, which is 72% of the font's em-size.
-//   cap_height = Set font size so that the height of a capital letter, using `$refchar_cap` as the reference character, is the specificed amount.
-//   nom_height = Set font size so that the height of normal characters, from nominal ascender to nominal descender, is the specified amount.
-//   full_height = Set font size so that the maximum height possible in the font, from maximum ascender to maximum descender is the specified amount.
-//   line_height = Set font size so that interline height property of the font is as specified.
-//   em = Standard font unit size, the size of the em-box in which the font was designed.
+//   size = Set font size; identical to OpenSCAD's `size` used in `text()`, which is 72% of the font's em-size.
+//   size_by_cap = Set font size so that the height of a capital letter, using `$refchar_cap` as the reference character, is the specificed amount.
+//   size_by_nom = Set font size so that the height of normal characters, from nominal ascender to nominal descender, is the specified amount.
+//   size_by_full = Set font size so that the maximum height possible in the font, from maximum ascender to maximum descender is the specified amount.
+//   size_by_iline = Set font size so that interline height property of the font is as specified.
+//   em = Standard font unit size, identical to OpenSCAD's `em` used in `text()`: the size of the em-box in which the font was designed.
 //   font = Name of the font to use. Default "Liberation Sans:style=Regular"
 //   text_align = Horizontal alignment within the bounding box. Set this to "left", "right", "center", or "justify" (which requires setting a finite `max_width`). Ignored if `max_width=INF`. Default: "left"
 //   justify_last = Alignment of last line in multiline full-justified text (when `text_align="justify"`). Defaults to "left" if `direction="ltr"` (default) or "right" if `direction="rtl"`.
@@ -369,7 +373,7 @@ function _get_write_data(w) = object(
 //   language = Language hint for text shaping, passed through to `text()`. May affect language-specific glyphs and font features. Default: "en"
 //   script = Writing-script hint for text shaping, passed through to `text()`. May affect glyph selection and shaping. Default: "latin"
 //   show_bounds = When true, shows the bounding box, anchor box, and first baseline of the text. Default: false
-//   anchor = Translate so that the [anchor](attachments.scad#subsection-anchor) point is at origin (0,0,0). The usual anchors `LEFT`, `RIGHT`, `CENTER`, `FWD`, `BACK` apply to the anchor box (which defaults to the text bounding box). Mutiline text can use named anchors (see below), and a named anchor is the **only** way to position the baseline of the text onto the origin. Default: `CENTER`
+//   anchor = Translate so that the anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: `CENTER`, or concatenation if used as a child of another `write()` (see above).
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Named Anchors:
 //   BASELINE(n,[pos],[tight],[rtl]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
@@ -384,16 +388,16 @@ function _get_write_data(w) = object(
 //   $write.tight_center = Coordinates of the tight box center.
 //   $write.vbounds = Object containing possible bounding heights, with properties `tight`, `nominal`, and `full`.
 //   $write.baselines = Array of baseline objects for each line; each object has properties `xstart`, `xend`, `y`, `top`, `bot`.
-// Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `nom_height` to specify the size of the font from nominal ascender to nominal descender.
-//   write("Flying high", nom_height=14, font="Liberation Sans");
+// Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `size_by_nom` to specify the size of the font from nominal ascender to nominal descender.
+//   write("Flying high", size_by_nom=14, font="Liberation Sans");
 // Example(2D): Anchors are used to position text vertically and horizontally with respect to the origin, instead of `valign` and `halign` in OpenSCAD's `text()`. To position the start of the baseline at the origin (the default behavior in `text()`), use a `BASELINE("start")` anchor. Glyph descenders then extend below the X axis.
 //   write("Quippy", size=10, anchor=BASELINE("start"));
 // Example(2D,NoAxes,VPT=[0,0,0],VPD=285): You can pass multi-line text by inserting newline (`\n`) characters, or passing an array of strings. An array of strings may also contain newlines, and they are split into separate lines. The results are identical.
 //   left(50)      write("Hello\nthere,\nworld!", size=10);
 //   color("gray") write(["Hello", "there,", "world!"], size=10);
 //   right(50)     write(["Hello\nthere,", "world!"], size=10);
-// Example(2D,VPT=[0,0,0],VPD=270): If your text is just uppercase characters, you can use `cap_height` for the font size to specify the uppercase ascender height only. The character `H` for your font is used as the reference character, which you may reset by changing `$refchar_cap`. The text height spans exactly -20 to 20.
-//   write("THIS", cap_height=40);
+// Example(2D,VPT=[0,0,0],VPD=270): If your text is just uppercase characters, you can use `size_by_cap` for the font size to specify the uppercase ascender height only. The character `H` for your font is used as the reference character, which you may reset by changing `$refchar_cap`. The text height spans exactly -20 to 20.
+//   write("THIS", size_by_cap=40);
 // Example(2D,VPT=[0,0,0],VPD=200): If `max_width` is set with no font size, then the font size is automatically adjusted so the text spans the specified maximum width. No automatic wordwrapping occurs; only manual wordwrapping by inserting `\n` is possible.
 //   write("Hello,\nworld!", max_width=80);
 // Example(2D, VPT=[0,0,0],VPD=200): Likewise, if only `max_height` is set with no font size, then the font size is automatically adjusted so the text spans the specified vertical height. We set `vbound="tight"` to maximize the vertical space used within the `max_height` constraint.
@@ -447,7 +451,6 @@ function _get_write_data(w) = object(
 //   font = "Liberation Sans:style=Bold";
 //   
 //   module write_lensize(t, base_size, font, i=0) {
-//       echo(t[i], len(t[i]), base_size/len(t[i]));
 //       if (i<len(t)-1)
 //           write(t[i], size = base_size/len(t[i]), font=font)
 //               write_lensize(t, base_size, font, i+1);
@@ -482,7 +485,7 @@ function _get_write_data(w) = object(
 //        wrap_optimize=false, show_bounds=true);
 
 module write(text, max_width=INF, max_height=INF,
- size, cap_height, nom_height, full_height, line_height, em, font=_DEFAULTFONT,
+ size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em, font=_DEFAULTFONT,
  text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, wrap_spacing=1, block_spacing=1,
@@ -490,8 +493,8 @@ module write(text, max_width=INF, max_height=INF,
      widthlimit = is_vector(max_width,2) ? max_width.x : max_width;
      heightlimit = is_vector(max_width,2) ? max_width.y : max_height;
     // get write object
-    w = _writeobj(text, 0, widthlimit, heightlimit, size, cap_height, nom_height, full_height,
-        line_height, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
+    w = _writeobj(text, 0, widthlimit, heightlimit, size, size_by_cap, size_by_nom, size_by_full,
+        size_by_iline, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
         letterspace, letterspace_em, letterspace_ref, indent, wrap_optimize, collapse_space,
         wrap_spacing, block_spacing, direction, language, script, "write");
     $write = _get_write_data(w);
@@ -599,7 +602,7 @@ module write(text, max_width=INF, max_height=INF,
 //                   letterspace=1, text_align="center");
 
 module write3d(text, thickness, max_width=INF, max_height=INF,
- size, cap_height, nom_height, full_height, line_height, em, font=_DEFAULTFONT,
+ size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em, font=_DEFAULTFONT,
  text_align="left", justify_last=undef, justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, wrap_spacing=1, block_spacing=1,
@@ -611,8 +614,8 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
 
     // get write object
 
-    w = _writeobj(text, thk, widthlimit, heightlimit, size, cap_height, nom_height, full_height,
-        line_height, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
+    w = _writeobj(text, thk, widthlimit, heightlimit, size, size_by_cap, size_by_nom, size_by_full,
+        size_by_iline, em, font, text_align, justify_last, justify_tight, vbound, frame_align,
         letterspace, letterspace_em, letterspace_ref, indent, wrap_optimize, collapse_space,
         wrap_spacing, block_spacing, direction, language, script, "write3d");
     $write = _get_write_data(w);
@@ -658,12 +661,12 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
 /// Arguments are the same as for write() but without the anchor-related ones.
 
 function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
- size, cap_height, nom_height, full_height, line_height, em,
+ size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em,
  font=_DEFAULTFONT, text_align="left", justify_last=undef,
  justify_tight=true, vbound="nominal", frame_align=undef,
  letterspace=undef, letterspace_em=undef, letterspace_ref=undef, indent=0,
  wrap_optimize=true, collapse_space = true, wrap_spacing=1, block_spacing=1,
- direction="ltr", language="en", script="latin", caller, _silent=false) = let(
+ direction="ltr", language="en", script="latin", caller) = let(
     // version 20250711 is when objects became available, and this needs objects.
     err_version=assert(version_num() >= 20250711, "\nOpenSCAD version must be dated on or after 2025-07-11 to use write()."),
     err_internal = assert(is_string(caller), "\n_writeobj(): Must specify string name of caller to this function."),
@@ -673,18 +676,18 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
     wid = max_width,
     ht = max_height,
     err_dims=assert(wid>0 && ht>0, str("\n",caller,"(): max_width and/or max_height must be a positive number or INF.")),
-    fontsizes = num_defined([size, cap_height, nom_height, full_height, line_height, em]),
+    fontsizes = num_defined([size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em]),
     err_fontsize = (fontsizes==0 && !(is_finite(wid) || is_finite(ht))),
     size = err_fontsize ? echo(str("\n\u26A0Warning: ",caller,"() requires a font size if max_width and max_height are not specified; assuming size=10.")) 10 : size,
     wrap_to_ht = (fontsizes==1 && !is_finite(wid) && is_finite(ht)), // for wrap-to-height recursion
     numfontsizes = err_fontsize ? 1 : fontsizes,
-    err_numfont=assert(numfontsizes<=1, str("\n",caller,"(): No more than one font size can be specified: size, cap_height, nom_height, full_height, line_height, or em).")),
+    err_numfont=assert(numfontsizes<=1, str("\n",caller,"(): No more than one font size can be specified: size, size_by_cap, size_by_nom, size_by_full, size_by_iline, or em).")),
     err_fontname=assert(is_string(font), str("\n",caller,"(): font parameter must be the name of a font family.")),
 
     txt = _preprocess_text(text, collapse_space, caller),
     fd = numfontsizes == 1 ?
-        _fontdata(font, size,cap_height,nom_height,full_height,line_height,em, letterspace, letterspace_em, letterspace_ref, direction, language, script)
-        : let(siz = fit_font_size(txt, wid, ht, font=font, letterspace_ref=letterspace_ref, letterspace_em=letterspace_em, vbound=vbound, direction=direction))
+        _fontdata(font, size,size_by_cap,size_by_nom,size_by_full,size_by_iline,em, letterspace, letterspace_em, letterspace_ref, direction, language, script)
+        : let(siz = fit_font_size(txt, wid, ht, font=font, letterspace=letterspace, letterspace_ref=letterspace_ref, letterspace_em=letterspace_em, vbound=vbound, direction=direction))
         _fontdata(font, siz, letterspace=letterspace, letterspace_em=letterspace_em, letterspace_ref=letterspace_ref, direction=direction, language=language, script=script),
     osize = fd.font.size,
     use_indent = (text_align=="left" && direction=="ltr") || text_align=="justify" || (text_align=="right" && direction=="rtl"),
@@ -694,7 +697,7 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
     just_last = is_undef(justify_last) ? (direction=="ltr" ? "left" : "right") : justify_last,
     err_just = assert(just_last=="left" || just_last=="center" || just_last=="right", str("\n",caller,"(): just_last can be set only to \"left\", \"center\", or \"right\".")),
 
-    wrapobj = _textwrap(txt, width=wid, height=ht, optimize=wrap_optimize, optimize_ht=wrap_to_ht, indent=indnt, fontdata=fd, rtl=(direction=="rtl"), vbound=vbound, wrap_spacing=wrap_spacing, block_spacing=block_spacing, silent=_silent),
+    wrapobj = _textwrap(txt, width=wid, height=ht, optimize=wrap_optimize, optimize_ht=wrap_to_ht, indent=indnt, fontdata=fd, rtl=(direction=="rtl"), vbound=vbound, wrap_spacing=wrap_spacing, block_spacing=block_spacing, nowrap=(numfontsizes==0)),
     firstbaseline = wrapobj[0].textobj.ascent,
     baselines = _baselines(wrapobj, wrap_spacing, block_spacing, fd.interline),
     fontname = str(fd.font.family, ":style=", fd.font.style),
@@ -934,7 +937,7 @@ function _line_anchors(baseline_pos, boxsize) =
 // Topics: Text
 // See Also: write(), fit_font_size()
 // Usage:
-//   size = get_font_size(font, [size=], [cap_height=], [nom_height=], [full_height=], [line_height=], [em=]);
+//   size = get_font_size(font, [size=], [size_by_cap=], [size_by_nom=], [size_by_full=], [size_by_iline=], [em=]);
 // Description:
 //   Returns the equivalent OpenSCAD font size corresponding to the specified alternative size
 //   metric, for use with OpenSCAD's `text()`. See {{write()}} above for a discussion of the
@@ -943,32 +946,32 @@ function _line_anchors(baseline_pos, boxsize) =
 //   font = The font to use. Default: "Liberation Sans:style=Regular"
 //   ---
 //   size = OpenSCAD `size` of a font. If set, the same value is returned.
-//   cap_height = Height of a capital letter, using `$refchar_cap` as the reference character.
-//   nom_height = Height of normal characters, from nominal ascender to nominal descender.
-//   full_height = Maximum height possible in the font, from maximum ascender to maximum descender.
-//   line_height = Interline height for the specified font.
+//   size_by_cap = Height of a capital letter, using `$refchar_cap` as the reference character.
+//   size_by_nom = Height of normal characters, from nominal ascender to nominal descender.
+//   size_by_full = Maximum height possible in the font, from maximum ascender to maximum descender.
+//   size_by_iline = Interline height for the specified font.
 //   em = Standard font unit size, the size of the em-box in which the font was designed.
 // Example:
 //   // "Liberation Sans:style=Bold" is the default font if not specified
 //   size = get_font_size(size=20);           // returns 20 (unchanged)
 //   size = get_font_size("Liberation Mono",
-//                        cap_height=20);     // returns 21.8531
-//   size = get_font_size(nom_height=20);     // returns 12.8894
-//   size = get_font_size(full_height=20);    // returns 10.2151
+//                        size_by_cap=20);     // returns 21.8531
+//   size = get_font_size(size_by_nom=20);     // returns 12.8894
+//   size = get_font_size(size_by_full=20);    // returns 10.2151
 //   size = get_font_size("Liberation Serif",
-//                        line_height=20);   // returns 12.5228
+//                        size_by_iline=20);   // returns 12.5228
 //   size = get_font_size(em = 20);           // returns 13.8889
-function get_font_size(font=_DEFAULTFONT, size, cap_height, nom_height, full_height, line_height, em) =
+function get_font_size(font=_DEFAULTFONT, size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em) =
     assert(version_num() >= 20210816, "\nget_font_size() requires OpenSCAD release after 2021-08-16.")
-    assert(num_defined([size, cap_height, nom_height, full_height, line_height, em])==1, "\nget_font_size(): Exactly one of size, cap_height, nom_height, full_height, line_height, or em must be specified.")
+    assert(num_defined([size, size_by_cap, size_by_nom, size_by_full, size_by_iline, em])==1, "\nget_font_size(): Exactly one of size, size_by_cap, size_by_nom, size_by_full, size_by_iline, or em must be specified.")
     is_def(size) ? size // pass through
     : let( // arbitrarily use a size 10 font to calculate scaling factor
         fm10 = fontmetrics(10, font),
         tmc = textmetrics($refchar_cap, 10, font), // $refchar_cap defaults to H
-        fontscale = is_def(cap_height) ? cap_height / tmc.size[1]
-            : is_def(nom_height) ? nom_height / (fm10.nominal.ascent-fm10.nominal.descent)
-            : is_def(full_height) ? full_height / (fm10.max.ascent-fm10.max.descent)
-            : is_def(line_height) ? line_height / fm10.interline
+        fontscale = is_def(size_by_cap) ? size_by_cap / tmc.size[1]
+            : is_def(size_by_nom) ? size_by_nom / (fm10.nominal.ascent-fm10.nominal.descent)
+            : is_def(size_by_full) ? size_by_full / (fm10.max.ascent-fm10.max.descent)
+            : is_def(size_by_iline) ? size_by_iline / fm10.interline
             : 1 / 0.72  // em
      ) 10*fontscale;
 
@@ -987,17 +990,18 @@ function get_font_size(font=_DEFAULTFONT, size, cap_height, nom_height, full_hei
 //   exceeding the other, which could be either the 'max_width' or the 'max_height'.
 //   .
 //   Because the final font size is unknown at first, if extra space between characters is desired,
-//   one of the two *relative* letterspacing arguments must be set to a proportion of the size of a
-//   character, where `letterspace_ref` is a fraction of `$refchar_width` (default `"0"`) and
-//   `letterspace_em` is a fraction of the font's em-box.
+//   one of the letterspacing arguments must be set, where `letterspace` adds a constant fixed space
+//   regardless of font size, `letterspace_ref` is a fraction of `$refchar_width` (default `"0"`),
+//   and `letterspace_em` is a fraction of the font's em-box.
 // Arguments:
 //   text = The text to analyze: a string with newline (`\n`) characters, or a list of strings (which can also contain newlines).
 //   max_width = Maximum width the text can occupy. Default: INF
 //   max_height = Maximum height the text can occupy. Default: INF
 //   ---
 //   font = Name of the font to use. Default "Liberation Sans:style=Regular"
-//   letterspace_ref = Fraction of `$refchar_width` to insert between characters. Default: 0
-//   letterspace_em = Fraction of font's em-box to insert between characters. Default: 0
+//   letterspace = Constant space in CAD units to insert between characters. Default: undef
+//   letterspace_ref = Fraction of `$refchar_width` to insert between characters. Default: undef
+//   letterspace_em = Fraction of font's em-box to insert between characters. Default: undef
 //   vbound = Determines how the vertical size of the block of text is calculated for vertical alignment, accounting for `wrap_spacing` and `block_spacing`. When set to "nominal", the nominal ascender at the top and nominal descender at the bottom is used. When set to "tight", the actual ascender at the top and descender at the bottom is used. Default: "nominal"
 //   direction = Text direction, "ltr" (left to right) or "rtl" (right to left). This matters for kerning. Default: "ltr"
 //   wrap_spacing = Proportion of font's interline height for vertical spacing between lines in a text block. Default: 1.0
@@ -1019,7 +1023,7 @@ function get_font_size(font=_DEFAULTFONT, size, cap_height, nom_height, full_hei
 //   // returns 5.592
 //   size5 = fit_font_size("Fitting multi-line\ntext to a width and height", [100,40]);
 function fit_font_size(text, max_width=INF, max_height=INF,
-    font=_DEFAULTFONT, letterspace_ref=undef, letterspace_em=undef,
+    font=_DEFAULTFONT, letterspace=undef, letterspace_ref=undef, letterspace_em=undef,
     vbound="nominal", direction="ltr", wrap_spacing=1, block_spacing=1) =
 assert(vbound=="full" || vbound=="nominal" || vbound=="tight", "\nfit_font_size(): vbound must be \"full\", \"nominal\", or \"tight\".")
 let(
@@ -1027,21 +1031,22 @@ let(
     ht = is_vector(max_width,2) ? max_width.y : max_height,
     err1 = assert(is_finite(wid) || is_finite(ht), "\nfit_font_size(): One or both of max_width and max_height must be finite."),
     err2 = assert(wid>0 && ht>0, "\nfit_font_size(): max_width and max_height must be greater than zero."),
-    nls = num_defined([letterspace_ref, letterspace_em]),
-    ds = assert(nls <= 1, "\nfit_font_size(): At most one of letterspace_ref or letterspace_em can be defined."),
-    lspc_ref = nls==0 ? 1.0 : letterspace_ref,
-    lspc_em = is_undef(lspc_ref) && is_undef(letterspace_em) ? 1.0 : letterspace_em,
-    fd10 = _fontdata(font, osize=10),
+    nls = num_defined([letterspace, letterspace_ref, letterspace_em]),
+    ds = assert(nls <= 1, "\nfit_font_size(): At most one of letterspace, letterspace_ref, or letterspace_em can be defined."),
+    lspc = is_undef(letterspace) ? 0 : letterspace,
+    fd10 = _fontdata(font, osize=10, letterspace_ref=letterspace_ref, letterspace_em=letterspace_em),
     // don't actually wrap multi-line text, but pass to _textwrap to get all the metadata
-    wrapobj = _textwrap(text, width=INF, height=INF, optimize=false, optimize_ht=false, indent=0, fontdata=fd10, rtl=(direction=="rtl"), vbound=vbound, wrap_spacing=wrap_spacing, block_spacing=block_spacing),
+    wrapobj = _textwrap(text, width=INF, height=INF, optimize=false, optimize_ht=false, indent=0, fontdata=fd10, rtl=(direction=="rtl"), vbound=vbound, wrap_spacing=wrap_spacing, block_spacing=block_spacing, nowrap=true),
     baselines = _baselines(wrapobj, wrap_spacing, block_spacing, fd10.interline),
     ilast = len(wrapobj) - 1,
     vboxsize = vbound=="tight" ?
         wrapobj[0].textobj.ascent + baselines[0] - wrapobj[ilast].textobj.descent - baselines[ilast]
     : vbound=="nominal" ? fd10.nominal.ascent + baselines[0] - fd10.nominal.descent - baselines[ilast]
     : fd10.max.asent + baselines[0] - fd10.max.descent - baselines[ilast],
-    htight = max([ for(i=[0:ilast]) wrapobj[i].textobj.boxwidth + wrapobj[i].indent ])
-) 9.999 * min(wid / htight, ht / vboxsize); // multiplying by 10 can introduce roundoff that overflows width in _textwrap()
+    lspc_add = [ for(i=[0:ilast]) lspc * len(wrapobj[i].textobj.text) ],
+    htight = [ for(i=[0:ilast]) wrapobj[i].textobj.boxwidth + wrapobj[i].indent + lspc_add[i] ],
+    ih = max_index(htight),
+) 9.99 * min((wid-lspc_add[ih]) / (htight[ih]-lspc_add[ih]), ht / vboxsize); // multiplying by 10 can introduce roundoff that overflows width in _textwrap()
 
 
 /// Internal function: _get_font_stylecodes() - called by _textwrap()
@@ -1281,8 +1286,9 @@ let(
 
     uadv = [for(k=[0:nu-1])
         textmetrics(ustr[k], osiz, ufont[k], direction, language, script).advance[0]
-            + (uspc[k] ? spcadd : 0)
+            + (uspc[k] ? spcadd : 0),
     ],
+
     // kerning between adjacent units: advance of the pair minus the sum of the individual advances
     // (enhanced by Claude to account for inline style changes inside a word)
     kern = [0, if(nu>1) for(k=[0:nu-2])
@@ -1328,18 +1334,18 @@ let(
 ///    spacer = amount of space to insert between each character
 ///    spc = size of a space character, shortcut for use in wordwrapping
 /// The `spacer` property is a constant value calculated from the letterspace parameter.
-/// The size parameters `osize`, `nom_height`, `line_height`, `em72`, and `cap_height` are mutually
-/// exclusive; one and only one of them must be specified. The `cap_height` parameter is probably
+/// The size parameters `osize`, `size_by_nom`, `size_by_iline`, `em72`, and `size_by_cap` are mutually
+/// exclusive; one and only one of them must be specified. The `size_by_cap` parameter is probably
 /// the most useful size specification. The special variable `$refchar_cap` is used as the reference
 /// character for a capital letter, and defaults to `H`. If your text uses only numbers you may want
 /// to pass `$refchar_cap=0` in the argument list.
 /// Arguments:
 ///    font = Name of font. Default: "Liberation Sans:style=Regular"
 ///    osize = OpenSCAD font size used in OpenSCAD's `text()`.
-///    cap_height = Height of a capital letter proportional to $refchar_cap
-///    nom_height = Height of characters proportional to nominal ascender to nominal descender.
-///    full_height = Height of characters proportional to max ascender to max descender
-///    line_height = Height of characters proportional to interline height
+///    size_by_cap = Height of a capital letter proportional to $refchar_cap
+///    size_by_nom = Height of characters proportional to nominal ascender to nominal descender.
+///    size_by_full = Height of characters proportional to max ascender to max descender
+///    size_by_iline = Height of characters proportional to interline height
 ///    em_size = Height of characters proportional to em size
 ///    letterspace, letterspace_em = same as in write()
 ///    direction, language, script = same as in text()
@@ -1356,10 +1362,10 @@ _letter_freq_en = [ // adds up to 1.0
     0.00978, 0.00772, 0.00153, 0.0015, 0.00095, 0.00074
 ];
 */
-function _fontdata(font=_DEFAULTFONT, osize, cap_height, nom_height, full_height, line_height, em_size, letterspace, letterspace_em, letterspace_ref, direction, language, script) =
+function _fontdata(font=_DEFAULTFONT, osize, size_by_cap, size_by_nom, size_by_full, size_by_iline, em_size, letterspace, letterspace_em, letterspace_ref, direction, language, script) =
     assert(num_defined([letterspace, letterspace_em, letterspace_ref]) <= 1, "\nAt most one of letterspace, letterspace_em, or letterspace_ref can be defined.")
     let(
-        osiz = get_font_size(font, osize, cap_height, nom_height, full_height, line_height, em_size),
+        osiz = get_font_size(font, osize, size_by_cap, size_by_nom, size_by_full, size_by_iline, em_size),
         fm = fontmetrics(osiz, font),
         tmc = textmetrics($refchar_width, osiz, font, direction, language, script, spacing=1),
         spacer = is_def(letterspace_em) ? letterspace_em / 0.72 * osiz
@@ -1404,7 +1410,7 @@ function _fontdata(font=_DEFAULTFONT, osize, cap_height, nom_height, full_height
 //   fontdata = structure returned from _fontdata()
 //   rtl = true if text is to be rendered right-to-left
 
-function _textwrap(texts, width=INF, height=INF, optimize=true, optimize_ht=false, indent=0, fontdata=undef, rtl=false, vbound="nominal", wrap_spacing=1, block_spacing=1, silent=false) = let(
+function _textwrap(texts, width=INF, height=INF, optimize=true, optimize_ht=false, indent=0, fontdata=undef, rtl=false, vbound="nominal", wrap_spacing=1, block_spacing=1, nowrap=false) = let(
     firststyle = _get_font_stylecode(fontdata.font.style),
     strings = _strings_to_array(texts),
     lines = [
@@ -1424,18 +1430,18 @@ function _textwrap(texts, width=INF, height=INF, optimize=true, optimize_ht=fals
                 if(tx[i]==" ") [i, charpos[i]]
         ]
     ],
+    wid = nowrap ? INF : width,
     wlens = flatten([ for(c=spacepos) [ c[0][1], if(len(c)>1) for(i=[1:len(c)-1]) c[i][1]-c[i-1][1]-spc ] ]),
     maxwordwid = max(wlens), // length of longest word in text
-    width_err = maxwordwid <= width ? false
-    : silent ? true
-    : echo(str("\n\u26A0Warning: ",maxwordwid,">",width,": A word exceeds the specified width", indent>0?" (possibly due to indent>0).":".")) true,
-    breaks_unop = [ for(sp=spacepos) _getbreaks(width, spc, sp, indent) ],
+    width_err = maxwordwid <= wid ? false
+    : echo(str("\n\u26A0Warning: ",maxwordwid,">",wid,": A word exceeds the specified width", indent>0?" (possibly due to indent>0).":".")) true,
+    breaks_unop = [ for(sp=spacepos) _getbreaks(wid, spc, sp, indent) ],
     breaks = optimize || optimize_ht ?
         let(
             nlines = sum([for(b=breaks_unop) len(b.breakspc)]),
             maxlines = (height - para_space_ht) / fontdata.interline
         )
-        _wrap_optimize(optimize_ht ? maxlines : nlines, maxwordwid, spacepos, breaks_unop, width, spc, indent)
+        _wrap_optimize(optimize_ht ? maxlines : nlines, maxwordwid, spacepos, breaks_unop, wid, spc, indent)
         : breaks_unop,
     wrapped = [
         for(i=[0:len(lines)-1])
