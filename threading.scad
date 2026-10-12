@@ -71,7 +71,7 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   Various options exist for controlling the ends of threads. You can specify bevels on threaded rods.
 //   In conventional threading, bevels are needed on the ends to remove sharp, thin edges, and
 //   the bevel is sized to the full outer diameter of the threaded rod.  
-//   With blunt start threading, the bevel appears on the unthreaded part of the rod.
+//   With blunt start threading, the bevel appears on the unthreaded part of the rod to ease the corner.  
 //   On a threaded rod, a bevel value of `true` or a positive bevel value cut off the corner.
 // Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=44):
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=true,$fn=80);
@@ -152,10 +152,10 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   pitch = Length between threads.
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
-//   starts = The number of lead starts.  Default: 1
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end.
+//   starts = The number of lead starts, a positive integer. Default: 1
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
@@ -290,14 +290,14 @@ module threaded_rod(
 //   ---
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
-//   starts = The number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   starts = The number of lead starts, a positive integer. Default: 1
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -347,7 +347,9 @@ module threaded_nut(
 ) {
     dummy1=
           assert(all_nonnegative(pitch), "\nNut pitch must be nonnegative.")
-          assert(all_positive(id), "\nNut inner diameter must be positive.");
+          assert(all_positive([first_defined([id1, is_list(id) ? id[2] : id]),
+                                first_defined([id2, is_list(id) ? id[2] : id])]),
+                 "\nNut inner diameter(s) must be positive.");
     basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
     dummy2 = assert(basic || is_vector(id,3));
     depth = basic ? cos(30) * 5/8
@@ -362,7 +364,7 @@ module threaded_nut(
     generic_threaded_nut(
         nutwidth=nutwidth,
         id=basic ? id : id[2], id1=id1, id2=id2,
-        h=h,
+        h=h, height=height, thickness=thickness,
         pitch=pitch,
         profile=profile,starts=starts,shape=shape, 
         left_handed=left_handed,
@@ -454,10 +456,10 @@ module threaded_nut(
 //   thread_depth = Depth of threads.  Default: pitch/2
 //   flank_angle = Angle of thread faces to plane perpendicular to screw. 
 //   left_handed = If true, create left-handed threads.  Default: false
-//   starts = The number of lead starts.  Default: 1
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   starts = The number of lead starts, a positive integer. Default: 1
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
@@ -617,7 +619,7 @@ module trapezoidal_threaded_rod(
 // Topics: Threading, Screws
 // See Also: trapezoidal_threaded_rod()
 // Usage:
-//   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle=|flank_angle=], [thread_depth], ...) [ATTACHMENTS];
+//   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle=|flank_angle=], [thread_depth=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.  By default produces
 //   the nominal dimensions for metric trapezoidal threads: a thread angle of 30° and a depth
@@ -635,13 +637,13 @@ module trapezoidal_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -718,7 +720,7 @@ module trapezoidal_threaded_nut(
                    "\nThread angle (2*flank_angle) must be smaller than 90° with default thread depth of pitch/2.");
     depth = first_defined([thread_depth,pitch/2]);
     pa_delta = 0.5*depth*tan(thread_angle/2) / pitch;
-    dummy2 = assert(pitch==0 || pa_delta<1/4, "\nSpecified thread geometry is impossible.");
+    dummy2 = assert(pitch==0 || pa_delta<=1/4, "\nSpecified thread geometry is impossible.");
     rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
@@ -759,9 +761,9 @@ module trapezoidal_threaded_nut(
 //   pitch = thread spacing (alternative to tpi)
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, this is a mask for making internal threads.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
@@ -830,7 +832,7 @@ module acme_threaded_rod(
     dummy = assert(num_defined([pitch,tpi])==1,"\nMust give exactly one of pitch and tpi.");
     pitch = is_undef(pitch) ? INCH/tpi : pitch;
     trapezoidal_threaded_rod(
-        d=d, l=l, pitch=pitch,
+        d=d, d1=d1, d2=d2, l=l, pitch=pitch,
         thread_angle=29,
         thread_depth=pitch/2,
         starts=starts,
@@ -869,13 +871,13 @@ module acme_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = Number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -935,7 +937,7 @@ module acme_threaded_nut(
         thread_depth = pitch/2, 
         thread_angle=29,shape=shape, 
         left_handed=left_handed,
-        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,
         height=height,thickness=thickness,
         blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
@@ -966,17 +968,17 @@ module acme_threaded_nut(
 // Topics: Threading, Screws
 // See Also: garden_hose_male(), garden_hose_female()
 // Usage:
-//   garden_hose_threaded_rod(d, l|length, [internal=], ...) [ATTACHMENTS];
+//   garden_hose_threaded_rod(l|length=, [internal=], [undersize=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a threaded rod compatible with 3/4-11.5NH garden hose threads as described by ANSI-ASME B1.20.7.
 //   .
 // Arguments:
 //   l / length / h / height = Length of threaded rod. Only `l` is positional, others must be named.
 //   ---
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
-//   internal = If true, make this a mask for making internal threads.  Default: false
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
+//   internal = If true, make this a mask for making internal threads. Positive undersize makes the hole smaller; negative values enlarge it. Faceting compensation and $slop are applied afterward. Default: false
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -991,6 +993,7 @@ module acme_threaded_nut(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
+//   undersize = Amount to decrease the thread diameters, in mm, without changing pitch or thread depth. Negative values enlarge the thread. Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1008,7 +1011,7 @@ function garden_hose_threaded_rod(
     end_len, end_len1, end_len2,
     lead_in_shape="default",
     teardrop=false,
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 ) = no_function("garden_hose_threaded_rod");
 module garden_hose_threaded_rod(
     l,
@@ -1021,13 +1024,14 @@ module garden_hose_threaded_rod(
     end_len, end_len1, end_len2,
     lead_in_shape="default",
     teardrop=false,
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 ) {
+    assert(is_finite(undersize), "\nundersize must be a finite number.");
     thread_angle = 60;
     tpi = 11.5;
     pitch = 1/tpi * INCH;
     thread_depth = 0.649519*pitch;
-    d = (1 + 1/16 + (internal ? 0.01 : 0)) * INCH; // 1.0625" external, 1.0725" internal
+    d = (1 + 1/16 + (internal ? 0.01 : 0)) * INCH - undersize; // 1.0625" external, 1.0725" internal
     pa_delta = 0.5*thread_depth*tan(thread_angle/2) / pitch;
     rr1 = -thread_depth/pitch;
     z1 = 1/4-pa_delta;
@@ -1056,30 +1060,33 @@ module garden_hose_threaded_rod(
 // Topics: Threading
 // See Also: garden_hose_female()
 // Usage:
-//   garden_hose_male([wall], ...) [ATTACHMENTS];
+//   garden_hose_male([wall], [undersize=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard male coupler compatible with a standard North American garden hose, using ANSI-ASME B1.20.7 specifications.
 //   The `wall` thickness default is set to give the coupler an inner diameter of 25/32" according to the spec.
 //   This results in a wall thickness sligtly over 2 mm, creating a ring-shaped surface that compresses a rubber gasket in the mating female coupler.
 //   For structural integrity when 3D printing, you may want to make the wall thickness thicker, which would reduce the inner diameter and flow rate through the coupler.
 // Arguments:
-//   wall = wall thickness inside the inner thread diameter. Default = 2.13729
+//   wall = Wall thickness below the thread root. The bore is derived from the undersized thread diameter and this wall thickness. Default: 2.13729
+//   undersize = Amount to decrease the thread diameters, in mm, without changing pitch or thread depth. Negative values enlarge the thread. Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
 // Example:
 //   garden_hose_male();
 
-function garden_hose_male(wall, anchor, spin, orient) = no_function("garden_hose_male");
-module garden_hose_male(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
+function garden_hose_male(wall, anchor, spin, orient, undersize=0) = no_function("garden_hose_male");
+module garden_hose_male(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP, undersize=0) {
+    assert(is_finite(undersize), "\nundersize must be a finite number.");
     tpi = 11.5;
     pitch = 1/tpi * INCH;
     thread_depth = 0.649519*pitch;
-    dia_male = (1 + 1/16) * INCH; // 1.0625"
+    dia_male = (1 + 1/16) * INCH - undersize; // 1.0625"
     pilot = 1/8 * INCH;
     nipple_len = 9/16 * INCH;
     thread_inside_dia = dia_male - 2*thread_depth;
-    nipple_inside_dia = thread_inside_dia - 2*wall; // should default 25/32 * INCH;
+    nipple_inside_dia = thread_inside_dia - 2*wall; // defaults to 25/32 * INCH at undersize=0
+    assert(is_finite(wall) && wall>0 && nipple_inside_dia>0, "\nwall and undersize leave no positive bore in the male coupler.");
 
     attachable(anchor, spin, orient, d=dia_male, l=nipple_len) {
         difference() {
@@ -1124,7 +1131,7 @@ module _tex_cyl(w, hh, texture, anchor, modname) {
 // Topics: Threading
 // See Also: garden_hose_female()
 // Usage:
-//   garden_hose_female([gasket_seat], [wall=], [texture=], ...) [ATTACHMENTS];
+//   garden_hose_female([gasket_seat], [wall=], [texture=], [addl_space=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a female hose coupler compatible with a standard North American garden hose, using [ANSI-ASME B1.20.7 specifications](https://web.archive.org/web/20170826074605/http://gost-snip.su/download/asme_b1_20_7i991_hose_coupling_screw_threads_inch)
 //   for the threads, with space to accommodate a rubber gasket assuming a standard 25/32" inner diameter.
@@ -1222,7 +1229,7 @@ module garden_hose_gasket(od=25.4, id=15.875, thickness=3, anchor=BOTTOM, spin=0
 // Topics: Threading, Screws
 // See Also: acme_threaded_rod()
 // Usage:
-//   npt_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
+//   npt_threaded_rod(size, [internal=], [undersize=], [hollow=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard NPT pipe end threading. If `internal=true`, creates a mask for making
 //   internal pipe threads.  Tapers smaller upward if `internal=false`.  Tapers smaller downward
@@ -1232,11 +1239,12 @@ module garden_hose_gasket(od=25.4, id=15.875, thickness=3, anchor=BOTTOM, spin=0
 //   size = NPT standard pipe size in inches.  1/16", 1/8", 1/4", 3/8", 1/2", 3/4", 1", 1+1/4", 1+1/2", or 2".  Default: 1/2"
 //   ---
 //   left_handed = If true, create left-handed threads.  Default = false
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   hollow = If true, create a pipe with the correct internal diameter.
-//   internal = If true, make this a mask for making internal threads.
+//   internal = If true, make this a mask for making internal threads. Positive undersize makes the hole smaller; negative values enlarge it. Faceting compensation and $slop are applied afterward. Default: false
+//   undersize = Amount to decrease the thread diameters, in mm, without changing pitch or thread depth. Negative values enlarge the thread. Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1264,7 +1272,7 @@ function npt_threaded_rod(
     bevel,bevel1,bevel2,
     hollow=false,
     internal=false,
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 )=no_function("npt_threaded_rod");
 module npt_threaded_rod(
     size=1/2,
@@ -1272,11 +1280,13 @@ module npt_threaded_rod(
     bevel,bevel1,bevel2,
     hollow=false,
     internal=false,
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 ) {
+    assert(is_finite(undersize), "\nundersize must be a finite number.");
     assert(is_finite(size));
     assert(is_bool(left_handed));
-    assert(is_undef(bevel) || is_bool(bevel));
+    assert(is_undef(bevel) || is_bool(bevel) || is_finite(bevel) || bevel=="reverse",
+           "\nbevel must be a number, boolean or \"reverse\".");
     assert(is_bool(hollow));
     assert(is_bool(internal));
     assert(!(internal&&hollow), "\nCannot created a hollow internal threads mask.");
@@ -1296,7 +1306,7 @@ module npt_threaded_rod(
     info = [for (data=info_table) if(approx(size,data[0])) data[1]][0];
     dummy1 = assert(is_def(info), "\nUnsupported NPT size. Try one of 1/16, 1/8, 1/4, 3/8, 1/2, 3/4, 1, 1+1/4, 1+1/2, 2.");
     l = INCH * info[0];
-    d = INCH * info[1];
+    d = INCH * info[1] - undersize;
     pitch = INCH / info[2];
     rr = d/2;
     rr2 = rr - l/32;
@@ -1318,6 +1328,8 @@ module npt_threaded_rod(
         [ 6/16, -depth/pitch],
         [ 7/16, -depth/pitch*1.07]
     ];
+    assert(!hollow || min(r1,r2)+pitch*min(column(profile,1))>size*INCH/2,
+           "\nundersize leaves no wall around the NPT bore.");
     attachable(anchor,spin,orient, l=l, r1=r1, r2=r2) {
         difference() {
             generic_threaded_rod(
@@ -1343,7 +1355,7 @@ module npt_threaded_rod(
 // Topics: Threading, Screws
 // See Also: npt_threaded_rod()
 // Usage:
-//   bspp_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
+//   bspp_threaded_rod(size, l|length=|h=|height=, [internal=], [undersize=], ...) [ATTACHMENTS];
 // Description:
 //   British Standard Pipe (BSP) is a set of screw thread standards used internationally (except in the USA)
 //   for connecting pipes.  This module implements British STandard Pipe Parallel (BSPP) thread, where the
@@ -1357,11 +1369,11 @@ module npt_threaded_rod(
 //   l / length / h / height = Length of threaded rod.
 //   ---
 //   left_handed = If true, create left-handed threads.  Default: false
-//   starts = The number of lead starts.  Default: 1
-//   internal = If true, make this a mask for making internal threads.  Default: false
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end. Overrides bevel=.
-//   bevel2 = Set bevel for top end. Overrides bevel=.
+//   starts = The number of lead starts, a positive integer. Default: 1
+//   internal = If true, make this a mask for making internal threads. Positive undersize makes the hole smaller; negative values enlarge it. Faceting compensation and $slop are applied afterward. Default: false
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -1375,6 +1387,7 @@ module npt_threaded_rod(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   undersize = Amount to decrease the thread diameters, in mm, without changing pitch or thread depth. Negative values enlarge the thread. Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1426,7 +1439,7 @@ function bspp_threaded_rod(
     lead_in_ang, lead_in_ang1, lead_in_ang2,
     end_len, end_len1, end_len2,
     lead_in_shape="default",
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 ) = no_function("bspp_threaded_rod");
 
 module bspp_threaded_rod(
@@ -1440,9 +1453,10 @@ module bspp_threaded_rod(
     lead_in_ang, lead_in_ang1, lead_in_ang2,
     end_len, end_len1, end_len2,
     lead_in_shape="default",
-    anchor, spin, orient
+    anchor, spin, orient, undersize=0
 )
 {
+    assert(is_finite(undersize), "\nundersize must be a finite number.");
     assert(!is_undef(size), "\nUndefined size.");
     assert(is_num(size), "\nsize is not a number.");
     _pitch = 0;
@@ -1450,7 +1464,7 @@ module bspp_threaded_rod(
     index = search(size, bspp_dimensions);
     forcefuncall = assert(len(index), str("\nUnsupported BSPP size ", size, "."));
     p = INCH / bspp_dimensions[index[0]][1][_pitch];
-    d = INCH * bspp_dimensions[index[0]][1][_diameter];
+    d = INCH * bspp_dimensions[index[0]][1][_diameter] - undersize;
     theta = 55 / 2;
     H = p / (2 * tan(theta));     // : fundamental triangle height
     hh = 2 * H / 3;               // : actual depth of the thread
@@ -1511,9 +1525,9 @@ module bspp_threaded_rod(
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = Number of lead starts.  Default: 1
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, this is a mask for making internal threads.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
@@ -1624,14 +1638,14 @@ module buttress_threaded_rod(
 //   ---
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
-//   starts = The number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   starts = The number of lead starts, a positive integer. Default: 1
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -1725,9 +1739,9 @@ module buttress_threaded_nut(
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, this is a mask for making internal threads.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
@@ -1833,13 +1847,13 @@ module square_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See {{generic_threaded_nut()}}. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See {{generic_threaded_nut()}}. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -1872,7 +1886,7 @@ function square_threaded_nut(
     lead_in_ang, lead_in_ang1, lead_in_ang2,
     end_len, end_len1, end_len2,
     lead_in_shape="default",
-    starts=1,
+    starts=1, shape="hex",
     anchor, spin, orient
 ) = no_function("square_threaded_nut");
 module square_threaded_nut(
@@ -1888,13 +1902,13 @@ module square_threaded_nut(
     lead_in_ang, lead_in_ang1, lead_in_ang2,
     end_len, end_len1, end_len2,
     lead_in_shape="default",
-    starts=1,
+    starts=1, shape="hex",
     anchor, spin, orient
 ) {
     assert(is_num(pitch) && pitch>=0)
     trapezoidal_threaded_nut(
         nutwidth=nutwidth, id=id, h=h, pitch=pitch,
-        thread_angle=0,
+        thread_angle=0, shape=shape,
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2, bevang=bevang,
         ibevel=ibevel, ibevel1=ibevel1, ibevel2=ibevel2,
@@ -1925,15 +1939,15 @@ module square_threaded_nut(
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length / h / height = Length of threaded rod.
-//   pitch = Thread spacing. Also, the diameter of the ball bearings used.
-//   ball_diam = The diameter of the ball bearings to use with this ball screw.
-//   ball_arc = The arc portion, in degrees, that should touch the ball bearings. Default: 120
+//   pitch = Thread spacing.
+//   ball_diam = The diameter of the ball bearings to use with this ball screw. Default: 5
+//   ball_arc = The arc portion, in degrees, that should touch the ball bearings. Default: 100
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end.
-//   bevel2 = Set bevel for top end. 
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See {{generic_threaded_rod()}} for sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   internal = If true, make this a mask for making internal threads.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
@@ -2019,6 +2033,18 @@ module ball_screw_rod(
 
 // Section: Generic Threading
 
+/// Resolve a rod bevel. Explicit numeric values are never clipped.
+/// The sign of the result describes the mask geometry, not the user argument.
+function _thread_bevel_size(bevel, blunt, internal, depth, length, core_r) =
+    let(
+        magnitude = is_num(bevel) ? bevel
+                  : bevel==false || (is_undef(bevel) && blunt) ? 0
+                  : min(depth/(blunt?2:1), length/4,
+                        !internal && blunt ? max(0,core_r/2) : INF)
+    )
+    (internal?-1:1)*(bevel=="reverse"?-1:1)*magnitude;
+
+
 // Module: generic_threaded_rod()
 // Synopsis: Creates a generic threaded rod.
 // SynTags: Geom
@@ -2041,14 +2067,28 @@ module ball_screw_rod(
 //   If internal is true then produce a thread mask to difference from an object.  When internal is true the rod
 //   diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the
 //   specified size.  The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a
-//   `2 * $slop` gap on each side. If `bevel=true` and `internal=false` then the ends of the rod are beveled.
-//   When `bevel=true` and `internal=true`, the ends of the rod are filled in so that the rod mask creates a
-//   bevel when subtracted from an object.  The bevel is at 45° and is the depth of the threads.
+//   `2 * $slop` gap on each side. 
 //   .
 //   Blunt start threading, which is the default, specifies that the thread ends abruptly at its full width instead of
 //   running off the end of the shaft and leaving a sharp edged partial thread at the end of the screw.  This makes
 //   screws easier to start and prevents cross threading.  Blunt start threads should always be superior, and they are
 //   faster to model, but if you really need standard threads that run off the end you can set `blunt_start=false`.
+//   .
+//   If `bevel=true` and `internal=false` then the ends of the rod are beveled.
+//   When `bevel=true` and `internal=true`, the ends of the rod are filled in so that the rod mask creates a
+//   bevel when subtracted from an object. For straight rods the bevel is at 45 degrees.
+//   Bevels default to `false` for blunt starts and `true` otherwise.  Bevels on blunt starts apply beyond the threading
+//   and decrease the space available for threads: their purpose is to round off the sharp edges and possibly ease
+//   alignment. Bevels on conventional threads clip sharp thread ends.  
+//   The default bevel size is half the thread depth for blunt starts, the full thread depth for conventional starts, 
+//   or 5% of the hole diameter in the unthreaded case (`pitch=0`).  The size is limited 
+//   to one quarter of the rod length at each end, and when `internal=false` the size is also
+//   limited to half the minor radius to avoid beveling to a sharp point.  With conventional threads on short
+//   rods this may leave a partly unclipped sharp thread end.  In the unthreaded case (`pitch=0`) the bevel is 5% of the diameter.
+//   You can also supply any bevel as a numerical size. 
+//   Explicit numeric sizes are not limited
+//   automatically and must fit the available length and radius. Positive values bevel the rod inward, or
+//   flare an internal mask outward; negative values reverse this direction.   
 //   .
 //   The teardrop option cuts off the threads with a teardrop for 3d printability of horizontal holes.  By default,
 //   if the screw outer radius is r then the flat top is distance 1.05r from the center, adding a 5% space.  
@@ -2061,13 +2101,13 @@ module ball_screw_rod(
 //   profile = A 2D path giving the shape of a thread
 //   ---
 //   left_handed = If true, create left-handed threads.  Default: false
-//   starts = The number of lead starts.  Default: 1
+//   starts = The number of lead starts, a positive integer. Default: 1
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
-//   bevel1 = Set bevel for bottom end. Overrides bevel=.
-//   bevel2 = Set bevel for top end. Overrides bevel=.
+//   bevel = Bevel both ends. True selects automatic sizing, a number specifies the size in mm, false disables beveling, and "reverse" reverses an automatic bevel. See above for automatic sizing. Default: false for blunt start ends, true otherwise
+//   bevel1 = Bottom bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top bevel; accepts the same values as bevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -2139,6 +2179,7 @@ module generic_threaded_rod(
     teardrop=false,
     anchor, spin, orient
 ) {
+    starts = assert(is_int(starts) && starts>0, "\nstarts must be a positive integer.") starts;
     len = one_defined([l,length,h,height],"l,length,h,height");
     bevel1 = first_defined([bevel1,bevel]);
     bevel2 = first_defined([bevel2,bevel]);
@@ -2156,13 +2197,13 @@ module generic_threaded_rod(
     dummy0 = 
       assert(all_positive([pitch]),"\nThread pitch must be a positive value.")
       assert(all_positive([len]),"\nLength must be a postive value.")
-      assert(is_path(profile),"\nProfile must be a path.")
+      assert(is_path(profile,2),"\nProfile must be a 2D path.")
       assert(is_bool(blunt_start1), "\nblunt_start1/blunt_start must be boolean.")
       assert(is_bool(blunt_start2), "\nblunt_start2/blunt_start must be boolean.")
       assert(is_bool(left_handed))
       assert(all_positive([r1,r2]), "\nMust give d or both d1 and d2 as positive values.")
-      assert(is_undef(bevel1) || is_num(bevel1) || is_bool(bevel1) || bevel1=="reverse", "\nbevel1/bevel must be a number, boolean or \"reverse\".")
-      assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "\nbevel2/bevel must be a number, boolean or \"reverse\".");
+      assert(is_undef(bevel1) || is_finite(bevel1) || is_bool(bevel1) || bevel1=="reverse", "\nbevel1/bevel must be a number, boolean or \"reverse\".")
+      assert(is_undef(bevel2) || is_finite(bevel2) || is_bool(bevel2) || bevel2=="reverse", "\nbevel2/bevel must be a number, boolean or \"reverse\".");
 
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;    // Internal radius adjusted for faceting
@@ -2188,21 +2229,11 @@ module generic_threaded_rod(
     pmax = pitch * profbounds[1].y;
     rmax = max(r1adj,r2adj)+pmax;
 
-    // These parameters give the size of the bevel, negative for an outward bevel (e.g. on internal thread mask)  
-    bev1 = (bevel1=="reverse"?-1:1)*(internal?-1:1) *
-               ( is_num(bevel1)? bevel1
-               : bevel1==false? 0
-               : blunt_start1? (is_undef(bevel1)?0
-                               :internal ? r1/6
-                               :(r1+profmin)/6)
-               : pmax-profmin);
-    bev2 = (bevel2=="reverse"?-1:1)*(internal?-1:1) *
-               ( is_num(bevel2)? bevel2
-               : bevel2==false? 0
-               : blunt_start2? (is_undef(bevel2)?0
-                               :internal ? r2/6
-                               :(r2+profmin)/6)
-               : pmax-profmin);
+    // A positive signed result cuts inward; a negative result flares outward.
+    depth = pmax-profmin;
+    bev1 = _thread_bevel_size(bevel1, blunt_start1, internal, depth, len, r1adj+profmin);
+    bev2 = _thread_bevel_size(bevel2, blunt_start2, internal, depth, len, r2adj+profmin);
+    assert(abs(bev1)+abs(bev2)<len, "\nCombined bevel size exceeds length of screw.");
     // This is the bevel size used for constructing the polyhedron.  The bevel is integrated when blunt start is on, but
     // applied later via difference/union if blunt start is off, so set bevel to zero in the latter case.  
     bevel_size1 = blunt_start1?bev1:0;
@@ -2355,7 +2386,7 @@ module generic_threaded_rod(
           if (clip_bev1<0) 
               down(len/2+.001)cyl(l=-clip_bev1, r2=r1adj+profmin, r1=r1adj+profmin+slope*clip_bev1-clip_bev1,anchor=BOTTOM);
           if (clip_bev2<0) 
-              up(len/2+.001)cyl(l=-clip_bev2, r1=r2adj+profmin, r2=r2adj+profmin+slope*clip_bev1-clip_bev2,anchor=TOP);
+              up(len/2+.001)cyl(l=-clip_bev2, r1=r2adj+profmin, r2=r2adj+profmin+slope*clip_bev2-clip_bev2,anchor=TOP);
 
           // Add teardrop profile
           if (teardrop!=false) {
@@ -2365,13 +2396,13 @@ module generic_threaded_rod(
                    : assert(false,"\ninvalid teardrop value.");
               dummy = assert(fact<=1/sqrt(2), "\nteardrop value too large.");
               pdepth = pmax-profmin;              
-              trap1 = back((r1adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r1adj+pmax)*sqrt(2), h = (r1adj+pmax)*fact,anchor=FWD),1),-l/2));
-              trap2 = back((r2adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r2adj+pmax)*sqrt(2), h = (r2adj+pmax)*fact,anchor=FWD),1), l/2));
+              trap1 = back((r1adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r1adj+pmax)*sqrt(2), h = (r1adj+pmax)*fact,anchor=FWD),1),-len/2));
+              trap2 = back((r2adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r2adj+pmax)*sqrt(2), h = (r2adj+pmax)*fact,anchor=FWD),1), len/2));
               yproj = [[1,0,0],[0,0,0],[0,0,1]];
-              p1a=trap1[0]+unit([0,0,-l/2]-trap1[0])*pdepth*3/4;
-              p1b=last(trap1)+unit([0,0,-l/2]-last(trap1))*pdepth*3/4;
-              p2a=trap2[0]+unit([0,0,l/2]-trap2[0])*pdepth*3/4;
-              p2b=last(trap2)+  unit([0,0,l/2]-last(trap2))*pdepth*3/4     ;
+              p1a=trap1[0]+unit([0,0,-len/2]-trap1[0])*pdepth*3/4;
+              p1b=last(trap1)+unit([0,0,-len/2]-last(trap1))*pdepth*3/4;
+              p2a=trap2[0]+unit([0,0,len/2]-trap2[0])*pdepth*3/4;
+              p2b=last(trap2)+  unit([0,0,len/2]-last(trap2))*pdepth*3/4     ;
               cut1 = reverse([p1a, p1a*yproj, p1b*yproj, p1b]);
               cut2 = reverse([p2a, p2a*yproj, p2b*yproj, p2b]);
               vert = [
@@ -2403,10 +2434,25 @@ module __rot_if_old()
 // Topics: Threading, Screws
 // See Also: generic_threaded_rod()
 // Usage:
-//   generic_threaded_nut(nutwidth, id, h|height|thickness, pitch, profile, [$slop], ...) [ATTACHMENTS];
+//   generic_threaded_nut(nutwidth, id, h|height|thickness, pitch, profile, [$slop=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hexagonal or square nut for an generic threaded rod using a user-supplied thread profile.
-//   See {{generic_threaded_rod()}} for details on the profile specification.  
+//   See {{generic_threaded_rod()}} for details on the profile specification.
+//   .
+//   When `ibevel=true` (the default), the threads will be beveled where they meet the nut face.  
+//   Bevels on blunt starts apply beyond the threading
+//   and decrease the space available for threads: their purpose is to round off the sharp edges and possibly ease
+//   alignment. Bevels on conventional threads clip sharp thread ends.  
+//   The default bevel size is half the thread depth for blunt starts, the full thread depth for conventional starts, 
+//   or 5% of the hole diameter in the unthreaded case (`pitch=0`).  The size is limited 
+//   to one quarter of the nut thickness at each end.  The bevel is also capped so that it uses at most half of the
+//   wall thickness.  You can also specify the bevel size numerically. 
+//   Numeric ibevel sizes are not automatically reduced: they must fit the thickness and leave material around the
+//   opening. Positive values flare the hole and negative values reverse the bevel. 
+//   .
+//   Outside bevels retain their shape-dependent automatic size. Numeric outside bevels specify a nonnegative radial
+//   inset of the circumscribed cutting cylinder at bevang, not an axial distance or an inset from the nut flats.
+//   Their combined axial extent must fit the nut.
 // Arguments:
 //   nutwidth = outer dimension of nut from flat to flat.
 //   id = inner diameter of threaded hole, measured from bottom of threads
@@ -2419,13 +2465,13 @@ module __rot_if_old()
 //   starts = The number of lead starts.  Default = 1
 //   id1 = inner diameter at the bottom
 //   id2 = inner diameter at the top
-//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
-//   bevel1 = if true, bevel the outside of the nut bottom.
-//   bevel2 = if true, bevel the outside of the nut top. 
+//   bevel = Outside nut bevel: true for automatic size, a nonnegative number for radial inset in mm, or false for no bevel. See above for sizing. Default: true for hex nuts, false for square nuts
+//   bevel1 = Bottom outside bevel; accepts the same values as bevel and overrides it.
+//   bevel2 = Top outside bevel; accepts the same values as bevel and overrides it.
 //   bevang = set the angle for the outside nut bevel.  Default: 30
-//   ibevel = if true, bevel the inside (the hole).   Default: true
-//   ibevel1 = if true bevel the inside, bottom end.
-//   ibevel2 = if true bevel the inside, top end.
+//   ibevel = Inside bevel: true for automatic size, a number for size in mm, false for none, or "reverse" for an inverted automatic bevel. See above for sizing. Default: true
+//   ibevel1 = Bottom inside bevel; accepts the same values as ibevel and overrides it.
+//   ibevel2 = Top inside bevel; accepts the same values as ibevel and overrides it.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -2484,6 +2530,7 @@ module generic_threaded_nut(
     anchor, spin, orient
 ) {
     
+    starts = assert(is_int(starts) && starts>0, "\nstarts must be a positive integer.") starts;
     extra = 0.01;
     id1 = first_defined([id1,id]);
     id2 = first_defined([id2,id]);
@@ -2497,18 +2544,44 @@ module generic_threaded_nut(
     full_id2 = id2+slope*extra/2;
     ibevel1 = first_defined([ibevel1,ibevel,true]);
     ibevel2 = first_defined([ibevel2,ibevel,true]);
-    bevel1 = first_defined([bevel1,bevel,shape=="hex"?true:false]);
-    bevel2 = first_defined([bevel2,bevel,shape=="hex"?true:false]);
-    depth = -pitch*min(column(profile,1));
-    IBEV=0.05;
+    bevel1 = first_defined([bevel1,bevel,shape=="hex"]);
+    bevel2 = first_defined([bevel2,bevel,shape=="hex"]);
+    blunt_start1 = first_defined([blunt_start1,blunt_start,true]);
+    blunt_start2 = first_defined([blunt_start2,blunt_start,true]);
+    assert(is_bool(blunt_start1) && is_bool(blunt_start2), "\nblunt_start must be boolean.");
+    assert(is_finite(nutwidth) && nutwidth>0, "\nnutwidth must be positive.");
+    assert(is_finite(bevang) && bevang>0 && bevang<90, "\nbevang must be between 0 and 90 degrees.");
+    assert(pitch==0 || is_path(profile,2), "\nProfile must be a 2D path.");
+    profmin = pitch==0 ? 0 : pitch*min(column(profile,1));
+    pmax = pitch==0 ? 0 : pitch*max(column(profile,1));
+    depth = pmax-profmin;
+    sides = quantup(segs(max(full_id1,full_id2)/2),starts);
+    rsc = pitch==0 ? 1 : 1/cos(180/sides);
+    // Use the same circumscribed radii as the actual subtraction mask.
+    mask_r = [full_id1,full_id2]*rsc/2 + repeat(2*get_slop(),2);
+    face_r = [id1,id2]*rsc/2 + repeat(2*get_slop(),2);
+    major_r = [for(i=[0:1]) max(mask_r[i],face_r[i])+pmax];
+    outer_r = _nut_end_radii(nutwidth,h,shape,bevel1,bevel2,bevang);
+    wall = outer_r-major_r;
+    assert(min(wall)>0, "\nNut hole exceeds the available outside dimensions at an end face.");
+    // A taper can enlarge an end's cutting cone. Bound that enlargement too.
+    taper = abs(mask_r[1]-mask_r[0])/(h+extra);
+    ib1 = _nut_ibevel_size(ibevel1,blunt_start1,pitch,depth,h,id1,wall[0],taper);
+    ib2 = _nut_ibevel_size(ibevel2,blunt_start2,pitch,depth,h,id2,wall[1],taper);
+    assert(abs(ib1)+abs(ib2)<h, "\nCombined internal bevel size exceeds nut thickness.");
+    // Explicit bevels may use more than the automatic half-wall allowance,
+    // but must still leave material. Negative (reverse) bevels do not flare.
+    assert(ib1<=0 || _nut_bevel_flare(ib1,blunt_start1,pitch,depth,taper)<wall[0],
+           "\nibevel1 is too large for the nut wall.");
+    assert(ib2<=0 || _nut_bevel_flare(ib2,blunt_start2,pitch,depth,taper)<wall[1],
+           "\nibevel2 is too large for the nut wall.");
     vnf = linear_sweep(hexagon(id=nutwidth), height=h, center=true);
     attachable(anchor,spin,orient, size=shape=="square" ? [nutwidth,nutwidth,h] : undef, vnf=shape=="hex" ? vnf : undef) {
         difference() {
             _nutshape(nutwidth,h, shape,bevel1,bevel2,bevang=bevang);
             if (pitch==0) 
                cyl(l=h+extra, d1=full_id1+4*get_slop(), d2=full_id2+4*get_slop(),
-                   chamfer1=ibevel1?-IBEV*full_id1:undef,
-                   chamfer2=ibevel2?-IBEV*full_id2:undef);
+                   chamfer1=-ib1, chamfer2=-ib2);
             else
                generic_threaded_rod(
                      d1=full_id1,d2=full_id2,
@@ -2518,7 +2591,7 @@ module generic_threaded_nut(
                      left_handed=left_handed,
                      starts=starts,
                      internal=true,
-                     bevel1=ibevel1,bevel2=ibevel2,
+                     bevel1=ib1,bevel2=ib2,
                      blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
                      lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
                      lead_in_ang=lead_in_ang, lead_in_ang1=lead_in_ang1, lead_in_ang2=lead_in_ang2,
@@ -2530,18 +2603,57 @@ module generic_threaded_nut(
 }
 
 
+/// Exterior nut bevels use the radial inset of the circumscribed cutting cylinder.
+function _nut_outer_bevel(bevel, width, shape) =
+    assert(is_bool(bevel) || (is_finite(bevel) && bevel>=0),
+           "\nOutside nut bevel must be boolean or a nonnegative number.")
+    is_num(bevel) ? bevel : !bevel ? 0
+  : (width/cos(180/(shape=="hex"?6:4))-width)/2/0.9;
+
+
+/// Minimum outside radius at each nut face. The cutter extends 0.005 beyond
+/// each face; the small chamfer on unbeveled polygon ends is also included.
+function _nut_end_radii(width, height, shape, bevel1, bevel2, angle) =
+    let(
+        radius = width/cos(180/(shape=="hex"?6:4))*0.99/2,
+        bevels = [for(b=[bevel1,bevel2]) _nut_outer_bevel(b,width,shape)]
+    )
+    assert(sum(bevels)*tan(angle)<=height+0.01,
+           "\nOutside bevels exceed nut thickness.")
+    [for(b=bevels)
+        min(width/2-(b==0?width*0.01:0), radius-max(0,b-0.005/tan(angle)))];
+
+
+/// Bound only automatic sizes. Conventional threads must first cut through
+/// their depth before the bevel consumes the wall outside the major radius.
+function _nut_ibevel_size(bevel, blunt, pitch, depth, height, diameter, wall, taper=0) =
+    assert(is_bool(bevel) || is_finite(bevel) || bevel=="reverse",
+           "\nInside nut bevel must be a number, boolean or \"reverse\".")
+    is_num(bevel) ? bevel : bevel==false ? 0
+  : let(
+        preferred = pitch==0 ? 0.05*diameter : depth/(blunt?2:1),
+        radial_limit = ((pitch!=0 && !blunt ? depth : 0)+wall/2)/(1+taper)
+    )
+    (bevel=="reverse"?-1:1)*min(preferred,height/4,radial_limit);
+
+
+/// Conservative radial flare bound for the existing tapered mask construction.
+function _nut_bevel_flare(bevel, blunt, pitch, depth, taper) =
+    max(0,bevel*(1+taper)-(pitch!=0 && !blunt ? depth : 0));
+
+
 module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 {
-   bevel_d=0.9;
+   chamf1 = _nut_outer_bevel(bevel1,nutwidth,shape);
+   chamf2 = _nut_outer_bevel(bevel2,nutwidth,shape);
    intersection(){
        if (shape=="hex")
-         cyl(d=nutwidth, circum=true, $fn=6, l=h, chamfer1=bevel1?0:nutwidth*.01, chamfer2=bevel2?0:nutwidth*.01);
+         cyl(d=nutwidth, circum=true, $fn=6, l=h, chamfer1=chamf1>0?0:nutwidth*.01, chamfer2=chamf2>0?0:nutwidth*.01);
        else
-         cuboid([nutwidth,nutwidth,h],chamfer=nutwidth*.01, except=[if (bevel1) BOT, if(bevel2) TOP]);
+         cuboid([nutwidth,nutwidth,h],chamfer=nutwidth*.01, except=[if (chamf1>0) BOT, if(chamf2>0) TOP]);
        fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
        d = shape=="hex" ? 2*nutwidth/sqrt(3) : sqrt(2)*nutwidth;
-       chamfsize = (d-nutwidth)/2/bevel_d;
-       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=bevang);
+       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=chamf1,chamfer2=chamf2,chamfang=bevang);
    }
 }
 
@@ -2556,7 +2668,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //     thread_helix(d1=,d2=, pitch=, turns=, [thread_depth=], [thread_angle=|flank_angle=], [profile=], [starts=], [internal=], ...) {ATTACHMENTS};
 // Description:
 //   Creates a right-handed helical thread with optional end tapering.  Unlike
-//   {{generic_threaded_rod()}, this module just generates the thread, and you specify the total
+//   {{generic_threaded_rod()}}, this module just generates the thread, and you specify the total
 //   angle of threading that you want, which makes it easy to put complete threads onto a longer
 //   shaft.  It also optionally makes a finely divided taper at the thread ends.  However, it takes
 //   2-3 times as long to render compared to {{generic_threaded_rod()}}.  This module was designed
@@ -2564,23 +2676,23 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //   .
 //   You can specify a thread_depth and flank_angle, in which case you get a symmetric trapezoidal
 //   thread, whose inner diameter (the base of the threads for external threading) is `d` (so the
-//   total diameter is `d + thread_depth`). This differs from the threaded_rod modules, where
+//   total diameter is `d + 2*thread_depth`). This differs from {{threaded_rod()}} and related modules, where
 //   the specified diameter is the outer diameter. Alternatively you can give a profile, following
-//   the same rules as for general_threaded_rod.  The Y=0 point align1 with the specified
+//   the same rules as for {{generic_threaded_rod()}}.  The Y=0 point aligns with the specified
 //   diameter, and the profile should range in X from -1/2 to 1/2. You cannot specify both the
-//   profile and the `thread_depth` or `flank_angle`.
+//   profile and `thread_depth`, `flank_angle`, or `thread_angle`.
 //   .
-//   Unlike {{generic_threaded_rod()}, when internal=true this module generates the threads, not a thread mask.
+//   Unlike {{generic_threaded_rod()}}, when internal=true this module generates the threads, not a thread mask.
 //   The profile needs to be inverted to produce the proper thread form.  If you use the built-in trapezoidal
 //   thread you get the inverted thread, designed so that the inner diameter is d.  If you supply a custom profile
 //   you must invert it yourself to get internal threads.  With adequate clearance
 //   this thread would mate with the thread that uses the same parameters but has `internal=false`.
-//   Unlike the threaded_rod modules, `thread_helix()` does not adjust the diameter for faceting, nor does it
+//   Unlike {{threaded_rod()}} and related modules, this module does not adjust the diameter for faceting, nor does it
 //   subtract any `$slop` for clearance.
 //   .
 //   The `lead_in` options specify a lead-in section where the ends of the threads scale down to avoid a sharp face at the thread ends.
 //   You can specify the length of this scaling directly with the `lead_in` parameters or as an angle using the `lead_in_ang` parameters.
-//   If you give a positive value, the extrusion is lengthenend by the specified distance or angle; if you give a negative
+//   If you give a positive value, the extrusion is lengthened by the specified distance or angle; if you give a negative
 //   value then the scaled end is included in the extrusion length specified by `turns`.  If the value is zero then no scaled ends
 //   are produced.  The shape of the scaled ends can be controlled with the lead_in_shape parameter.  Supported options are "sqrt", "linear"
 //   "smooth" and "cut".  Lead-in works on both internal and external threads.
@@ -2633,17 +2745,17 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //    back(3)text("angle",size=4,halign="center");
 //   }
 // Arguments:
-//   d = Base diameter of threads.  Default: 10
-//   pitch = Distance between threads.  Default: 2
+//   d = Base diameter of threads.
+//   pitch = Distance between threads.
 //   ---
 //   turns = Number of revolutions to rotate thread around.
 //   thread_depth = Depth of threads from top to bottom.
 //   flank_angle = Angle of thread faces to plane perpendicular to screw. Default: 15°
 //   thread_angle = Angle between two thread faces.  
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
-//   starts = The number of thread starts.  Default: 1
+//   starts = The number of thread starts, a positive integer. Default: 1
 //   left_handed = If true, thread has a left-handed winding.
-//   internal = if true make internal threads.  The only effect this has is to change how the thread lead_in is constructed. When true, the lead-in section tapers toward the outside; when false, it tapers toward the inside.  Default: false
+//   internal = If true, invert the built-in profile and taper lead-in sections toward the outside; otherwise taper them toward the inside. Custom profiles must be inverted by the caller. Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
 //   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
@@ -2692,17 +2804,19 @@ module thread_helix(
     lead_in_sample=10,
     anchor, spin, orient
 ) {
+    starts = assert(is_int(starts) && starts>0, "\nstarts must be a positive integer.") starts;
     dummy1=assert(num_defined([thread_angle,flank_angle])<=1, "\nCannot define both flank angle and thread angle.")
-           assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),
-                  "\nCannot give thread_depth or flank_angle with a profile.")
+           assert(is_undef(profile) || !any_defined([thread_depth, flank_angle, thread_angle]),
+                  "\nCannot give thread_depth, flank_angle or thread_angle with a profile.")
            assert(all_positive([turns]), "\nThe turns parameter must be a positive number.")
            assert(all_positive(pitch), "\npitch must be a positive number.")
            assert(num_defined([flank_angle,thread_angle])<=1, "\nCannot give both thread_angle and flank_angle.")
            assert(is_def(profile) || is_def(thread_depth), "\nIf profile is not given, must give thread depth.");
     flank_angle = first_defined([flank_angle,u_mul(0.5,thread_angle),15]);
     h = pitch*starts*abs(turns);
-    r1 = get_radius(d1=d1, d=d, dflt=10);
-    r2 = get_radius(d1=d2, d=d, dflt=10);
+    r1 = get_radius(d1=d1, d=d);
+    r2 = get_radius(d1=d2, d=d);
+    assert(all_positive([r1,r2]), "\nMust give d or both d1 and d2 as positive values.");
     profile = is_def(profile) ? profile :
         let(
             tdp = thread_depth / pitch,
@@ -2748,7 +2862,6 @@ module thread_helix(
 // Need explanation of what exactly the diff is between threaded_rod and helix_threads.
 //
 // What about blunt_start for ball screws?
-// Should default bevel be capped at 1mm or 2mm or something like that?  Including/especially inner bevel on nuts
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 

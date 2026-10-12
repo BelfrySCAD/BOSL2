@@ -1634,11 +1634,11 @@ module ring_gear2d(
 // Topics: Gears, Parts
 // See Also: rack2d(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
-//   rack(pitch, teeth, thickness, [base|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
-//   rack(mod=, teeth=, thickness=, [base=|bottom=|width=], [helical=], [pressure_angle=], [backlash]=, [clearance=]) [ATTACHMENTS];
+//   rack(pitch, teeth, thickness, [backing|bottom=|width=], [helical=], [herringbone=], [profile_shift=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack(mod=, teeth=, thickness=, [backing=|bottom=|width=], [helical=], [herringbone=], [profile_shift=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
 // Usage: As a Function
-//   vnf = rack(pitch, teeth, thickness, [base|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]);
-//   vnf = rack(mod=, teeth=, thickness=, [base=|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]);
+//   vnf = rack(pitch, teeth, thickness, [backing|bottom=|width=], [helical=], [herringbone=], [profile_shift=], [pressure_angle=], [backlash=], [clearance=]);
+//   vnf = rack(mod=, teeth=, thickness=, [backing=|bottom=|width=], [helical=], [herringbone=], [profile_shift=], [pressure_angle=], [backlash=], [clearance=]);
 // Description:
 //   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.  A helical rack meshes with a gear with the opposite
@@ -1907,11 +1907,11 @@ function rack(
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
-//   rack2d(pitch, teeth, [base|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
-//   rack2d(mod=, teeth=, [base=|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack2d(pitch, teeth, [backing|bottom=|width=], [helical=], [profile_shift=], [rounding=], [gear_travel=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack2d(mod=, teeth=, [backing=|bottom=|width=], [helical=], [profile_shift=], [rounding=], [gear_travel=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
 // Usage: As a Function
-//   path = rack2d(pitch, teeth, [base|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]);
-//   path = rack2d(mod=, teeth=, [base=|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]);
+//   path = rack2d(pitch, teeth, [backing|bottom=|width=], [helical=], [profile_shift=], [rounding=], [gear_travel=], [pressure_angle=], [backlash=], [clearance=]);
+//   path = rack2d(mod=, teeth=, [backing=|bottom=|width=], [helical=], [profile_shift=], [rounding=], [gear_travel=], [pressure_angle=], [backlash=], [clearance=]);
 // Description:
 //   Create a 2D rack, a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any spur gear or helical gear that has the same `pitch` and `pressure_angle`.  
@@ -2139,6 +2139,9 @@ module rack2d(
 //   vnf = crown_gear(circ_pitch, teeth, backing, face_width, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
 //   vnf = crown_gear(diam_pitch=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
 //   vnf = crown_gear(mod=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+// Usage: Alternative base dimensions
+//   crown_gear(circ_pitch, teeth, bottom=|thickness=, [face_width=], [profile_shift=], ...) [ATTACHMENTS];
+//   vnf = crown_gear(circ_pitch, teeth, bottom=|thickness=, [face_width=], [profile_shift=], ...);
 // Description:
 //   Creates a crown gear.  The module `crown_gear()` gives a crown gear, with reasonable defaults
 //   for all the parameters.  Normally, you should just choose the first 4 parameters, and let the
@@ -2160,6 +2163,7 @@ module rack2d(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   profile_shift = Profile shift factor x. Default: 0
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The module of the gear (pitch diameter / teeth)
@@ -2336,9 +2340,9 @@ module crown_gear(
 // Topics: Gears, Parts
 // See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
-//   gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [shaft_diam], [face_width=], [hide=], [spiral=], [cutter_radius=], [right_handed=], [pressure_angle=], [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [internal=], [gear_spin=], ...) [ATTACHMENTS];
+//   bevel_gear(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [shaft_diam=], [face_width=], [spiral=], [cutter_radius=], [right_handed=], [pressure_angle=], [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [gear_spin=], ...) [ATTACHMENTS];
 // Usage: As a Function
-//   vnf = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [face_width=], [hide=], [spiral=], [cutter_radius=], [right_handed=], [pressure_angle=], , [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [internal=], [gear_spin=], ...);
+//   vnf = bevel_gear(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [face_width=], [spiral=], [cutter_radius=], [right_handed=], [pressure_angle=], [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [gear_spin=], ...);
 // Description:
 //   Creates a spiral, zerol, or straight bevel gear.  In straight bevel gear sets, when each tooth
 //   engages it inpacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
@@ -2381,7 +2385,6 @@ module crown_gear(
 //   cone_backing = If true backing extends conical shape of the gear; otherwise backing is an attached cylinder.  Default: true
 //   face_width = Width of teeth.  Default: minimum of one third the cone distance and 10*module
 //   shaft_diam = Diameter of the hole in the center, or zero for no hole.  (Module only.)  Default: 0
-//   hide = Number of teeth to delete to make this only a fraction of a circle.  Default: 0
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
@@ -3055,11 +3058,11 @@ module enveloping_worm(
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
-//   worm_gear(circ_pitch, teeth, worm_diam, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [slices=], [shaft_diam=]) [ATTACHMENTS];
-//   worm_gear(mod=, teeth=, worm_diam=, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [slices=], [shaft_diam=]) [ATTACHMENTS];
+//   worm_gear(circ_pitch, teeth, worm_diam, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=], [shaft_diam=]) [ATTACHMENTS];
+//   worm_gear(mod=, teeth=, worm_diam=, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=], [shaft_diam=]) [ATTACHMENTS];
 // Usage: As a Function
-//   vnf = worm_gear(circ_pitch, teeth, worm_diam, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [slices=]);
-//   vnf = worm_gear(mod=, teeth=, worm_diam=, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [slices=]);
+//   vnf = worm_gear(circ_pitch, teeth, worm_diam, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=]);
+//   vnf = worm_gear(mod=, teeth=, worm_diam=, [worm_starts=], [worm_arc=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=]);
 // Description:
 //   Creates a worm gear to match with a worm.
 // Arguments:
@@ -3075,6 +3078,7 @@ module enveloping_worm(
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   profile_shift = Profile shift factor x.  Default: "auto"
 //   slices = The number of vertical slices to refine the curve of the worm throat.  Default: 10
+//   shaft_diam = Diameter of the central shaft hole. Module only. Default: 0 (no hole)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The module of the gear (pitch diameter / teeth)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -3892,7 +3896,7 @@ function _dedendum(
 // Topics: Gears, Parts
 // See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value(), outer_radius()
 // Usage:
-//   pr = pitch_radius(pitch, teeth, [helical]);
+//   pr = pitch_radius(circ_pitch, teeth, [helical]);
 //   pr = pitch_radius(mod=, teeth=, [helical=]);
 // Description:
 //   Calculates the pitch radius for the gear.  Two mated gears will have their centers spaced apart
@@ -3999,7 +4003,7 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 // Topics: Gears, Parts
 // See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value(), pitch_radius(), outer_radius()
 // Usage:
-//   rr = outer_radius(mod=|circ_pitch=|diam_pitch=, teeth, [helical], [pressure_angle=], [clearance=], [internal=], [profile_shift=], [backlash=]);
+//   rr = root_radius(mod=|circ_pitch=|diam_pitch=, teeth, [helical], [pressure_angle=], [clearance=], [internal=], [profile_shift=], [backlash=]);
 // Description:
 //   Calculates the actual radius of the roots of the teeth.  The root radius is usually given as a straight forward calcluation, but
 //   when large pressure-angle teeth are clipped, it is more difficult to determine this radius.  This function calculates the actual
@@ -4147,8 +4151,8 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   thick = worm_gear_thickness(pitch, teeth, worm_diam, [worm_arc=], [crowning=], [clearance=]);
-//   thick = worm_gear_thickness(mod=, teeth=, worm_diam=, [worm_arc=], [crowning=], [clearance=]);
+//   thick = worm_gear_thickness(circ_pitch, teeth, worm_diam, [worm_arc=], [crowning=], [clearance=], [pressure_angle=]);
+//   thick = worm_gear_thickness(mod=, teeth=, worm_diam=, [worm_arc=], [crowning=], [clearance=], [pressure_angle=]);
 // Description:
 //   Calculate the thickness of the worm gear.
 // Arguments:
@@ -4221,7 +4225,7 @@ function worm_gear_thickness(
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   dist = worm_dist(mod=|diam_pitch=|circ_pitch=, d, starts, teeth, [profile_shift], [pressure_angle=]);
+//   dist = worm_dist(mod=|diam_pitch=|circ_pitch=, d, starts, teeth, [profile_shift], [pressure_angle=], [backlash=]);
 // Description:
 //   Calculate the distance between the centers of a worm and its mating worm gear, taking account
 //   possible profile shifting of the worm gear.
@@ -4255,7 +4259,7 @@ function worm_dist(d,starts,teeth,mod,profile_shift=0,diam_pitch,circ_pitch,pres
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   dist = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=], [backlash=]);
+//   dist = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=], [backlash=], [internal1=], [internal2=]);
 // Description:
 //   Calculate the distance between the centers of two spur gears gears or helical gears with parallel axes,
 //   taking into account profile shifting and helical angle.  You can give the helical angle as either positive or negative.  
@@ -4380,7 +4384,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 // Topics: Gears, Parts
 // See Also: gear_dist(), worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   dist = gear_dist_skew(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]
+//   dist = gear_dist_skew(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=], [backlash=]);
 // Description:
 //   Calculate the distance between two helical gears that mesh with non-parallel axes, taking into account
 //   profile shift and the helical angles.
@@ -4388,7 +4392,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 //   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
 //   teeth2 = Total number of teeth in the second gear.  If given 0, we assume this is a rack or worm.
 //   helical1 = The helical angle (from vertical) of the teeth on the first gear. 
-//   helical1 = The helical angle (from vertical) of the teeth on the second gear.
+//   helical2 = The helical angle (from vertical) of the teeth on the second gear.
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: "auto"
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: "auto"
 //   ---
@@ -4434,7 +4438,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 
 // Function: gear_skew_angle()
 // Usage:
-//   ang = gear_skew_angle(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]
+//   ang = gear_skew_angle(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
 // Synopsis: Returns corrected skew angle between two profile shifted helical gears.  
 // Description:
 //   Compute the correct skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
@@ -4444,7 +4448,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
 //   teeth2 = Total number of teeth in the second gear.  If given 0, we assume this is a rack or worm.
 //   helical1 = The helical angle (from vertical) of the teeth on the first gear. 
-//   helical1 = The helical angle (from vertical) of the teeth on the second gear.
+//   helical2 = The helical angle (from vertical) of the teeth on the second gear.
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: "auto"
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: "auto"
 //   ---
@@ -4483,7 +4487,7 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 
 // Function: get_profile_shift()
 // Usage:
-//   total_shift = get_profile_shift(mod=|diam_pitch=|circ_pitch=, desired, teeth1, teeth2, [helical], [pressure_angle=],
+//   total_shift = get_profile_shift(mod=|diam_pitch=|circ_pitch=, desired, teeth1, teeth2, [helical], [pressure_angle=], [internal1=], [internal2=]);
 // Synopsis: Returns total profile shift needed to achieve a desired spacing between two gears
 // Description:
 //   Compute the total profile shift, split between two gears, needed to place those gears with a specified separation.

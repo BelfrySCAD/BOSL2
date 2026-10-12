@@ -564,7 +564,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 // See Also: joiner(), snap_pin(), rabbit_clip(), partition(), partition_mask(), partition_cut_mask()
 //
 // Usage:
-//   dovetail(gender, w=|width, h=|height, slide|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [entry_slot_length=], [$slop=])
+//   dovetail(gender, w=|width=, h=|height=, slide=|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [entry_slot_length=], [$slop=]);
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -1315,7 +1315,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 // Synopsis: Creates a Hirth face spline that locks together two cylinders.
 // SynTags: Geom
 // Usage:
-//   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [anchor=], [spin=], [orient=]
+//   hirth(n, ir|id=, or|od=, [tooth_angle=], [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [skew=], [rot=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Create a Hirth face spline.  The Hirth face spline is a joint that locks together two cylinders using radially
 //   positioned triangular teeth on the ends of the cylinders.  If the joint is held together (e.g. with a screw) then

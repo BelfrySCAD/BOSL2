@@ -541,7 +541,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
 // Topics: List Handling, Paths
 // See Also: list_unwrap(), deduplicate()
 // Usage:
-//   list_wrap(path, [eps]);
+//   list_wrap(list, [eps]);
 // Description:
 //   Force a list to wrap around so that its last point is equal to its first point:  if the first and last entries are equal, simply returns the list unchanged.
 //   Otherwise returns the list with the first point duplicated at the end of the list.  Comparisons are done to the tolerance `eps`.  Lists of length 0 or

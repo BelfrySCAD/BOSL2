@@ -20,7 +20,7 @@ _BOSL2_SLIDERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 // Topics: Parts, Sliders
 // See Also: rail()
 // Usage:
-//   slider(l, w, h, [base=], [wall=], [ang=], [$slop=]) [ATTACHMENTS];
+//   slider(l, w, h, [base=], [wall=], [ang=], [chamfer=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Arguments:
