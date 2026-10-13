@@ -19,7 +19,7 @@ _BOSL2_HOOKS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 // Topics: Parts
 // See Also: prismoid(), rounded_prism(), ycyl()
 // Usage:
-//   ring_hook(base_size, hole_z, [or], [od=], [ir=|id=], [wall=], [hole=], [rounding=], [fillet=], [hole_rounding=], [anchor=], [spin=], [orient=])
+//   ring_hook(base_size, hole_z, [or], [od=], [ir=|id=], [wall=], [hole=], [rounding=], [fillet=], [hole_rounding=], [anchor=], [spin=], [orient=], [outside_segments=]);
 // Description:
 //   Form a part that attaches a loop hook with a cylindrical hole a specified distance away from its mount point.
 //   You specify a rectangle defining the base a hole diameter or radius, and `hole_z`, a distance from the base to the hole.

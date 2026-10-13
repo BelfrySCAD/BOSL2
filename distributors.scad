@@ -554,72 +554,113 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 // See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
-//   grid_copies(spacing, size=, [stagger=], [inside=], [axes=]) CHILDREN;
-//   grid_copies(n=, size=, [stagger=], [inside=], [axes=]) CHILDREN;
-//   grid_copies(spacing, [n], [stagger=], [inside=], [axes=]) CHILDREN;
-//   grid_copies(n=, inside=, [stagger=], [axes=]) CHILDREN;
+//   grid_copies(spacing, size=, [stagger=], [inside=], [nonzero=], [axes=]) CHILDREN;
+//   grid_copies(n=, size=, [stagger=], [inside=], [nonzero=], [axes=]) CHILDREN;
+//   grid_copies(spacing, n, [stagger=], [inside=], [nonzero=], [axes=]) CHILDREN;
+//   grid_copies(n=, inside=, [nonzero=], [stagger=], [axes=]) CHILDREN;
+//   grid_copies(spacing, inside=, [nonzero=], [stagger=], [axes=]) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
-//   copies = grid_copies(spacing, size=, [stagger=], [inside=], [axes=], p=);
-//   copies = grid_copies(n=, size=, [stagger=], [inside=], [axes=], p=);
-//   copies = grid_copies(spacing, [n], [stagger=], [inside=], [axes=], p=);
-//   copies = grid_copies(n=, inside=, [stagger=], [axes=], p=);
-// Usage: Get Translation Matrices
-//   mats = grid_copies(spacing, size=, [stagger=], [inside=], [axes=]);
-//   mats = grid_copies(n=, size=, [stagger=], [inside=], [axes=]);
-//   mats = grid_copies(spacing, [n], [stagger=], [inside=], [axes=]);
-//   mats = grid_copies(n=, inside=, [stagger=], [axes=]);
+//   copies = grid_copies(..., p=);
+// Usage: As a function to get a list of translation matrices
+//   mat_list = grid_copies(...);
 // Description:
-//   When called as a module, makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.
+//   When called as a module, makes a square or staggered (possibly equilateral) grid of copies of children,
+//   with an optional masking polygon or region.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //   .
-//   The `stagger` parameter causes each row to be offset from the one below.  
-//   By default the layout is in the xy plane where a row runs in the x direction.  You can choose
-//   any pair of axes for the layout using the `axes` parameter, which is a two letter parameter
-//   where the first letter gives the direction of a row.  The default is "xy".  The order matters because
-//   whichever axis is first will correspond to the first entry in `size`, and if you set `stagger=true` that
-//   operates on rows, so interchanging the axes will produce a different result.  Staggering works by
-//   skipping items, so you will get about half as many child objects as when `stagger=false`.  
+//   The grid is centered on the origin and is determined by two of `n`, `spacing` and `size`.  (The `inside` parameter can
+//   stand in for `size` as described below.)  The `spacing` parameter sets the distance between copies as
+//   a number or `[spacing1,spacing2]` pair; a negative value reverses the order in which the copies are generated.
+//   The `n` parameter specifies the dimensions of the grid either as a scalar or a pair giving
+//   the number of columns and number of rows, [width,height].  The `size` parameter specifies a rectangular
+//   size to fill with copies either as a scalar or as a [width,height] pair.  When you combine `size` with
+//   `n` the copies exactly fill the specified rectangle (except when `n=1`).  If you combine `size` with `spacing` then
+//   the copies are placed exactly `spacing` apart, as many as fit within `size`, so `size` acts as
+//   a bound, and the copies won't necessarily reach its edges.  
+//   .
+//   When `stagger=true` only half the items appear in each row, with every alternate item being omitted.
+//   The first item in the first row is retained unless you specify `stagger="alt"`, in which case the first item
+//   is omitted (and the second retained).  The rows alternate the pattern, resulting in a triangular grid.  If you give a scalar `spacing` value 
+//   it sets the spacing between the items to form a grid of equilateral triangles with that spacing.  If you give a vector
+//   for `spacing` then it specifies the spacing in the usual way of the underlying grid, before items have been ommitted.
+//   This means that spacing.x gives half the space between items horizontally, and spacing.y gives the vertical
+//   spacing; with stagger enabled, `spacing=5` and `spacing=[5,5]` are **not** equivalent.  A scalar spacing of `s` is equivalent
+//   to `[s/2, s*sqrt(3)/2]`.  If spacing is derived from `size` and `n` then the computed spacing vector applies directly
+//   and the layout is not likely to be equilateral.  Since staggering works by skipping items you will always get
+//   about half as many child objects as when `stagger=false`. 
+//   .
+//   The `inside` argument, a polygon or region applies on top of all of the above.  It removes every copy
+//   whose center is not inside the shape (the boundary counts as inside).  If every copy is removed, nothing is produced.
+//   If you give two of `n`, `spacing` and `size` then `inside` only filters the result.  If you give
+//   just one of `spacing` or `n` and do not supply `size` then `inside` provides the size as the smallest rectangle centered
+//   on the origin that contains the shape.  If you give `inside` alone or with only size that is an error.
+//   .
+//   Both forms of grid_copies() distributes their grid on a plane, but using the `axes=` argument you can choose
+//   any of the coordinate planes and you can also flip the meaning of "rows" and "columns".  The `axes=` parameter accepts
+//   a two letter string giving the two axes that define the grid plane.  The default is `axes="xy"`.  If you 
+//   specify `axes="xz"` then the children are distributed on the XZ plane.  If you specify `axes="yx"` then the items
+//   still appear in the XY plane, but with the axes interchanged, so in this case, n=[2,5] will produce a grid that is
+//   five objects along X and two objects along Y.  If staggering is enabled then alternate items will be removed from
+//   each **column** (a line of constant X) rather than each row.  
 //
 // Arguments:
-//   spacing = Distance between copies in [X,Y] or scalar distance.
-//   n = How many columns and rows of copies to make.  Can be given as `[COLS,ROWS]`, or just as a scalar that specifies both.  If staggered, count both staggered and unstaggered columns and rows.  Each count must be at least 2. Default: 2 (3 if staggered), unless derived from size and spacing
-//   size = The [X,Y] size to spread the copies over.
+//   spacing = Distance between copies as a scalar or [spacing1,spacing2].  When `stagger` is enabled, a scalar gives equilateral separation.  
+//   n = Number of columns and rows, either a vector `[width, height]` or a scalar to give both.  If staggered, the count includes omitted items that appear in the rows.  
+//   size = Size of a rectangle to bound the centerpoints of all of the copies, can be a scalar or vector.  
 //   ---
-//   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
-//   inside = If given a list of polygon points, or a region, only creates copies whose center would be inside the polygon or region.  Polygon can be concave and/or self crossing.
+//   stagger = If true, make a staggered (possibly equilateral) grid.  If false, make square grid.  If `"alt"`, makes the alternate staggered pattern.  Default: false
+//   inside = If given a list of polygon points, or a region, only creates copies whose centers are inside the polygon or region (including on the boundary).  Polygon can be concave and/or self crossing.
 //   nonzero = If inside is set to a polygon with self-crossings then use the nonzero method for deciding if points are in the polygon.  Default: false
-//   axes = Specify the axes to use for the row and column directions as a 2 character string.  Default: "xy"
-//   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
+//   axes = Specify the axes from "x", "y" and "z" to use for the row and column directions as a 2 character string.  Default: "xy"
+//   p = Either a point, pointlist, VNF, or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$col` is set to the integer column number for each child.
+//   `$pos` is set to the center coordinates of the child. 
+//   `$col` is set to the integer column number for each child (in the unstaggered grid).
 //   `$row` is set to the integer row number for each child.
 //   `$idx` is set to a unique index for each child, progressing across rows first, from the bottom
 //
+// Example(2D):
+//   grid_copies(n=7, spacing=10) circle(d=10);
+// Example(2D): Staggered items form an equilateral grid
+//   grid_copies(n=7, spacing=10, stagger=true) circle(d=10);
+// Example(2D): Alternate grid form
+//   grid_copies(n=7, spacing=10, stagger="alt") circle(d=10);
+// Example(2D): Interchanging the axes
+//   grid_copies(n=7, spacing=10, stagger=true,axes="yx")
+//     circle(d=10);
+// Example(2D): Vector spacing with staggered items
+//   grid_copies(n=7, spacing=[10,10], stagger=true) circle(d=10);
+// Example(2D): Fitting to a size: item centers fill the size
+//   grid_copies(size=50, n=5) circle(d=10);
+//   stroke(rect(50),color="red",closed=true);
+// Example(2D): Fitting to a size with spacing and stagger gives equilateral spacing
+//   grid_copies(size=50, spacing=10, stagger=true) circle(d=10);
+//   stroke(rect(50),color="red",closed=true);
+// Example(2D): Fitting to a size with n and stagger does not give equilateral spacing
+//   grid_copies(size=50, n=6,stagger=true) circle(d=10);
+//   stroke(rect(50),color="red",closed=true);
 // Examples:
-//   grid_copies(size=50, spacing=10) cylinder(d=10, h=1);
 //   grid_copies(size=50, spacing=[10,15]) cylinder(d=10, h=1);
 //   grid_copies(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
-//   grid_copies(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
-//   grid_copies(size=50, n=11, stagger=true) cylinder(d=5, h=1);
-// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): Setting the axes to "xz"
-//   grid_copies(size=50, n=[13,7], stagger=true, axes="xz") cylinder(d=5, h=4);
+// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): Setting the axes to "xz" puts copies in the XZ plane.
+//   grid_copies(size=50, n=[13,7], stagger=true, axes="xz")
+//     cylinder(d=5, h=4);
 // Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): The layout is different with axes="zx"
-//   grid_copies(size=50, n=[13,7], stagger=true, axes="zx") cylinder(d=5, h=4);
-//
-// Example:
+//   grid_copies(size=50, n=[13,7], stagger=true, axes="zx")
+//     cylinder(d=5, h=4);
+// Example(2D): Using `inside` constrains the centerpoints of the copies to lie in a polygon
 //   poly = [[-25,-25], [25,25], [-25,25], [25,-25]];
 //   grid_copies(spacing=5, stagger=true, inside=poly)
-//      zrot(180/6) cylinder(d=5, h=1, $fn=6);
+//      zrot(180/6) hexagon(d=5); 
 //   %polygon(poly);
-//
+// Example(3D): Using `inside` to provide the size with just spacing 
+//   grid_copies(inside=star(id=30,od=75,n=5), spacing=2) star(id=1,od=2,n=7);
 // Example: Using `$row` and `$col`
 //   grid_copies(spacing=8, n=8)
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
-//
 // Example: Makes a grid of hexagon pillars whose tops are all angled to reflect light at [0,0,50], if they were shiny.
 //   hexregion = circle(r=50.01,$fn=6);
 //   grid_copies(spacing=10, stagger=true, inside=hexregion)
@@ -636,143 +677,74 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
    grid_copies(spacing, n, size, stagger, inside, nonzero) children();
 }   
 
-module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy")
-{
-    req_children($children);    
-    dummy = assert(in_list(stagger, [false, true, "alt"]))
-            assert(is_string(axes) && len(axes)==2 && search(axes[0], "xyz")!=[] && search(axes[1], "xyz")!=[] && axes[0]!=axes[1], "Invalid axes specification");
-    count_check = assert(is_undef(n) ||
-        (is_num(n) ? is_int(n) && n>=2 :
-         is_vector(n,2) && is_int(n[0]) && is_int(n[1]) && min(n)>=2),
-        "The number of rows/columns must be integers at least 2");
-    xind = search("x",axes);
-    yind = search("y",axes);
-    zind = search("z",axes);        
-    permax = function(pt) [xind==[] ? 0 : pt[xind[0]],
-                           yind==[] ? 0 : pt[yind[0]],
-                           zind==[] ? 0 : pt[zind[0]]];
-    bounds = is_undef(inside)? undef :
-        is_path(inside)? pointlist_bounds(inside) :
-        assert(is_region(inside))
-        pointlist_bounds(flatten(inside));
-    nonzero = is_path(inside) ? default(nonzero,false)
-            : assert(is_undef(nonzero), "nonzero only allowed if inside is a polygon")
-              false;
-    size = is_num(size)? [size, size] :
-        is_vector(size)? assert(len(size)==2) size :
-        bounds!=undef? [
-            for (i=[0:1]) 2*max(abs(bounds[0][i]),bounds[1][i])
-        ] : undef;
-    spacing = is_num(spacing)? (
-            stagger!=false? polar_to_xy(spacing,60) :
-            [spacing,spacing]
-        ) :
-        is_vector(spacing)? assert(len(spacing)==2) spacing :
-        size!=undef? (
-            is_num(n)? v_div(size,(n-1)*[1,1]) :
-            is_vector(n)? assert(len(n)==2) v_div(size,n-[1,1]) :
-            v_div(size,(stagger==false? [1,1] : [2,2]))
-        ) :
-        undef;
-    n = is_num(n)? [n,n] :
-        is_vector(n)? assert(len(n)==2) n :
-        size!=undef && spacing!=undef? v_floor(v_div(size,spacing))+[1,1] :
-        (stagger==false ? [2,2] : [3,3]);
-    dummy2 = assert(is_int(n[0]) && is_int(n[1]) && min(n)>=2,
-                    "The number of rows/columns must be integers at least 2");
-    offset = v_mul(spacing, n-[1,1])/2;
 
-    poslist = 
-      stagger==false ? 
-               [for (row = [0:1:n.y-1], col = [0:1:n.x-1])
-                   let(
-                       pos = v_mul([col,row],spacing) - offset
-                   )
-                   if (
-                           is_undef(inside) ||
-                           (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
-                           (is_region(inside) && point_in_region(pos, inside)>=0)
-                   )
-                   [pos,row,col]
-               ]
-      :
-        let(  // stagger == true or stagger == "alt"
-            staggermod = (stagger == "alt")? 1 : 0,
-            cols1 = ceil(n.x/2),
-            cols2 = n.x - cols1
-         )
-         [for (row = [0:1:n.y-1])
-              let(
-                rowcols = ((row%2) == staggermod)? cols1 : cols2
-              )
-              if (rowcols > 0) 
-                for (col = [0:1:rowcols-1])
-                  let(
-                    rowdx = (row%2 != staggermod)? spacing.x : 0,
-                    pos = v_mul([2*col,row],spacing) + [rowdx,0] - offset
-                  )
-                    if (
-                        is_undef(inside) ||
-                        (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
-                        (is_region(inside) && point_in_region(pos, inside)>=0)
-                    )
-                    [pos, row, col * 2 + ((row%2!=staggermod)? 1 : 0)]
-        ];
-    for(i=idx(poslist)){
-      $idx=i;
-      $pos=permax(poslist[i][0]);
-      $row=poslist[i][1];
-      $col=poslist[i][2];
-      translate(permax(poslist[i][0]))children();
-    }
-}
-
-
-function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy", p=_NO_ARG) =
+function _grid_copies_list(spacing, n, size, stagger, inside, nonzero, axes) =
     let(
         dummy = assert(in_list(stagger, [false, true, "alt"]))
-                assert(is_string(axes) && len(axes)==2 && search(axes[0], "xyz")!=[] && search(axes[1], "xyz")!=[] && axes[0]!=axes[1], "Invalid axes specification"),
+                assert(is_string(axes) && len(axes)==2 && search(axes[0], "xyz")!=[] && search(axes[1], "xyz")!=[] && axes[0]!=axes[1],
+                       "\nInvalid axes specification"),
         count_check = assert(is_undef(n) ||
-            (is_num(n) ? is_int(n) && n>=2 :
-             is_vector(n,2) && is_int(n[0]) && is_int(n[1]) && min(n)>=2),
-            "The number of rows/columns must be integers at least 2"),
+            (is_num(n) ? is_int(n) && n>=1 :
+             is_vector(n,2) && is_int(n[0]) && is_int(n[1]) && min(n)>=1),
+            "\nThe number of rows/columns must be integers at least 1"),
+        // These checks use the arguments as the caller gave them, so they come
+        // before size, spacing and n are reassigned below.  Inside counts as size
+        // when size is not given, so inside alone, or inside with only size, is
+        // one of the three and is not enough.
+        arg_check = assert(is_undef(spacing) || is_num(spacing) || is_vector(spacing,2),
+                           "\nspacing must be a number or a vector [xspacing,yspacing]")
+                    assert(is_undef(size) || is_num(size) || is_vector(size,2),
+                           "\nsize must be a number or a vector [xsize,ysize]")
+                    assert((is_undef(spacing)? 0 : 1) + (is_undef(n)? 0 : 1)
+                           + ((is_undef(size) && is_undef(inside))? 0 : 1) >= 2,
+                           "\nMust give two of spacing, n and size (inside counts as size if size is not given)")
+                    assert(is_undef(spacing) || is_undef(n) || is_undef(size),
+                           "\nCannot give spacing, n and size together: give at most two of them"),
         xind = search("x",axes),
         yind = search("y",axes),
-        zind = search("z",axes),        
+        zind = search("z",axes),
         permax = function(pt) [xind==[] ? 0 : pt[xind[0]],
                                yind==[] ? 0 : pt[yind[0]],
                                zind==[] ? 0 : pt[zind[0]]],
+        // Spacing from a size and counts.  An axis with a count of 1 gets spacing 0,
+        // which is never used because the offset and position on that axis are both 0.
+        spc_from_size = function(sz,nn) [for (i=[0:1]) nn[i]>1 ? sz[i]/(nn[i]-1) : 0],
         bounds = is_undef(inside)? undef :
             is_path(inside)? pointlist_bounds(inside) :
             assert(is_region(inside))
             pointlist_bounds(flatten(inside)),
         nonzero = is_path(inside) ? default(nonzero,false)
-                : assert(is_undef(nonzero), "nonzero only allowed if inside is a polygon")
+                : assert(is_undef(nonzero), "\nnonzero only allowed if inside is a polygon")
                   false,
         size = is_num(size)? [size, size] :
             is_vector(size)? assert(len(size)==2) size :
             bounds!=undef? [
                 for (i=[0:1]) 2*max(abs(bounds[0][i]),bounds[1][i])
             ] : undef,
+        size_check = assert(is_undef(size) || min(size)>=0, "\nsize must not be negative"),
         spacing = is_num(spacing)? (
                 stagger!=false? polar_to_xy(spacing,60) :
                 [spacing,spacing]
             ) :
             is_vector(spacing)? assert(len(spacing)==2) spacing :
-            size!=undef? (
-                is_num(n)? v_div(size,(n-1)*[1,1]) :
-                is_vector(n)? assert(len(n)==2) v_div(size,n-[1,1]) :
-                v_div(size,(stagger==false? [1,1] : [2,2]))
-            ) :
+            size!=undef && n!=undef? spc_from_size(size, is_num(n)? [n,n] : n) :
             undef,
+        // n is about to be computed from spacing, so spacing must be nonzero on both
+        // axes, otherwise the division below gives infinity or NaN.  Here n is still
+        // the caller's argument.
+        n_from_spacing_check = assert(!is_undef(n) || (spacing[0]!=0 && spacing[1]!=0),
+                                      "\nWhen n is not given, spacing must be nonzero along both axes"),
         n = is_num(n)? [n,n] :
             is_vector(n)? assert(len(n)==2) n :
-            size!=undef && spacing!=undef? v_floor(v_div(size,spacing))+[1,1] :
-            (stagger==false ? [2,2] : [3,3]),
-        count_check2 = assert(is_int(n[0]) && is_int(n[1]) && min(n)>=2,
-                              "The number of rows/columns must be integers at least 2"),
+            size!=undef && spacing!=undef? v_floor(v_div(size,[abs(spacing[0]),abs(spacing[1])])+[_EPSILON,_EPSILON])+[1,1] :
+            undef,
+        count_check2 = assert(is_int(n[0]) && is_int(n[1]) && min(n)>=1,
+                              "\nThe number of rows/columns must be integers at least 1"),
+        spacing_check = assert([for (i=[0:1]) if (n[i]>1 && spacing[i]==0) i]==[],
+                               "\nSpacing (given or computed from size) must be nonzero along any axis with more than one copy"),
         offset = v_mul(spacing, n-[1,1])/2,
-        mats = stagger == false
+        // Each entry is [pos, row, col] where pos is in the grid's own two coordinates
+        poslist = stagger == false
           ? [
                 for (row = [0:1:n.y-1], col = [0:1:n.x-1])
                 let( pos = v_mul([col,row],spacing) - offset )
@@ -781,7 +753,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axe
                     (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                     (is_region(inside) && point_in_region(pos, inside)>=0)
                 )
-                translate(permax(pos))
+                [pos, row, col]
             ]
           : // stagger == true or stagger == "alt"
             let(
@@ -803,10 +775,34 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axe
                     (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                     (is_region(inside) && point_in_region(pos, inside)>=0)
                 )
-                translate(permax(pos))
+                [pos, row, col * 2 + ((row%2!=staggermod)? 1 : 0)]
             ]
     )
+    // Entries returned are [3D position after applying axes, row, col]
+    [for (e = poslist) [permax(e[0]), e[1], e[2]]];
+
+
+module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy")
+{
+    req_children($children);
+    list = _grid_copies_list(spacing, n, size, stagger, inside, nonzero, axes);
+    for (i = idx(list)) {
+        $idx = i;
+        $pos = list[i][0];
+        $row = list[i][1];
+        $col = list[i][2];
+        translate(list[i][0]) children();
+    }
+}
+
+
+function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy", p=_NO_ARG) =
+    let(
+        list = _grid_copies_list(spacing, n, size, stagger, inside, nonzero, axes),
+        mats = [for (e = list) translate(e[0])]
+    )
     p==_NO_ARG? mats : [for (m = mats) apply(m, p)];
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -854,7 +850,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axe
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.  Default: 0
 //   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.  Default: `[0,0,0]`
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.  Instead maintain their native orientation.  The false setting is only allowed when `delta` is given.  Default: `true`
-//   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
+//   p = Either a point, pointlist, VNF, or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
 //   `$ang` is set to the rotation angle (or XYZ rotation triplet) of each child copy, and can be used to modify each child individually.

@@ -154,7 +154,7 @@ module mask2d_roundover(r, inset=0, mask_angle, excess=0.01, flat_top, d, h, hei
 
 
 
-function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, flat_top, quarter_round=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
+function mask2d_roundover(r, inset=0, mask_angle, excess=0.01, clip_angle, flat_top, quarter_round=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(num_defined([r,d,cut,joint])<=1, "Must define at most one of r, d, cut and joint")
     assert(num_defined([h,height])<=1, "Must define at most one of h and height")
@@ -228,7 +228,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
                        cutind = [for(i=idx(basic)) if (basic[i].y-inset.y < clipshift.y) i],
                        ipt = line_intersection([basic[cutind[0]-1],basic[cutind[0]]], [[0,clipshift.y+inset.y],[1,clipshift.y+inset.y]])
                   )
-                  move(-clipshift, [ each select(basic, 0,cutind[0]), ipt]),
+                  move(-clipshift, [ each slice(basic, 0,cutind[0]-1), ipt]),
           path = deduplicate([
                              [last(arcpath).x,-excess],
                              outside_corner[0][1],
@@ -237,7 +237,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
                              [last(arcpath).x,inset.y]
                            ]
                           ,closed=true)
-    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 // Function&Module: mask2d_smooth()
@@ -246,9 +246,12 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As module
-//   mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [anchor=], [spin=]) [ATTACHMENTS];
+//   mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [k=], [splinesteps=], [anchor=], [spin=]) [ATTACHMENTS];
 // Usage: As function
-//   path = mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [anchor=], [spin=]);
+//   path = mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [k=], [splinesteps=], [anchor=], [spin=]);
+// Usage: Specifying height and a scalar joint distance
+//   mask2d_smooth([mask_angle], joint=, h=|height=, [inset=], [excess=], [flat_top=], [k=], [splinesteps=], [anchor=], [spin=]) [ATTACHMENTS];
+//   path = mask2d_smooth([mask_angle], joint=, h=|height=, [inset=], [excess=], [flat_top=], [k=], [splinesteps=], [anchor=], [spin=]);
 // Description:
 //   Creates a 2D continuous curvature rounding mask shape that is useful for extruding into a 3D mask for an edge.
 //   Conversely, you can use that same extruded shape to make an interior fillet between two walls.
@@ -281,6 +284,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 //   joint = Joint distance.  IE: How far from the edge the roundover should start.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
 //   h / height = Mask height excluding inset and excess.  This determines the height of the mask when you want a consistent mask height, no matter what the mask angle.  You must provide a scalar joint value to define the mask width, and you cannot give cut.  
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: false
+//   k = Continuous-curvature smoothness parameter, between 0 and 1. Larger values shorten the transition into the rounding. Default: 0.5
 //   splinesteps = Numbers of segments to create on the roundover.  Default: 16
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -352,12 +356,12 @@ function mask2d_smooth( mask_angle,  cut, joint, height, h, k=0.5, excess=.01, i
                             ],
                             closed=true)
      )
-     reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+     reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset=0, flat_top=false, splinesteps=16, anchor=CENTER, spin=0)
 {
     path = mask2d_smooth(mask_angle=mask_angle, cut=cut, joint=joint, height=height, h=h, k=k, excess=excess, inset=inset,
-                         flat_top=flat_top, splinesteps=splinesteps,anchor=anchor, spin=spin);
+                         flat_top=flat_top, splinesteps=splinesteps);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
         children();
@@ -371,9 +375,9 @@ module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_teardrop(r|d=, [angle], [inset] [mask_angle], [excess], [cut=], [joint=], [h=|height=]) [ATTACHMENTS];
+//   mask2d_teardrop(r|d=, [angle], [inset], [mask_angle], [excess], [cut=], [joint=], [h=|height=], [flat_top=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_teardrop(r|d=, [angle], [inset], [mask_angle], [excess], [cut=], [joint=], [h=|height=]);
+//   path = mask2d_teardrop(r|d=, [angle], [inset], [mask_angle], [excess], [cut=], [joint=], [h=|height=], [flat_top=]);
 // Description:
 //   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for an edge.
 //   Conversely, you can use that same extruded shape to make an interior teardrop fillet between two walls.
@@ -394,7 +398,7 @@ module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset
 //   h / height = Mask height excluding inset and excess.  Given instead of r or d when you want a consistent mask height, no matter what the mask angle.
 //   cut = Cut distance.  IE: How much of the corner to cut off.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
 //   joint = Joint distance.  IE: How far from the edge the roundover should start.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
-//   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
+//   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: false.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Teardrop Mask
@@ -429,7 +433,7 @@ module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset
 //       linear_extrude(height=30, center=true)
 //           mask2d_teardrop(r=10);
 
-function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle=90, excess=0.01, flat_top=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
+function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle, excess=0.01, flat_top=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(one_defined([r,height,d,h,cut,joint],"r,height,d,h,cut,joint"))
     assert(is_finite(angle) && angle>mask_angle-90 && angle<90)
@@ -477,11 +481,11 @@ function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle=90, excess=0.01, f
                              each arcpts2,
                              ipt
                            ], closed=true)
-    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
     
 
 
-module mask2d_teardrop(r, angle=45, mask_angle, excess=0.01, inset=0, flat_top=false, height, d, h, cut, joint, anchor=CENTER, spin=0) {
+module mask2d_teardrop(r, angle=45, inset=0, mask_angle, excess=0.01, flat_top=false, height, d, h, cut, joint, anchor=CENTER, spin=0) {
     path = mask2d_teardrop(r=r, d=d, h=h, height=height, flat_top=flat_top, cut=cut, joint=joint, angle=angle,inset=inset, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -583,7 +587,7 @@ module mask2d_cove(r, inset=0, mask_angle, excess=0.01, flat_top, bulge, d, h, h
 }
 
 
-function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height,bulge, quarter_round=false, anchor=CENTER, spin=0) =
+function mask2d_cove(r, inset=0, mask_angle, excess=0.01, flat_top, d, h, height,bulge, quarter_round=false, anchor=CENTER, spin=0) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(one_defined([r,d,h,height],"r,d,h,height"))
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
@@ -598,7 +602,7 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
         r = get_radius(r=r,d=d,dflt=undef),
         h = u_add(one_defined([h,height],"h,hight",dflt=undef),flat_top || mask_angle>=90?0:-inset.x*cos(mask_angle)),
         radius = is_def(h) ? assert(all_positive([h]), "height / h must be a larger than y inset")
-                             !bulge && (quarter_round || mask_angle>90) ? h-inset.y
+                             !bulge && (quarter_round || mask_angle>90) ? h
                            : h/sin(mask_angle)
                : assert(all_positive([r]), "r / d must be a positive value") r,
         quarter_round_ofs = quarter_round ? radius/tan(mask_angle) : 0,
@@ -641,7 +645,7 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
                             if (!bulge) each arc(cp=cp, points = corners),
                            ],
                            closed=true)
-    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 
@@ -651,13 +655,18 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_chamfer(edge, [angle], [inset], [excess]) [ATTACHMENTS];
-//   mask2d_chamfer(y=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
-//   mask2d_chamfer(x=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
+//   mask2d_chamfer(edge, [angle], [inset], [excess], [mask_angle], [flat_top=]) [ATTACHMENTS];
+//   mask2d_chamfer(y=, [angle=], [inset=], [excess=], [flat_top=]) [ATTACHMENTS];
+//   mask2d_chamfer(x=, [angle=], [inset=], [excess=], [flat_top=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_chamfer(edge, [angle], [inset], [excess]);
-//   path = mask2d_chamfer(y=, [angle=], [inset=], [excess=]);
-//   path = mask2d_chamfer(x=, [angle=], [inset=], [excess=]);
+//   path = mask2d_chamfer(edge, [angle], [inset], [excess], [mask_angle], [flat_top=]);
+//   path = mask2d_chamfer(y=, [angle=], [inset=], [excess=], [flat_top=]);
+//   path = mask2d_chamfer(x=, [angle=], [inset=], [excess=], [flat_top=]);
+// Usage: Specifying width or vertical height
+//   mask2d_chamfer(w=|width=, [angle=], [mask_angle=], [inset=], [excess=], [flat_top=]) [ATTACHMENTS];
+//   mask2d_chamfer(h=|height=, [angle=], [mask_angle=], [inset=], [excess=], [flat_top=]) [ATTACHMENTS];
+//   path = mask2d_chamfer(w=|width=, [angle=], [mask_angle=], [inset=], [excess=], [flat_top=]);
+//   path = mask2d_chamfer(h=|height=, [angle=], [mask_angle=], [inset=], [excess=], [flat_top=]);
 // Description:
 //   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for an edge. 
 //   Conversely, you can use that same extruded shape to make an interior chamfer between two walls.
@@ -670,15 +679,14 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //   edge = The length of the edge of the chamfer.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: mask_angle/2.
 //   inset = Optional amount to inset perpendicular to each edge.  Scalar or 2-vector.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   ---
 //   x = The width of the chamfer (joint distance in x direction)
 //   y = The set-back (joint distance) in the non-x direction of the chamfer. 
 //   h / height = The height of the chamfer (excluding inset and excess).
 //   w/ width = The width of the chamfer (excluding inset and excess).
-//   quarter_round = If true, make a roundover independent of the mask_angle, defined based on a 90 deg angle, with a constant height.  Default: false.
-//   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
+//   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: false.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Chamfer Mask, at 45 deg by default
@@ -744,7 +752,7 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //       edge_profile(TOP, excess=20)//let(f=$edge_angle)
 //           mask2d_chamfer(h=4,inset=1,flat_top=true,mask_angle=$edge_angle);
 
-module mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_top=false, x, y, h, w, height, width, anchor=CENTER,spin=0) {
+module mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle, flat_top=false, x, y, h, w, height, width, anchor=CENTER,spin=0) {
     path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, height=height, h=h, excess=excess, w=w,
                           inset=inset, mask_angle=mask_angle, flat_top=flat_top,width=width);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
@@ -753,7 +761,7 @@ module mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_top
     }
 }
 
-function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_top=false, x, y, h, w, width, height, anchor=CENTER,spin=0) =
+function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle, flat_top=false, x, y, h, w, width, height, anchor=CENTER,spin=0) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(is_undef(x) || all_positive([x]))
     assert(is_undef(y) || all_positive([y]))
@@ -793,9 +801,9 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
                          )
            : is_def(y) ? assert(num_defined([edge,angle])<=1, "Conflicting or insufficient values of x, y, height, edge and angle given")
                          (
-                             is_def(edge) ? let(xopt=quadratic_roots(1,-2*y,cos(mask_angle), y^2-edge^2,real=true))
-                                            assert(xopt!=[], "edge too short for y value")
-                                            [x,max(xopt)]
+                             is_def(edge) ? let(xopt=quadratic_roots(1,-2*y*cos(mask_angle), y^2-edge^2,real=true))
+                                            assert(xopt!=[] && max(xopt)>0, "edge too short for y value")
+                                            [max(xopt),y]
                            : let(angle=default(angle,mask_angle/2))
                              [law_of_sines(a=y,A=90-angle,B=90-mask_angle+angle), y]
                          )
@@ -817,7 +825,7 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
         dummy2=assert(outside_corner[1][2].x>0,str("Angle of chamfer is too small to fit on mask angle ",mask_angle,
                                                    ".  Either increase angle or add x inset to make space.")),
         path = deduplicate(concat(outside_corner[0], select(outside_corner[1],[0,2])),closed=true)
-    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 // Function&Module: mask2d_rabbet()
@@ -864,7 +872,7 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_rabbet(size=[5,10]);
-module mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) {
+module mask2d_rabbet(size, mask_angle, excess=0.01, anchor=CTR, spin=0) {
     path = mask2d_rabbet(size=size, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
@@ -874,7 +882,7 @@ module mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) {
 
 
 
-function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
+function mask2d_rabbet(size, mask_angle, excess=0.01, anchor=CTR, spin=0) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(is_finite(size)||is_vector(size,2))
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
@@ -900,12 +908,16 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 // Topics: Masks (2D), Shapes (2D), Paths (2D), Path Generators, Attachable 
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_dovetail(edge, angle, [inset], [shelf], [excess], ...) [ATTACHMENTS];
-//   mask2d_dovetail(width=, angle=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
-//   mask2d_dovetail(height=, angle=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
-//   mask2d_dovetail(width=, height=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(edge, angle, [shelf], [inset], [mask_angle], [excess], [flat_top=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(width=, angle=, [inset=], [shelf=], [excess=], [flat_top=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(height=, angle=, [inset=], [shelf=], [excess=], [flat_top=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(width=, height=, [inset=], [shelf=], [excess=], [flat_top=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_dovetail(edge, [angle], [inset], [shelf], [excess]);
+//   path = mask2d_dovetail(edge, angle, [shelf], [inset], [mask_angle], [excess], [flat_top=]);
+// Usage: Specifying slope instead of angle
+//   mask2d_dovetail(edge, slope=, [shelf=], [inset=], [mask_angle=], [excess=], [flat_top=]) [ATTACHMENTS];
+//   mask2d_dovetail(width=|height=, slope=, [shelf=], [inset=], [mask_angle=], [excess=], [flat_top=]) [ATTACHMENTS];
+//   path = mask2d_dovetail(edge, slope=, [shelf=], [inset=], [mask_angle=], [excess=], [flat_top=]);
 // Description:
 //   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior dovetail between two walls at a 90º angle.
@@ -919,6 +931,7 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
 //   ---
+//   slope = Tangent of the dovetail angle, used instead of angle.
 //   width = The width of the dovetail (excluding any inset)
 //   height = The height of the dovetail (excluding any inset or shelf). 
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
@@ -951,7 +964,7 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_dovetail(width=10,angle=30);
-module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,h,width,height, slope, anchor=CENTER, spin=0,x,y) {
+module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle, excess=0.01, flat_top=true, w,h,width,height, slope, anchor=CENTER, spin=0,x,y) {
     path = mask2d_dovetail(w=w,width=width,h=h,height=height, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess, slope=slope, flat_top=flat_top, mask_angle=mask_angle,x=x,y=y);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -959,7 +972,7 @@ module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01
     }
 }
 
-function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,width,h,height, anchor=CENTER, spin=0,x,y) =
+function mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle, excess=0.01, flat_top=true, slope, w,width,h,height, anchor=CENTER, spin=0,x,y) =
     let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(num_defined([slope,angle])<=1, "Cannot give both slope and angle")
     assert(is_finite(excess))
@@ -979,10 +992,11 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
               : is_def(y)? adj_ang_to_opp(adj=y,ang=angle)
               : assert(all_positive([edge]))
                 hyp_ang_to_opp(hyp=edge,ang=angle),
-        height = is_def(y) ? y
-               : num_defined([width,angle])==2 ? opp_ang_to_adj(opp=width,ang=angle)+shelf
+        rise = is_def(y) ? y
+               : num_defined([width,angle])==2 ? opp_ang_to_adj(opp=width,ang=angle)
                : all_defined([edge,angle]) ? hyp_ang_to_adj(hyp=edge,ang=angle)
                : assert(is_def(edge) && edge>width) sqrt(edge^2-width^2),
+        height = rise+shelf,
         top = polar_to_xy(height/sin(mask_angle),mask_angle),
         outside_corner = _inset_corner([top,[0,0],[0,0]], mask_angle, inset, excess, flat_top),
         dummy=assert(outside_corner[1][1].x+width > top.x, "Dovetail doesn't fit on that angled edge.  Try increasing x inset.")
@@ -1143,7 +1157,7 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile(), face_mask(), edge_mask(), corner_mask()
 // Usage:
-//   PARENT() face_profile(faces, r|d=, [convexity=]) CHILDREN;
+//   PARENT() face_profile(faces, r|d=, [excess=], [convexity=], [axis=]) CHILDREN;
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face. If no tag is set
 //   then `face_profile` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
@@ -1156,9 +1170,10 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
 //   d = Diameter of corner mask.
 //   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+//   axis = Axis around which to revolve the corner profiles: "X", "Y", or "Z". Defaults to the axis perpendicular to the selected faces when they are parallel; otherwise "Z".
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each face.
+//   `$idx` is set to the index of the edge or corner currently being processed.
 //   `$attach_anchor` is set for each edge or corner given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$profile_type` is set to `"edge"` or `"corner"`, depending on what is being masked.
 // Example:
@@ -1166,14 +1181,17 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
 //   cube([50,60,70],center=true)
 //       face_profile(TOP,r=10)
 //           mask2d_roundover(r=10);
-module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
+module face_profile(faces=[], r, d, excess=0.01, convexity=10, axis) {
     req_children($children);
     faces = is_vector(faces)? [faces] : faces;
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
     r = get_radius(r=r, d=d, dflt=undef);
     assert(is_num(r) && r>=0);
-    edge_profile(faces, excess=excess) children();
-    corner_profile(faces, convexity=convexity, r=r) children();
+    axes = unique([for(face=faces) max_index(v_abs(face))]);
+    axis = is_undef(axis) ? (len(axes)==1 ? ["X","Y","Z"][axes[0]] : "Z") : axis;
+    assert(in_list(axis,["X","Y","Z"]), "axis must be X, Y, or Z");
+    edge_profile(faces, excess=excess, convexity=convexity) children();
+    corner_profile(faces, convexity=convexity, r=r, axis=axis) children();
 }
 
 
@@ -1183,7 +1201,7 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile_asym(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
-//   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
+//   PARENT() edge_profile([edges], [except], [excess], [convexity=]) CHILDREN;
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges of a cuboid, prismoid or cone, with the
 //   appropriate orientation and
@@ -1195,6 +1213,7 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 //   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
+//   ---
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
@@ -1228,9 +1247,13 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
              assert(in_list($parent_geom[0],["conoid","prismoid"]), "Parent must be a cyl, cuboid or prismoid");
     conoid = $parent_geom[0] == "conoid";
     edges = !conoid? _edges(edges, except=except) :
-        edges==EDGES_ALL? [TOP,BOT] :
-        assert(all([for (e=edges) in_list(e,[TOP,BOT])]), "\nInvalid conoid edge spec.")
-        edges;
+        let(
+            selected = edges==EDGES_ALL || edges=="ALL" ? [TOP,BOT] : is_vector(edges) ? [edges] : edges,
+            excluded = except==EDGES_ALL || except=="ALL" ? [TOP,BOT] : is_vector(except) ? [except] : except
+        )
+        assert(is_list(selected) && all([for(e=selected) in_list(e,[TOP,BOT])]), "\nInvalid conoid edge spec.")
+        assert(is_list(excluded) && all([for(e=excluded) in_list(e,[TOP,BOT])]), "\nInvalid conoid edge exclusion.")
+        [for(e=selected) if(!in_list(e,excluded)) e];
     vecs = conoid
       ? [for (e=edges) e+FWD]
       : [
@@ -1280,7 +1303,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
-//   PARENT() edge_profile([edges], [except], [convexity=], [flip=], [corner_type=]) CHILDREN;
+//   PARENT() edge_profile_asym([edges], [except], [excess=], [size=], [convexity=], [flip=], [corner_type=]) CHILDREN;
 // Description:
 //   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners of a parent cuboid, with the appropriate
 //   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
@@ -1326,7 +1349,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   size = If given the width and height of the 2D profile, enable rounding and chamfering of internal corners when given a negative profile.
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each edge.
+//   `$idx` is the index of the current edge in the list of selected edges.
 //   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$profile_type` is set to `"edge"`.
 //   `$edge_angle` is set to the inner angle of the current edge.
@@ -1467,6 +1490,7 @@ module edge_profile_asym(
         ) [for (x=xs, y=ys, z=zs) x+y+z + off];
 
     function _gather_contiguous_edges(edge_corners) =
+        edge_corners==[] ? [] :
         let(
             no_tri_corners = all([for(cn = [0:7]) len([for (ec=edge_corners) if(in_list(cn,ec[1])) 1])<3]),
             check = assert(no_tri_corners, "\nCannot have three edges that meet at the same corner.")
@@ -1498,7 +1522,7 @@ module edge_profile_asym(
             nu_curr = [
                 if (i1) edge_corners[i1[0]][0],
                 each curr,
-                if (i2) edge_corners[i2[0]][0],
+                if (i2 && i2!=i1) edge_corners[i2[0]][0],
             ],
             nu_ecns = [
                 if (!i1) ecns[0] else [
@@ -1659,10 +1683,11 @@ module edge_profile_asym(
             }
         }
         for (i = idx(edge_string)) {
+            edge_index = search([edge_string[i]],vecs)[0];
             $attach_to = undef;
             $attach_anchor = _find_anchor(edge_string[i], $parent_geom);
             $profile_type = "edge";
-            edge_profile(edge_string[i], excess=excess, convexity=convexity) {
+            edge_profile(edge_string[i], excess=excess, convexity=convexity) let($idx=edge_index) {
                 if (flipverts[i]) {
                     mirror([-1,1]) children();
                 } else {
@@ -1681,7 +1706,7 @@ module edge_profile_asym(
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask(), face_mask(), edge_mask()
 // Usage:
-//   PARENT() corner_profile([corners], [except], [r=|d=], [convexity=]) CHILDREN;
+//   PARENT() corner_profile([corners], [except], [r=|d=], [convexity=], [axis=]) CHILDREN;
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation. If no tag is set then `corner_profile()`
@@ -1714,6 +1739,7 @@ module edge_profile_asym(
 //           mask2d_teardrop(r=10, angle=40);
 //   }
 module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=10) {
+    assert(in_list(axis,["X","Y","Z"]), "axis must be X, Y, or Z");
     check1 = assert($parent_geom != undef, "\nNo object to attach to!");
     r = max(0.01, get_radius(r=r, d=d, dflt=undef));
     check2 = assert(is_num(r), "\nBad r/d argument.");
@@ -1839,7 +1865,7 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 // Topics: Masks, Rounding, Shapes (3D)
 // See Also: edge_profile(), rounding_corner_mask(), default_tag(), diff() 
 // Usage:
-//   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=], [rounding=|chamfer=], ) [ATTACHMENTS];
+//   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=], [rounding=|chamfer=]) [ATTACHMENTS];
 //   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=], [rounding=|chamfer=]) [ATTACHMENTS];
 // Description:
 //   Creates a mask shape that can be used to round a straight edge at any angle, with
@@ -1866,7 +1892,7 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //   d = Diameter of the rounding.
 //   d1 = Bottom diameter of rounding.
 //   d2 = Top diameter of rounding.
-//   excess = Extra size for the mask.  Defaults: 0.1
+//   excess = Extra size for the mask.  Default: 0.01
 //   rounding = Radius of roundong along ends.  Default: 0
 //   rounding1 = Radius of rounding along bottom end
 //   rounding2 = Radius of rounding along top end
@@ -1951,8 +1977,8 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 function rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER, spin=0, orient=UP,l,height,length) = no_function("rounding_angled_edge_mask");
 module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER, spin=0, orient=UP,l,height,length)
 {
-    deprecate("angled_edge_mask");
-    rounding_edge_mask(h=h,r=r,r1=r1,r2=r2,d=d,d1=d1,d2=d1,ang=ang,anchor=anchor,spin=spin,orient=orient,l=l,height=height,length=length)
+    deprecate("rounding_edge_mask");
+    rounding_edge_mask(h=h,r=r,r1=r1,r2=r2,d=d,d1=d1,d2=d2,ang=ang,anchor=anchor,spin=spin,orient=orient,l=l,height=height,length=length)
       children();
 }
 
@@ -1966,7 +1992,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 }
 
 function rounding_edge_mask(l, r, ang=90, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("rounding_edge_mask");
-module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, height, anchor=CENTER, spin=0, orient=UP,
+module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor=CENTER, spin=0, orient=UP,
                           rounding,rounding1,rounding2,chamfer,chamfer1,chamfer2,
                          _remove_tag=true)
 {
@@ -2083,7 +2109,7 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
 // See Also: teardrop_corner_mask(), teardrop_edge_mask(), default_tag(), diff()
 // Usage:
-//   teardrop_edge_mask(l|h=|length=|height=, r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
+//   teardrop_edge_mask(l|h=|length=|height=, r|d=, [angle], [excess], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Makes an apropriate 3D edge rounding mask that keeps within `angle` degrees of vertical.  Don't confuse `angle`
 //   with `ang`, the parameter which specifies the angle of the corner being rounded.  If the flat section ends up
@@ -2126,10 +2152,13 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, ang, d, anchor=CTR, spin=0
     corner = cylindrical_to_xyz(1,90+ang,0)+FWD;
     anchors=[named_anchor("corner",CENTER, corner, ang/2-90)]; 
     path = mask2d_teardrop(r=r, angle=angle, mask_angle=ang, excess=excess);
-    default_tag("remove") {  
-        change_anchors(named=anchors) 
-        linear_sweep(path, height=l, atype="bbox", anchor=anchor, spin=spin, orient=orient)
-           children();
+    bounds = pointlist_bounds(path);
+    size = point3d(bounds[1]-bounds[0], l);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, size=size, offset=point3d(mean(bounds)), anchors=anchors) {
+            linear_sweep(path, height=l, anchor="origin");
+            children();
+        }
     }
 }
 
@@ -2150,7 +2179,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, ang, d, anchor=CTR, spin=0
 //   object but at the corner point that needs to align with the corner being masked.  If you use {{linear_sweep()}}
 //   you will need to adjust for the excess manually, because the FWD+LEFT anchor is at the actual corner of the geometry.
 //   .
-//   For correct definition of the "corner" anchor this module assumes that the bottom edge is parallel to the Y axis, the bottom and
+//   For correct definition of the "corner" anchor this module assumes that the bottom edge is parallel to the X axis, the bottom and
 //   left edges are at the same angle as the corner the mask applies to, and that the mask corner point aligns with the origin.
 // Example(3D): Creating a roundover with a large excess
 //   polygon_edge_mask(mask2d_roundover(r=5, excess=2), length=20);
@@ -2166,7 +2195,10 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, ang, d, anchor=CTR, spin=0
 //   l / h / length / height = Length of mask.  Default: $edge_length if defined
 //   ---
 //   scale = Scaling multiplier for the top end of the mask object compared to the bottom.  Default: 1
-//   atype = Anchor type, either "hull" or "intersect".  Default: "intersect"
+//   atype = Anchor type, either "hull" or "intersect".  Default: "hull"
+//   anchor = Translate so the anchor is at the origin. Default: "origin"
+//   spin = Rotate this many degrees about Z after anchoring. Default: 0
+//   orient = Vector to rotate top toward after spin. Default: UP
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -2247,7 +2279,7 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 // Topics: Masking, Rounding, Shapes (3D)
 // See Also: rounding_edge_mask(), default_tag(), diff()
 // Usage:
-//   rounding_corner_mask(r|d, [ang], [excess=], [style=]) [ATTACHMENTS];
+//   rounding_corner_mask(r|d=, [ang], [excess=], [style=]) [ATTACHMENTS];
 // Description:
 //   Creates a shape that you can use to round corners where the top and bottom faces are parallel and the two side
 //   faces are perpendicular to the top and bottom, e.g. cubes or pie_slice corners.  
@@ -2332,7 +2364,7 @@ module rounding_corner_mask(r, ang=90, d, style="octa", excess=0.1, anchor=CENTE
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
 // See Also: teardrop_corner_mask(), teardrop_edge_mask(), default_tag(), diff()
 // Usage:
-//   teardrop_corner_mask(r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
+//   teardrop_corner_mask(r|d=, [angle], [excess], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
 // Arguments:
@@ -2387,7 +2419,7 @@ module teardrop_corner_mask(r, angle=45, excess=0.1, d, anchor=CTR, spin=0, orie
 // Topics: Masking, Chamfers, Cylinders
 // See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask(), default_tag(), diff()
 // Usage:
-//   chamfer_cylinder_mask(r|d=, chamfer, [ang], [from_end]) [ATTACHMENTS];
+//   chamfer_cylinder_mask(r|d=, chamfer, [ang=], [from_end=]) [ATTACHMENTS];
 // Description:
 //   Create a mask that can be used to bevel/chamfer the end of a cylindrical region.
 //   Difference it from the end of the region to be chamfered.  The center of the mask
@@ -2512,7 +2544,7 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 // Topics: Masking, Rounding
 // See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_corner_mask(), default_tag(), diff()
 // Usage:
-//   rounding_hole_mask(r|d, rounding, [excess]) [ATTACHMENTS];
+//   rounding_hole_mask(r|d=, rounding, [excess]) [ATTACHMENTS];
 // Description:
 //   Create a mask that can be used to round the edge of a circular hole.
 //   Difference it from the hole to be rounded.  The center of the
@@ -2579,7 +2611,7 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 //   For details on specifying the faces to mask see [Specifying Faces](attachments.scad#subsection-specifying-faces).
 //   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
 // Arguments:
-//   edges = Faces to mask.  See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  Default: All faces
+//   faces = Faces to mask.  See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  Default: All faces
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //   `$idx` is set to the index number of each face in the list of faces given.
