@@ -91,7 +91,7 @@ module _surface(file,center,convexity,invert)
   if ($children>0) surface(file=file,center=center,convexity=convexity,invert=invert) children();
   else surface(file=file,center=center,convexity=convexity,invert=invert);
   
-module _projection(cut,convexity) projection(cut=cut,convexity=convexity) children();
+module _projection(cut,convexity)
   if ($children>0) projection(cut=cut,convexity=convexity) children();
   else projection(cut=cut,convexity=convexity);                                
                                   

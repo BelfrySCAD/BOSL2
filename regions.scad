@@ -406,8 +406,8 @@ module debug_region(region, vertices=true, edges=true, convexity=2, size=1)
     if(vertices)
         _debug_poly_verts(region,size);
     for(j=idx(region)){
-      if(edges)
-        _debug_poly_edges(j,region[j],vertices=vertices,size=size);
+      if(edges || vertices)
+        _debug_poly_edges(j,region[j],vertices=vertices,size=size,edges=edges);
     }      
   }      
 }
@@ -593,7 +593,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 // Usage:
 //   split_region = split_region_at_region_crossings(region1, region2, [closed1], [closed2], [eps])
 // Description:
-//   Splits the {{region} `region1` at the places where its {{polygons}} touches each other at corners and at locations
+//   Splits the {{region}} `region1` at the places where its {{polygons}} touches each other at corners and at locations
 //   where `region1` intersects `region2`.  Split `region2` similarly with respect to `region1`.
 //   The return is a pair of results of the form [split1, split2] where split1=[frags1,frags2,...]
 //   and frags1 is a list of paths that when placed end to end (in the given order), give the first polygon of region1.
@@ -705,6 +705,8 @@ function region_parts(region) =
 
 
 // Section: Offset and 2D Boolean Set Operations
+//   Boolean shared-boundary probes adapt to local feature clearance. Features at or below `eps`
+//   may not be distinguishable. Empty Boolean results (`[]`) may be passed to subsequent Boolean operations.
 
 
 function _offset_chamfer(center, points, delta) =
@@ -1030,7 +1032,7 @@ function offset(
         let(
             ofsregs = [for(R=region_parts(path))
                 difference([for(i=idx(R)) offset(R[i], r=u_mul(i>0?-1:1,r), delta=u_mul(i>0?-1:1,delta),
-                                      chamfer=chamfer, check_valid=check_valid, quality=quality,same_length=same_length,closed=true)])]
+                                      chamfer=chamfer, check_valid=check_valid, quality=quality, error=error, same_length=same_length, closed=true)])]
         )
         union(ofsregs)
     :
@@ -1181,7 +1183,8 @@ function _filter_region_parts(region1, region2, keep, eps=_EPSILON) =
     let(
         subpaths = split_region_at_region_crossings(region1,region2,eps=eps),
         regions=[force_region(region1),
-                 force_region(region2)]
+                 force_region(region2)],
+        probe_data=_boundary_probe_data(concat(regions[0],regions[1]))
     )        
     _assemble_path_fragments(
         [for(i=[0:1])
@@ -1200,14 +1203,16 @@ function _filter_region_parts(region1, region2, keep, eps=_EPSILON) =
                             : rel>0 ? keepinside
                             : !(keepS || keepU) ? false
                             : let(
-                                  sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
+                                  sidept = midpt + _boundary_probe_distance(midpt,select(subpath,0,1),probe_data,eps)
+                                                     * line_normal(subpath[0],subpath[1]),
                                   rel1 = point_in_region(sidept,regions[0],eps=eps)>0,
                                   rel2 = point_in_region(sidept,regions[1],eps=eps)>0
                               )
                               rel1==rel2 ? keepS : keepU
                )
                if (keepthis) subpath
-        ]
+        ],
+        eps=eps
     );
 
 
@@ -1249,7 +1254,9 @@ function _list_three(a,b,c) =
 function union(regions=[],b=undef,c=undef,eps=_EPSILON) =
     let(regions=_list_three(regions,b,c))
     len(regions)==0? [] :
-    len(regions)==1? regions[0] :
+    len(regions)==1? force_region(regions[0]) :
+    regions[0]==[] ? union(list_tail(regions),eps=eps) :
+    regions[1]==[] ? union(list_remove(regions,1),eps=eps) :
     let(regions=[for (r=regions) is_path(r)? [r] : r])
     union([
            _filter_region_parts(regions[0],regions[1],["OS", "O"], eps=eps),           
@@ -1287,8 +1294,9 @@ function union(regions=[],b=undef,c=undef,eps=_EPSILON) =
 function difference(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0? []
-   : len(regions)==1? regions[0]
+   : len(regions)==1? force_region(regions[0])
    : regions[0]==[] ? []
+   : regions[1]==[] ? difference(list_remove(regions,1),eps=eps)
    : let(regions=[for (r=regions) is_path(r)? [r] : r])
      difference([
                  _filter_region_parts(regions[0],regions[1],["OU", "I"], eps=eps),                
@@ -1323,7 +1331,7 @@ function difference(regions=[],b=undef,c=undef,eps=_EPSILON) =
 function intersection(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0 ? []
-   : len(regions)==1? regions[0]
+   : len(regions)==1? force_region(regions[0])
    : regions[0]==[] || regions[1]==[] ? []   
    : intersection([
                    _filter_region_parts(regions[0],regions[1],["IS","I"],eps=eps),                       
@@ -1369,8 +1377,8 @@ function exclusive_or(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0? []
    : len(regions)==1? force_region(regions[0])
-   : regions[0]==[] ? exclusive_or(list_tail(regions))
-   : regions[1]==[] ? exclusive_or(list_remove(regions,1))
+   : regions[0]==[] ? exclusive_or(list_tail(regions),eps=eps)
+   : regions[1]==[] ? exclusive_or(list_remove(regions,1),eps=eps)
    : exclusive_or([
                    _filter_region_parts(regions[0],regions[1],["IO","IO"],eps=eps),                  
                    for (i=[2:1:len(regions)-1]) regions[i]
