@@ -29,7 +29,7 @@ include <../std.scad>
 
 module test_get_font_size() {
     assert(get_font_size(size=15) == 15);
-    assert(round(get_font_size(nom_height=20)) == 13);
+    assert(round(get_font_size(size_by_nom=20)) == 13);
 }
 test_get_font_size();
 '''
