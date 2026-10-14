@@ -376,8 +376,8 @@ function _get_write_data(w) = object(
 //   anchor = Translate so that the anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor). Default: `CENTER`, or concatenation if used as a child of another `write()` (see above).
 //   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Named Anchors:
-//   BASELINE(n,[pos],[tight],[rtl]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
-//   TEXTLINE(n,[pos],[tight],[rtl]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set). The `tight` and `rtl` parameters should be named and not used positionally.
+//   BASELINE(n,[pos],[tight=],[rtl=]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
+//   TEXTLINE(n,[pos],[tight=],[rtl=]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set). The `tight` and `rtl` parameters should be named and not used positionally.
 // Side Effects:
 //   $write = An object containing metadata about the last `write()` call, with properties described below:
 //   $write.fontname = The font spec (family and style) name used.
@@ -514,7 +514,7 @@ module write(text, max_width=INF, max_height=INF,
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
     translate(parent_offset)
-        attachable(anch, spin, two_d=true, size=w.anchorboxsize, anchors=_line_anchors(w.baseline_pos, w.boundboxsize)) {
+        attachable(anch, spin, two_d=true, size=w.anchorboxsize, anchors=_line_anchors(w.baseline_pos, w.boundboxsize, two_d=true)) {
             union() {
                 if(show_bounds) {
                     stroke(square(w.anchorboxsize, center=true), width=0.6, color="lightgray", closed=true);
@@ -626,7 +626,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
         anchors = last($parent_geom),
         found = search([BASELINE("end")], anchors, num_returns_per_match=1)[0]
     ) found==[] ? undef : anchors[found];
-    parent_offset = is_undef(parent_end) ? [0, 0, -thk/2] : parent_end[1];
+    parent_offset = is_undef(parent_end) ? [0,0,0] : parent_end[1];
     anch = is_def(anchor) ? anchor: is_undef(parent_end) ? CENTER: BASELINE("start");
 
     // display the text
@@ -635,7 +635,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
     ilast = len(w.baseline_pos) - 1;
     ha = dir>0 ? "left" : "right";
     translate(parent_offset) attachable(anch, spin, orient, size=w.anchorboxsize, anchors=_line_anchors(w.baseline_pos, w.boundboxsize)) {
-        linear_extrude(thk) union() {
+        translate([0,0,-thk/2]) linear_extrude(thk) union() {
             for(i=[0:ilast]) let(   // for each line....
                 wo = w.baseline_pos[i].linewrapobj,
                 tx = wo.textobj.text,
@@ -647,7 +647,7 @@ module write3d(text, thickness, max_width=INF, max_height=INF,
                     translate([w.baseline_pos[i].xstart+dir*cp[p], w.baseline_pos[i].y])
                         // _text() uses OpenSCAD's text() rather than BOSL2's text()
                         _text(word, w.osize, w.allfontnames[st[p]], direction=direction,
-                            halign=ha, valign="baseline", valign="baseline", spacing=1,
+                            halign=ha, valign="baseline", spacing=1,
                             language=language, script=script);
         }
         children();
@@ -783,7 +783,7 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
                 xend = xoff + dir*(xoffset + wo.textobj.boxwidth),
                 y = y,
                 top = y + wo.textobj.ascent,
-                bot = y - wo.textobj.descent,
+                bot = y + wo.textobj.descent, // sescent is negative
                 linewrapobj = wo
             )
     ]
@@ -885,15 +885,15 @@ function TEXTLINE(n, pos=CENTER, tight=true, rtl=false) =
 /// Internal function: _line_anchors() - called by _writeobj()
 /// Named anchor generator to pass to attachable() - anchors can be 2D or 3D
 /// boxsize is the tight bounding box [xsize,ysize] or [xsize,ysize,zsize]
-function _line_anchors(baseline_pos, boxsize) =
+function _line_anchors(baseline_pos, boxsize, two_d=false) =
     let(
         n = len(baseline_pos),
         bboxsize = is_vector(boxsize,3) ? boxsize : [boxsize[0], boxsize[1], 0],
-        xbhi = bboxsize[0]/2,
-        xblo = -xbhi,
-        zbhi = bboxsize[2], // height of extrusion
-        zblo = 0,
-        zbmid = (zbhi+zblo)/2,
+        xbhi = bboxsize[0]/2,   // max x of box
+        xblo = -xbhi,           // min x of box
+        zbhi = bboxsize[2]/2,     // height of extrusion (0 in 2D)
+        zblo = -zbhi,               // bottom of extrusion
+        zbmid = 0,  // middle of extrusion
         indx = count(n+1)
     ) [
         for (i=[0:n-1])
@@ -904,10 +904,7 @@ function _line_anchors(baseline_pos, boxsize) =
                 xmid = (xlo+xhi)/2,
                 ylo = bp.bot,
                 yhi = bp.top,
-                ymid = (ylo+yhi)/2,
-                // container edges: real box edge if bounded, else same as text edge
-                box_lo = is_finite(boxsize.x) ? -boxsize.x/2 : xlo,
-                box_hi = is_finite(boxsize.x) ? boxsize.x/2 : xhi
+                ymid = (ylo+yhi)/2
             )
             for(x=[-1:1:1]) for(y=[-1:1:1]) for(z=[-1:1:1]) let(
                 a = [x,y,z], in = i-n,
@@ -915,18 +912,21 @@ function _line_anchors(baseline_pos, boxsize) =
                 btight = [a.x<0 ? xlo : a.x>0 ?  xhi : xmid, bp.y, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
                 bbox =   [a.x<0 ? xblo : a.x>0 ? xbhi : 0,   bp.y, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
                 ttight = [a.x<0 ? xlo : a.x>0 ? xhi : xmid, a.y<0 ? ylo : a.y>0 ? yhi : ymid, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
-                tbox =   [a.x<0 ? xblo : a.x>0 ? xbhi : 0, a.y<0 ? ylo : a.y>0 ? yhi : ymid, a.z<0 ? zblo : a.z>0?zbhi:zbmid]
-            ) each [
+                tbox =   [a.x<0 ? xblo : a.x>0 ? xbhi : 0, a.y<0 ? ylo : a.y>0 ? yhi : ymid, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
+            zdir = z != 0 ? [0,0,two_d?0:z]
+                : x == 0 && y == 0 ? (two_d ? BACK : UP) : [0,0,0],
+            dir = [x,y,0] + zdir
+            ) if ((z==0 && two_d) || !two_d) each [
                 // normal line numbers
-                named_anchor(str("base",i,"_tight",a), btight, UP, 0),
-                named_anchor(str("base",i,"_box",a), bbox, UP, 0),
-                named_anchor(str("text",i,"_tight",a), ttight, UP, 0),
-                named_anchor(str("text",i,"_box",a), tbox, UP, 0),
+                if (y==0) named_anchor(str("base",i,"_tight",a), btight, dir, 0),
+                if (y==0) named_anchor(str("base",i,"_box",a), bbox, dir, 0),
+                named_anchor(str("text",i,"_tight",a), ttight, dir, 0),
+                named_anchor(str("text",i,"_box",a), tbox, dir, 0),
                 // negative line numbers, last line forward
-                named_anchor(str("base",in,"_tight",a), btight, UP, 0),
-                named_anchor(str("base",in,"_box",a), bbox, UP, 0),
-                named_anchor(str("text",in,"_tight",a), ttight, UP, 0),
-                named_anchor(str("text",in,"_box",a), tbox, UP, 0)
+                if (y==0) named_anchor(str("base",in,"_tight",a), btight, dir, 0),
+                if (y==0) named_anchor(str("base",in,"_box",a), bbox, dir, 0),
+                named_anchor(str("text",in,"_tight",a), ttight, dir, 0),
+                named_anchor(str("text",in,"_box",a), tbox, dir, 0)
         ]
     ];
 
@@ -1045,7 +1045,7 @@ let(
     : fd10.max.asent + baselines[0] - fd10.max.descent - baselines[ilast],
     lspc_add = [ for(i=[0:ilast]) lspc * len(wrapobj[i].textobj.text) ],
     htight = [ for(i=[0:ilast]) wrapobj[i].textobj.boxwidth + wrapobj[i].indent + lspc_add[i] ],
-    ih = max_index(htight),
+    ih = max_index(htight)
 ) 9.99 * min((wid-lspc_add[ih]) / (htight[ih]-lspc_add[ih]), ht / vboxsize); // multiplying by 10 can introduce roundoff that overflows width in _textwrap()
 
 
@@ -1069,48 +1069,7 @@ _style_codes = [  // style codes in text. The index of the array is used to iden
     "{{b}}",    // 2 = Bold
     "{{bi}}"    // 3 = Bold Italic
 ];
-/*
-_literal_codes = [ "{{lb}}", "{{ }}",  "{ }" ];
-_literal_chars = [ "{",      "\u00A0", "\u00A0" ];
 
-function _text_styles(text, firststyle=0) =
-    let(
-        n = len(text),
-        // type 1 = style code (payload = style index), type 0 = literal code (payload = ord of literal char)
-        style_matches = [for (ci = idx(_style_codes))
-                            let(cl = len(_style_codes[ci]))
-                            for (p = str_find(text, _style_codes[ci], all=true))
-                              [p, cl, 1, ci]],
-        literal_matches = [for (li = idx(_literal_codes))
-                              let(cl = len(_literal_codes[li]))
-                              for (p = str_find(text, _literal_codes[li], all=true))
-                                [p, cl, 0, ord(_literal_chars[li])]],
-        sorted = sort(concat(style_matches, literal_matches)),
-        nm = len(sorted),
-        // greedy non-overlap filter, same logic str_replace() uses
-        pos = [
-            for (j = 0, last_end = 0;
-                 j < nm;
-                 last_end = (sorted[j][0] >= last_end) ? sorted[j][0] + sorted[j][1] : last_end,
-                 j = j + 1)
-              if (sorted[j][0] >= last_end) j
-        ],
-        np = len(pos),
-        // single pass: emit [ord, style] for real characters, skip matched code spans
-        built = [
-            for (i = 0, mi = 0, style = firststyle,
-                 matched = (0 < np && sorted[pos[0]][0] == 0);
-                 i < n;
-                 style = (matched && sorted[pos[mi]][2] == 1) ? sorted[pos[mi]][3] : style,
-                 i     = matched ? i + sorted[pos[mi]][1] : i + 1,
-                 mi    = matched ? mi + 1 : mi,
-                 matched = (mi < np && sorted[pos[mi]][0] == i))
-              if (!matched) [ord(text[i]), style]
-              else if (sorted[pos[mi]][2] == 0) [sorted[pos[mi]][3], style]
-              // else: type 1 (style code) -> consumed, nothing emitted
-        ]
-    ) object(text = chr([for (e = built) e[0]]), style=[for (e = built) e[1]]);
-*/
 _literal_codes = [
     [ "{lb}", "{" ],            // left brace
     [ "{ }", "\u00A0" ],        // nonbreaking space
@@ -1168,70 +1127,6 @@ function _text_styles(text, firststyle=0) =
     ) object(text = chr([for (e = built) e[0]]), style=[for (e = built) e[1]]);
 
 
-/*
-/// Internal function: _textobj()
-///   Given a simple string without newlines, a font spec, and letterspacing spec, return an object
-//    containing font metrics and character positions.
-///   The object returned has these properties:
-///   * text: the line of text being represented, reversed if fontdata.direction="rtl"
-///   * charpos: array of character positions for each character in the text
-///   * ascent: the ascent for this line of text
-///   * descent: the descent for this line of text
-///   * boxwidth: the width of the text
-///   * nominal_boxheight: the nominal height of the bounding box using the fontmetrics nominal ascent and descent
-///   * actual_boxheight: the actual height of the bounding box using the text's own ascent and descent
-/// Arguments:
-///   txt = line of text, containing displayable characters, free of newlines
-///   fontdata = object returned from _fontdata(), includes fontmetrics() object with other info
-///   spcadd = amount to increase size of a space character (for full justification), normally 0
-///   style = style array generated by _textwrap()
-function _textobj(txt, fontdata, spcadd, style) =
-let(
-    osiz = fontdata.font.size,      // font size
-    spacer = fontdata.spacer,       // letterspacing, normally 0, we don't use 'spacing' arg in textmetrics()
-    fontname = str(fontdata.font.family, ":style=", fontdata.font.style),
-    direction = fontdata.direction, // normally "ltr" (left to right) but can be "rtl"
-    language = fontdata.language,   // normally "en" - passed through to textmetrics()
-    script = fontdata.script,       // normally "latin" - passed through to textmetrics()
-    fontnames = [                   // font styles; style is array of indices of this array
-        str(fontdata.font.family, ":style=Regular"),
-        str(fontdata.font.family, ":style=Italic"),
-        str(fontdata.font.family, ":style=Bold"),
-        str(fontdata.font.family, ":style=Bold Italic")
-    ],
-
-    advance = [ // single character widths (account for nonbreaking space as a normal space)
-        for(i=[0:len(txt)-1]) textmetrics(txt[i], osiz, fontnames[style[i]], direction, language, script).advance[0]
-            + (txt[i] == " " || txt[i] == "\u00A0" ? spcadd : 0)
-    ],
-    // kerning (changes in position for each character) is calculated by measuring the 'advance'
-    // property of a pair of characters and subtracting the sum of 'advance' properties for both
-    // characters individually.
-    kern = [ 0,
-        if(len(txt)>1) for(i=[0:len(txt)-2]) let(
-            c1 = txt[i]=="\u00A0" ? " " : txt[i],     // kerning for a normal space is different
-            c2 = txt[i+1]=="\u00A0" ? " " : txt[i+1], // from a nonbreaking space; use normal space
-            wid2 = textmetrics(str(c1,c2), osiz, fontnames[style[i]], direction, language, script).advance[0]
-                + (c1 == " " ? spcadd : 0)
-                + (c2 == " " ? spcadd : 0)
-        ) wid2 - advance[i] - advance[i+1]
-    ],
-    // new character widths corrected for kerning
-    newadv = len(txt)<2 ? [0] : [ for(i=[0:len(txt)-2]) advance[i] + kern[i+1] + spacer],
-    charpos = [0, each cumsum(newadv) ], // horizontal position of each character
-    tm = textmetrics(txt, osiz, fontname, direction, language, script, valign="baseline", spacing=1)
-) object(
-    text = txt,
-    charpos = charpos,
-    charstyle = style,
-    charlen = repeat(1, len(txt)), // placeholder (all strings 1 character long) until word units are figured out
-    ascent = tm.ascent,
-    descent = tm.descent,
-    boxwidth = charpos[len(charpos)-1] + advance[len(advance)-1],
-    nominal_boxheight = fontdata.nominal.ascent - fontdata.nominal.descent,
-    actual_boxheight = tm.ascent-tm.descent
-);
-*/
 /// Internal function: _textobj()
 ///   Given a simple string without newlines, a font spec, and letterspacing spec, return an object
 ///   containing font metrics and character positions.
