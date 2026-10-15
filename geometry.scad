@@ -1304,7 +1304,8 @@ function circle_3points(pt1, pt2, pt3) =
 //   tangents = circle_point_tangents(r|d=, cp, pt);
 // Description:
 //   Given a 2d circle and a 2d point outside that circle, finds the 2d tangent point(s) on the circle for a
-//   line passing through the point.  Returns a list of zero or more 2D tangent points.
+//   line passing through the point.  Returns a list of zero or more 2D tangent points.  When two tangents
+//   exist the first point is the one that is right of the circle center as viewed from `pt`.  
 // Arguments:
 //   r = Radius of the circle.
 //   cp = The coordinates of the 2d circle centerpoint.
@@ -1314,21 +1315,21 @@ function circle_3points(pt1, pt2, pt3) =
 // Example(2D):
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
 //   tanpts = circle_point_tangents(r=r, cp=cp, pt=pt);
-//   color("yellow") translate(cp) circle(r=r);
-//   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
-//   color("red") move_copies(tanpts) circle(d=3,$fn=12);
-//   color("blue") move_copies([cp,pt]) circle(d=3,$fn=12);
+//   move(cp) circle(r=r);
+//   recolor("cyan") for(tp=tanpts) stroke([cp,tp,pt]);
+//   recolor("red") move_copies(tanpts) circle(d=3,$fn=12);
+//   recolor("blue") move_copies([cp,pt]) circle(d=3,$fn=12);
 function circle_point_tangents(r, cp, pt, d) =
     assert(is_finite(r) || is_finite(d), "\nInvalid radius or diameter." )
     assert(is_path([cp, pt],dim=2), "\nInvalid center point or external point.")
     let(
         r = get_radius(r=r, d=d, dflt=1),
         delta = pt - cp,
-        dist = norm(delta),
-        baseang = atan2(delta.y,delta.x)
+        dist = norm(delta)
     ) dist < r? [] :
     approx(dist,r)? [pt] :
     let(
+        baseang = atan2(delta.y,delta.x),
         relang = acos(r/dist),
         angs = [baseang + relang, baseang - relang]
     ) [for (ang=angs) cp + r*[cos(ang),sin(ang)]];
