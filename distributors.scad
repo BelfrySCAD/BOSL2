@@ -655,7 +655,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   grid_copies(spacing=5, stagger=true, inside=poly)
 //      zrot(180/6) hexagon(d=5); 
 //   %polygon(poly);
-// Example(3D): Using `inside` to provide the size with just spacing 
+// Example(2D): Using `inside` to provide the size with just spacing 
 //   grid_copies(inside=star(id=30,od=75,n=5), spacing=2) star(id=1,od=2,n=7);
 // Example: Using `$row` and `$col`
 //   grid_copies(spacing=8, n=8)
