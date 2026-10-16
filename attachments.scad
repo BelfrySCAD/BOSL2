@@ -3919,7 +3919,7 @@ function _standard_anchors(two_d=false) = [
 // Topics: Attachments, Debugging
 // See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
 // Usage:
-//   PARENT() show_anchors([s], [std=], [custom=]);
+//   PARENT() show_anchors([s], [std=], [custom=], [show_labels=]);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
@@ -3927,10 +3927,10 @@ function _standard_anchors(two_d=false) = [
 //   ---
 //   std = If true, show standard anchors. Default: true
 //   custom = If true, show named anchors. Default: true
-//   show_tags = If true, show custom anchor tags. Default: true
+//   show_labels = If true, show custom anchor labels. Default: true
 // Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
-module show_anchors(s=10, std=true, custom=true, show_tags=true) {
+module show_anchors(s=10, std=true, custom=true, show_labels=true) {
     check = assert($parent_geom != undef);
     two_d = _attach_geom_2d($parent_geom);
     if (std) {
@@ -3951,7 +3951,7 @@ module show_anchors(s=10, std=true, custom=true, show_tags=true) {
                 } else {
                     anchor_arrow(s, color="cyan");
                 }
-                if (show_tags) {
+                if (show_labels) {
                     color("white") tag("anchor-arrow") {
                         if(two_d)
                             back(s/2)
