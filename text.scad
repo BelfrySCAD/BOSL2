@@ -80,7 +80,7 @@ character in a single wrapped line of text. First character position is always z
     charstyle               // font styles (0, 1, 2, or 3) for each character
     charlen                 // length of word at the horizontal position in charpos, 0 for mid-word
     ascent                  // 'ascent' property for this line from textmetrics()
-    descent                 // 'descent' property for this line from textmetrics()  
+    descent                 // 'descent' property for this line from textmetrics()
     boxwidth                // physical width of this line in CAD units
     nominal_boxheight       // nominal height (ascent to descent) of this line in CAD units
     actual_boxheight        // physical height of this line, ascent-descent from textmetrics()
@@ -331,19 +331,13 @@ function _get_write_data(w) = object(
 //   Mutiline text can use named anchors (see argument list), and a named anchor is the **only** way
 //   to position the baseline of the text onto the origin.
 //   . 
-//   Text produced by `write()` is anchored to CENTER by default with an important exception: if
+//   Text produced by `write()` is anchored to `CENTER` by default with an important exception: if
 //   `write()` appears as a child of another `write()`, then the text concatenates along its
 //   baseline to the parent text. Concatenation is disabled if you give an explicit `anchor=`, or if
 //   you use {{attach()}}, {{align()}}, or {{position()}}. In those cases the child `write()` is
-//   positioned as you specify. An example of concatenation:
-//   ````
-//     write("Hello ", size=12, anchor=BACK)
-//         write("there ", size=8)
-//             write("world", size=12);
-//   ````
-//   This displays "Hello there world" with a smaller size for "there", with the text continuing
-//   along the baseline. Include spaces explicitly to prevent the text from running together.
-//   Because `anchor=` disables concatenation, only the first `write()` can be given an anchor.
+//   positioned as you specify. When you concatenate `write()` calls, include spaces explicitly to
+//   prevent the text from running together. Because `anchor=` disables concatenation, only the
+//   first `write()` can be given an anchor.
 // Arguments:
 //   text = The text to display. May be a simple string, string with newline (`\n`) characters, or a list of strings (which can also contain newline characters). The alias `{ }` is treated as the nonbreaking space character `\u00a0`.
 //   max_width = Constrains text to fit within a maximum horizontal width. If no font size is given then the size is chosen for the line of text (or longest line in an array) to span this width. If a font size is given, the text is wrapped to fit within this constraint. As a positional argument, this is a `[width,height]` vector in lieu of specifying `max_width` and `max_height` separately. Default: `INF`
@@ -379,7 +373,7 @@ function _get_write_data(w) = object(
 //   BASELINE(n,[pos],[tight=],[rtl=]) = Anchor the baseline of line `n` at position `pos` (default `CENTER`). The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` is `LEFT`, `CENTER` (default if omitted), or `RIGHT`, relative to the physical length of the line when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `BASELINE("start")` and `BASELINE("end")` as shortcuts for `BASELINE(0,"left")` and `BASELINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end" (default is `rtl=false)`. The `tight` and `rtl` parameters should be named and not used positionally.
 //   TEXTLINE(n,[pos],[tight=],[rtl=]) = Anchor the rendered text of line `n` at position `pos`. The line number `n` is an integer (0, 1, 2,...), where negative values (-1, -2,...) count back from the last line; default is 0 if unset. The position `pos` (default `CENTER`) is relative to the bounding box containing that individual line, which is the physical horizontal width of the text when `tight=true` (default if omitted) or the entire bounding box when `tight=false`. You can use `TEXTLINE("start")` and `TEXTLINE("end")` as shortcuts for `TEXTLINE(0,"left")` and `TEXTLINE(-1,"right")`. For right-to-left text, setting `rtl=true` reverses the meanings of "start" and "end". `TEXTLINE(2,RIGHT+FWD,tight=false)` would position lower right corner of the line's bounding box at the origin, using a bounding box as wide as the overall bounds containing all lines of text (`max_width`, or the tight bounds if `max_width` is not set). The `tight` and `rtl` parameters should be named and not used positionally.
 // Side Effects:
-//   $write = An object containing metadata about the last `write()` call, with properties described below:
+//   $write = An object containing metadata about the last `write()` call, with the following properties.
 //   $write.fontname = The font spec (family and style) name used.
 //   $write.fontsize = The font size in OpenSCAD font size units.
 //   $write.bounding_box = Size of the bounding box of the rendered text.
@@ -388,7 +382,7 @@ function _get_write_data(w) = object(
 //   $write.tight_center = Coordinates of the tight box center.
 //   $write.vbounds = Object containing possible bounding heights, with properties `tight`, `nominal`, and `full`.
 //   $write.baselines = Array of baseline objects for each line; each object has properties `xstart`, `xend`, `y`, `top`, `bot`.
-// Example(2D,VPT=[0,0,0],VPD=125): Basic usage of write(). Default is to center the text on the origin. In this case the font size is set by `size_by_nom` to specify the size of the font from nominal ascender to nominal descender.
+// Example(2D,VPT=[0,0,0],VPD=125): Basic usage of `write()`. Default is to center the text on the origin. In this case the font size is set by `size_by_nom` to specify the size of the font from nominal ascender to nominal descender.
 //   write("Flying high", size_by_nom=14, font="Liberation Sans");
 // Example(2D): Anchors are used to position text vertically and horizontally with respect to the origin, instead of `valign` and `halign` in OpenSCAD's `text()`. To position the start of the baseline at the origin (the default behavior in `text()`), use a `BASELINE("start")` anchor. Glyph descenders then extend below the X axis.
 //   write("Quippy", size=10, anchor=BASELINE("start"));
@@ -565,6 +559,9 @@ module write(text, max_width=INF, max_height=INF,
 //   example, `anchor=BASELINE("end",TOP)` creates an anchor at the end of the last line of text, at
 //   the top of the extrusion, and positions that point at the origin or to the attachment point of
 //   the parent.
+//   .
+//   When concatenating `write3d()` calls, the `thickness` parameter should be consistent across the
+//   whole chain, otherwise the vertical positioning may be unpredictable.
 // Example(3D,VPD=88,VPT=[2,0,0]): Basic 3D text, 6 units thickness. This example contains a hardcoded newline (`\n`), resulting in two lines of text. The default anchor is to center the bounding box at the origin.
 //   write3d("Flying\nhigh", h=6, size=10, text_align="center",
 //       font="Liberation Serif:style=Bold Italic");
@@ -783,7 +780,7 @@ function _writeobj(text, thickness=0, max_width=INF, max_height=INF,
                 xend = xoff + dir*(xoffset + wo.textobj.boxwidth),
                 y = y,
                 top = y + wo.textobj.ascent,
-                bot = y + wo.textobj.descent, // sescent is negative
+                bot = y + wo.textobj.descent, // descent is negative
                 linewrapobj = wo
             )
     ]
@@ -818,20 +815,6 @@ function _preprocess_text(text, collapse_space, caller="write") =
     : assert(false, str("\n",caller,"(): 'text' must be a string or list of strings.")) "";
 
 
-/// Internal function: _postprocess_text() - called by _textwrap()
-/// This function is called after processing the font style codes, but before wrapping the text.
-/// text = text to process
-/// styles = style codes for each character of text
-/// code = code to look for
-/// char = character that the code represents
-/*
-function _postprocess_text(text, styles, code="{{lb}}", char="{") = let(
-    pos = str_find(text, code)
-) len(pos)==0 ? [text, styles]
-: let(
-    
-    ) [ str_replace(text, code, char), style];
-*/
 
 /// Internal function: _baselines() - called by _writeobj()
 /// Return baseline positions for multi-line text, starting at 0 and going negative from there.
@@ -845,7 +828,7 @@ function _baselines(wrapobj, lheight, pheight, interline) =
         for(i=[0:len(wrapobj)-1]) i==0?0: -(wrapobj[i].textblock ? pheight : lheight)
     ] * interline);
 
-    
+
 
 /// Internal function _justify_pos() - called by _writeobj()
 /// Given a line of output from _textwrap(), adjust the charpos values so that the text is
@@ -880,7 +863,7 @@ function TEXTLINE(n, pos=CENTER, tight=true, rtl=false) =
     : n=="end" ? TEXTLINE(rtl?0:-1, (rtl?LEFT:RIGHT)+pos, tight, rtl)
     : str("text", n, tight ? "_tight" : "_box", pos);
 
- 
+
 
 /// Internal function: _line_anchors() - called by _writeobj()
 /// Named anchor generator to pass to attachable() - anchors can be 2D or 3D
@@ -891,9 +874,9 @@ function _line_anchors(baseline_pos, boxsize, two_d=false) =
         bboxsize = is_vector(boxsize,3) ? boxsize : [boxsize[0], boxsize[1], 0],
         xbhi = bboxsize[0]/2,   // max x of box
         xblo = -xbhi,           // min x of box
-        zbhi = bboxsize[2]/2,     // height of extrusion (0 in 2D)
-        zblo = -zbhi,               // bottom of extrusion
-        zbmid = 0,  // middle of extrusion
+        zbhi = bboxsize[2]/2,   // height of extrusion (0 in 2D)
+        zblo = -zbhi,           // bottom of extrusion
+        zbmid = 0,              // middle of extrusion
         indx = count(n+1)
     ) [
         for (i=[0:n-1])
@@ -911,23 +894,32 @@ function _line_anchors(baseline_pos, boxsize, two_d=false) =
                 // coordinates for different anchor modes
                 btight = [a.x<0 ? xlo : a.x>0 ?  xhi : xmid, bp.y, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
                 bbox =   [a.x<0 ? xblo : a.x>0 ? xbhi : 0,   bp.y, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
-                ttight = [a.x<0 ? xlo : a.x>0 ? xhi : xmid, a.y<0 ? ylo : a.y>0 ? yhi : ymid, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
-                tbox =   [a.x<0 ? xblo : a.x>0 ? xbhi : 0, a.y<0 ? ylo : a.y>0 ? yhi : ymid, a.z<0 ? zblo : a.z>0?zbhi:zbmid],
-            zdir = z != 0 ? [0,0,two_d?0:z]
-                : x == 0 && y == 0 ? (two_d ? BACK : UP) : [0,0,0],
-            dir = [x,y,0] + zdir
-            ) if ((z==0 && two_d) || !two_d) each [
+                ttight = [a.x<0 ? xlo : a.x>0 ? xhi : xmid,
+                    a.y<0 ? ylo : a.y>0 ? yhi : ymid,
+                    a.z<0 ? zblo : a.z>0 ? zbhi : zbmid],
+                tbox = [a.x<0 ? xblo : a.x>0 ? xbhi : 0,
+                    a.y<0 ? ylo : a.y>0 ? yhi : ymid,
+                    a.z<0 ? zblo : a.z>0 ? zbhi : zbmid],
+                // baseline anchor direction
+                bdir = x != 0 ? [x,0,two_d?0:z]
+                    : two_d ? BACK
+                    : z==0 ? UP : [x,0,z],
+                // textline anchor direction
+                tdir = two_d ? (x==0 && y==0 && z==0 ? BACK : [x, x==0 && y==0 ? z : y, 0])
+                    : x==0 && y==0 && z==0 ? UP : a
+            ) if (!two_d || y == 0 || z == 0) // omit 2D cases with y and z both nonzero
+              each [
                 // normal line numbers
-                if (y==0) named_anchor(str("base",i,"_tight",a), btight, dir, 0),
-                if (y==0) named_anchor(str("base",i,"_box",a), bbox, dir, 0),
-                named_anchor(str("text",i,"_tight",a), ttight, dir, 0),
-                named_anchor(str("text",i,"_box",a), tbox, dir, 0),
+                named_anchor(str("base",i,"_tight",a), btight, bdir, 0),
+                named_anchor(str("base",i,"_box",a), bbox, bdir, 0),
+                named_anchor(str("text",i,"_tight",a), ttight, tdir, 0),
+                named_anchor(str("text",i,"_box",a), tbox, tdir, 0),
                 // negative line numbers, last line forward
-                if (y==0) named_anchor(str("base",in,"_tight",a), btight, dir, 0),
-                if (y==0) named_anchor(str("base",in,"_box",a), bbox, dir, 0),
-                named_anchor(str("text",in,"_tight",a), ttight, dir, 0),
-                named_anchor(str("text",in,"_box",a), tbox, dir, 0)
-        ]
+                named_anchor(str("base",in,"_tight",a), btight, bdir, 0),
+                named_anchor(str("base",in,"_box",a), bbox, bdir, 0),
+                named_anchor(str("text",in,"_tight",a), ttight, tdir, 0),
+                named_anchor(str("text",in,"_box",a), tbox, tdir, 0)
+            ]
     ];
 
 
@@ -1819,8 +1811,8 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
 //   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false,
-                 textmetrics=false, kern=0, height,h, valign="baseline", language, script)
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal,
+    top, center=false, textmetrics=false, kern=0, height,h, valign="baseline", language, script)
 {
   no_children($children);
   dummy2=assert(is_path(path,[2,3]),"\nMust supply a 2d or 3d path.")
