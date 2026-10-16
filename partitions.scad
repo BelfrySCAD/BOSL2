@@ -1387,60 +1387,53 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 //   spin = Rotation about local Z before orientation. Default: 0
 //   orient = Orient local Z+ toward this direction. Ignored in 2D. Default: UP
 //   convexity = Preview convexity. Default: 10
-// Example(3D): Keep the upper part of a cuboid, with a patterned interface.
+// Example(3D):  In its native orientation, the basic mask keeps the part where Z>0 and removes the part where Z<0.
+//    half_mask([100,70,60],pattern="jigsaw 16x6",cut_width=75,$fn=32);
+// Example(3D): Apply the above mask to keep the upper half of a cuboid
 //   diff()
-//       cuboid([80,50,40])
-//           position(CENTER)
-//               half_mask([100,70,60],pattern="jigsaw 16x6",cut_width=75,$fn=32);
-// Example(3D): Cut a positive-octant parent through its center, retaining its right side.
+//   cuboid([80,50,40])
+//       half_mask([100,70,60],pattern="jigsaw 16x6",cut_width=75,$fn=32);
+// Example(3D): The mask is centered relative to the parent regardless of the parent location
 //   diff()
-//       cuboid([80,50,40],anchor=LEFT+FWD+BOT)
-//           position(CENTER)
-//               orient(RIGHT)
-//                   half_mask([70,60,100],pattern="dovetail 14x6",cut_width=45);
-// Example(3D,Big): Orient to each side of a parent. Extrusion remains parallel to parent Z.
-//   dirs=[FWD,RIGHT,BACK,LEFT];
-//   for(i=[0:3])
-//       right(110*i)
-//           diff()
-//               cuboid([80,60,40])
-//                   position(CENTER)
-//                       orient(dirs[i])
-//                           half_mask([100,60,100],pattern="jigsaw 16x6",cut_width=55,$fn=24);
-// Example(3D): Keep the front side of a bottom-anchored cylinder.
+//   cube([80,50,40])
+//     orient(RIGHT)
+//       half_mask(100,pattern="dovetail 14x6",cut_width=45);
+// Example(3D): If you use `orient=` instead of {{orient()}} then the mask appears with a different spin.  
 //   diff()
-//       cyl(h=50,d=80,anchor=BOT,$fn=64)
-//           position(CENTER)
-//               orient(FWD)
-//                   half_mask([100,70,100],pattern="triangle 16x6",cut_width=70);
-// Example(3D): Use a spherical parent's anchor frame for an oblique cut.
+//   cube([80,50,40])
+//       half_mask(100,pattern="dovetail 14x6",cut_width=45,orient=RIGHT);
+// Example(3D): Adjusting the spin
 //   diff()
-//       spheroid(d=80,$fn=64)
-//           position(CENTER)
-//               orient(UP+RIGHT)
-//                   half_mask([120,120,120],pattern="jigsaw 16x5",cut_width=70,$fn=32);
-// Example(3D): Mating pieces use the same frame, changing only flip.
-//   for(i=[0:1])
-//       right(110*i)
-//           diff()
-//               cuboid([80,50,40])
-//                   position(CENTER)
-//                       orient(BACK)
-//                           half_mask([100,60,80],pattern="dovetail 20x8",cut_width=75,
-//                                     flip=i==1,offset=-0.15);
-// Example(3D): Remove only a clearance band, leaving both pieces in their original positions.
+//   cube([80,50,40])
+//       half_mask(100,pattern="dovetail 14x6",cut_width=45,orient=LEFT,spin=35);
+// Example(3D): Orienting the mask diagonally
 //   diff()
-//       cuboid([80,50,30])
-//           position(CENTER)
-//               orient(RIGHT)
-//                   half_mask([80,50,110],pattern="jigsaw 12x4",cut_width=45,
-//                             flip="both",offset=-0.5,$fn=32);
-// Example(2D): A planar mask retains the positive-Y side of the patterned interface.
+//   cube([80,50,40])
+//     orient(LEFT+BACK)
+//       half_mask(100,pattern="dovetail 14x6",cut_width=45);
+// Example(3D): An angle mask on a cylinder
 //   diff()
-//       rect([80,50])
-//           position(CENTER)
-//               half_mask([100,70],planar=true,pattern="sinewave 20x6",cut_width=75,
-//                         offset=-0.15,$fn=32);
+//   cyl(h=50,d=80,anchor=BOT,$fn=64)
+//      orient(BACK+DOWN)
+//         half_mask(100,pattern="triangle 16x6",cut_width=70);
+// Example(3D): Constructing both parts using `flip`.
+//   ycopies(n=2, spacing=30)
+//   diff()
+//     cuboid([80,50,40])
+//       orient(BACK)
+//         half_mask(100,pattern="dovetail 20x8",cut_width=75,
+//                   flip=$idx==0,offset=-0.15);
+// Example(3D): Using `flip="both"` with `offset` to remove only a clearance band, leaving both pieces in their original positions.
+//   diff()
+//     cuboid([40,50,30])
+//        orient(RIGHT)
+//          half_mask(60,pattern="jigsaw 12x4",cut_width=45,
+//                    flip="both",offset=-0.5,$fn=32);
+// Example(2D): Masking in 2D
+//   diff()
+//     rect([80,50])
+//        half_mask(100,planar=true,pattern="sinewave 20x6",cut_width=75,
+//                  offset=-0.15,$fn=32);
 module half_mask(size=100, planar=false, pattern, pattern_size, pattern_width,
                  repeat, cut_width, flip=false, offset=0,
                  anchor=CENTER, spin=0, orient=UP, convexity=10)
