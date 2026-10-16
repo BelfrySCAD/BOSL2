@@ -772,14 +772,25 @@ function scalar_vec3(v, dflt) =
     !is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
 
 // Function: segs()
-// Synopsis: Returns the number of sides for a circle given `$fn`, `$fa`, and `$fs`.
+// Synopsis: Returns the number of sides for a circle given `$fn`, `$fe`, `$fa`, and `$fs`.
 // Topics: Geometry
 // See Also: circle(), cyl()
 // Usage:
 //   sides = segs(r, [angle]);
 // Description:
-//   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
+//   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fe`, `$fa`, and `$fs`.
 //   If angle is given, calculate for an arc of the given angle.
+//   .
+//   `$fn`, if greater than zero, sets the number of sides directly, with a minimum of 3.
+//   Otherwise `$fe`, if set and greater than zero, gives the largest distance any side may stray from the
+//   true circle, and the circle gets just enough sides to stay within it, with a minimum of 5.  This keeps
+//   small and large circles equally smooth.  When `$fe` is used, `$fa` and `$fs` are ignored.
+//   Otherwise `$fa` and `$fs` set the largest angle and the longest length of a side, with a minimum of 5 sides.
+//   .
+//   `$fe` is supported by OpenSCAD when run with `--enable=discretization-by-error`, and by BelfrySCAD.
+//   It is not predefined, so anywhere it is not set, `segs()` uses `$fa` and `$fs` as before.
+//   If you set `$fe` in OpenSCAD without that option, `segs()` still uses it, but OpenSCAD's own
+//   `circle()`, `cylinder()` and `sphere()` ignore it, so the two will no longer agree.
 // Arguments:
 //   r = Radius of circle/arc to get the number of segments for.
 //   angle = Angle of arc to get the get the number of segments for.
@@ -787,11 +798,28 @@ function scalar_vec3(v, dflt) =
 //   $fn=12; sides=segs(10);           // Returns: 12
 //   $fa=2; $fs=3; sides=segs(10);     // Returns: 21
 //   $fa=2; $fs=3; sides=segs(10,180); // Returns: 11
+//   $fe=0.01; sides=segs(10);         // Returns: 71
+//   $fe=0.01; sides=segs(10,180);     // Returns: 36
 function segs(r,angle) =
-    is_def(angle) ? ceil(segs(r)*abs(angle)/360-2e-15)  // 2e-15 needed in case angle is slightly large due to rounding error
+    let( fe = _segs_fe() )
+    is_def(angle) ? ceil((fe>0 && $fn<=0 ? _segs_by_error(r,fe) : segs(r))*abs(angle)/360-2e-15)  // 2e-15 needed in case angle is slightly large due to rounding error
   : $fn>0? ($fn>3? $fn : 3)
+  : fe>0? ceil(_segs_by_error(r,fe))
   : let( r = is_finite(r)? r : 0 )
     ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
+
+
+// `$fe` if it is set to a usable value, otherwise 0.  `is_undef()` first, so an unset `$fe` is read without a warning.
+function _segs_fe() =
+    is_undef($fe) || !is_finite($fe) || $fe < 1/1048576 ? 0 : $fe;
+
+
+// Sides for a full circle of radius r whose sides stray at most fe from it, as OpenSCAD computes them.
+// Not rounded up, so that an arc is scaled from the exact count, as OpenSCAD does.
+function _segs_by_error(r,fe) =
+    let( r = is_finite(r)? abs(r) : 0 )
+    r==0 || fe/r >= 0.1909830056 ? 5
+  : min(max(5, min(360/0.01, 2*PI*r/0.01)), 180/acos(1-fe/r));
 
 
 // Module: no_children()

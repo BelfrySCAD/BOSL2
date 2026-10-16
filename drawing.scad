@@ -552,7 +552,7 @@ module stroke(
                   // Miter clipping removes polygonal overruns at constant-width
                   // joints.  At a tapered joint, keep both cone ends uncut: an
                   // angle-bisector clip could otherwise remove exposed material.
-                  miter_overlap = 1e-4;  // Fraction of the local line width.
+                  miter_overlap = 0;  // Can we get away with this?  If errors arise return to 1e-4
                   wedge_joints = is_undef(joints) || joints=="round" || joints=="square";
                   directions = [for (i=[0:1:segcount-1])
                       unit(path2[i+1]-path2[i])];

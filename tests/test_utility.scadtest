@@ -533,6 +533,28 @@ module test_segs() {
 test_segs();
 '''
 [[test]]
+name = "test_segs_fe"
+script = '''
+include <../std.scad>
+
+module test_segs_fe() {
+    // Counts checked against OpenSCAD 2026.02.01 with --enable=discretization-by-error.
+    assert_equal(segs(10,$fe=0.01), 71);
+    assert_equal(segs(10,180,$fe=0.01), 36);
+    assert_equal(segs(2.5,$fe=0.1), 12);
+    assert_equal(segs(100,90,$fe=0.05), 25);
+    assert_equal(segs(33,270,$fe=0.003), 175);
+    assert_equal(segs(1,$fe=0.5), 5);
+    assert_equal(segs(0,$fe=0.1), 5);
+    // $fn wins over $fe; an unusable $fe falls back to $fa/$fs.
+    assert_equal(segs(10,$fn=7,$fe=0.01), 7);
+    assert_equal(segs(10,$fa=2,$fs=3,$fe=0), 21);
+    assert_equal(segs(10,$fa=2,$fs=3,$fe=-1), 21);
+    assert_equal(segs(10,$fa=2,$fs=3,$fe="x"), 21);
+}
+test_segs_fe();
+'''
+[[test]]
 name = "test_all_integer"
 script = '''
 include <../std.scad>

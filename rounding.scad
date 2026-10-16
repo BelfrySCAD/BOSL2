@@ -730,9 +730,19 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   color("red") for(p=path) translate(p) sphere(d=0.3);
 //   stroke(path, width=0.1, color="red");
 // Example(FlatSpin,VPD=45): Comparison of "edges" and "corners" 3D path resembling a [trefoil knot](https://en.wikipedia.org/wiki/Trefoil_knot).
-//   shape = [[8.66, -5, -5], [8.66, 5, 5], [-2, 3.46, 0],
-//       [-8.66, -5, -5], [0, -10, 5], [4, 0, 0],
-//       [0, 10, -5], [-8.66, 5, 5], [-2, -3.46, 0]];
+//   tre1 = 1;
+//   tre2 = 1/2;
+//   tre3 = 1/5;
+//   tre4 = 2/5;
+//   tre5 = sqrt(3)/2;
+//   tre6 = sqrt(3)/5;
+//   amplitude = 10;
+//   shape = amplitude *
+//      [
+//         [tre5,  -tre2, -tre2], [tre5,  tre2,  tre2], [-tre3, tre6,  0],
+//         [-tre5, -tre2, -tre2], [0,     -tre1, tre2], [tre4,  0,     0],
+//         [0,     tre1,  -tre2], [-tre5, tre2,  tre2], [-tre3, -tre6, 0]
+//      ];
 //   stroke(smooth_path(shape, method="corners", relsize=1, closed=true), color="red", closed=true, width=0.5);
 //   stroke(smooth_path(shape, method="edges", size=1.5, closed=true, splinesteps=20), closed=true, width=0.5);
 //   stroke(shape, color="green", width=0.15, closed=true);
