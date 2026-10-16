@@ -117,27 +117,37 @@ _BOSL2_PARTITIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 // Examples:
 //   half_of(DOWN+BACK,cp=[0,-10,0]) cylinder(h=40,r1=10,r2=0);
 //   half_of(LEFT,s=200,flip=true) sphere(d=50);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([100,60]);
-// Example(2D): Patterned 2D cut with unconstrained repetition. 
-//   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([100,60]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends, with no margin
 //   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([100,60]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   half_of(BACK,planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   half_of(BACK,planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   half_of(BACK,planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([100,60]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   half_of(BACK,pattern="jigsaw",pattern_size=[20,8],cut_width=95,
 //           flip="both",offset=-0.15,s=200)
 //       cuboid([100,60,20]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   half_of(BACK,pattern=["flat 5","square 20x20 pinch:70","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=2,s=200)
+//       cuboid([100,60,20]);
 // Example(3D): Place a centered pattern on a positive-octant object using `cp`.
 //   half_of(BACK,cp=[60,30,10],pattern="dovetail",pattern_size=[20,8],
 //           cut_width=100,flip="both",s=300)
 //       cube([120,60,20]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=half_of(rect([80,40]),BACK,pattern="triangle 20x8",repeat=3,
 //                 flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -149,6 +159,12 @@ _BOSL2_PARTITIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 // Example(3D): Identify the two child evaluations.
 //   half_of(BACK,pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "orange" : "lightblue") cuboid([80,50,15]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask
+//   half_of(BACK,pattern="jigsaw 3x 60x12",cut_angle=45,s=300)
+//       cuboid([140,60,40]);
+// Example(3D): Use `show_frameref` to see the cut frame.  The result is ghosted, Y (green) is the normal pointing into the retained side, and X (red) is the direction the cut path runs.
+//   half_of(BACK,pattern="jigsaw 20x8",repeat=3,show_frameref=true,s=200)
+//       cuboid([80,50,15]);
 
 module half_of(v=UP, cp, s=100, planar=false, pattern, pattern_size, pattern_width,
                repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
@@ -322,17 +338,11 @@ function _half_translate(p, v, vnf) =
 // Usage: Function on a VNF (flat cuts only)
 //   result = left_half(p, [x], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the Y-Z plane at X=`x`, or at a patterned interface lying in that plane,
-//   keeping the left (-X) side by default.  This is a directional wrapper for {{half_of()}} with
-//   normal LEFT (-X) and cut-frame origin `[x,0,0]`.  The function accepts a 2D polygon/region or a
+//   Cuts the children at the YZ plane at X=`x`, or at a patterned interface lying in that plane,
+//   keeping the left (-X) side by default.  This is a wrapper for {{half_of()}} with `v=LEFT`.  
+//   The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`; the function infers dimensionality from its input.
-//   .
-//   The flat cut is the Y-Z plane at X=`x`, and the normal LEFT (-X) points into the retained side.
-//   In 3D the seam is a curve in the X-Y plane, extruded along Z.  The pattern X axis runs along the cut toward BACK (+Y) and the pattern Y axis points LEFT (-X).
-//   With `planar=true`, or for 2D data, the cut is the line X=`x` with the same orientation: pattern X runs BACK (+Y) and pattern Y points LEFT (-X).
-//   Everything about positioning the cut that is not controlled by `x` follows from the fixed origin
-//   `[x,0,0]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[x,0,0]`: it spans Y and Z from -s/2 to s/2 (only Y if `planar=true`) and reaches `s` from the plane into the retained side, toward -X (toward +X when `flip=true`).  An object that lies far from Y=0 or Z=0 therefore needs a larger `s`.
@@ -412,27 +422,37 @@ function _half_translate(p, v, vnf) =
 // Examples:
 //   left_half() sphere(r=20);
 //   left_half(x=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   left_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   left_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([60,100]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   left_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains
+//   left_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([60,100]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales): Specifying 7 repeats in this case creates a thin edge at the ends
 //   left_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([60,100]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   left_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([60,100]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   left_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([60,100]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   left_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([60,100]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   left_half(pattern="jigsaw",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
 //       cuboid([60,100,20]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   left_half(pattern=["flat 5","square 20x20 pinch:70","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=2,s=200)
+//       cuboid([60,100,20]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `x`.
 //   left_half(x=30,pattern="dovetail",pattern_size=[20,8],
 //       cut_width=95,flip="both",s=300)
 //       translate([0,-50,0]) cube([60,100,20]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=left_half(rect([40,80]),pattern="triangle 20x8",repeat=3,
 //             flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -444,6 +464,9 @@ function _half_translate(p, v, vnf) =
 // Example(3D): Identify the two child evaluations.
 //   left_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "orange" : "lightblue") cuboid([50,80,15]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   left_half(pattern="jigsaw 3x 60x12",cut_angle=45,s=300)
+//       cuboid([60,140,40]);
 module left_half(s=100, x=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -480,17 +503,11 @@ function left_half(p, x=0, pattern, pattern_size, pattern_width,
 // Usage: Function on a VNF (flat cuts only)
 //   result = right_half(p, [x], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the Y-Z plane at X=`x`, or at a patterned interface lying in that plane,
+//   Cuts the children at the YZ plane at X=`x`, or at a patterned interface lying in that plane,
 //   keeping the right (+X) side by default.  This is a directional wrapper for {{half_of()}} with
 //   normal RIGHT (+X) and cut-frame origin `[x,0,0]`.  The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`; the function infers dimensionality from its input.
-//   .
-//   The flat cut is the Y-Z plane at X=`x`, and the normal RIGHT (+X) points into the retained side.
-//   In 3D the seam is a curve in the X-Y plane, extruded along Z.  The pattern X axis runs along the cut toward FWD (-Y) and the pattern Y axis points RIGHT (+X).
-//   With `planar=true`, or for 2D data, the cut is the line X=`x` with the same orientation: pattern X runs FWD (-Y) and pattern Y points RIGHT (+X).
-//   Everything about positioning the cut that is not controlled by `x` follows from the fixed origin
-//   `[x,0,0]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[x,0,0]`: it spans Y and Z from -s/2 to s/2 (only Y if `planar=true`) and reaches `s` from the plane into the retained side, toward +X (toward -X when `flip=true`).  An object that lies far from Y=0 or Z=0 therefore needs a larger `s`.
@@ -570,27 +587,37 @@ function left_half(p, x=0, pattern, pattern_size, pattern_width,
 // Examples:
 //   right_half() sphere(r=20);
 //   right_half(x=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   right_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   right_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([60,100]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   right_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   right_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([60,100]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends
 //   right_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([60,100]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   right_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([60,100]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   right_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([60,100]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   right_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([60,100]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   right_half(pattern="dovetail",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
 //       cuboid([60,100,20]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   right_half(pattern=["flat 5","triangle 20x15","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=3,s=200)
+//       cuboid([60,100,20]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `x`.
 //   right_half(x=30,pattern="jigsaw",pattern_size=[20,8],
 //       cut_width=95,flip="both",s=300)
 //       translate([0,-50,0]) cube([60,100,20]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=right_half(rect([40,80]),pattern="triangle 20x8",repeat=3,
 //             flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -602,6 +629,9 @@ function left_half(p, x=0, pattern, pattern_size, pattern_width,
 // Example(3D): Identify the two child evaluations.
 //   right_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "lightgreen" : "gold") cuboid([50,80,15]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   right_half(pattern="jigsaw 3x 60x12",cut_angle=30,s=300)
+//       cuboid([60,140,40]);
 module right_half(s=100, x=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -638,17 +668,11 @@ function right_half(p, x=0, pattern, pattern_size, pattern_width,
 // Usage: Function on a VNF (flat cuts only)
 //   result = front_half(p, [y], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the X-Z plane at Y=`y`, or at a patterned interface lying in that plane,
+//   Cuts the children at the XZ plane at Y=`y`, or at a patterned interface lying in that plane,
 //   keeping the front (-Y) side by default.  This is a directional wrapper for {{half_of()}} with
 //   normal FWD (-Y) and cut-frame origin `[0,y,0]`.  The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`; the function infers dimensionality from its input.
-//   .
-//   The flat cut is the X-Z plane at Y=`y`, and the normal FWD (-Y) points into the retained side.
-//   In 3D the seam is a curve in the X-Y plane, extruded along Z.  The pattern X axis runs along the cut toward LEFT (-X) and the pattern Y axis points FWD (-Y).
-//   With `planar=true`, or for 2D data, the cut is the line Y=`y` with the same orientation: pattern X runs LEFT (-X) and pattern Y points FWD (-Y).
-//   Everything about positioning the cut that is not controlled by `y` follows from the fixed origin
-//   `[0,y,0]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[0,y,0]`: it spans X and Z from -s/2 to s/2 (only X if `planar=true`) and reaches `s` from the plane into the retained side, toward -Y (toward +Y when `flip=true`).  An object that lies far from X=0 or Z=0 therefore needs a larger `s`.
@@ -728,21 +752,31 @@ function right_half(p, x=0, pattern, pattern_size, pattern_width,
 // Examples:
 //   front_half() sphere(r=20);
 //   front_half(y=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   front_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   front_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([100,60]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   front_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   front_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([100,60]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends
 //   front_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([100,60]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   front_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   front_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   front_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([100,60]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   front_half(pattern="jigsaw",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
+//       cuboid([100,60,20]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   front_half(pattern=["flat 5","square 20x20 pinch:60","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=4,s=200)
 //       cuboid([100,60,20]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `y`.
 //   front_half(y=30,pattern="dovetail",pattern_size=[20,8],
@@ -760,6 +794,9 @@ function right_half(p, x=0, pattern, pattern_size, pattern_width,
 // Example(3D): Identify the two child evaluations.
 //   front_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "salmon" : "lightblue") cuboid([80,50,15]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   front_half(pattern="jigsaw 3x 60x12",cut_angle=45,s=300)
+//       cuboid([140,60,40]);
 module front_half(s=100, y=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -796,17 +833,11 @@ function front_half(p, y=0, pattern, pattern_size, pattern_width,
 // Usage: Function on a VNF (flat cuts only)
 //   result = back_half(p, [y], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the X-Z plane at Y=`y`, or at a patterned interface lying in that plane,
+//   Cuts the children at the XZ plane at Y=`y`, or at a patterned interface lying in that plane,
 //   keeping the back (+Y) side by default.  This is a directional wrapper for {{half_of()}} with
 //   normal BACK (+Y) and cut-frame origin `[0,y,0]`.  The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`; the function infers dimensionality from its input.
-//   .
-//   The flat cut is the X-Z plane at Y=`y`, and the normal BACK (+Y) points into the retained side.
-//   In 3D the seam is a curve in the X-Y plane, extruded along Z.  The pattern X axis runs along the cut toward RIGHT (+X) and the pattern Y axis points BACK (+Y).
-//   With `planar=true`, or for 2D data, the cut is the line Y=`y` with the same orientation: pattern X runs RIGHT (+X) and pattern Y points BACK (+Y).
-//   Everything about positioning the cut that is not controlled by `y` follows from the fixed origin
-//   `[0,y,0]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[0,y,0]`: it spans X and Z from -s/2 to s/2 (only X if `planar=true`) and reaches `s` from the plane into the retained side, toward +Y (toward -Y when `flip=true`).  An object that lies far from X=0 or Z=0 therefore needs a larger `s`.
@@ -886,27 +917,37 @@ function front_half(p, y=0, pattern, pattern_size, pattern_width,
 // Examples:
 //   back_half() sphere(r=20);
 //   back_half(y=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   back_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   back_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([100,60]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   back_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   back_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([100,60]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends
 //   back_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([100,60]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   back_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   back_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   back_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([100,60]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   back_half(pattern="triangle",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
 //       cuboid([100,60,20]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   back_half(pattern=["flat 5","semicircle 20x10","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=2,s=200)
+//       cuboid([100,60,20]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `y`.
 //   back_half(y=30,pattern="dovetail",pattern_size=[20,8],
 //       cut_width=95,flip="both",s=300)
 //       translate([-50,0,0]) cube([100,60,20]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=back_half(rect([80,40]),pattern="triangle 20x8",repeat=3,
 //             flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -918,6 +959,9 @@ function front_half(p, y=0, pattern, pattern_size, pattern_width,
 // Example(3D): Identify the two child evaluations.
 //   back_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "orange" : "lightblue") cuboid([80,50,15]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   back_half(pattern="jigsaw 3x 60x12",cut_angle=60,s=300)
+//       cuboid([140,60,40]);
 module back_half(s=100, y=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -954,18 +998,12 @@ function back_half(p, y=0, pattern, pattern_size, pattern_width,
 // Usage: Function on a VNF (flat cuts only)
 //   result = bottom_half(p, [z], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the X-Y plane at Z=`z`, or at a patterned interface lying in that plane,
+//   Cuts the children at the XY plane at Z=`z`, or at a patterned interface lying in that plane,
 //   keeping the bottom (-Z; the front, -Y, side if `planar=true`) side by default.  This is a directional wrapper for {{half_of()}} with
 //   normal DOWN (-Z) and cut-frame origin `[0,0,z]`.  The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`.  The function on 2D data also requires `planar=true`;
 //   in 2D, `z` is a Y coordinate, as described below.
-//   .
-//   The flat cut is the X-Y plane at Z=`z`, and the normal DOWN (-Z) points into the retained side.
-//   In 3D the seam is a curve in the X-Z plane, extruded along Y.  The pattern X axis runs along the cut toward RIGHT (+X) and the pattern Y axis points DOWN (-Z).
-//   With `planar=true` the cut is made as {{front_half()}} would make it: `z` is the Y coordinate of the cut line, the normal is FWD (-Y), pattern X runs LEFT (-X), pattern Y points FWD (-Y), and the origin is `[0,z,0]`.
-//   Everything about positioning the cut that is not controlled by `z` follows from the fixed origin
-//   `[0,0,z]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[0,0,z]`: in 3D it spans X and Y from -s/2 to s/2 and reaches `s` from the plane into the retained side, toward -Z (toward +Z when `flip=true`).  With `planar=true` it spans only X and reaches `s` from the line `Y=z`.  An object that lies far from X=0 or Y=0 therefore needs a larger `s`.
@@ -1045,27 +1083,37 @@ function back_half(p, y=0, pattern, pattern_size, pattern_width,
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   bottom_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   bottom_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([100,60]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   bottom_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   bottom_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([100,60]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends
 //   bottom_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([100,60]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   bottom_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   bottom_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   bottom_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([100,60]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   bottom_half(pattern="dovetail",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
 //       cuboid([100,60,40]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   bottom_half(pattern=["flat 5","square 20x20 pinch:70","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=3,s=200)
+//       cuboid([100,60,40]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `z`.
 //   bottom_half(z=20,pattern="jigsaw",pattern_size=[20,8],
 //       cut_width=95,flip="both",s=300)
 //       translate([-50,-30,0]) cube([100,60,40]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=bottom_half(rect([80,40]),planar=true,pattern="triangle 20x8",repeat=3,
 //             flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -1077,6 +1125,9 @@ function back_half(p, y=0, pattern, pattern_size, pattern_width,
 // Example(3D): Identify the two child evaluations.
 //   bottom_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "lightgreen" : "gold") cuboid([80,50,30]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   bottom_half(pattern="jigsaw 3x 60x12",cut_angle=30,s=300)
+//       cuboid([140,60,40]);
 module bottom_half(s=100, z=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -1114,18 +1165,12 @@ function bottom_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 // Usage: Function on a VNF (flat cuts only)
 //   result = top_half(p, [z], [flip=], [spread=], [offset=]);
 // Description:
-//   Cuts the children at the X-Y plane at Z=`z`, or at a patterned interface lying in that plane,
+//   Cuts the children at the XY plane at Z=`z`, or at a patterned interface lying in that plane,
 //   keeping the top (+Z; the back, +Y, side if `planar=true`) side by default.  This is a directional wrapper for {{half_of()}} with
 //   normal UP (+Z) and cut-frame origin `[0,0,z]`.  The function accepts a 2D polygon/region or a
 //   VNF and returns a region or VNF, respectively.  When you give a VNF you cannot give a pattern.
 //   The module performs a 2D operation if you give `planar=true`.  The function on 2D data also requires `planar=true`;
 //   in 2D, `z` is a Y coordinate, as described below.
-//   .
-//   The flat cut is the X-Y plane at Z=`z`, and the normal UP (+Z) points into the retained side.
-//   In 3D the seam is a curve in the X-Z plane, extruded along Y.  The pattern X axis runs along the cut toward LEFT (-X) and the pattern Y axis points UP (+Z).
-//   With `planar=true` the cut is made as {{back_half()}} would make it: `z` is the Y coordinate of the cut line, the normal is BACK (+Y), pattern X runs RIGHT (+X), pattern Y points BACK (+Y), and the origin is `[0,z,0]`.
-//   Everything about positioning the cut that is not controlled by `z` follows from the fixed origin
-//   `[0,0,z]`; to place a cut or pattern center elsewhere, use {{half_of()}} with a point `cp`.
 //   .
 //   The mask is finite: `s` controls its along-cut coverage, retained-side depth and, in 3D,
 //   extrusion height.  The mask is centered on the frame origin `[0,0,z]`: in 3D it spans X and Y from -s/2 to s/2 and reaches `s` from the plane into the retained side, toward +Z (toward -Z when `flip=true`).  With `planar=true` it spans only X and reaches `s` from the line `Y=z`.  An object that lies far from X=0 or Y=0 therefore needs a larger `s`.
@@ -1205,27 +1250,37 @@ function bottom_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 // Examples:
 //   top_half() sphere(r=20);
 //   top_half(z=5,flip=true) sphere(r=20);
-// Example(2D): Patterned 2D cut with automatic odd repetition.
-//   top_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200)
+// Example(2D,NoScales): Patterned 2D cut with automatic odd repetition.
+//   top_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200)
 //       rect([100,60]);
-// Example(2D): Patterned 2D cut with unconstrained repetition.
-//   top_half(planar=true,pattern="jigsaw",pattern_size=[28,8],cut_width=95,s=200,repeat="any")
+// Example(2D,NoScales): Patterned 2D cut with unconstrained repetition allows one more to fit.  A margin on the sides remains. 
+//   top_half(planar=true,pattern="jigsaw",pattern_size=[20,8],cut_width=95,s=200,repeat="any")
 //       rect([100,60]);
-// Example(2D): Specifying 7 repeats in this case creates a thin edge at the ends
+// Example(2D,NoScales,Med): Specifying 7 repeats in this case creates a thin edge at the ends
 //   top_half(planar=true,pattern="jigsaw",pattern_size=[15,8],s=200,repeat=7)
 //       rect([100,60]);
-// Example(2D): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
+// Example(2D,NoScales,Med): You can avoid the thin edge and fit 7 repeats in by specifying the repeats within the pattern and giving a pattern size smaller than your object to leave a margin
 //   top_half(planar=true,pattern="jigsaw 7x",pattern_size=[90,8],s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): A scalar `pattern_size` scales X and Y together, so the shapes get shorter as well as narrower from their original 25x25 size, preserving the aspect ratio.
+//   top_half(planar=true,pattern="jigsaw",pattern_size=15,cut_width=95,s=200)
+//       rect([100,60]);
+// Example(2D,NoScales): `pattern_width` with the same width shrinks only X, so the shapes keep their original height of 25 and their aspect ratio changes.  
+//   top_half(planar=true,pattern="jigsaw",pattern_width=15,cut_width=95,s=200)
 //       rect([100,60]);
 // Example(3D): Two mating parts, offset for clearance and automatically spread.
 //   top_half(pattern="jigsaw",pattern_size=[20,8],cut_width=95,
 //       flip="both",offset=-0.15,s=200)
 //       cuboid([100,60,40]);
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+//   top_half(pattern=["flat 5","triangle 20x15","flat 5"],pattern_size=[20,8],cut_width=95,
+//           flip="both",spread=2,s=200)
+//       cuboid([100,60,40]);
 // Example(3D): Place the cut through the middle of an object that is not centered on the origin by giving `z`.
 //   top_half(z=20,pattern="dovetail",pattern_size=[20,8],
 //       cut_width=95,flip="both",s=300)
 //       translate([-50,-30,0]) cube([100,60,40]);
-// Example(2D): Use the function to get two regions in their original positions
+// Example(2D,NoAxes): Use the function to get two regions in their original positions
 //   parts=top_half(rect([80,40]),planar=true,pattern="triangle 20x8",repeat=3,
 //             flip="both",spread=0,offset=-0.5);
 //   region(parts[0]);
@@ -1237,6 +1292,9 @@ function bottom_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 // Example(3D): Identify the two child evaluations.
 //   top_half(pattern="jigsaw 20x8",repeat=3,flip="both",s=200)
 //       color($idx==0 ? "orange" : "lightblue") cuboid([80,50,30]);
+// Example(3D): Using `cut_angle` to rotate the cutting mask about the cut normal.
+//   top_half(pattern="jigsaw 3x 60x12",cut_angle=45,s=300)
+//       cuboid([140,60,40]);
 module top_half(s=100, z=0, planar=false, pattern, pattern_size, pattern_width,
                    repeat, cut_width, cut_angle=0, flip=false, spread, offset=0,
                    show_frameref=false, convexity=10)
@@ -1256,6 +1314,206 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
             pattern=pattern, pattern_size=pattern_size, pattern_width=pattern_width,
             repeat=repeat, cut_width=cut_width, cut_angle=cut_angle,
             flip=flip, spread=spread, offset=offset);
+
+
+// Module: half_mask()
+// Synopsis: Difference mask retaining either or both sides of a patterned cut.
+// SynTags: Geom
+// Topics: Partitions, Masking, Attachments
+// See Also: half_of(), partition_path(), diff(), orient(), position()
+// Usage: 3D mask
+//   half_mask([size], [pattern=], [pattern_size=|pattern_width=], [repeat=], [cut_width=], [flip=], [offset=], [anchor=], [spin=], [orient=], [convexity=]) [ATTACHMENTS];
+// Usage: 2D mask
+//   half_mask([size], planar=true, [pattern=], [pattern_size=|pattern_width=], [repeat=], [cut_width=], [flip=], [offset=], [anchor=], [spin=]) [ATTACHMENTS];
+// Description:
+//   Creates an attachable difference mask. Subtract it to retain the side above the
+//   XY cut plane. The mask itself occupies the side below the patterned interface, and is extruded
+//   along Y.  If you use {{orient()}} to position the mask along a horizontal parent anchor direction then the slice direction will be vertical;
+//   if you position it along a vertical direction the slice direction will be front to back (along Y).  If you use `orient=` you may need
+//   to apply spin to get the desired position.  The mask CENTER will be the center of the cut plane, so normal use would
+//   be to center the mask on a parent object.  The `size` parameter defines a centered region that defines the extent of the mask, so it
+//   should be larger than your object; you can give a scalar to produce a cube whose sides are equal.  The actual mask object will occupy
+//   approximately half the volume.  
+//   .
+//   The `pattern` parameter is a pattern descriptor or list of descriptors as accepted by 
+//   {{partition_path()}}.  The basic descriptor strings are
+//   `"sawtooth"`, `"square"`, `"triangle"`, `"halfsine"`,
+//   `"semicircle"`, `"sinewave"`, `"comb"`, `"finger"`, `"dovetail"`,
+//   `"hammerhead"`, and `"jigsaw"`.  These can be combined with each other or
+//   with modifiers to change their size and shape or build up more complex
+//   compound patterns.  A simple example is "jigsaw 6x" creates six copies of
+//   the jigsaw pattern.  See {{partition_path()}} for details on the pattern specification. 
+//   .
+//   Pattern width means the X separation between the first and last points, not its bounding box.
+//   When patterns are joined they are connected end to end from their first and last points;
+//   no space is added for overhangs.  
+//   A scalar `pattern_size` scales X and Y uniformly so the pattern is the specified width; `pattern_size=[w,h]` scales
+//   X and Y independently to the specified size.  If you set `pattern_width` then the pattern is stretched in X to the specified
+//   width, while Y values remain unchanged and do not scale.  The `pattern_size` and `pattern_width` options are
+//   mutually exclusive and operate before repetition. Scaling in X is
+//   about the middle point between the endpoints; scaling in Y is about Y=0.
+//   You will generally want your entire cut to be a little bit shorter than your object so that
+//   the cut geometry doesn't produce detached pieces near the boundary.  By setting one of these
+//   parameters you can stretch or shrink a pattern so it fits on your object.  
+//   .
+//   The other way to expand a pattern to fit your object is by repetition.  You can repeat
+//   a single unit as described above by adding a multiplier to its string.  If you give
+//   `cut_width` then your entire (possibly compound) pattern is repeated as many times
+//   as possible in the specified width.  You can use `repeat="odd"`, `"even"`
+//   to require that the number of copies be odd or even, which controls how the copies
+//   will center on your shape: in the odd case one copy will be centered and in the even case
+//   the two copies will meet at the center.  As usual, the size of the pattern is determined
+//   by its endpoint span, not its bounding box.  If you set `repeat="any"` then either case
+//   is permitted.  You can also give `repeat=n` to produce exactly `n` copies, in which
+//   case you cannot give `cut_width`.  
+//   .
+//   The `offset` parameter provides fitting clearance: A negative value shrinks the retained side
+//   away from the cut plane; a positive value expands the shape, making the fit tighter.
+//   The offset is calculated using a rounded 2D offset() call.
+//   In order to produce a mask for the mating part give `flip=true`.  Giving 
+//   `flip="both"` produces a mask that removes the border between two cut parts assuming that offset<0.
+// Arguments:
+//   size = Scalar, 3D [X,Y,Z] coverage, or planar [X,Y] coverage. Default: 100
+//   ---
+//   planar = Create a 2D difference mask keeping Y+ by default. Default: false
+//   pattern = String, descriptor list, or open 2D pattern. Default: undef (flat cut)
+//   pattern_size = Target endpoint width, or [endpoint width, Y span]. Default: unchanged
+//   pattern_width = Target endpoint width without Y scaling; exclusive with pattern_size.
+//   repeat = Exact count, or "odd", "even", "any" with cut_width. Default: 1, or "odd" with cut_width
+//   cut_width = Available endpoint span for automatic repetition. Default: undef
+//   flip = Keep the normal side, opposite side, or both: false, true, "both". Default: false
+//   offset = Expansion of the retained side; negative provides clearance. Default: 0
+//   anchor = Anchor on the centered nominal size box/rectangle. Default: CENTER
+//   spin = Rotation about local Z before orientation. Default: 0
+//   orient = Orient local Z+ toward this direction. Ignored in 2D. Default: UP
+//   convexity = Preview convexity. Default: 10
+// Example(3D): Keep the upper part of a cuboid, with a patterned interface.
+//   diff()
+//       cuboid([80,50,40])
+//           position(CENTER)
+//               half_mask([100,70,60],pattern="jigsaw 16x6",cut_width=75,$fn=32);
+// Example(3D): Cut a positive-octant parent through its center, retaining its right side.
+//   diff()
+//       cuboid([80,50,40],anchor=LEFT+FWD+BOT)
+//           position(CENTER)
+//               orient(RIGHT)
+//                   half_mask([70,60,100],pattern="dovetail 14x6",cut_width=45);
+// Example(3D,Big): Orient to each side of a parent. Extrusion remains parallel to parent Z.
+//   dirs=[FWD,RIGHT,BACK,LEFT];
+//   for(i=[0:3])
+//       right(110*i)
+//           diff()
+//               cuboid([80,60,40])
+//                   position(CENTER)
+//                       orient(dirs[i])
+//                           half_mask([100,60,100],pattern="jigsaw 16x6",cut_width=55,$fn=24);
+// Example(3D): Keep the front side of a bottom-anchored cylinder.
+//   diff()
+//       cyl(h=50,d=80,anchor=BOT,$fn=64)
+//           position(CENTER)
+//               orient(FWD)
+//                   half_mask([100,70,100],pattern="triangle 16x6",cut_width=70);
+// Example(3D): Use a spherical parent's anchor frame for an oblique cut.
+//   diff()
+//       spheroid(d=80,$fn=64)
+//           position(CENTER)
+//               orient(UP+RIGHT)
+//                   half_mask([120,120,120],pattern="jigsaw 16x5",cut_width=70,$fn=32);
+// Example(3D): Mating pieces use the same frame, changing only flip.
+//   for(i=[0:1])
+//       right(110*i)
+//           diff()
+//               cuboid([80,50,40])
+//                   position(CENTER)
+//                       orient(BACK)
+//                           half_mask([100,60,80],pattern="dovetail 20x8",cut_width=75,
+//                                     flip=i==1,offset=-0.15);
+// Example(3D): Remove only a clearance band, leaving both pieces in their original positions.
+//   diff()
+//       cuboid([80,50,30])
+//           position(CENTER)
+//               orient(RIGHT)
+//                   half_mask([80,50,110],pattern="jigsaw 12x4",cut_width=45,
+//                             flip="both",offset=-0.5,$fn=32);
+// Example(2D): A planar mask retains the positive-Y side of the patterned interface.
+//   diff()
+//       rect([80,50])
+//           position(CENTER)
+//               half_mask([100,70],planar=true,pattern="sinewave 20x6",cut_width=75,
+//                         offset=-0.15,$fn=32);
+module half_mask(size=100, planar=false, pattern, pattern_size, pattern_width,
+                 repeat, cut_width, flip=false, offset=0,
+                 anchor=CENTER, spin=0, orient=UP, convexity=10)
+{
+    dims = assert(is_bool(planar), "\nplanar must be a boolean.")
+        let(d = is_num(size) ? (planar ? [size,size] : [size,size,size]) : size)
+        assert(is_vector(d,planar ? 2 : 3) && min(d)>0,
+            "\nsize must be positive: a scalar, a planar 2-vector, or a 3D 3-vector.")
+        d;
+    assert(is_bool(flip) || flip=="both", "\nflip must be false, true, or \"both\".");
+    assert(is_finite(spin), "\nspin must be finite.");
+    assert(planar || (is_vector(orient,3) && norm(orient)>0),
+        "\norient must be a nonzero 3-vector.");
+    assert(is_int(convexity) && convexity>0, "\nconvexity must be a positive integer.");
+
+    // Reuse the same validation, sizing, and repetition as half_of().
+    prepared = _ptn_prepare(default(pattern,[]),pattern_size,pattern_width,repeat,cut_width);
+    seam = prepared==[] ? [[0,0]] : prepared;
+    assert(is_list(prepared));
+
+    // Offset expands the removal mask when the retained object is to shrink.
+    r = assert(is_finite(offset), "\noffset must be finite.") -offset;
+    normal_size = planar ? dims.y : dims.z;
+    ys = [for(pt=seam) pt.y];
+
+    // Compensate artificial outer faces, extending further when the seam needs room.
+    margin = abs(r) + 1e-6*max([1,each dims]);
+    left_x = min(-dims.x/2+r, seam[0].x-margin);
+    right_x = max(dims.x/2-r, last(seam).x+margin);
+    lower_y = min(-normal_size/2+r, min(ys)-margin);
+    upper_y = max(normal_size/2-r, max(ys)+margin);
+
+    module removal_side(opposite)
+    {
+        far_y = opposite ? upper_y : lower_y;
+        outline = deduplicate(concat(
+            [[left_x,seam[0].y]], seam,
+            [[right_x,last(seam).y],[right_x,far_y],[left_x,far_y]]
+        ),closed=true);
+
+        if(r==0)
+            polygon(outline,convexity=convexity);
+        else
+            offset(r=r)
+                polygon(outline,convexity=convexity);
+    }
+
+    module removal_profile()
+    {
+        if(flip=="both") {
+            // Nonnegative retained-side offset leaves no volume to subtract.
+            if(offset<0)
+                intersection() {
+                    removal_side(false);
+                    removal_side(true);
+                }
+        } else
+            removal_side(flip);
+    }
+
+    default_tag("remove")
+        attachable(anchor,spin,planar ? UP : orient,size=dims,two_d=planar) {
+            if(planar)
+                removal_profile();
+            else
+                // Pattern X -> -X, pattern Y -> Z, extrusion -> Y, matching half_of(UP).
+                multmatrix([[-1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+                    linear_extrude(height=dims.y,center=true,convexity=convexity)
+                        removal_profile();
+            children();
+        }
+}
+
 
 
 // Section: Constructing Partition Paths and Masks
@@ -1285,7 +1543,7 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 //   Most descriptors are strings.  The two exceptions are
 //   * A numeric descriptor makes a flat section of that positive length at Y=0.
 //   * A 2D-path descriptor is inserted directly into the path, shifted in X to align it with neighboring elements.  If you give
-//     a path alone with `pattern=path` then the path is not shifted, but left in its native position.  If you give `pattern=[path]`
+//     a path alone with `pattern=p` then the path is not shifted, but left in its native position.  If you give `pattern=[p]`
 //     then it is centered.  
 //   .
 //   Width of a pattern is X distance between the first and last points, NOT the bounding-box width.
@@ -1343,11 +1601,11 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 //   The `length` (`l`) parameter supplies a minimum total endpoint span AFTER repetition. It extends each
 //   end by the same amount horizontally at its own Y height.  
 //   .
-//   The `path` parameter specifies a path for the seam to follow instead of a simple straight line path.
+//   The `path` parameter specifies a path for the pattern to follow instead of a simple straight line path.
 //   The X coordinate of the pattern maps along your path and Y is the normal distance left of the path.
 //   The pattern's Y=0 line follows the path.  The mapping bends the pattern point by point rather than placing
 //   rigid copies.  If the path is too long for the pattern only its center is used; if the path is too short
-//   it is extrapolated from its edge segments.  
+//   it is extrapolated linearly from its end segments.  
 //   .
 //   Sizing, `cut_width`, and `length` apply BEFORE mapping, and do not measure the final output's
 //   X extent or patterned arc length. The unpatterned end sections follow the route and need not
@@ -1410,7 +1668,7 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 // Example(2D): You can pass a 2D path directly as a segment; it is used as-is (no scaling).
 //   cust_path = scale([40,30], p=yscale(2, p=arc(n=15, r=0.5, cp=[0.5,0], start=180, angle=-180)));
 //   stroke(partition_path([cust_path]), width=3);
-// Example(2D): The module returns a stroke which you can extrude into a mask for dividing parts
+// Example(3D): The module returns a stroke which you can extrude into a mask for dividing parts
 //   linear_extrude(height=100)
 //      partition_path([
 //              20,
@@ -1454,7 +1712,7 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 //         y=150,
 //         $fn=24
 //       );
-// Example(2D): You can use list comprehensions in constructing partition path descriptions.
+// Example(2D,NoAxes,Med): You can use list comprehensions in constructing partition path descriptions.
 //   partition_path([
 //           50,
 //           "jigsaw",
