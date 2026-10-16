@@ -3966,7 +3966,7 @@ module show_anchors(s=10, std=true, custom=true, show_tags=true) {
                             text(text=anchor[0], size=textsize, halign="center", valign="center", font="Liberation Sans", $fn=36);
                         else
                             up(s*.45) xrot(90) yrot_copies(n=2) up(s/30)
-                            text3d(text=anchor[0],h=.01, size=textsize, center=true, font="Helvetica", $fn=36);
+                            text3d(text=anchor[0],h=.01, size=textsize, center=true, font="Liberation Sans", $fn=36);
                     }
                 }
             }
