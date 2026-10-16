@@ -485,7 +485,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   dist_ba=0;
 //   gear_ba=0;
 //   xdistribute(spacing=25){
-//      xrot(180)yrot(-tilt)  
+//      zrot(180)yrot(-tilt)  
 //      union(){
 //       color("lightgreen")
 //         xrot(90) 
