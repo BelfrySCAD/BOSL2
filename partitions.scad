@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: partitions.scad
-//   Cut objects with planes or patterned seams, or construct paths and masks for partitioning.
+//   Cut objects with planes or jigsaw-style patterned cuts.  Construct a cutting mask, or pattern cut paths built from
+//   pattern elements including jigsaw, dovetail, and hammerhead. 
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
@@ -12,13 +13,13 @@ _BOSL2_PARTITIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
        echo("Warning: partitions.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
-// Section: Cutting Objects
+// Section: Cutting Objects at Planes or with Jigsaw-style Cuts
 
 // Function&Module: half_of()
-// Synopsis: Keeps either or both sides of a plane or patterned cut.
+// Synopsis: Cuts an object at an arbitrary plane, keeping the half on one side, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), partition_path()
+// See Also: left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), half_mask(), partition_path() 
 // Usage: Flat 3D cut
 //   half_of([v], [cp], [s], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -139,7 +140,7 @@ _BOSL2_PARTITIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 //   half_of(BACK,pattern="jigsaw",pattern_size=[20,8],cut_width=95,
 //           flip="both",offset=-0.15,s=200)
 //       cuboid([100,60,20]);
-// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  
+// Example(3D): Here a compound pattern is replicated in full to fill the space and we use an explicit `spread` to set the gap between the two halves.  Splitting the flat section in half and putting it on both sides of the square keeps the pattern balanced.  
 //   half_of(BACK,pattern=["flat 5","square 20x20 pinch:70","flat 5"],pattern_size=[20,8],cut_width=95,
 //           flip="both",spread=2,s=200)
 //       cuboid([100,60,20]);
@@ -323,10 +324,10 @@ function _half_translate(p, v, vnf) =
 
 
 // Function&Module: left_half()
-// Synopsis: Keeps the left side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the YZ plane, keeping the left half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), right_half(), partition_path()
+// See Also: half_of(), right_half(), front_half(), back_half(), bottom_half(), top_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   left_half([s], [x], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -488,10 +489,10 @@ function left_half(p, x=0, pattern, pattern_size, pattern_width,
 
 
 // Function&Module: right_half()
-// Synopsis: Keeps the right side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the YZ plane, keeping the right half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), left_half(), partition_path()
+// See Also: half_of(), left_half(), front_half(), back_half(), bottom_half(), top_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   right_half([s], [x], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -653,10 +654,10 @@ function right_half(p, x=0, pattern, pattern_size, pattern_width,
 
 
 // Function&Module: front_half()
-// Synopsis: Keeps the front side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the XZ plane, keeping the front half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), back_half(), partition_path()
+// See Also: half_of(), left_half(), right_half(), back_half(), bottom_half(), top_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   front_half([s], [y], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -818,10 +819,10 @@ function front_half(p, y=0, pattern, pattern_size, pattern_width,
 
 
 // Function&Module: back_half()
-// Synopsis: Keeps the back side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the XZ plane, keeping the back half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), front_half(), partition_path()
+// See Also: half_of(), left_half(), right_half(), front_half(), bottom_half(), top_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   back_half([s], [y], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -983,10 +984,10 @@ function back_half(p, y=0, pattern, pattern_size, pattern_width,
 
 
 // Function&Module: bottom_half()
-// Synopsis: Keeps the bottom side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the XY plane, keeping the bottom half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), top_half(), partition_path()
+// See Also: half_of(), left_half(), right_half(), front_half(), back_half(), top_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   bottom_half([s], [z], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -1150,10 +1151,10 @@ function bottom_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 
 
 // Function&Module: top_half()
-// Synopsis: Keeps the top side, opposite side, or both sides of a cut.
+// Synopsis: Cuts an object at the XY plane, keeping the top half, optionally with a jigsaw-style cut.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: half_of(), bottom_half(), partition_path()
+// See Also: half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), half_mask(), partition_path()
 // Usage: Flat 3D cut
 //   top_half([s], [z], [flip=], [spread=], [offset=]) CHILDREN;
 // Usage: Patterned 3D cut
@@ -1317,10 +1318,10 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 
 
 // Module: half_mask()
-// Synopsis: Difference mask retaining either or both sides of a patterned cut.
+// Synopsis: Mask that when subtracted, cuts the object at the XY plane, removing the bottom half, optionally with a jigsaw-style cut.
 // SynTags: Geom
 // Topics: Partitions, Masking, Attachments
-// See Also: half_of(), partition_path(), diff(), orient(), position()
+// See Also: half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), partition_path()
 // Usage: 3D mask
 //   half_mask([size], [pattern=], [pattern_size=|pattern_width=], [repeat=], [cut_width=], [flip=], [offset=], [anchor=], [spin=], [orient=], [convexity=]) [ATTACHMENTS];
 // Usage: 2D mask
@@ -1402,11 +1403,11 @@ function top_half(p, z=0, planar=false, pattern, pattern_size, pattern_width,
 //   diff()
 //   cube([80,50,40])
 //       half_mask(100,pattern="dovetail 14x6",cut_width=45,orient=RIGHT);
-// Example(3D): Adjusting the spin
+// Example(3D,VPR=[68.00,0.00,19.00]): Adjusting the spin
 //   diff()
 //   cube([80,50,40])
 //       half_mask(100,pattern="dovetail 14x6",cut_width=45,orient=LEFT,spin=35);
-// Example(3D): Orienting the mask diagonally
+// Example(3D,VPR=[23.50,0.00,10.00]): Orienting the mask diagonally
 //   diff()
 //   cube([80,50,40])
 //     orient(LEFT+BACK)
@@ -1509,13 +1510,13 @@ module half_mask(size=100, planar=false, pattern, pattern_size, pattern_width,
 
 
 
-// Section: Constructing Partition Paths and Masks
+// Section: Partition Paths
 
 // Function&Module: partition_path()
-// Synopsis: Builds a patterned seam, strokes it, or fills its closed polygon.
+// Synopsis: Compute a jigsaw style cut path from a descriptor list
 // SynTags: Path, Geom
 // Topics: Partitions, Masking, Paths
-// See Also: half_of(), stroke()
+// See Also: stroke(), half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), half_mask()
 // Usage: Function returning an open seam or a closed polygon boundary
 //   p = partition_path(pattern, [pattern_size=|pattern_width=], [repeat=], [cut_width=], [length=|l=], [path=], [y=], [seglen=], [segwidth=]);
 // Usage: Module producing an open 2D stroke
@@ -2024,17 +2025,18 @@ function _ptn_sect(type, length=25, width=25, invert=false) =
 
 // Section: Legacy Partitioning
 //   These legacy partitioning functions will eventually go away.  Use
-//   the half_of modules instead.
+//   {{half_mask()}}, {{back_half()}} and {{partition_path()}} instead.  
 
 
 // Module: partition_mask()
 // Synopsis: Creates a mask to remove half an object with the remaining half suitable for reassembly.
 // SynTags: Geom
 // Topics: Partitions, Masking, Paths
-// See Also: partition_cut_mask(), partition(), dovetail()
+// See Also: partition_cut_mask(), partition(), dovetail(), half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), partition_path()
 // Usage:
 //   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
+//   This module is deprecated and will be removed in the future.  Use {{half_mask()}} instead.  
 //   Creates a mask that you can use to difference or intersect with an object to remove half of it,
 //   leaving behind a side designed to allow assembly of the sub-parts.
 // Arguments:
@@ -2079,6 +2081,7 @@ module partition_mask(
     spin=0,
     orient=UP
 ) {
+    echo("Module partition_mask() is deprecated and will be removed; use half_mask() instead");
     cutsize = is_vector(cutsize)? point2d(cutsize) : [cutsize*2, cutsize];
     path = _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered);
     midpath = select(path,1,-2);
@@ -2101,10 +2104,11 @@ module partition_mask(
 // Synopsis: Creates a mask to cut an object into two subparts that can be reassembled.
 // SynTags: Geom
 // Topics: Partitions, Masking, Paths
-// See Also: partition_mask(), partition(), dovetail()
+// See Also: partition_mask(), partition(), dovetail(), half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), partition_path()
 // Usage:
 //   partition_cut_mask(l, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
+//   This function is deprecated and will be removed in the future.  Use {{partition_path()}} instead.
 //   Creates a mask that you can use to difference with an object to cut it into two sub-parts that can be assembled.
 //   The `$slop` value is important to get the proper fit and should probably be smaller than 0.2.  The examples below
 //   use larger values to make the mask easier to see.  
@@ -2135,6 +2139,7 @@ module partition_mask(
 //   partition_cut_mask(cutpath="jigsaw",h=10,$slop=0.5,$fn=12);
 module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
+    echo("Module partition_cut_mask() is deprecated and will be removed; use partition_path() instead");
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
     path = _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered);
     attachable(anchor,spin,orient, size=[l,cutsize.y,h]) {
@@ -2150,10 +2155,11 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 // Synopsis: Cuts an object in two with matched joining edges, then separates the parts.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking, Paths
-// See Also: partition_cut_mask(), partition_mask(), dovetail()
+// See Also: partition_cut_mask(), partition_mask(), dovetail(), half_of(), left_half(), right_half(), front_half(), back_half(), bottom_half(), top_half(), partition_path()
 // Usage:
 //   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:
+//   This module is deprecated and will be removed in the future.  Use {{back_half()}} instead.  
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
 //   If you only need one side of the partition you can use `$idx` in the children.  
 // Arguments:
@@ -2189,6 +2195,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 
 module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, convexity=10, spin=0)
 {
+    echo("Module partition() is deprecated and will be removed in the future.  Use back_half() instead.");   
     req_children($children);
     size = is_vector(size)? size : [size,size,size];
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
@@ -2209,9 +2216,6 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
         }
     }
 }
-
-
-// Section: Partioning into Interlocking Pieces
 
 
 function _partition_subpath(type) =
