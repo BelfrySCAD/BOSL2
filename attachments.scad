@@ -1,10 +1,12 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: attachments.scad
-//   The modules in this file allows you to attach one object to another by making one object the child of another object.
-//   You can place the child object in relation to its parent object and control the position and orientation
-//   relative to the parent.  The modifiers allow you to treat children in ways different from simple union, such
-//   as differencing them from the parent, or changing their color.  Attachment works only when the parent and child
-//   are both written to support attachment.  Also included in this file  are the tools to make your own "attachable" objects.
+//   The modules in this file allows you to attach one object to another by making one object the
+//   child of another object. You can place the child object in relation to its parent object and
+//   control the position and orientation relative to the parent.  The modifiers allow you to treat
+//   children in ways different from simple union, such as differencing them from the parent, or
+//   changing their color.  Attachment works only when the parent and child are both written to
+//   support attachment.  Also included in this file  are the tools to make your own "attachable"
+//   objects.
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
@@ -13,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////
 
 _BOSL2_ATTACHMENTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
-       echo("Warning: attachments.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+       echo("\u26A0 Warning: attachments.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
 // Default values for attachment code.
@@ -71,71 +73,76 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   - Orientation is rotating an object so that its top is pointed toward a given vector.
 //   .
 //   An object is first be translated to its anchor position, then spun, then oriented.
-//   For a detailed step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
+//   For a detailed step-by-step explanation of attachments,
+//   see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 //   .
 //   For describing directions, faces, edges, and corners the library provides a set of shortcuts
-//   all based on combinations of unit direction vectors.  You can use these for anchoring and orienting
-//   attachable objects.  You can also them to specify edge sets for rounding or chamfering cuboids,
-//   or for placing edge, face and corner masks.
+//   all based on combinations of unit direction vectors.  You can use these for anchoring and
+//   orienting attachable objects.  You can also them to specify edge sets for rounding or
+//   chamfering cuboids, or for placing edge, face and corner masks.
 // Subsection: Anchor
 //   Anchoring is specified with the `anchor` argument in most shape modules.  Specifying `anchor`
 //   when creating an object translates the object so that the anchor point is at the origin
 //   (0,0,0).  Anchoring always occurs before spin and orientation are applied.
 //   .
-//   An anchor can be referred to in one of two ways; as a directional vector, or as a named anchor string.
+//   An anchor can be referred to in one of two ways; as a directional vector, or as a named anchor
+//   string.
 //   .
 //   When given as a vector, it points, in a general way, toward the face, edge, or corner of the
 //   object that you want the anchor for, relative to the center of the object.  You can simply
 //   specify a vector like `[0,0,1]` to anchor an object at the Z+ end, but you can also use
-//   directional constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
-//   to specify anchor points.  See [specifying directions](attachments.scad#subsection-specifying-directions)
-//   below for the full list of pre-defined directional constants.
+//   directional constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can
+//   add together to specify anchor points.  See
+//   [specifying directions](attachments.scad#subsection-specifying-directions) below for the full
+//   list of pre-defined directional constants.
 //   .
 //   For example:
 //   - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
 //   - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
 //   - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
 //   .
-//   When the object is cubical or rectangular in shape the anchor components must be 0, -1, or 1 and 
-//   these values specify the face centers, edge centers, or corners of the object.
-//   The direction of a face anchor is perpendicular to the face, pointing outward.  The direction of an edge
-//   anchor is the average of the anchor directions of the two faces on either side of the edge.  The direction
-//   of a corner anchor is the average of the anchor directions of the three faces meeting at the corner. 
+//   When the object is cubical or rectangular in shape the anchor components must be 0, -1, or 1
+//   and these values specify the face centers, edge centers, or corners of the object. The
+//   direction of a face anchor is perpendicular to the face, pointing outward.  The direction of an
+//   edge anchor is the average of the anchor directions of the two faces on either side of the
+//   edge.  The direction of a corner anchor is the average of the anchor directions of the three
+//   faces meeting at the corner.
 //   .
-//   When the object is cylindrical or conical and aligned with the z axis the z component of an anchor must be
-//   0, 1 or -1.  For selecting the flat faces the x and y components must be zero, but otherwise, the x and y components
-//   can be arbitrary and will select any angle on either the circular edges (if anchor.z is nonzero) or on the center
-//   of the curved face (if anchor.z is zero).  When the object is spherical the anchors are arbitrary and can select any location on the sphere.  
-//   Anchors on curved surfaces are oriented normal to the surface.  Anchors on edges are oriented to divide the
-//   edge angle.  
+//   When the object is cylindrical or conical and aligned with the z axis the z component of an
+//   anchor must be 0, 1 or -1.  For selecting the flat faces the x and y components must be zero,
+//   but otherwise, the x and y components can be arbitrary and select any angle on either the
+//   circular edges (if anchor.z is nonzero) or on the center of the curved face (if anchor.z is
+//   zero).  When the object is spherical the anchors are arbitrary and can select any location on
+//   the sphere. Anchors on curved surfaces are oriented normal to the surface.  Anchors on edges
+//   are oriented to divide the edge angle.
 //   .
-//   For objects in two dimensions, the natural expectation is for TOP and BOTTOM to refer to the Y direction
-//   of the shape.  To support this, if you give an anchor in 2D that has anchor.y=0 then the Z component
-//   is mapped to the Y direction.  This  means you can use TOP and BOTTOM for anchors of 2D objects.
-//   But remember that TOP and BOTTOM are three dimensional vectors and this is a special interpretation
-//   for 2d anchoring.
+//   For objects in two dimensions, the natural expectation is for TOP and BOTTOM to refer to the Y
+//   direction of the shape.  To support this, if you give an anchor in 2D that has anchor.y=0 then
+//   the Z component is mapped to the Y direction.  This  means you can use TOP and BOTTOM for
+//   anchors of 2D objects. But remember that TOP and BOTTOM are three dimensional vectors and this
+//   is a special interpretation for 2d anchoring.
 //   .
-//   Some more complex objects, like screws and stepper motors, have named anchors to refer to places
-//   on the object that are not at one of the standard faces, edges or corners.  For example, stepper
-//   motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes on the
-//   stepper motor shape.  The names, positions, directions, and spins of these anchors are
+//   Some more complex objects, like screws and stepper motors, have named anchors to refer to
+//   places on the object that are not at one of the standard faces, edges or corners.  For example,
+//   stepper motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes
+//   on the stepper motor shape.  The names, positions, directions, and spins of these anchors are
 //   specific to the object, and are documented when they exist.
 //   .
-//   The anchor argument is ignored if you use {{align()}} or the two-argument form of {{attach()}} because
-//   these modules provide their own anchoring for their children.  
+//   The anchor argument is ignored if you use {{align()}} or the two-argument form of {{attach()}}
+//   because these modules provide their own anchoring for their children.
 // Subsection: Spin
-//   Spin is specified with the `spin` argument in most shape modules.  Specifying a spin
-//   angle when creating an object rotates the object counter-clockwise around the Z axis by the given
-//   number of degrees.  Spin is always applied after anchoring, and before orientation.
-//   Since spin is applied **after** anchoring it does not, in general, rotate around the object's center,
-//   so it is not always what you might think of intuitively as spinning the shape.  
+//   Spin is specified with the `spin` argument in most shape modules.  Specifying a spin angle when
+//   creating an object rotates the object counter-clockwise around the Z axis by the given number
+//   of degrees.  Spin is always applied after anchoring, and before orientation. Since spin is
+//   applied **after** anchoring it does not, in general, rotate around the object's center, so it
+//   is not always what you might think of intuitively as spinning the shape.
 // Subsection: Orient
-//   Orientation is specified with the `orient` argument in most shape modules.  Specifying `orient`
-//   when creating an object rotates the object such that the top of the object points
-//   at the vector direction given in the `orient` argument.  Orientation is always applied after
-//   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
-//   added together to form the directional vector for this (e.g. `LEFT+BACK`).  The orient parameter
-//   is ignored when you use {{attach()}} with two arguments, because {{attach()}} provides its own orientation. 
+//   Orientation is specified with the `orient` argument in most shape modules. Specifying `orient`
+//   when creating an object rotates the object such that the top of the object points at the vector
+//   direction given in the `orient` argument.  Orientation is always applied after anchoring and
+//   spin. The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be added together to
+//   form the directional vector for this (e.g. `LEFT+BACK`).  The orient parameter is ignored when
+//   you use {{attach()}} with two arguments, because {{attach()}} provides its own orientation.
 // Subsection: Specifying Directions
 //   You can use direction vectors to specify anchors for objects or to specify edges, faces, and
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
@@ -190,9 +197,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   }
 //   stroke(path2d([[0,0,0],BACK]), endcap2="arrow2", width=.05);
 // Subsection: Specifying Faces
-//   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
-//   face is given by a vector that points to that face.  Attachments of cuboid objects onto their faces also
-//   work by choosing an attachment face with a single vector in the same manner.
+//   Modules operating on faces accept a list of faces to describe the faces to operate on. Each
+//   face is given by a vector that points to that face. Attachments of cuboid objects onto their
+//   faces also work by choosing an attachment face with a single vector in the same manner.
 // Figure(3D,Big,NoScales,VPD=275): The six faces of the cube.  Some have faces have more than one name.
 //   ydistribute(50) {
 //      xdistribute(35){
@@ -207,14 +214,13 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //      }
 //   }
 // Subsection: Specifying Edges
-//   Modules operating on edges use two arguments to describe the edge set they will use: The `edges` argument
-//   is a list of edge set descriptors to include in the edge set, and the `except` argument is a list of
-//   edge set descriptors to remove from the edge set.
-//   The default value for `edges` is `"ALL"`, the set of all edges.
+//   Modules operating on edges use two arguments to describe the edge set they use: The `edges`
+//   argument is a list of edge set descriptors to include in the edge set, and the `except`
+//   argument is a list of edge set descriptors to remove from the edge set.
+//   The default value for`edges` is `"ALL"`, the set of all edges.
 //   The default value for `except` is the empty set, meaning no edges are removed.
-//   If either argument is just a single edge set
-//   descriptor it can be passed directly rather than in a singleton list.
-//   Each edge set descriptor must be one of:
+//   If either argument is just a single edge set descriptor it can be passed directly rather than
+//   in a singleton list. Each edge set descriptor must be one of:
 //   - A 3-vector with entries in {-1,0,1} pointing toward an edge of a centered cube, indicating that single edge.
 //   - A 3-vector with entries in {-1,0,1} pointing toward a face of a centered cube, indicating all edges surrounding that face.
 //   - A 3-vector with entries in {-1,0,1} pointing toward a corner of a centered cube, indicating all edges touching that corner.
@@ -320,9 +326,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //    _show_edges(_edges([TOP,BOT], TOP+RIGHT+FRONT),toplabel=["edges=[TOP,BOT]","except=TOP+RIGHT+FRONT"]);
 //   }
 // Subsection: Specifying Corners
-//   Modules operating on corners use two arguments to describe the corner set they will use: The `corners` argument
-//   is a list of corner set descriptors to include in the corner set, and the `except` argument is a list of
-//   corner set descriptors to remove from the corner set.
+//   Modules operating on corners use two arguments to describe the corner set they use: The
+//   `corners` argument is a list of corner set descriptors to include in the corner set, and the
+//   `except` argument is a list of corner set descriptors to remove from the corner set.
 //   The default value for `corners` is `"ALL"`, the set of all corners.
 //   The default value for `except` is the   empty set, meaning no corners are removed.
 //   If either argument is just a single corner set
@@ -402,7 +408,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //     _show_corners(_corners(BOT+RIGHT+FRONT),toplabel=["corners=BOT+RIGHT+FRONT"]);
 //     _show_corners(_corners([FRONT,RIGHT]), toplabel=["corners=[FRONT,RIGHT]"]);
 //   }
-// Figure(3D,Big,NoScales,VPD=300): Corners for one edge, two edges, and all the edges except the two on one edge.  Note that since the default is all edges, you need to give only the `except` argument in this case:
+// Figure(3D,Big,NoScales,VPD=300): Corners for one edge, two edges, and all the edges except the two on one edge. Because the default is all edges; you need to give only the `except` argument in this case:
 //    xdistribute(52){
 //      _show_corners(_corners(FRONT+TOP), toplabel=["corners=FRONT+TOP"]);
 //       _show_corners(_corners([FRONT+TOP,BOT+BACK]), toplabel=["corners=[FRONT+TOP,","        BOT+BACK]"]);
@@ -415,14 +421,16 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //                    toplabel=["except=[FRONT+RIGHT+TOP,","       FRONT+LEFT+BOT]"]);
 //    }
 // Subsection: Anchoring of Non-Rectangular Objects and Anchor Type (atype)
-//   We focused above on rectangular objects that have well-defined faces and edges aligned with the coordinate axes.
-//   Things get difficult when the objects are curved, or even when their edges are not neatly aligned with the coordinate axes.
-//   In these cases, the library may provide multiple different anchoring schemes, called the anchor types.  When a module supports
-//   multiple anchor types, use the `atype=` parameter to select the anchor type you need.
+//   We focused above on rectangular objects that have well-defined faces and edges aligned with the
+//   coordinate axes. Things get difficult when the objects are curved, or even when their edges are
+//   not neatly aligned with the coordinate axes. In these cases, the library may provide multiple
+//   different anchoring schemes, called the anchor types.  When a module supports multiple anchor
+//   types, use the `atype=` parameter to select the anchor type you need.
 //   .
-//   First consider the case of a simple rectangle whose corners have been rounded.  Where should the anchors lie?
-//   The default anchor type puts them in the same location as the anchors of an unrounded rectangle, which means that for
-//   positive rounding radii, they are not even located on the perimeter of the object.
+//   First consider the case of a simple rectangle whose corners have been rounded. Where should the
+//   anchors lie? The default anchor type puts them in the same location as the anchors of an
+//   unrounded rectangle, which means that for positive rounding radii, they are not even located on
+//   the perimeter of the object.
 // Figure(2D,Med,NoAxes): Default "box" atype anchors for a rounded {{rect()}}
 //   rect([100,50], rounding=[10,0,0,-20],chamfer=[0,10,-20,0]) show_anchors();
 // Continues:
@@ -431,10 +439,12 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Figure(2D,Med,NoAxes): The "perim" atype for a rounded and chamfered {{rect()}}
 //   rect([100,50], rounding=[10,0,0,-20],chamfer=[0,10,-20,0],atype="perim") show_anchors();
 // Continues:
-//   With this anchor type, the anchors are located on the perimeter.  For positive roundings they point in the standard anchor direction;
-//   for negative roundings they are parallel to the base.  As noted above, for circles, cylinders, and spheres, the anchor point is
-//   determined by choosing the point where the anchor vector intersects the shape.  On a circle, this results in an anchor whose direction
-//   matches the user provided anchor vector.  But on an ellipse, something else happens:
+//   With this anchor type, the anchors are located on the perimeter. For positive roundings they
+//   point in the standard anchor direction; for negative roundings they are parallel to the base.
+//   As noted above, for circles, cylinders, and spheres, the anchor point is determined by choosing
+//   the point where the anchor vector intersects the shape. On a circle, this results in an anchor
+//   whose direction matches the user provided anchor vector. But on an ellipse, something else
+//   happens:
 // Figure(2D,Med,NoAxes): Anchors on an ellipse.  The red arrow shows a TOP+RIGHT anchor direction. 
 //   ellipse([70,30]) show_anchors();
 //   stroke([[0,0],[45,45]], color="red",endcap2="arrow2");
@@ -450,8 +460,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Figure(2D,Med,NoAxes): A supershape with "hull" anchor type:
 //   supershape(n=150,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9,atype="hull") show_anchors();
 // Continues:
-//   Hull anchoring works by creating the line (or plane in 3D) that is normal to the specified anchor direction, and
-//   finding the point farthest from the center that intersects that line (or plane).
+//   Hull anchoring works by creating the line (or plane in 3D) that is normal to the specified
+//   anchor direction, and finding the point farthest from the center that intersects that line (or
+//   plane).
 // Figure(2D,Med,NoAxes): Finding the RIGHT and BACK+LEFT "hull" anchors
 //   supershape(n=128,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9,atype="hull") {
 //     position(RIGHT) color_this("red")rect([1,90],anchor=LEFT);
@@ -462,28 +473,34 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //        }
 //     }
 // Continues:
-//   In the example the RIGHT anchor is found when the normal line (shown in red) is tangent to the shape at two points.
-//   The anchor is then taken to be the midpoint.  The BACK+LEFT anchor occurs with a single tangent point, and the
-//   anchor point is located at the tangent point.  For circles intersection is done to the exact circle, but for other
-//   shapes these calculations are done on the point lists that defines the shape, so if you change the number of points
-//   in the list, the precise location of the anchors can change.  You can also get surprising results if your point list is badly chosen.
+//   In the example the RIGHT anchor is found when the normal line (shown in red) is tangent to the
+//   shape at two points. The anchor is then taken to be the midpoint.  The BACK+LEFT anchor occurs
+//   with a single tangent point, and the anchor point is located at the tangent point.  For circles
+//   intersection is done to the exact circle, but for other shapes these calculations are done on
+//   the point lists that defines the shape, so if you change the number of points in the list, the
+//   precise location of the anchors can change.  You can also get surprising results if your point
+//   list is badly chosen.
 // Figure(2D,Med,NoAxes): Circle anchor in blue.  The red anchor is computed to a point list of a circle with 17 segments.  
 //   circle(r=31,$fn=128) attach(TOP)anchor_arrow2d(15);
 //   region(circle(r=33,$fn=17)) {color("red")attach(TOP)anchor_arrow2d(13);}
 // Continues:
-//   The figure shows a large horizontal offset due to a poor choice of sampling for the circular shape when using the "hull" anchor type.
-//   The determination of "hull" or "intersect" anchors may depend on the location of the centerpoint used in the computation.
-//   Some of the modules allow you to change the centerpoint using a `cp=` argument.  If you need to change the centerpoint for
-//   a module that does not provide this option, you can use the generic {{region()}} module, which lets you specify a centerpoint.
-//   The default center point is the centroid, specified by "centroid".  You can also choose "mean", which gives the mean of all
-//   the data points, or "box", which gives the centerpoint of the bounding box for the data.  Your last option for centerpoint is to
-//   choose an arbitrary point that meets your needs.
+//   The figure shows a large horizontal offset due to a poor choice of sampling for the circular
+//   shape when using the "hull" anchor type. The determination of "hull" or "intersect" anchors may
+//   depend on the location of the centerpoint used in the computation. Some of the modules allow
+//   you to change the centerpoint using a `cp=` argument.  If you need to change the centerpoint
+//   for a module that does not provide this option, you can use the generic {{region()}} module,
+//   which lets you specify a centerpoint.
+//   The default center point is the centroid, specified by "centroid".  You can also choose "mean",
+//   which gives the mean of all the data points, or "box", which gives the centerpoint of the
+//   bounding box for the data. Your last option for centerpoint is to choose an arbitrary point
+//   that meets your needs.
 // Figure(2D,Med,NoAxes): The centerpoint for "intersect" anchors is located at the red dot
 //   region(supershape(n=128,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9),atype="intersect",cp=[0,30]) show_anchors();
 //   color("red")back(30)circle(r=2,$fn=16);
 // Continues:
-//   Note that all the anchors for an object have to be determined based on one anchor type and relative to the same centerpoint.
-//   The supported anchor types for each module appear in the "Anchor Types" section of its entry.  
+//   All the anchors for an object have to be determined based on one anchor type and relative to
+//   the same centerpoint. The supported anchor types for each module appear in the "Anchor Types"
+//   section of its entry.
 
 
 
@@ -517,7 +534,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 module position(at,from)
 {
     if (is_def(from)){
-      echo("'from' argument of position() has changed to 'at' and will be removed in a future version");
+      echo("\u26A0 'from' argument of position() has changed to 'at' and will be removed in a future version.");
     }
     dummy0=assert(num_defined([at,from])==1, "\nCannot give both `at` argument and the deprectated `from` argument to position().");
     at = first_defined([at,from]);
@@ -545,8 +562,9 @@ module position(at,from)
 // Usage:
 //   PARENT() orient(anchor, [spin]) CHILDREN;
 // Description:
-//   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
+//   Orients children such that their top is tilted in the direction of the specified parent anchor
+//   point. For a step-by-step explanation of attachments, see the
+//   [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 // Arguments:
 //   anchor = The anchor on the parent that you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
@@ -597,48 +615,51 @@ module orient(anchor, spin) {
 // Usage:
 //   PARENT() align(anchor, [align], [inside=], [inset=], [shiftout=], [overlap=]) CHILDREN;
 // Description:
-//   Place a child on the face identified by `anchor`.  If align is not given or is CENTER
-//   then the child is centered on top of the specified face, outside the parent object.  The align parameter is a
-//   direction defining an edge or corner to align to.  The child is aligned to that edge or corner by
-//   choosing an appropriate anchor on the child.  
-//   Like {{position()}} this module never rotates the child.  If you give `anchor=RIGHT` then the child
-//   is given the LEFT anchor and placed adjacent to the parent.  You can use `orient=` or `spin=`
-//   with the child and the alignment adjusts to select the correct child anchor.  Note that if
-//   you spin the child by an amount not a multiple of 90 degrees then an edge of the child will be
-//   placed against the parent.  This module makes it easy to place children aligned flush with the edges
-//   of the parent, even after orienting them or spinning them.  In contrast {{position()}} can 
-//   do the same thing but you would have to figure out the correct child anchor, which is not always obvious.
+//   Place a child on the face identified by `anchor`.  If align is not given or is CENTER then the
+//   child is centered on top of the specified face, outside the parent object.  The align parameter
+//   is a direction defining an edge or corner to align to.  The child is aligned to that edge or
+//   corner by choosing an appropriate anchor on the child.
+//   Like {{position()}} this module never rotates the child.  If you give `anchor=RIGHT` then the
+//   child is given the LEFT anchor and placed adjacent to the parent.  You can use `orient=` or
+//   `spin=` with the child and the alignment adjusts to select the correct child anchor.
+//   If you spin the child by an amount not a multiple of 90°, then an edge of the child is
+//   placed against the parent.  This module makes it easy to place children aligned flush with the
+//   edges of the parent, even after orienting them or spinning them.  In contrast {{position()}}
+//   can do the same thing but you would have to figure out the correct child anchor, which is not
+//   always obvious.
 //   .
-//   Because `align()` works by setting the child anchor, it overrides any anchor you specify to the child:
-//   **any `anchor=` value given to the child is ignored.**
+//   Because `align()` works by setting the child anchor, it overrides any anchor you specify to the
+//   child: **any `anchor=` value given to the child is ignored.**
 //   .
 //   Several options can adjust how the child is positioned.  You can specify `inset=` to inset the
-//   aligned object from its alignment location. If you set `inside=true` then the
-//   child appears inside the parent instead of on its surface so that you can use {{diff()}} to subtract it.
-//   In this case the child receives a default "remove" tag.
+//   aligned object from its alignment location. If you set `inside=true` then the child appears
+//   inside the parent instead of on its surface so that you can use {{diff()}} to subtract it. In
+//   this case the child receives a default "remove" tag.
 //   .
-//   The overlap option and shiftout option both move the object away from its aligned position.  They
-//   can be used to prevent coincident faces from creating issues in OpenSCAD by ensuring that the child
-//   fully overlaps the parent's face(s).  The `overlap` parameter defaults to the value of `$overlap`, or
-//   0 if `$overlap` is not set.  It moves the child object in the direction of the `anchor` face when
-//   `inside=false` (sinking the child into the parent) and it moves the child in the opposite direction
-//   if `inside=true`, shifting the child outward away from the `anchor` face.  The child will remain exactly flush
-//   with edges it was aligned to using `align`. The `overlap` parameter is best suited to externally aligned objects (`inside=false`)
-//   where the aligned edges should remain perfectly aligned. The `shiftout` parameter shifts the child outward relative to
-//   the `anchor` face and also any aligned edges.  The direction of movement does not depend on the `inside` parameter.
+//   The overlap option and shiftout option both move the object away from its aligned position.
+//   They can be used to prevent coincident faces from creating issues in OpenSCAD by ensuring that
+//   the child fully overlaps the parent's face(s).  The `overlap` parameter defaults to the value
+//   of `$overlap`, or 0 if `$overlap` is not set.  It moves the child object in the direction of
+//   the `anchor` face when `inside=false` (sinking the child into the parent) and it moves the
+//   child in the opposite direction if `inside=true`, shifting the child outward away from the
+//   `anchor` face. The child remains exactly flush with edges it was aligned to using `align`. The
+//   `overlap` parameter is best suited to externally aligned objects (`inside=false`) where the
+//   aligned edges should remain perfectly aligned. The `shiftout` parameter shifts the child
+//   outward relative to the `anchor` face and also any aligned edges.  The direction of movement
+//   does not depend on the `inside` parameter.
 //   For an inside child this is equivalent to giving a positive overlap and negative inset value.
-//   For a child with `inside=false` it is equivalent to a negative overlap and negative inset.  The `shiftout` parameter
-//   is well suited to internal objects where `inside=true` because it shifts to overlap all coincident faces, including
-//   faces at aligned edges.  
+//   For a child with `inside=false` it is equivalent to a negative overlap and negative inset.  The
+//   `shiftout` parameter is well suited to internal objects where `inside=true` because it shifts
+//   to overlap all coincident faces, including faces at aligned edges.
 //   .
 //   In the description above, the anchor was said to define a "face".  You can also use this module
-//   with an edge anchor, in which case a corner of the child is placed in contact with the specified
-//   edge and the align direction shifts the child to either end of the edge.  You can even give a
-//   corner as the anchor point, but in that case the only allowed alignment is CENTER.
+//   with an edge anchor, in which case a corner of the child is placed in contact with the
+//   specified edge and the align direction shifts the child to either end of the edge.  You can
+//   even give a corner as the anchor point, but in that case the only allowed alignment is CENTER.
 //   .
-//   If you give a list of anchors and/or a list of align directions then all combinations are generated.
-//   In this way align() acts like a distributor, creating multiple copies of the child.  
-//   Named anchors are not supported by `align()`.  
+//   If you give a list of anchors and/or a list of align directions then all combinations are
+//   generated. In this way align() acts like a distributor, creating multiple copies of the child.
+//   Named anchors are not supported by `align()`.
 // Arguments:
 //   anchor = parent anchor or list of parent anchors for positioning children.
 //   align = optional alignment direction or directions for aligning the children.  Default: CENTER
@@ -690,7 +711,7 @@ module orient(anchor, spin) {
 //   cyl(h=20,d=10,$fn=128)
 //     align([1,.3],TOP)
 //       color("lightblue")cuboid(5);
-// Example: Orienting the child is done in the global coordinate system (as usual) not in the parent coordinate system.  Note that the blue prismoid is not lined up with the parent face.  (To place the child on the face use {{attach()}}.
+// Example: Orienting the child is done in the global coordinate system (as usual) not in the parent coordinate system. Note that the blue prismoid is not lined up with the parent face. (To place the child on the face use {{attach()}}.
 //   prismoid(50,30,25)
 //     align(RIGHT)
 //      color("lightblue")prismoid([10,5],[7,4],height=4,orient=RIGHT);
@@ -727,7 +748,7 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
            assert(is_undef($attach_to), "\nCannot use align() as a child of attach().")
            assert(is_finite(overlap), str("\noverlap must be a finite number but is ",overlap));
     if (_is_shown() && inside && overlap!=0 && (is_undef($align_msg) || $align_msg))
-      echo("WARNING: overlap passed to align() with inside=true; handling has changed (May 2026): positive overlap moves child outward (change in sign). Set $align_msg=false to hide this message");
+      echo("\u26A0 Warning: overlap passed to align() with inside=true; handling has changed (May 2026): positive overlap moves child outward (change in sign). Set $align_msg=false to hide this message");
 
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
@@ -793,76 +814,83 @@ function _make_anchor_legal(anchor,geom) =
 //   PARENT() attach(parent, child, [align=], [spin=], [overlap=], [inside=], [inset=], [shiftout=]) CHILDREN;
 //   PARENT() attach(parent, [overlap=], [spin=]) CHILDREN;
 // Description:
-//   Attaches children to a parent object at an anchor point or points, oriented in the anchor direction.
-//   This module differs from {{position()}} and {{align()}} in that it rotates the children to
-//   the anchor direction, which generally means it places the children on the surface of a parent.
-//   There are two modes of operation, parent anchor (single argument) and parent-child anchor (double argument).
+//   Attaches children to a parent object at an anchor point or points, oriented in the anchor
+//   direction. This module differs from {{position()}} and {{align()}} in that it rotates the
+//   children to the anchor direction, which generally means it places the children on the surface
+//   of a parent. There are two modes of operation, parent anchor (single argument) and parent-child
+//   anchor (double argument).
 //   In most cases you should use the parent-child (double argument) version of `attach()`.  
 //   .
-//   The parent-child anchor (double argument) version is usually easier to use, and it is more powerful because it supports
-//   alignment.  You provide an anchor on the parent (`parent`) and an anchor on the child (`child`).
-//   This module connects the `child` anchor on the child to the `parent` anchor on the parent.  
-//   Imagine pointing the parent and child anchor arrows at each other and pushing the objects
-//   together until they meet at the anchor point.  The most basic case
-//   is `attach(TOP,BOT)`, which puts the bottom of the child onto the top of the parent.  If you
-//   do `attach(RIGHT,BOT)` this puts the bottom of the child onto the right anchor of the parent.
+//   The parent-child anchor (double argument) version is usually easier to use, and it is more
+//   powerful because it supports alignment.  You provide an anchor on the parent (`parent`) and an
+//   anchor on the child (`child`). This module connects the `child` anchor on the child to the
+//   `parent` anchor on the parent. Imagine pointing the parent and child anchor arrows at each
+//   other and pushing the objects together until they meet at the anchor point.  The most basic
+//   case is `attach(TOP,BOT)`, which puts the bottom of the child onto the top of the parent.  If
+//   you do `attach(RIGHT,BOT)` this puts the bottom of the child onto the right anchor of the
+//   parent.
 //   When an object is attached to the top or bottom, its BACK direction remains pointing BACK.
-//   When an object is attached to one of the other anchors its FRONT is pointed DOWN and its
-//   BACK pointed UP.  You can change this using the `spin=` argument to attach().  This spin
-//   rotates around the attachment vector and is not the same as the spin argument to the child, which
-//   will usually rotate around some other axis that may be hard to predict. 
+//   When an object is attached to one of the other anchors its FRONT is pointed DOWN and its BACK
+//   pointed UP.  You can change this using the `spin=` argument to attach(). This spin rotates
+//   around the attachment vector and is not the same as the spin argument to the child, which
+//   usually rotates around some other axis that may be hard to predict.
 //   For 2D objects you cannot give the `spin=` argument to attach() because this breaks the anchor
-//   alignment that attach() creates.  (You can,  however, still give `spin=` to the child, which will
-//   misalign the anchors produe by the attachment.)
+//   alignment that attach() creates. (You can,  however, still give `spin=` to the child, which
+//   misaligns the anchors produe by the attachment.)
 //   .
-//   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner of the
-//   face where that child is attached.  For example, `attach(TOP,BOT,align=RIGHT)` stands the child
-//   up on the top while aligning it with the right edge of the top face, and `attach(RIGHT,BOT,align=TOP)` 
-//   stands the object on the right face while aligning with the top edge.  If you apply spin using the
-//   argument to `attach()`, then it is taken into account for the alignment. However, if you apply spin as
-//   a parameter to the child, it is **not** taken into account.  The special spin value "align"
-//   spins the child so that the child's BACK direction is pointed toward the aligned edge on the parent. 
-//   When you use `align=` you can also adjust the position using `inset=`, which shifts the child
-//   inward away from the edge or corner it is aligned to.  The `inset=` parameter is not permitted without `align=`.
+//   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner
+//   of the face where that child is attached.  For example, `attach(TOP,BOT,align=RIGHT)` stands
+//   the child up on the top while aligning it with the right edge of the top face, and
+//   `attach(RIGHT,BOT,align=TOP)` stands the object on the right face while aligning with the top
+//   edge.  If you apply spin using the argument to `attach()`, then it is taken into account for
+//   the alignment. However, if you apply spin as a parameter to the child, it is **not** taken into
+//   account.  The special spin value "align" spins the child so that the child's BACK direction is
+//   pointed toward the aligned edge on the parent. When you use `align=` you can also adjust the
+//   position using `inset=`, which shifts the child inward away from the edge or corner it is
+//   aligned to.  The `inset=` parameter is not permitted without `align=`.
 //   .
-//   The concept of alignment doesn't always make sense for objects without corners, such as spheres or cylinders.
-//   In same cases, the alignments using such children may look odd because the alignment computation tries to
-//   place a non-existent corner somewhere.  Because attach() doesn't have in formation about the child when
-//   it runs, it cannot handle curved shapes differently from cubes, so this behavior cannot be changed.  
+//   The concept of alignment doesn't always make sense for objects without corners, such as spheres
+//   or cylinders. In same cases, the alignments using such children may look odd because the
+//   alignment computation tries to place a non-existent corner somewhere.  Because attach() doesn't
+//   have in formation about the child when it runs, it cannot handle curved shapes differently from
+//   cubes, so this behavior cannot be changed.
 //   .
-//   Because the attachment process forces an orientation and anchor point for the child, it overrides
-//   any such specifications you give to the child:  **both `anchor=` and `orient=` given to the child are
-//   ignored** with the **double argument** version of `attach()`.  As noted above, you can give `spin=` to the
-//   child but using the `spin=` parameter to `attach()` is more likely to be useful.
+//   Because the attachment process forces an orientation and anchor point for the child, it
+//   overrides any such specifications you give to the child:  **both `anchor=` and `orient=` given
+//   to the child are ignored** with the **double argument** version of `attach()`.  As noted above,
+//   you can give `spin=` to the child but using the `spin=` parameter to `attach()` is more likely
+//   to be useful.
 //   .
-//   If you give `inside=true` then the anchor arrows are lined up so they point the same direction and
-//   the child object is located inside the parent.  In this case a default "remove" tag is applied to
-//   the children.  
+//   If you give `inside=true` then the anchor arrows are lined up so they point the same direction
+//   and the child object is located inside the parent.  In this case a default "remove" tag is
+//   applied to the children.
 //   .
-//   The overlap option and shiftout option both move the object away from its aligned position.  They
-//   can be used to prevent coincident faces from creating issues in OpenSCAD by ensuring that the child
-//   fully overlaps the parent's face(s).  The `overlap` parameter defaults to the value of `$overlap`, or
-//   0 if `$overlap` is not set.  It moves the child object in the direction of the `parent` face when
-//   `inside=false` (sinking the child into the parent) and it moves the child in the opposite direction
-//   if `inside=true`, shifting the child outward away from the `parent` face.  The child will remain exactly flush
-//   with edges it was aligned to using `align=`.  The `overlap` parameter is best suited to externally attached objects (`inside=false`)
-//   where the aligned edges should remain perfectly aligned.  The `shiftout` parameter shifts the child outward relative to
-//   the `parent` face and also any aligned edges.  The direction of movement does not depend on the `inside` parameter.
-//   For an inside child this is equivalent to giving a positive overlap and negative inset value.
-//   For a child with `inside=false` it is equivalent to a negative overlap and negative inset.  The `shiftout` parameter
-//   is well suited to internal objects where `inside=true` because it shifts to overlap all coincident faces, including
-//   faces at aligned edges.  
+//   The overlap option and shiftout option both move the object away from its aligned position.
+//   They can be used to prevent coincident faces from creating issues in OpenSCAD by ensuring that
+//   the child fully overlaps the parent's face(s). The `overlap` parameter defaults to the value of
+//   `$overlap`, or 0 if `$overlap` is not set. It moves the child object in the direction of the
+//   `parent` face when `inside=false` (sinking the child into the parent) and it moves the child in
+//   the opposite direction if `inside=true`, shifting the child outward away from the `parent`
+//   face. The child remains exactly flush with edges it was aligned to using `align=`. The
+//   `overlap` parameter is best suited to externally attached objects (`inside=false`) where the
+//   aligned edges should remain perfectly aligned.  The `shiftout` parameter shifts the child
+//   outward relative to the `parent` face and also any aligned edges. The direction of movement
+//   does not depend on the `inside` parameter. For an inside child this is equivalent to giving a
+//   positive overlap and negative inset value. For a child with `inside=false` it is equivalent to
+//   a negative overlap and negative inset. The `shiftout` parameter is well suited to internal
+//   objects where `inside=true` because it shifts to overlap all coincident faces, including faces
+//   at aligned edges.
 //   .
-//   The single parameter version of `attach()` is rarely needed; to use it, you give only the `parent` anchor.  The `align` direction
-//   is not permitted.  In this case the child is placed at the specified parent anchor point
-//   and rotated to the anchor direction.  For example, `attach(TOP) cuboid(2);` places a small
-//   cube **with its center** located at the TOP anchor of the parent, so just half the cube projects
-//   from the parent.  If you want the cube sitting on the parent you need to anchor the cube to its bottom:
-//   `attach(TOP) cuboid(2,anchor=BOT);`.
+//   The single parameter version of `attach()` is rarely needed; to use it, you give only the
+//   `parent` anchor.  The `align` direction is not permitted.  In this case the child is placed at
+//   the specified parent anchor point and rotated to the anchor direction.  For example,
+//   `attach(TOP) cuboid(2);` places a small cube **with its center** located at the TOP anchor of
+//   the parent, so just half the cube projects from the parent.  If you want the cube sitting on
+//   the parent you need to anchor the cube to its bottom: `attach(TOP) cuboid(2,anchor=BOT);`.
 //   .
-//   The **single argument** version of `attach()` **respects `anchor=` and `orient=` given to the child.**
-//   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
-//   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
+//   The **single argument** version of `attach()` **respects `anchor=` and `orient=` given to the
+//   child.** These options are probably necessary, in fact, to get the child correctly positioned.
+//   Giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child.
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 // Arguments:
@@ -970,11 +998,11 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
     removetag = inside;
     inside = $anchor_inside ? !inside : inside;
     if (is_def(to))
-      echo("The 'to' option to attach() is deprecated and will be removed in the future.  Use 'child' instead.");
+      echo("\uA26A0 The 'to' option to attach() is deprecated and will be removed in the future. Use 'child' instead.");
     if (is_def(from))
-      echo("The 'from' option to attach(0 is deprecated and will be removed in the future.  Use 'parent' instead");
+      echo("\uA26A0 The 'from' option to attach() is deprecated and will be removed in the future. Use 'parent' instead");
     if (norot)
-      echo("The 'norot' option to attach() is deprecated and will be removed in the future.  Use position() instead.");
+      echo("\uA26A0 The 'norot' option to attach() is deprecated and will be removed in the future. Use position() instead.");
     req_children($children);
     
     dummy=assert($parent_geom != undef, "\nNo object to attach to!")
@@ -1109,16 +1137,16 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 //   PARENT() attach_part(name, [ind]) CHILDREN;
 // Description:
 //   Most attachable objects have a single geometry defined that is used by the attachment commands,
-//   but some objects also define attachable parts.  This module selects 
-//   an attachable part using a name defined by the parent object.  Any operations
-//   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
-//   references the geometry for the specified part.  This allows you to access the inner wall
-//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.
+//   but some objects also define attachable parts. This module selects an attachable part using a
+//   name defined by the parent object.  Any operations that use the parent geometry such as
+//   {{attach()}}, {{align()}}, {{position()}} or {{parent()}} references the geometry for the
+//   specified part.  This allows you to access the inner wall of tubes, for example. You cannot
+//   call `attach_part()` as a child of another `attach_part()`.
 //   .
-//   If you select a compound part then you can also provide an index to select the desired component
-//   of that part.  The index wraps around in both directions so for example, -1 gives the last component, and
-//   the selection cannot fail due to being out of bounds.  The default index is zero.   The `ind`
-//   parameter has no effect on simple parts.  
+//   If you select a compound part then you can also provide an index to select the desired
+//   component of that part.  The index wraps around in both directions so for example, -1 gives the
+//   last component, and the selection cannot fail due to being out of bounds.  The default index is
+//   zero.   The `ind` parameter has no effect on simple parts.
 // Arguments:
 //   name = name of part to use for subsequent attachments.
 //   ind = index for use with compount parts.  Default: 0
@@ -1162,10 +1190,10 @@ function _get_part(name, ind) =
 // Usage:
 //   PARENT() tag(tag) CHILDREN;
 // Description:
-//   Assigns the specified tag to all of the children. Note that if you want
-//   to apply a tag to non-tag-aware objects you need to use {{force_tag()}} instead.
-//   This works by setting the `$tag` variable, but it provides extra error checking and
-//   handling of scopes.  You may set `$tag` directly yourself, but this is not recommended.
+//   Assigns the specified tag to all of the children. Note that if you want to apply a tag to
+//   non-tag-aware objects you need to use {{force_tag()}} instead. This works by setting the `$tag`
+//   variable, but it provides extra error checking and handling of scopes.  You may set `$tag`
+//   directly yourself, but this is not recommended.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1234,12 +1262,12 @@ module tag_this(tag)
 // Usage:
 //   PARENT() force_tag([tag]) CHILDREN;
 // Description:
-//   You use this module when you want to make a non-attachable or non-BOSL2 module respect tags.
-//   It applies to its children the tag specified (or the tag currently in force if you don't specify a tag),
-//   making a final determination about whether to show or hide the children.
+//   You use this module when you want to make a non-attachable or non-BOSL2 module respect tags. It
+//   applies to its children the tag specified (or the tag currently in force if you don't specify a
+//   tag), making a final determination about whether to show or hide the children.
 //   This means that tagging is ignored in children's children.
-//   This module is specifically provided for operating on children that are not tag aware such as modules
-//   that don't use {{attachable()}} or built in modules such as
+//   This module is specifically provided for operating on children that are not tag aware such as
+//   modules that don't use {{attachable()}} or built in modules such as
 //   - `polygon()`
 //   - `projection()`
 //   - `polyhedron()`  (or use {{vnf_polyhedron()}})
@@ -1251,12 +1279,12 @@ module tag_this(tag)
 //   - `intersection()`
 //   - `hull()`
 //   .
-//   When you use tag-based modules like {{diff()}} with a non-attachable module, the result may be puzzling.
-//   Any time a test occurs for display of child(), that test will succeed.  This means that when diff() checks
-//   to see if it should show a module, it shows the module, and when diff() checks to see if it should subtract the module,
-//   it subtracts the module.  The result appears as a hole, possibly with zero-thickness edges or faces. To
-//   get the correct behavior, every non-attachable module needs an invocation of `force_tag()`, even ones
-//   that are not tagged.
+//   When you use tag-based modules like {{diff()}} with a non-attachable module, the result may be
+//   puzzling. Any time a test occurs for display of child(), that test succeeds.  This means that
+//   when diff() checks to see if it should show a module, it shows the module, and when diff()
+//   checks to see if it should subtract the module, it subtracts the module.  The result appears as
+//   a hole, possibly with zero-thickness edges or faces. To get the correct behavior, every
+//   non-attachable module needs an invocation of `force_tag()`, even ones that are not tagged.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1297,13 +1325,14 @@ module force_tag(tag)
 // Usage:
 //   PARENT() default_tag(tag, [do_tag]) CHILDREN;
 // Description:
-//   Sets a default tag for all of the children.  This is intended to be used to set a tag for a whole module
-//   that is then used outside the module, such as setting the tag to "remove" for easy operation with {{diff()}}.
-//   The default_tag() module sets the `$tag` variable only if it is not already
-//   set so you can have a module set a default tag of "remove" but that tag can be overridden by a {{tag()}}
-//   in force from a parent.  If you use {{tag()}}, it overrides any previously
-//   specified tag from a parent, which can be confusing to a user trying to change the tag on a module.
-//   The `do_tag` parameter allows you to apply a default tag conditionally without having to repeat the children.  
+//   Sets a default tag for all of the children.  This is intended to be used to set a tag for a
+//   whole module that is then used outside the module, such as setting the tag to "remove" for easy
+//   operation with {{diff()}}.
+//   The default_tag() module sets the `$tag` variable only if it is not already set so you can have
+//   a module set a default tag of "remove" but that tag can be overridden by a {{tag()}} in force
+//   from a parent.  If you use {{tag()}}, it overrides any previously specified tag from a parent,
+//   which can be confusing to a user trying to change the tag on a module. The `do_tag` parameter
+//   allows you to apply a default tag conditionally without having to repeat the children.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1340,11 +1369,12 @@ module default_tag(tag,do_tag=true)
 //   tag_scope([scope]) CHILDREN;
 // Description:
 //   Creates a tag scope with locally altered tag names to avoid tag name conflict with other code.
-//   This is necessary when writing modules because the module's caller might happen to use the same tags.
-//   Note that if you directly set the `$tag` variable, then tag scoping will not work correctly.
-//   Usually you would to use tag_scope in the first child of {{attachable()}} to isolate the geometry
-//   of your attachable object.  If you put it **outside** the {{attachable()}} call, then it
-//   sets a scope that also applies to the children passed to your attachable object, which is probably not what you want.  
+//   This is necessary when writing modules because the module's caller might happen to use the same
+//   tags. Note that if you directly set the `$tag` variable, then tag scoping cannot work
+//   correctly. Usually you would to use tag_scope in the first child of {{attachable()}} to isolate
+//   the geometry of your attachable object.  If you put it **outside** the {{attachable()}} call,
+//   then it sets a scope that also applies to the children passed to your attachable object, which
+//   is probably not what you want.
 // Side Effects:
 //   `$tag_prefix` is set to the value of `scope=` if given, otherwise is set to a random string.
 // Example(3D,NoAxes): In this example, tag_scope() is required for things to work correctly. 
@@ -1439,9 +1469,9 @@ module tag_scope(scope){
 // Usage:
 //   diff([remove], [keep]) PARENT() CHILDREN;
 // Description:
-//   Performs a differencing operation using tags to control what happens.  This is specifically intended to
-//   address the situation where you want differences between a parent and child object, something
-//   that is impossible with the native difference() module.
+//   Performs a differencing operation using tags to control what happens.  This is specifically
+//   intended to address the situation where you want differences between a parent and child object,
+//   something that is impossible with the native difference() module.
 //   The children to diff are grouped into three categories, regardless of nesting level.
 //   The `remove` argument is a space delimited list of tags specifying objects to
 //   subtract.  The `keep` argument is a similar list of tags giving objects to be kept.
@@ -1451,12 +1481,12 @@ module tag_scope(scope){
 //   Attachable objects should be tagged using {{tag()}}
 //   and non-attachable objects with {{force_tag()}}.
 //   .
-//   Remember when using tagged operations with that the operations don't happen in hierarchical order, since
-//   the point of tags is to break the hierarchy.  If you tag an object with a keep tag, nothing will be
-//   subtracted from it, no matter where it appears because kept objects are unioned in at the end.
-//   If you want a child of an object tagged with a remove tag to stay in the model it may be
-//   better to give it a tag that is not a remove tag or a keep tag.  Such an object *will* be subject to
-//   subtractions from other remove-tagged objects.
+//   Remember when using tagged operations with that the operations don't happen in hierarchical
+//   order, since the point of tags is to break the hierarchy.  If you tag an object with a keep
+//   tag, nothing is subtracted from it, no matter where it appears because kept objects are unioned
+//   in at the end. If you want a child of an object tagged with a remove tag to stay in the model
+//   it may be better to give it a tag that is not a remove tag or a keep tag.  Such an object *is*
+//   subject to subtractions from other remove-tagged objects.
 //   .
 //   Note that `diff()` invokes its children three times.
 //   .
@@ -1531,7 +1561,7 @@ module tag_scope(scope){
 //           }
 //       }
 //   }
-// Example: This example shows deep nesting, where all the differences cross levels.  Unlike the preceding example, each cylinder is positioned relative to its parent.  Note that it suffices to use two remove tags, alternating between them at each level.
+// Example: This example shows deep nesting, where all the differences cross levels.  Unlike the preceding example, each cylinder is positioned relative to its parent. It suffices to use two remove tags, alternating between them at each level.
 //   $fn=32;
 //   diff("remA")
 //     cyl(r=9, h=6)
@@ -1560,7 +1590,7 @@ module tag_scope(scope){
 //                 right(20)
 //                   circle(5);
 //       }
-// Example: Here is another example where two children are intersected using the native intersection operator, and then tagged with {{force_tag()}}.  Note that because the children are at the same level, you don't need to use a tagged operator for their intersection.
+// Example: Here is another example where two children are intersected using the native intersection operator, and then tagged with {{force_tag()}}. Because the children are at the same level, you don't need to use a tagged operator for their intersection.
 //  $fn=32;
 //  diff()
 //    cuboid(10){
@@ -1588,7 +1618,7 @@ module tag_scope(scope){
 //         tag("keep") position(RIGHT)cyl(r=8,h=12);
 //         tag("fullkeep")cyl(r=1,h=12);
 //     }
-// Example: In this complex example we form an intersection, subtract an object, and keep some objects.  Note that for the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
+// Example: In this complex example we form an intersection, subtract an object, and keep some objects. For the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
 //   $fn=64;
 //   diff()
 //     intersect(keep="remove keep")
@@ -1630,11 +1660,12 @@ module diff(remove="remove", keep="keep")
 // Usage:
 //   tag_diff([tag], [remove], [keep]) PARENT() CHILDREN;
 // Description:
-//   Perform a differencing operation in the manner of {{diff()}} using tags to control what happens,
-//   and then tag the resulting difference object with the specified tag.  This forces the specified
-//   tag to be resolved at the level of the difference operation.  In most cases, this is not necessary,
-//   but if you have kept objects and want to operate on this difference object as a whole object using
-//   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
+//   Perform a differencing operation in the manner of {{diff()}} using tags to control what
+//   happens, and then tag the resulting difference object with the specified tag.  This forces the
+//   specified tag to be resolved at the level of the difference operation. In most cases, this is
+//   not necessary, but if you have kept objects and want to operate on this difference object as a
+//   whole object using more tag operations, you may not get the results you want if you simply use
+//   {{tag()}}.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1701,18 +1732,15 @@ module tag_diff(tag="",remove="remove", keep="keep")
 // Usage:
 //   intersect([intersect], [keep]) PARENT() CHILDREN;
 // Description:
-//   Performs an intersection operation on its children, using tags to
-//   determine what happens.  This is specifically intended to address
-//   the situation where you want intersections involving a parent and
-//   child object, something that is impossible with the native
-//   intersection() module.  This module treats the children in three
-//   groups: objects matching the tags listed in `intersect`, objects
-//   matching tags listed in `keep`, and the remaining objects that
-//   don't match any of the listed tags.  The intersection is computed
-//   between the union of the `intersect` tagged objects and union of the objects that don't
-//   match any of the listed tags.  Finally the objects listed in `keep` are
-//   unioned with the result.  Attachable objects should be tagged using {{tag()}}
-//   and non-attachable objects with {{force_tag()}}.
+//   Performs an intersection operation on its children, using tags to determine what happens. This
+//   is specifically intended to address the situation where you want intersections involving a
+//   parent and child object, something that is impossible with the native intersection() module.
+//   This module treats the children in three groups: objects matching the tags listed in
+//   `intersect`, objects matching tags listed in `keep`, and the remaining objects that don't match
+//   any of the listed tags. The intersection is computed between the union of the `intersect`
+//   tagged objects and union of the objects that don't match any of the listed tags. Finally the
+//   objects listed in `keep` are unioned with the result. Attachable objects should be tagged using
+//   {{tag()}} and non-attachable objects with {{force_tag()}}.
 //   .
 //   Note that `intersect()` invokes its children three times.
 //   .
@@ -1735,7 +1763,7 @@ module tag_diff(tag="",remove="remove", keep="keep")
 //         tag("keep") position(RIGHT)cyl(r=8,h=12);
 //         tag("fullkeep")cyl(r=1,h=12);
 //     }
-// Example: In this complex example we form an intersection, subtract an object, and keep some objects.  Note that for the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
+// Example: In this complex example we form an intersection, subtract an object, and keep some objects. For the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
 //   $fn=64;
 //   diff()
 //     intersect(keep="remove keep")
@@ -1773,11 +1801,12 @@ module intersect(intersect="intersect",keep="keep")
 // Usage:
 //   tag_intersect([tag], [intersect], [keep]) PARENT() CHILDREN;
 // Description:
-//   Perform an intersection operation in the manner of {{intersect()}} using tags to control what happens,
-//   and then tag the resulting difference object with the specified tag.  This forces the specified
-//   tag to be resolved at the level of the intersect operation.  In most cases, this is not necessary,
-//   but if you have kept objects and want to operate on this difference object as a whole object using
-//   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
+//   Perform an intersection operation in the manner of {{intersect()}} using tags to control what
+//   happens, and then tag the resulting difference object with the specified tag. This forces the
+//   specified tag to be resolved at the level of the intersect operation.  In most cases, this is
+//   not necessary, but if you have kept objects and want to operate on this difference object as a
+//   whole object using more tag operations, you may not get the results you want if you simply use
+//   {{tag()}}.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1829,9 +1858,9 @@ module tag_intersect(tag="",intersect="intersect",keep="keep")
 // Usage:
 //   conv_hull([keep]) CHILDREN;
 // Description:
-//   Performs a hull operation on the children using tags to determine what happens.  The items
-//   not tagged with the `keep` tags are combined into a convex hull, and the children tagged with the keep tags
-//   are unioned with the result.
+//   Performs a hull operation on the children using tags to determine what happens.  The items not
+//   tagged with the `keep` tags are combined into a convex hull, and the children tagged with the
+//   keep tags are unioned with the result.
 //   .
 //   Note that `conv_hull()` invokes its children twice.  
 //   .
@@ -1868,11 +1897,12 @@ module conv_hull(keep="keep")
 // Usage:
 //   tag_conv_hull([tag], [keep]) CHILDREN;
 // Description:
-//   Perform a convex hull operation in the manner of {{conv_hull()}} using tags to control what happens,
-//   and then tag the resulting hull object with the specified tag.  This forces the specified
-//   tag to be resolved at the level of the hull operation.  In most cases, this is not necessary,
-//   but if you have kept objects and want to operate on the hull object as a whole object using
-//   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
+//   Perform a convex hull operation in the manner of {{conv_hull()}} using tags to control what
+//   happens, and then tag the resulting hull object with the specified tag.  This forces the
+//   specified tag to be resolved at the level of the hull operation.  In most cases, this is not
+//   necessary, but if you have kept objects and want to operate on the hull object as a whole
+//   object using more tag operations, you may not get the results you want if you simply use
+//   {{tag()}}.
 //   .
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
@@ -1920,7 +1950,8 @@ module tag_conv_hull(tag="",keep="keep")
 // Usage:
 //   hide(tags) CHILDREN;
 // Description:
-//   Hides all attachable children with the given tags, which you supply as a space separated string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.
+//   Hides all attachable children with the given tags, which you supply as a space separated
+//   string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Side Effects:
 //   Sets `$tags_hidden` to include the tags you specify.
@@ -1987,7 +2018,10 @@ module hide_this()
 // Usage:
 //   show_only(tags) CHILDREN;
 // Description:
-//   Show only the children with the listed tags, which you supply as a space separated string.  Only unhidden objects are shown, so if an object is hidden either before or after the `show_only()` call then it remains hidden.  This overrides any previous `show_only()` calls.  Unlike `hide()`, calls to `show_only()` are not cumulative.
+//   Show only the children with the listed tags, which you supply as a space separated string.
+//   Only unhidden objects are shown, so if an object is hidden either before or after the
+//   `show_only()` call then it remains hidden.  This overrides any previous `show_only()` calls.
+//   Unlike `hide()`, calls to `show_only()` are not cumulative.
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Side Effects:
 //   Sets `$tags_shown` to the tag you specify.
@@ -2084,10 +2118,10 @@ module show_int(tags)
 //   attachable(anchor, spin, [orient], geom=) {OBJECT; children();}
 //
 // Description:
-//   Manages the anchoring, spin, orientation, and attachments for OBJECT, located in a 3D volume or 2D area.
-//   A managed 3D volume is assumed to be vertically (Z-axis) oriented, and centered.
-//   A managed 2D area is just assumed to be centered.  The shape to be managed is given
-//   as the first child to this module, and the second child should be given as `children()`.
+//   Manages the anchoring, spin, orientation, and attachments for OBJECT, located in a 3D volume or
+//   2D area. A managed 3D volume is assumed to be vertically (Z-axis) oriented, and centered. A
+//   managed 2D area is just assumed to be centered.  The shape to be managed is given as the first
+//   child to this module, and the second child should be given as `children()`.
 //   For example, to manage a conical shape:
 //   ```openscad
 //   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h) {
@@ -2096,42 +2130,46 @@ module show_int(tags)
 //   }
 //   ```
 //   .
-//   If this is *not* run as a child of `attach()` with the `child` argument
-//   given, then the following transformations are performed in order:
+//   If this is *not* run as a child of `attach()` with the `child` argument given, then the
+//   following transformations are performed in order:
 //   * Translates so the `anchor` point is at the origin (0,0,0).
 //   * Rotates around the Z axis by `spin` degrees counter-clockwise.
 //   * Rotates so the top of the part points toward the vector `orient`.
 //   .
-//   If this is called as a child of `attach(parent,child)`, then the info
-//   for the anchor points referred to by `parent` and `child` are fetched,
-//   which includes position, direction, and spin.  With that info,
-//   the following transformations are performed:
+//   If this is called as a child of `attach(parent,child)`, then the info for the anchor points
+//   referred to by `parent` and `child` are fetched, which includes position, direction, and spin.
+//   With that info, the following transformations are performed:
 //   * Translates this part so its anchor position matches the parent's anchor position.
 //   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
-//   In addition to handling positioning of the attachable object, 
-//   this module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
-//   it is responsible for processing tags and determining whether the object should
-//   display or not in the current context.  The determination based on the tags of whether to display the attachable object
-//   often occurs in this module, meaning that an object that does not display (e.g. a "remove" tagged object
-//   inside {{diff()}}) cannot have internal {{tag()}} calls that change its tags and cause submodel
-//   portions to display: the entire object simply does not run.  If you want the use the attachable object's internal tags outside
-//   of the attachable object you can set `expose_tags=true` to delay the determination to display objects to the children.
-//   For this to work correctly, all of the children must be attachables.  An example situation where you should set
-//   `expose_tags=true` is when you want to have negative space in an attachable object that gets removed from the parent via
-//   a "remove" tagged component of your attachable.  
+//   In addition to handling positioning of the attachable object, this module is also responsible
+//   for handing coloring of objects with {{recolor()}} and {{color_this()}}, and it is responsible
+//   for processing tags and determining whether the object should display or not in the current
+//   context.  The determination based on the tags of whether to display the attachable object often
+//   occurs in this module, meaning that an object that does not display (e.g. a "remove" tagged
+//   object inside {{diff()}}) cannot have internal {{tag()}} calls that change its tags and cause
+//   submodel portions to display: the entire object simply does not run.  If you want the use the
+//   attachable object's internal tags outside of the attachable object you can set
+//   `expose_tags=true` to delay the determination to display objects to the children.
+//   For this to work correctly, all of the children must be attachables.  An example situation
+//   where you should set `expose_tags=true` is when you want to have negative space in an
+//   attachable object that gets removed from the parent via a "remove" tagged component of your
+//   attachable.
 //   .
-//   Application of {{recolor()}} and {{color_this()}} also happens in this module and normally it applies to the
-//   entire attachable object, so coloring commands that you give internally in the first child to `attachable()` have no effect.
-//   Generally it makes sense that if a user specifies a color for an attachable object, the entire object is displayed
-//   in that color, but if you want to retain control of color for sub-parts of an attachable object, you can use
-//   the `keep_color=true` option, which delays the assignment of colors to the child level.  For this to work
-//   correctly, all of the sub-parts of your attachable object must be attachables.  Also note that this option could
-//   be confusing to users who don't understand why color commands are not working on the object.
+//   Application of {{recolor()}} and {{color_this()}} also happens in this module and normally it
+//   applies to the entire attachable object, so coloring commands that you give internally in the
+//   first child to `attachable()` have no effect. Generally it makes sense that if a user specifies
+//   a color for an attachable object, the entire object is displayed in that color, but if you want
+//   to retain control of color for sub-parts of an attachable object, you can use the
+//   `keep_color=true` option, which delays the assignment of colors to the child level.  For this
+//   to work correctly, all of the sub-parts of your attachable object must be attachables. This
+//   option could be confusing to users who don't understand why color commands are not working on
+//   the object.
 //   .
-//   Note that anchors created by attachable() are generally intended for use by the user-supplied children of the attachable object, but they
-//   are available internally and can be used in the object's definition.  
+//   Anchors created by attachable() are generally intended for use by the user-supplied children of
+//   the attachable object, but they are available internally and can be used in the object's
+//   definition.
 //   .
 //   For a step-by-step explanation of making objects attachable, see the [Attachments Tutorial](Tutorial-Attachment-Making).
 //
@@ -2701,16 +2739,18 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
 // Usage:
 //   change_anchors([named],[alias=],[remove=]) PARENT() CHILDREN;
 // Description:
-//   Modifies the named anchors propagated an object or adds new named anchors.  The `named` parameter gives a list
-//   of new or replacement named anchors, specified in the usual way with {{named_anchor()}}.
-//   The `alias` parameter specifies a list of pairs of the form `[newname, anchor]` where
-//   `newname` is a new anchor name and `anchor` is an existing anchor for the object, either a named anchor or a regular anchor.  The
-//   existing anchor will be propagated to the child under the new name.  The old name is not changed,
-//   and will also be propagated to the child.   The `remove` parameter removes named anchors defined by the object
-//   so they are not propagated to the child.  You can use it to remove an anchor that you have
-//   aliased so that only the new name propagates to the child.
+//   Modifies the named anchors propagated an object or adds new named anchors.  The `named`
+//   parameter gives a list of new or replacement named anchors, specified in the usual way with
+//   {{named_anchor()}}. The `alias` parameter specifies a list of pairs of the form `[newname,
+//   anchor]` where `newname` is a new anchor name and `anchor` is an existing anchor for the
+//   object, either a named anchor or a regular anchor. The existing anchor is propagated to the
+//   child under the new name.  The old name is not changed, and is also propagated to the child.
+//   The `remove` parameter removes named anchors defined by the object so they are not propagated
+//   to the child. You can use it to remove an anchor that you have aliased so that only the new
+//   name propagates to the child.
 //   .
-//   This works by setting a `$change_anchors` which will be interpreted by the first `attachable()` child invocation.                  
+//   This works by setting a `$change_anchors`, which is interpreted by the first `attachable()`
+//   child invocation.
 // Arguments:
 //   named = list of named anchors to add
 //   ---
@@ -3055,7 +3095,7 @@ function define_part(name, geom, inside=false, T=IDENT) =
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Attachment internal functions
 
@@ -3277,8 +3317,8 @@ function _attach_transform(anchor, spin, orient, geom, p) =
         spin=default(spin,0),
         orient=default(orient,UP),
         two_d = _attach_geom_2d(geom),
-        m = is_def($attach_to) ?   // $attach_to is the attachment point on this object
-              (                       // which will attach to the parent
+        m = is_def($attach_to) ?   // $attach_to is this object's attachment point
+              (                    // that will attach to the parent
                    let(
                         anch = _find_anchor($attach_to, geom),
                         // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
@@ -3326,7 +3366,7 @@ function _get_cp(geom) =
     )
     cp == "centroid" ? (
        assert(is_vnf || in_list(geom[0],["rgn_extent","rgn_isect","extrusion_extent","extrusion_isect"]),
-              "\ncp=\"centroid\" is only allowed for VNF, region, and extruded-region attachment geometries.")
+              "\ncp=\"centroid\" is allowed only for VNF, region, and extruded-region attachment geometries.")
        is_vnf && len(geom[1][1])==0
           ? [0,0,0]
           : centroid(geom[1])
@@ -3454,9 +3494,9 @@ function _find_anchor(anchor, geom)=
 
             // If the anchor is an edge anchor and not horizontal we point spin UP
             // If the anchor is horizontal edge we point spin clockwise:
-            //     cross product of UP with the edge direction will point OUT if we are on top and edge direction
-            //     is correct.  We check if it points out by comparing to the final_dir which points out at that edge,
-            //     with a correction for top/bottom (anchor.z).  
+            //     cross product of UP with the edge direction points OUT if we are on top and edge
+            //     direction is correct.  We check if it points out by comparing to the final_dir
+            //     which points out at that edge, with a correction for top/bottom (anchor.z).
             // Otherwise use the standard BACK/UP definition
             // The precomputed oang value seems to be wrong, at least when axis!=UP
             spin = is_def(edgedir) && degenerate ? _compute_spin(final_dir, unit(((BACK+RIGHT)*edgedir)*edgedir))
@@ -3652,8 +3692,8 @@ function _find_anchor(anchor, geom)=
                                      )
                                      _compute_spin(direction, flip*edgedir)
                                   :
-                                     let(  // Determine whether the edge is the right or wrong direction compared to the horizongal face
-                                           // which will determine what clockwise means so we can assign spin
+                                     let(  // Determine whether the edge is the right or wrong direction compared to the horizontal face
+                                           // which determines what clockwise means so we can assign spin
                                          face = select(vnf[1],edgefaces[horiz_face[0]]),
                                          endptidx=search(column(elist,0),face),
                                          hedge = elist[endptidx[0]!=[] ? 0:1],
@@ -3879,17 +3919,18 @@ function _standard_anchors(two_d=false) = [
 // Topics: Attachments, Debugging
 // See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
 // Usage:
-//   PARENT() show_anchors([s], [std=], [custom=]);
+//   PARENT() show_anchors([s], [std=], [custom=], [show_labels=]);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
 //   s = Length of anchor arrows.
 //   ---
-//   std = If true show standard anchors.  Default: true
-//   custom = If true show named anchors.  Default: true
+//   std = If true, show standard anchors. Default: true
+//   custom = If true, show named anchors. Default: true
+//   show_labels = If true, show custom anchor labels. Default: true
 // Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
-module show_anchors(s=10, std=true, custom=true) {
+module show_anchors(s=10, std=true, custom=true, show_labels=true) {
     check = assert($parent_geom != undef);
     two_d = _attach_geom_2d($parent_geom);
     if (std) {
@@ -3901,8 +3942,8 @@ module show_anchors(s=10, std=true, custom=true) {
             }
         }
     }
-    textsize = s/4;
     if (custom) {
+        textsize = s/4;
         for (anchor=last($parent_geom)) {
             attach(anchor[0]) {
                 if(two_d) {
@@ -3910,34 +3951,30 @@ module show_anchors(s=10, std=true, custom=true) {
                 } else {
                     anchor_arrow(s, color="cyan");
                 }
-
-                color("white")
-                tag("anchor-arrow") {
-                    if(two_d)
-                        back(s/2)
-                        square([s/4.5*len(anchor[0]), s*.37], center=true);
-                    else
-                        up(s*.45)
-                        xrot(90)
-                        cube([s/4.5*len(anchor[0]), s*.37, 0.01], center=true);
-                }
-                color("black")
-                tag("anchor-arrow") {
-                    if(two_d)
-                        back(s/2)
-                            text(text=anchor[0], size=textsize, halign="center", valign="center", font="Helvetica", $fn=36);
-                    else
-                        up(s*.45)
-                        xrot(90)
-                        yrot_copies(n=2)
-                        up(s/30)
-                              text3d(text=anchor[0],h=.01, size=textsize, center=true, font="Helvetica", $fn=36);
+                if (show_labels) {
+                    color("white") tag("anchor-arrow") {
+                        if(two_d)
+                            back(s/2)
+                            square([s/4.5*len(anchor[0]), s*.37], center=true);
+                        else
+                            up(s*.45) xrot(90)
+                            cube([s/4.5*len(anchor[0]), s*.37, 0.01], center=true);
+                    }
+                    color("black") tag("anchor-arrow") {
+                        if(two_d)
+                            back(s/2)
+                            text(text=anchor[0], size=textsize, halign="center", valign="center", font="Liberation Sans", $fn=36);
+                        else
+                            up(s*.45) xrot(90) yrot_copies(n=2) up(s/30)
+                            text3d(text=anchor[0],h=.01, size=textsize, center=true, font="Liberation Sans", $fn=36);
+                    }
                 }
             }
         }
     }
     children();
 }
+
 
 
 // Module: anchor_arrow()
@@ -4006,9 +4043,11 @@ module anchor_arrow2d(s=10, color=[0.333,0.333,1], $tag="anchor-arrow") {
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
 // Description:
-//   Used in combination with show_anchors() to display an object transparently, in gray by default, with its anchors in solid color.
-//   Children appear transparent and any anchor arrows drawn appear in solid color.  If you use {{recolor()}} before calling `expose_anchors()`
-//   then the children will be given the specified color.  
+//   Used in combination with show_anchors() to display an object transparently, in gray by default,
+//   with its anchors in solid color.
+//   Children appear transparent and any anchor arrows drawn appear in solid color.  If you use
+//   {{recolor()}} before calling `expose_anchors()` then the children are given the specified
+//   color.
 // Arguments:
 //   opacity = The opacity of the children.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
 // Example(FlatSpin,VPD=333):
@@ -4228,7 +4267,7 @@ EDGES_ALL = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];
 /// See Also: EDGES_NONE, EDGES_ALL, edges()
 /// Description:
 ///   The vectors pointing to the center of each edge of a unit sized cube.
-///   Each item in an edge array will have a corresponding vector in this array.
+///   Each item in an edge array has a corresponding vector in this array.
 EDGE_OFFSETS = [
     [
         [ 0,-1,-1],
@@ -4395,7 +4434,7 @@ CORNERS_ALL = [1,1,1,1,1,1,1,1];
 /// Topics: Corners
 /// Description:
 ///   The vectors pointing to each corner of a unit sized cube.
-///   Each item in a corner array will have a corresponding vector in this array.
+///   Each item in a corner array has a corresponding vector in this array.
 /// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 CORNER_OFFSETS = [
     [-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
@@ -4454,7 +4493,7 @@ function _corner_set(v,name) =
 /// Description:
 ///   Takes a list of corner set descriptors, and returns a normalized corners array
 ///   that represents all those given corners.  If the `except` argument is given
-///   a list of corner set descriptors, then all those corners will be removed
+///   a list of corner set descriptors, then all those corners are removed
 ///   from the returned corners array.  If either argument has only a single corner
 ///   set descriptor, you do not have to pass it in a list.
 function _corners(v, except=[]) =
@@ -4583,7 +4622,7 @@ function _force_anchor_2d(anchor) =
 // anchor_dir assumed to be a unit vector; no assumption on spin_dir
 // Takes the component of the spin direction perpendicular to the anchor
 // direction and gives the spin angle that achieves it.
-// backup_dir will be used instead of spin_dir if anchor_dir is parallel to spin_dir
+// backup_dir is used instead of spin_dir if anchor_dir is parallel to spin_dir
 function _compute_spin(anchor_dir, spin_dir, backup_dir) =
    let(
         native_dir = rot(from=UP, to=anchor_dir, p=BACK),
@@ -4618,13 +4657,15 @@ function _canonical_edge(edge) =
 // Usage: in development releases only
 //   PARENT() { desc=parent(); CHILDREN; }
 // Description:
-//   Returns a description of the closest attachable ancestor in the geometry tree, along with the current transformation.  You can use this
-//   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
-//   restore the context of the parent object and transformation state using {{restore()}}.  Note that with OpenSCAD 2021.01 you need to use `let` for
-//   this function to work, and the definition of the variable is scoped to the children of the let module.
-//   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
-//   related to transformation operations then the transformation that parent() returns is likely to be incorrect, even if OpenSCAD
-//   continues to run and produces a valid result.  
+//   Returns a description of the closest attachable ancestor in the geometry tree, along with the
+//   current transformation.  You can use this description to create new objects based on the
+//   described object or perform computations based on the described object.  You can also use it to
+//   restore the context of the parent object and transformation state using {{restore()}}.  Note
+//   that with OpenSCAD 2021.01 you need to use `let` for this function to work, and the definition
+//   of the variable is scoped to the children of the `let` module. (In development versions the use
+//   of `let` is no longer necessary.)  Note that if OpenSCAD displays any warnings related to
+//   transformation operations then the transformation that `parent()` returns is likely to be
+//   incorrect, even if OpenSCAD continues to run and produces a valid result.
 /// The fourth description field stores anchor, spin, orient, size, and inside-part state.
 function parent() =
     let(
@@ -4645,14 +4686,17 @@ function parent() =
 // Usage: in development releases only
 //   PARENT() { desc=parent_part(name, [ind]); CHILDREN; }
 // Description:
-//   Returns a description of the parent part with the specified name.  You can use this
-//   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
-//   restore the context of the parent object and transformation state using {{restore()}}.  Note that with OpenSCAD 2021.01 you need to use `let` for
-//   this function to work, and the definition of the variable is scoped to the children of the let module.
-//   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
-//   related to transformation operations then the transformation that parent_part() returns is likely to be incorrect, even if OpenSCAD
-//   continues to run and produces a valid result.  If the chosen part is a compound part then you select which component you want by giving the index, `ind`.
-//   The index wraps around in both directions, so it will always select some component.  
+//   Returns a description of the parent part with the specified name. You can use this description
+//   to create new objects based on the described object or perform computations based on the
+//   described object.  You can also use it to restore the context of the parent object and
+//   transformation state using {{restore()}}. With OpenSCAD 2021.01, you need to use `let` for this
+//   function to work, and the definition of the variable is scoped to the children of the `let`
+//   module. (In development versions the use of `let` is no longer necessary.)  Note that if
+//   OpenSCAD displays any warnings related to transformation operations then the transformation
+//   that `parent_part()` returns is likely to be incorrect, even if OpenSCAD continues to run and
+//   produces a valid result.  If the chosen part is a compound part then you select which component
+//   you want by giving the index, `ind`.
+//   The index wraps around in both directions, so it always selects some component.  
 //   The default index is zero; the index has no effect for simple parts
 // Arguments:
 //   name = name of part whose description is returned
@@ -4696,12 +4740,14 @@ function parent_part(name,ind=0) =
 // Usage:
 //   restore([desc]) CHILDREN;
 // Description:
-//   Restores the transformation and parent geometry contained in the specified description that you obtained with {{parent()}}.  
-//   If you don't give a description then restores the global world coordinate system with a zero size cuboid object as the parent.
+//   Restores the transformation and parent geometry contained in the specified description that you
+//   obtained with {{parent()}}. If you don't give a description then restores the global world
+//   coordinate system with a zero size cuboid object as the parent.
 //   .
-//   Be careful not to use restore() as a descendent of code that duplicates its children such as {{attach()}} or {{align()}} with anchor or alignment lists, or
-//   any of the distributors such as {{move_copies()}}.  This will result in the entire restored
-//   geometry being duplicated multiple times onto itself, which will look identical, but make your model less efficient.  
+//   Be careful not to use restore() as a descendent of code that duplicates its children such as
+//   {{attach()}} or {{align()}} with anchor or alignment lists, or any of the distributors such as
+//   {{move_copies()}}. This results in the entire restored geometry being duplicated multiple times
+//   onto itself, which looks identical, but makes your model less efficient.
 // Arguments:
 //   desc = saved description to restore.  Default: restore to world coordinates
 // Example(3D):  The pink cube is a child of the green cube, but {{restore()}} restores the state to the yellow parent cube, so the pink cube attaches to the yellow cube
@@ -4737,7 +4783,8 @@ module restore(desc)
 //   point = desc_point(desc, [p]);
 //   point = desc_point(desc, anchor=);
 // Description:
-//   Computes the coordinates of the specified point or anchor point in the given description relative to the current transformation state.
+//   Computes the coordinates of the specified point or anchor point in the given description
+//   relative to the current transformation state.
 // Arguments:
 //   desc = Description to use to get the point
 //   p = Point or point list to transform.  Default: CENTER (if anchor not given)
@@ -4781,10 +4828,11 @@ function desc_point(desc, p, anchor) =
 //   dir = desc_dir([desc], [dir]);
 //   dir = desc_dir(desc, anchor=);
 // Description:
-//   Computes the direction in the current context of a direction in the context of the description.  You can specify
-//   the direction by giving a direction vector, or you can give an anchor that is interpreted from the description.
-//   If you don't give a description then the direction is computed relative to global world coordinates; in this case you
-//   cannot give an anchor as the direction.  
+//   Computes the direction in the current context of a direction in the context of the description.
+//   You can specify the direction by giving a direction vector, or you can give an anchor that is
+//   interpreted from the description.
+//   If you don't give a description then the direction is computed relative to global world
+//   coordinates; in this case you cannot give an anchor as the direction.
 // Arguments:
 //   desc = Description to use.  Default: use the global world coordinate system
 //   dir = Direction or list of directions to use.  Default: UP (if anchor is not given)
@@ -4819,10 +4867,11 @@ function desc_dir(desc, dir, anchor) =
 /// Synopsis: Converts point data between an anchor frame and the current coordinates.
 /// Topics: Descriptions, Attachments
 /// Description:
-///   Converts point data from the coordinate frame of a description's specified anchor into the current coordinate system.
-///   The frame is determined by the anchor's position, direction, and spin. With `reverse=true`, converts from the current
-///   coordinate system into the anchor frame instead. The default anchor is UP. Intended for 3D rotation and translation;
-///   the frame construction does not preserve scaling or shear.
+///   Converts point data from the coordinate frame of a description's specified anchor into the
+///   current coordinate system. The frame is determined by the anchor's position, direction, and
+///   spin. With `reverse=true`, converts from the current coordinate system into the anchor frame
+///   instead. The default anchor is UP. Intended for 3D rotation and translation; the frame
+///   construction does not preserve scaling or shear.
 function _desc_attach(desc, anchor=UP, p, reverse=false) =
     assert(is_description(desc), "\nInvalid description.")
     let(
@@ -4845,8 +4894,8 @@ function _desc_attach(desc, anchor=UP, p, reverse=false) =
 //   dist = desc_dist(desc1,anchor1,desc2,anchor2);
 //   dest = desc_dist(desc1=, desc2=, [anchor1=], [anchor2=]);
 // Description:
-//   Computes the distance between two points specified using attachable descriptions and optional anchor
-//   points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.
+//   Computes the distance between two points specified using attachable descriptions and optional
+//   anchor points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.
 // Arguments:
 //   desc1 = First description
 //   anchor1 = Anchor for first description
@@ -4910,29 +4959,31 @@ function transform_desc(T,desc) =
 //   This is equivalent to running `multmatrix()` over all the transformations for the children.
 //   This function provides a method for working with descriptions of the whole set of copies by
 //   making all of their descriptions available to the children.  This functionality is useful
-//   primarily when the transformation consists only of translations and rotations and hence
-//   does not change the size or shape of the children.  If you change the shape of the objects, care
-//   is required to ensure that the descriptions match correctly. 
+//   primarily when the transformation consists only of translations and rotations and hence does
+//   not change the size or shape of the children.  If you change the shape of the objects, care is
+//   required to ensure that the descriptions match correctly.
 //   .
-//   In a child object you obtain its description using {{parent()}} as usual.  Once you have
-//   that description you can also access descriptions of the other objects, assuming they have
-//   identical geometry.  (The geometry can vary if you make your object conditional on `$idx` for example.)
+//   In a child object you obtain its description using {{parent()}} as usual.  Once you have that
+//   description you can also access descriptions of the other objects, assuming they have identical
+//   geometry.  (The geometry can vary if you make your object conditional on `$idx` for example.)
 //   To get the next object use `$next()` and to get the previous one use `$prev()`.  You can also
 //   get an arbitrary object description by index using `$desc(i)`.  You can use these descriptions
 //   with {{prism_connector()}} to create prisms between the corresponding objects.
 //   .
-//   Note that in OpenSCAD version 2021.01 you cannot directly call `$next` or the other `$` functions.
-//   You have to write `let(next=$next)` and then you can use the `next()` function.  Similar steps
-//   are necessary for the other functions.  In development versions you can directly invoke `$next()`
-//   and the other functions.  
+//   In OpenSCAD version 2021.01 you cannot directly call `$next` or the other `$` functions. You
+//   have to write `let(next=$next)` and then you can use the `next()` function.  Similar steps are
+//   necessary for the other functions.  In development versions you can directly invoke `$next()`
+//   and the other functions.
 //   .
-//   The descriptions are made available through function literals provided in the `$` variables.  The
-//   available functions are
+//   The descriptions are made available through function literals provided in the `$` variables.
+//   The available functions are
 //   * $next([di], [desc]): Returns the description of the next object, or if `di` is given, the object `di` steps forward.  The indexing wraps around.
 //   * $prev([di], [desc]): Returns the description of the previous object, or if `di` is given, the object `di` steps before.  The indexing wraps around.
-//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does **not** wrap around.  
-//   All of these functions have an optional `desc` parameter, which is the description that will be transformed to produce the next, previous, or indexed
-//   description.  By default `desc` is set to {{parent()}}, but you may wish to use a different description if you have objects that vary.
+//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does **not** wrap around.
+//   .  
+//   All of these functions have an optional `desc` parameter, which is the description that gets
+//   transformed to produce the next, previous, or indexed description. By default `desc` is set to
+//   {{parent()}}, but you may wish to use a different description if you have objects that vary.
 //   .
 //   See the last examples in {{prism_connector()}} for examples using this module.  
 // Arguments:
