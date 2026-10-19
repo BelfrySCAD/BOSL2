@@ -937,8 +937,6 @@ function spur_gear(
     let(
         profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift),
         pr = pitch_radius(circ_pitch, teeth, helical),
-                feee=echo(pr_spur = pr, circ_pitch, teeth, helical), 
-
         or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten),
         rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal),
         anchor_rad = atype=="pitch" ? pr
@@ -962,15 +960,15 @@ function spur_gear(
                 shaft_diam = shaft_diam
             ),
         rvnf = herringbone
-          ? zrot(twist/2, p=linear_sweep(rgn, height=thickness, twist=twist, slices=slices, center=true))
-          : let(
+          ? let(
                 wall_vnf = linear_sweep(rgn, height=thickness/2, twist=twist/2, slices=ceil(slices/2), center=false, caps=false),
                 cap_vnf = vnf_from_region(rgn, transform=up(thickness/2)*zrot(twist/2))
             )
             vnf_join([
                 wall_vnf, zflip(p=wall_vnf),
                 cap_vnf,  zflip(p=cap_vnf),
-            ]),
+            ])
+          : zrot(twist/2, p=linear_sweep(rgn, height=thickness, twist=twist, slices=slices, center=true)),
         vnf = zrot(gear_spin, p=rvnf)
     ) reorient(anchor,spin,orient, h=thickness, r=anchor_rad, p=vnf);
 
@@ -1035,9 +1033,9 @@ module spur_gear(
         attachable(anchor,spin,orient, r=anchor_rad, l=thickness) {
             zrot(gear_spin)
             if (herringbone) {
-                zflip_copy() down(0.01)
+                zflip_copy()
                 linear_extrude(
-                    height=thickness/2+0.01, center=false,
+                    height=thickness/2, center=false,
                     twist=twist/2, slices=ceil(slices/2),
                     convexity=convexity
                 ) {
@@ -1464,7 +1462,7 @@ module ring_gear(
     attachable(anchor,spin,orient, h=thickness, r=atype=="outside"?or:pr) {
         zrot(gear_spin)
         if (herringbone) {
-            zflip_copy() down(0.01)
+            zflip_copy()
             linear_extrude(height=thickness/2, center=false, twist=twist/2, slices=ceil(slices/2), convexity=12) {
                 difference() {
                     circle(r=or);
