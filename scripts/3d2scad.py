@@ -17,7 +17,8 @@
 # In some cases, the operations above can result in non-manifold shapes, such as when two objects
 # share an edge, the resulting edge may be shared by more than two faces.
 #
-# June 2025
+# June 2025: Iniital release
+# October 2026: Added support for exporting STL and 3MF, so this can be used as mesh cleanup/simplification utility.
 
 # TO USE IN OPENSCAD WITH BOLS2 LIBRARY:
 # See VNF documentation at https://github.com/BelfrySCAD/BOSL2/wiki/vnf.scad
@@ -27,6 +28,8 @@
 # vnf_list = include <model.txt>; // end with semicolon
 # // vnf_list now contains a list of VNF (OpenSCAD polyhedron) structures
 # vnf_polyhedron(vnf_list);
+# To use with OpenSCAD's polyhedron(), use a loop to render all polyhedrons:
+#     for(p=vnf_list) polyhedron(points=p[0], faces=p[1]);
 
 import sys
 REQUIRED = ["numpy", "scipy", "trimesh", "open3d", "networkx", "lxml"]   # required libraries not typically included in Python
@@ -248,7 +251,7 @@ def export_openscad_structure(vertices, polygons, nshells, shell_index, precisio
 def main():
     parser = argparse.ArgumentParser(description="3D model to OpenSCAD polyhedron converter", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("input", help="Input STL or 3MF file")
-    parser.add_argument("output", help="Output data file (list of VNF structures)")
+    parser.add_argument("output.ext", help="Output file (list of VNF structures); .ext may be .txt, .3mf, or .stl")
     parser.add_argument("--polycount", type=float, metavar="FRAC", default=0.0,
                         help="Fraction of faces to remove via quadric decimation (0-0.9)")
     parser.add_argument("--quantize", type=float, metavar="GRIDUNIT", default=0.001,
@@ -257,10 +260,21 @@ def main():
                         help="Merge nearby shells within given distance")
     parser.add_argument("--min-faces", type=int, metavar="FACES", default=4,
                         help="Minimum number of faces per shell to include in output")
+    parser.add_argument("--no-merge-coplanar", action="store_true", default=true,
+                        help="Disable merging of coplanar triangles (.scad only)")
     args = parser.parse_args()
 
     precision = max(0, -int(np.floor(np.log10(args.quantize)))) if args.quantize > 0 else 6
-    name = os.path.splitext(os.path.basename(args.output))[0]
+
+    output = args.output
+    ext = os.path.splitext(output)[1].lower()
+
+    if not ext:
+        output += ".txt"
+        ext = ".txt"
+    elif ext not in (".txt", ".stl", ".3mf"):
+        parser.error("Output extension must be .txt, .stl, or .3mf")
+    name = os.path.splitext(os.path.basename(output))[0]
 
     mesh = load_mesh(args.input)
     shells = split_into_shells(mesh)
@@ -291,44 +305,67 @@ def main():
         shells = merged
         print(f"Merged into {len(shells)} shell{'s' if len(shells) != 1 else ''}", flush=True)
 
-    with open(args.output, 'w') as f:
-        for i, shell in enumerate(shells):
-            print(f"Processing shell {i + 1}:", flush=True)
-            shell = remove_invalid_triangles(shell)
-            if args.polycount > 0:
-                shell = decimate_mesh(shell, args.polycount)
+    processed_shells = []
+    for i, shell in enumerate(shells):
+        print(f"Processing shell {i + 1}:", flush=True)
+        shell = remove_invalid_triangles(shell)
+        if args.polycount > 0:
+            shell = decimate_mesh(shell, args.polycount)
 
-            if not shell.is_watertight:
-                print("  Mesh is not watertight after simplification; attempting repair...", flush=True)
-                trimesh.repair.fill_holes(shell)
-                shell.remove_unreferenced_vertices()
-                trimesh.repair.fix_inversion(shell)
-                trimesh.repair.fix_winding(shell)
-                shell.remove_duplicate_faces()
-                if shell.is_watertight:
-                    print("   -> Repair successful, now watertight.", flush=True)
-                else:
-                    print("   -> Repair attempted, still not watertight.", flush=True)
-
-            trimesh.repair.fix_normals(shell)
-            shell = quantize_vertices(shell, args.quantize)
-            shell = remove_zero_area_triangles(shell)
+        if not shell.is_watertight:
+            print("  Mesh is not watertight after simplification; attempting repair...", flush=True)
+            trimesh.repair.fill_holes(shell)
             shell.remove_unreferenced_vertices()
-
-            if len(shell.faces) < args.min_faces:
-                print(f" Skipping shell with only {len(shell.faces)} face{'s' if len(shell.faces) != 1 else ''}", flush=True)
-                nshells = nshells-1
-                continue
-
-            print(f"  Diagnostics:")
-            print(f"   - Watertight: {shell.is_watertight}")
-            print(f"   - Euler number: {shell.euler_number}", flush=True)
+            trimesh.repair.fix_inversion(shell)
+            trimesh.repair.fix_winding(shell)
+            shell.remove_duplicate_faces()
             if shell.is_watertight:
-                genus = (2 - shell.euler_number) // 2
-                print(f"   - Genus: {int(genus)}")
+                print("   -> Repair successful, now watertight.", flush=True)
+            else:
+                print("   -> Repair attempted, still not watertight.", flush=True)
 
-            polygons = merge_coplanar_triangles(shell.vertices, shell.faces)
-            export_openscad_structure(shell.vertices.tolist(), polygons, nshells, i, precision, f)
+        trimesh.repair.fix_normals(shell)
+        shell = quantize_vertices(shell, args.quantize)
+        shell = remove_zero_area_triangles(shell)
+        shell.remove_unreferenced_vertices()
+
+        print(f"  Diagnostics:")
+        print(f"   - Watertight: {shell.is_watertight}")
+        print(f"   - Euler number: {shell.euler_number}", flush=True)
+        if shell.is_watertight:
+            genus = (2 - shell.euler_number) // 2
+            print(f"   - Genus: {int(genus)}")
+
+        if len(shell.faces) < args.min_faces:
+            print(f" Skipping shell with only {len(shell.faces)} faces",
+                  flush=True)
+            continue
+
+        processed_shells.append(shell)
+
+    if not processed_shells:
+        print("No shells to export.", flush=True)
+        sys.exit(1)
+
+    if ext == ".txt":
+        with open(output, "w") as f:
+            for i, shell in enumerate(processed_shells):
+                if args.no_merge_coplanar:
+                    polygons = [tri[::-1].tolist() for tri in shell.faces]
+                else:
+                    polygons = merge_coplanar_triangles(shell.vertices, shell.faces)
+                export_openscad_structure(
+                    shell.vertices.tolist(), polygons,
+                    len(processed_shells), i, precision, f
+                )
+    else:
+        result = trimesh.util.concatenate(processed_shells)
+        result.export(output, file_type=ext[1:])
+        print(
+            f"Exported {len(result.vertices)} vertices and "
+            f"{len(result.faces)} triangles to {output}",
+            flush=True
+        )
 
 if __name__ == "__main__":
     main()
