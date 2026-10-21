@@ -402,17 +402,12 @@ test_gear_skew_angle();
 
 [[test]]
 name = "test_gear_shorten_skew"
-expect_success = false
-assert_no_warnings = false
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
 module test_gear_shorten_skew() {
-    // gear_shorten_skew has a BOSL2 bug: uses undefined variable 'helical'
-    // The function returns undef due to the bug; we just verify it doesn't crash hard
-    s = gear_shorten_skew(teeth1=15, teeth2=24, helical1=45, helical2=30);
+    assert_approx(gear_shorten_skew(teeth1=5, teeth2=7, helical1=45, helical2=30),0.236429832966);
 }
 test_gear_shorten_skew();
 '''
