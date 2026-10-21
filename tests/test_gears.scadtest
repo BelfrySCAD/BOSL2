@@ -209,7 +209,6 @@ test_spur_gear2d();
 
 [[test]]
 name = "test_spur_gear"
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
@@ -221,6 +220,28 @@ module test_spur_gear() {
     assert(len(v[0]) > 0);
 }
 test_spur_gear();
+'''
+
+[[test]]
+name = "test_spur_gear_herringbone"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_spur_gear_herringbone() {
+    $fn = 4;
+    // How far the top face's points are from the bottom face's, seen from above.
+    function ends_apart(vnf) = let(
+        zs = [for (p = vnf[0]) p.z],
+        top = [for (p = vnf[0]) if (approx(p.z, max(zs))) point2d(p)],
+        bot = [for (p = vnf[0]) if (approx(p.z, min(zs))) point2d(p)]
+    ) max([for (p = top) min([for (q = bot) norm(p - q)])]);
+    // A herringbone gear's ends are twisted the same way from its middle, so its top face is its bottom face moved up.
+    assert(ends_apart(spur_gear(mod=2, teeth=12, thickness=10, helical=30, herringbone=true)) < 1e-6);
+    // A helical gear's ends are twisted opposite ways.
+    assert(ends_apart(spur_gear(mod=2, teeth=12, thickness=10, helical=30)) > 0.1);
+}
+test_spur_gear_herringbone();
 '''
 
 [[test]]
