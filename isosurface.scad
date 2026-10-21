@@ -3,7 +3,7 @@
 //   [Metaballs](https://en.wikipedia.org/wiki/Metaballs) (also known as "blobby objects"), are
 //   bounded and closed organic surfaces that smoothly blend together. Metaballs are a specific kind
 //   of [isosurface](https://en.wikipedia.org/wiki/Isosurface).
-//   . 
+//   .
 //   An isosurface, or implicit surface, is a three-dimensional surface representing all points of a
 //   constant value (e.g. pressure, temperature, electric potential, density) in a 3D volume. It's
 //   the 3D version of a 2D contour; in fact, any 2D cross-section of an isosurface **is** a 2D
@@ -57,7 +57,7 @@
 //////////////////////////////////////////////////////////////////////
 
 _BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
-       echo("Warning: isosurface.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+       echo("\u26A0 Warning: isosurface.scad included without std.scad; dependencies may be missing.\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
 
@@ -120,22 +120,9 @@ Vertex and edge layout (heavier = and # indicate closer to viewer):
 z changes fastest, then y, then x.
 */
 
-/// Pair of vertex indices for each edge on the voxel
+/// Pair of vertex indices for each edge on the voxel, always low index to high index (increasing X
+/// or Y), so shared edges are interpolated identically by neighboring voxels
 _MCEdgeVertexIndices = [
-    /*
-    [0, 1],
-    [1, 3],
-    [3, 2],
-    [2, 0],
-    [4, 5],
-    [5, 7],
-    [7, 6],
-    [6, 4],
-    [0, 4],
-    [1, 5],
-    [3, 7],
-    [2, 6]
-    */
     [0,1],  // 0: +Z
     [1,3],  // 1: +Y
     [2,3],  // 2: +Z
@@ -1134,7 +1121,7 @@ bit and vertex (4) the most significant, forms an address ranging from 0 to 31.
 This address is used as an index in _MTriSegmentTable to get the order of edges that are crossed.
 */
 
-// vertices that make each edge
+/// vertices that make each edge, in clockwise winding order for outer edges
 _MTEdgeVertexIndices = [
     [0, 1],
     [1, 3],
@@ -1146,8 +1133,21 @@ _MTEdgeVertexIndices = [
     [2, 4]
 ];
 
-// edge order for drawing a contour (or two contours) through a pixel, for all 32 possibilities of
-// vertices being higher or lower than isovalue
+/// vertices that make each edge, always low index to high index (increasing X or Y),
+/// so shared edges are interpolated identically by neighboring pixels
+_MTEdgeVertexIndices_interp = [
+    [0, 1],
+    [1, 3],
+    [2, 3],
+    [0, 2],
+    [0, 4],
+    [1, 4],
+    [3, 4],
+    [2, 4]
+];
+
+/// edge order for drawing a contour (or two contours) through a pixel, for all 32 possibilities of
+/// vertices being higher or lower than isovalue
 _MTriSegmentTable = [ // marching triangle segment table
     [[], []],            // 0 - 00000
     [[0,4,3], []],       // 1 - 00001
@@ -1368,7 +1368,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
             if(len(sp)>0) [
                 for(p=sp)
                     let(
-                        edge = _MTEdgeVertexIndices[p],
+                        edge = _MTEdgeVertexIndices_interp[p],
                         vi0 = edge[0],
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
@@ -1379,7 +1379,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
             if(len(sp)>0) [
                 for(p=sp)
                     let(
-                        edge = _MTEdgeVertexIndices[p],
+                        edge = _MTEdgeVertexIndices_interp[p],
                         vi0 = edge[0],
                         vi1 = edge[1],
                         denom = f[vi1] - f[vi0],
@@ -1388,6 +1388,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
             ],
         if(len(bbsides)>0) for(b = bbsides)
             let(
+                // vertices in clockwise winding order
                 edge = _MTEdgeVertexIndices[b],
                 vi0 = edge[0],
                 vi1 = edge[1],
@@ -1396,12 +1397,15 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
                 f1 = f[vi1],
                 p0 = vpix[vi0],
                 p1 = vpix[vi1],
-                denom = f1 - f0,
-                umin = abs(denom)<0.00001 ? 0.5 : max(-1e9, min(1e9, isovalmin-f0)) / denom,
-                umax = abs(denom)<0.00001 ? 0.5 : max(-1e9, min(1e9, isovalmax-f0)) / denom,
-                midptmin = p0 + umin*(p1-p0),
-                midptmax = p0 + umax*(p1-p0)
-            ) 
+                // interpolation
+                ie = _MTEdgeVertexIndices_interp[b],
+                a0 = ie[0], a1 = ie[1],
+                dn = f[a1] - f[a0],
+                umin = abs(dn)<0.00001 ? 0.5 : max(-1e9, min(1e9, isovalmin-f[a0])) / dn,
+                umax = abs(dn)<0.00001 ? 0.5 : max(-1e9, min(1e9, isovalmax-f[a0])) / dn,
+                midptmin = vpix[a0] + umin*(vpix[a1]-vpix[a0]),
+                midptmax = vpix[a0] + umax*(vpix[a1]-vpix[a0])
+            )
             if(f0<=isovalmin && isovalmin<=f1 && f1<=isovalmax) [midptmin, p1]
             else if(f0>=isovalmax && isovalmax>=f1 && f1>=isovalmin) [midptmax, p1]
             else if(f1>=isovalmax && isovalmax>=f0 && f0>=isovalmin) [p0, midptmax]
@@ -1468,7 +1472,7 @@ function _mb_cuboid_influence(point, inv_size, xp, ex, neg) = let(
                       :(abs(point.x)^xp + abs(point.y)^xp + abs(point.z)^xp) ^ (1/xp)
 ) neg / dist^ex;
 function _mb_cuboid_cutoff(point, inv_size, xp, cutoff, neg) = let(
-    point = inv_size * point, 
+    point = inv_size * point,
     dist = xp >= 1100 ? max(v_abs(point))
                       : (abs(point.x)^xp + abs(point.y)^xp + abs(point.z)^xp) ^ (1/xp)
 ) neg * mb_cutoff(dist, cutoff) / dist;
@@ -1620,22 +1624,22 @@ function mb_cyl(h,r,rounding=0,r1,r2,l,height,length,d1,d2,d, cutoff=INF, influe
 
 function _mb_disk_basic(point, hl, r, neg) =
     let(
-        rdist=norm([point.x,point.y]), 
+        rdist=norm([point.x,point.y]),
         dist = rdist<r ? abs(point.z) : norm([rdist-r,point.z])
     ) neg*hl/dist;
 function _mb_disk_influence(point, hl, r, ex, neg) =
     let(
-        rdist=norm([point.x,point.y]), 
+        rdist=norm([point.x,point.y]),
         dist = rdist<r ? abs(point.z) : norm([rdist-r,point.z])
     ) neg*(hl/dist)^ex;
 function _mb_disk_cutoff(point, hl, r, cutoff, neg) =
     let(
-        rdist=norm([point.x,point.y]), 
+        rdist=norm([point.x,point.y]),
         dist = rdist<r ? abs(point.z) : norm([rdist-r,point.z])
     ) neg * mb_cutoff(dist, cutoff) * hl/dist;
 function _mb_disk_full(point, hl, r, cutoff, ex, neg) =
     let(
-        rdist=norm([point.x,point.y]), 
+        rdist=norm([point.x,point.y]),
         dist = rdist<r ? abs(point.z) : norm([rdist-r,point.z])
     ) neg*mb_cutoff(dist, cutoff) * (hl/dist)^ex;
 
@@ -1727,7 +1731,7 @@ function mb_connector(p1, p2, r, cutoff=INF, influence=1, negative=false, hide_d
         let(newdv = transform * [each dv,1])
             _mb_capsule_full(newdv, h, r, cutoff, 1/influence, neg), vnf];
 
- 
+
 /// metaball torus
 
 function _mb_torus_basic(point, rmaj, rmin, neg) =
@@ -1760,7 +1764,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, hide_de
             assert(false, "\nBad minor size parameter."),
        neg = negative ? -1 : 1,
        vnf = [neg, hide_debug ? debug_tetra(0.02) : torus(r_maj,r_min,$fn=20)]
-   ) 
+   )
    !is_finite(cutoff) && influence==1 ? [function(point) _mb_torus_basic(point, r_maj, r_min, neg), vnf]
  : !is_finite(cutoff) ? [function(point) _mb_torus_influence(point, r_maj, r_min, 1/influence, neg), vnf]
  : influence==1 ? [function(point) _mb_torus_cutoff(point, r_maj, r_min, cutoff, neg), vnf]
@@ -1839,7 +1843,7 @@ function _debug_cube(size, squareness) =
     ) [pts, faces]; // vnf structure
 
 /// beveled octahedron with squareness argument to approximate mb_octahedron for debug view
-function _debug_octahedron(size, squareness) = 
+function _debug_octahedron(size, squareness) =
     squareness > 0.998 ? octahedron(size)
     : let(
         hw = is_num(size) ? [size,size,size]*0.5 : 0.5*size,
@@ -1923,7 +1927,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   The `bounding_box` parameter can be specified by its minimum and maximum corners:
 //   `[[xmin,ymin,zmin],[xmax,ymax,zmax]]` in 3D, or `[[xmin,ymin],[xmax,ymax]]` in 2D. The bounding
 //   box can also be specified as a scalar size of a cube (in 3D) or square (in 2D) centered on the
-//   origin. The contributions from **all**  metaballs, even those outside the box, are evaluated
+//   origin. The contributions from **all** metaballs, even those outside the box, are evaluated
 //   over the bounding box.
 //   .
 //   This bounding box is divided into grid units, specified as `voxel_size` in 3D or `pixel_size`
@@ -1982,7 +1986,8 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   over a 100×100×100 bounding box requires only 8,000 function values and a modest computation
 //   time. A good rule is to keep the number of voxels below 10,000 for preview, and adjust the
 //   voxel size smaller for final rendering. If you don't specify `voxel_size` or `voxel_count`,
-//   then a default count of 10,000 voxels is used, which should be reasonable for initial preview.
+//   then a default count of 10,648 (22^3) voxels is used, which should be reasonable for initial
+//   preview.
 //   .
 //   In 2D, If you don't specify `pixel_size` or `pixel_count`, then a default count of 1024 pixels
 //   is used, which is reasonable for initial preview. You may find, however, that 2D metaballs are
@@ -1992,6 +1997,13 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   needed, you can also set the parameter `show_stats=true` to get the actual bounds of the voxels
 //   intersected by the surface. With this information, you may be able to decrease run time, or
 //   keep the same run time but increase the resolution.
+//   .
+//   Run time is improved when using this library with
+//   [BelfrySCAD](https://github.com/BelfrySCAD/BelfrySCAD) rather than OpenSCAD, because the
+//   built-in module
+//   [levelset()](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-Extensions#levelset) is
+//   used to compute the isosurfaces, provided the parameters `closed=true` and `show_stats=false`
+//   (defaults). Otherwise the library falls back to computing isosurfaces using OpenSCAD code.
 //   .
 //   ***Metaball functions and user defined functions***
 //   .
@@ -2075,7 +2087,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   result in strange shapes, as shown in Example 17, with the metaball interacting on one side of
 //   the boundary and not interacting on the other side. If you scale a ball, the cutoff value is
 //   also scaled.
-//   . 
+//   .
 //   The `influence` parameter adjusts the strength of the interaction that metaball objects have
 //   with each other. If you increase `influence` of one metaball from its default of 1, then that
 //   metaball interacts with others at a longer range, and surrounding balls grow bigger. The
@@ -2102,13 +2114,13 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   parameters always specify the size of the metaball **in isolation** with `isovalue=1`. The
 //   metaballs can grow much bigger than their specified sizes when they interact with each other.
 //   Changing `isovalue` also changes the sizes of metaballs. They grow bigger than their specified
-//   sizes, even in isolation, if `isovalue < 1` and smaller than their specified sizes if `isovalue
-//   > 1`.
+//   sizes, even in isolation, if `isovalue < 1` and smaller than their specified sizes if
+//   `isovalue > 1`.
 //   .
 //   The built-in metaball functions are listed below. As usual, arguments without a trailing `=`
 //   can be used positionally; arguments with a trailing `=` must be used as named arguments.
 //   .
-//   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius `r` or diameter `d`.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
+//   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius `r` or diameter `d`.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array.
 //   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` parameter specifies the dimensions of the cuboid that circumscribes the rounded shape, which is tangent to the center of each cube face. The `size` parameter may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
 //   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with similar dimensional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_disk()` or `mb_capsule()`, which are less flexible but have faster execution times.
 //   * `mb_disk(h|l|height|length, r|d=)` &mdash; flat disk with rounded edge, using similar dimensional arguments as {{cyl()}}. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
@@ -2347,7 +2359,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       voxel_size=0.4);
 // Example(3D): Next we show how to create a function that works like the built-ins. **This is a full implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. Here, `noisy_sphere_calcs()` is the calculation function that accepts the `point` position argument and any other parameters needed (here `r` and `noise_level`), and returns a single value. Then there is a "master" function `noisy_sphere()` that does some error checking and returns an array consisting of (a) a function literal expression that sets all of your parameters, and (b) another array containing the metaball sign and a simple "debug" VNF representation of the metaball for viewing when `debug=true` is passed to `metaballs()`. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
 //   //
-//   // noisy sphere internal calculation function 
+//   // noisy sphere internal calculation function
 //   
 //   function noisy_sphere_calcs(point, r, noise_level, cutoff, exponent, neg) =
 //       let(
@@ -2487,7 +2499,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   
 //       // Head
 //       move(head + [-4,0,-3])*yrot(45)*xscale(0.75), mb_cyl(d1 = 1.5, d2 = 4, l = 12, rounding=0),
-//       move(head), mb_cuboid(2),    
+//       move(head), mb_cuboid(2),
 //   
 //       // Horns
 //       move(head), mb_connector([0,-2,5],[0,-2.5,8],0.3, cutoff = 1),
@@ -2504,7 +2516,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   metaballs(spec, bbox, voxel_size=vsize);
 // Example(3D,Med,NoAxes,VPD=228,VPT=[1,-5,35]): A model of a bunny, assembled from separate body components made with metaballs, with each component rendered at a different voxel size, and then combined together along with eyes and teeth. In this way, smaller bounding boxes can be defined for each component, which speeds up rendering. A bit more time is saved by saving the repeated components (ear, front leg, hind leg) in VNF structures, to render copies with {{vnf_polyhedron()}}.
 //   torso = [
-//       up(20) * scale([1,1.2,2]), mb_sphere(10), 
+//       up(20) * scale([1,1.2,2]), mb_sphere(10),
 //       up(10), mb_sphere(5) // fatten lower torso
 //   ];
 //   head = [
@@ -2517,11 +2529,11 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       // tail
 //       move([0,15,6]), mb_sphere(2, cutoff = 5)
 //   ];
-//   hind_leg = [ 
+//   hind_leg = [
 //       move([-15,-5,3]) * scale([1.5,4,1.75]), mb_sphere(5),
 //       move([-15,10,3]), mb_sphere(3, negative = true)
 //   ];
-//   front_leg = [ 
+//   front_leg = [
 //       move([-9,-4,30]) * zrot(30) * scale([1.5,5,1.75]), mb_sphere(3),
 //       move([-9,10,30]), mb_sphere(2, negative = true)
 //   ];
@@ -2566,7 +2578,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       // body
 //       scale([1.5,1,1]), mb_disk(17,15), //body
 //       // tail
-//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5) 
+//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5)
 //   ];
 //   metaballs(spec, b_box, voxel_size=0.75);
 //   // add eyeballs
@@ -2593,7 +2605,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       // body
 //       scale([1.5,1,1]), mb_disk(17,15), //body
 //       // tail
-//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5) 
+//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5)
 //   ];
 //   metaballs(spec, b_box, debug=true); // removed voxel_size, set debug=true
 //   // add eyeballs
@@ -2620,7 +2632,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       // body
 //       scale([1.5,1,1]), mb_disk(17,15), //body
 //       // tail
-//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5) 
+//       right(20)*up(8)*yscale(1.7)*yrot(35), mb_cyl(h=15, r1=4, r2=0.5)
 //   ];
 //   metaballs(spec, b_box, debug=true); // removed voxel_size, set debug=true
 //   // add eyeballs
@@ -2659,32 +2671,31 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 $metaball_vnf = undef; // set by module for possible use with children()
 
 module metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, debug=false) {
-    vnflist = metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue, closed, exact_bounds, show_stats, _debug=debug);
-    $metaball_vnf = debug ? vnflist[0] : vnflist; // for possible use with children
+    datalist = metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue, closed, exact_bounds, show_stats, _debug=debug, _fieldarray_only=true);
+    sfc = debug ? datalist[0] : datalist;
+    fieldarray = sfc[0];
+    isoval = sfc[1];
+    newbbox = sfc[2];
+    voxsize = sfc[3];
+    $metaball_vnf = sfc; // for possible use with children
     if(debug) {
         // display debug polyhedrons
-        for(a=vnflist[1])
+        for(a=datalist[1])
             color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
                 vnf_polyhedron(a[1]);
         // display metaball surface as transparent
-        %vnf_polyhedron(vnflist[0], convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
-            children();        
+//        %vnf_polyhedron(sfc, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
+        %isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype, show_stats=show_stats, show_box=show_box, _mball=true)
+            children();
     } else { // debug==false, just display the metaball surface
-        vnf_polyhedron(vnflist, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
+//        vnf_polyhedron(datalist, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
+        isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype, show_stats=show_stats, show_box=show_box, _mball=true)
             children();
     }
-    if(show_box)
-        let(
-            bbox0 = is_num(bounding_box)
-            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
-            : bounding_box,
-            autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
-            voxsize = _getvoxsize(autovoxsize, bbox0, exact_bounds),
-            bbox = _getbbox(voxsize, bounding_box, exact_bounds, undef)
-        ) %translate(bbox[0]) cube(bbox[1]-bbox[0]);
 }
 
-function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, show_stats=false, _debug=false) =
+
+function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, show_stats=false, _debug=false, _fieldarray_only=false) =
     assert(all_defined([spec, bounding_box]), "\nThe parameters spec and bounding_box must both be defined.")
     assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
     assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or not given.")
@@ -2729,7 +2740,8 @@ function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, clos
         //total = _sum(allvals,allvals[0]*_EPSILON),
         total = _sum(slice(allvals,1,-1), allvals[0]),
         fieldarray = list_to_matrix(list_to_matrix(total,len(zset)),len(yset)),
-        surface = isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, show_stats=show_stats, _mball=true)
+        surface = _fieldarray_only ? [fieldarray, isoval, newbbox, voxsize]
+            : isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, show_stats=show_stats, _mball=true)
     ) _debug ? [
         surface, [
             for(i=[0:2:len(funclist)-1])
@@ -2738,6 +2750,7 @@ function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, clos
         ]
     ]
     : surface;
+
 
 /// internal function: unwrap nested metaball specs in to a single list
 function _mb_unwind_list(list, parent_trans=[IDENT], depth=0, twoD=false) =
@@ -2765,7 +2778,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT], depth=0, twoD=false) =
                     each [trans, list[j]]
                 else if (is_list(list[j][0])) // likely a nested spec if not a function
                     each _mb_unwind_list(list[j], [trans], depth+1, twoD)
-                else                 
+                else
                     assert(false, str("\nExpected function literal or list at position ",j,", depth ",depth,"."))
     ];
 
@@ -2929,7 +2942,7 @@ function mb_connector2d(p1, p2, r, cutoff=INF, influence=1, negative=false, hide
         let(newdv = transform * [each dv,1])
             _mb_stadium_full(newdv, h, r, cutoff, 1/influence, neg), poly];
 
- 
+
 /// metaball ring or annulus
 
 function _mb_ring_full(point, rmaj, rmin, cutoff, ex, neg) =
@@ -2992,7 +3005,7 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   can result in strange shapes, as shown in Example 9, with the metaball interacting on one side
 //   of the boundary and not interacting on the other side. If you scale a ball, the cutoff value is
 //   also scaled.
-//   . 
+//   .
 //   The `influence` parameter adjusts the strength of the interaction that metaball objects have
 //   with each other. If you increase `influence` of one metaball from its default of 1, then that
 //   metaball interacts with others at a longer range, and surrounding balls grow bigger. The
@@ -3025,7 +3038,7 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   The built-in 2D metaball functions are listed below. As usual, arguments without a trailing `=`
 //   can be used positionally; arguments with a trailing `=` must be used as named arguments.
 //   .
-//   * `mb_circle(r|d=)` &mdash; circular metaball, with radius `r` or diameter `d`.  You can create an ellipse using `scale()` as the last transformation entry of the metaball `spec` array. 
+//   * `mb_circle(r|d=)` &mdash; circular metaball, with radius `r` or diameter `d`.  You can create an ellipse using `scale()` as the last transformation entry of the metaball `spec` array.
 //   * `mb_rect(size, [squareness=])` &mdash; a square/circle hybrid known as a squircle, appearing as a square with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (circular) to 1 (square), and defaults to 0.5. The `size` parameter specifies the dimensions of the squircle that circumscribes the rounded shape, which is tangent to the center of each square side. The `size` parameter may be a scalar or a vector, as in {{squircle()}}. Except when `squareness=1`, the sides are always a little bit curved.
 //   * `mb_trapezoid(h, w1|w=, w2|w=, [ang=], [rounding=])` &mdash; rounded trapezoid metaball with arguments similar to {{trapezoid()}}. Any three of the arguments `h` (height), `w1` (bottom width), `w2` (top width), or `ang` (bottom corner angle) may be specified, and `w` sets both `w1` and `w2` to the same size. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a rounded rectangular shape, consider using `mb_rect()`, or `mb_stadium()`, which are less flexible but have faster execution time.
 //   * `mb_stadium(size)` &mdash; rectangle with rounded caps on the narrow ends. The object is a convex hull of two circles. Set the `size` parameter to `[width,height]` to get an object that fits inside a rectangle of that size. Giving a scalar size produces a circle.
@@ -3210,7 +3223,6 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_
             if(len(a[1])>0)
                 color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
                     region(a[1]);
-            //else echo("WARNING: Empty metaball path found!");
         // display metaball as outline
         attachable(anchor, spin, two_d=true, region=regionlist[0], extent=atype=="hull", cp=cp) {
             wid = is_def(pixel_size) ? min(0.5, 0.5 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1]))) : 0.2;
@@ -3244,7 +3256,7 @@ function metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, cl
     assert(is_finite(isovalue) || (is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1])), "\nIsovalue must be a number or a range; a number is the same as [number,INF].")
     assert(len(spec)%2==0, "\nThe spec parameter must be an even-length list of alternating transforms and functions")
     let(
-        isoval = is_list(isovalue) ? isovalue : [isovalue,INF], 
+        isoval = is_list(isovalue) ? isovalue : [isovalue,INF],
         funclist = _mb_unwind_list(spec, twoD=true),
         nballs = len(funclist)/2,
         dummycheck = [
@@ -3374,12 +3386,18 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   mesh. On the other hand, a voxel size of 5 over a 100×100×100 bounding box requires only 8,000
 //   function values and a modest computation time. A good rule is to keep the number of voxels
 //   below 10,000 for preview, and adjust the voxel size smaller for final rendering. If you don't
-//   specify voxel_size or voxel_count then metaballs uses a default voxel_count of 22^3 (10,648),
-//   which should be reasonable for initial preview. Because a bounding box that is too large wastes
-//   time computing function values that are not needed, you can also set the parameter
-//   `show_stats=true` to get the actual bounds of the voxels intersected by the surface. With this
-//   information, you may be able to decrease run time, or keep the same run time but increase the
-//   resolution.
+//   specify `voxel_size` or `voxel_count`, then 10,648 (22^3) voxels are used by default, which
+//   should be reasonable for initial preview. Because a bounding box that is too large wastes time
+//   computing function values that are not needed, you can also set the parameter `show_stats=true`
+//   to get the actual bounds of the voxels intersected by the surface. With this information, you
+//   may be able to decrease run time, or keep the same run time but increase the resolution.
+//   .
+//   Run time for a 3D isosurface is improved when using this library with
+//   [BelfrySCAD](https://github.com/BelfrySCAD/BelfrySCAD) rather than OpenSCAD, because the
+//   built-in module
+//   [levelset()](https://github.com/BelfrySCAD/BelfrySCAD/wiki/Language-Extensions#levelset) is
+//   used to compute the isosurfaces, provided the parameters `closed=true` and `show_stats=false`
+//   (defaults). Otherwise the library falls back to computing isosurfaces using OpenSCAD code.
 
 
 // Function&Module: isosurface()
@@ -3391,7 +3409,8 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 // Usage: As a function
 //   vnf = isosurface(f, isovalue, bounding_box, voxel_size, [voxel_count=], [reverse=], [closed=], [exact_bounds=], [show_stats=]);
 // Description:
-//   Computes a [VNF structure](vnf.scad) of an object bounded by an isosurface or a range between two isosurfaces, within a specified bounding box.
+//   Computes a [VNF structure](vnf.scad) of an object bounded by an isosurface or a range between
+//   two isosurfaces, within a specified bounding box.
 //   .
 //   See [Isosurface contour parameters](#isosurface-contour-parameters) for details about how the
 //   primary parameters work for isosurfaces.
@@ -3407,16 +3426,16 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   .
 //   **Manifold warnings:**
 //   The point list in the generated VNF structure contains many duplicated points. This is normally
-//   not a problem for rendering the shape, but machine roundoff differences may result in Manifold
-//   issuing warnings when doing the final render, causing rendering to abort if you have enabled
-//   the "stop on first warning" setting. You can prevent this by passing the VNF through
+//   not a problem for rendering the shape, but machine roundoff differences may result in
+//   non-manifold warnings when doing the final render, causing rendering to abort if you have
+//   enabled the "stop on first warning" setting. You can prevent this by passing the VNF through
 //   {{vnf_quantize()}} using a quantization of 1e-7, or you can pass the VNF structure into
 //   {{vnf_merge_points()}}, which also removes the duplicates. Additionally, flat surfaces (often
 //   resulting from clipping by the bounding box) are triangulated at the voxel size resolution, and
 //   these can be unified into a single face by passing the vnf structure to {{vnf_unify_faces()}}.
 //   These steps can be computationally expensive and are not normally necessary.
 // Arguments:
-//   f = The isosurface function literal or array. As a function literal, `x,y,z` must be the first arguments. 
+//   f = The isosurface function literal or array. As a function literal, `x,y,z` must be the first arguments.
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
 //   bounding_box = The volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole voxels. When `f` is an array of values, `bounding_box` cannot be supplied if `voxel_size` is supplied because the bounding box is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   voxel_size = Size of the voxels used to sample the bounding box volume, can be a scalar or 3-vector, or omitted if `voxel_count` is set. You may get non-cubical voxels of a slightly different size than requested if `exact_bounds=true`.
@@ -3424,7 +3443,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   voxel_count = Approximate number of voxels in the bounding box. If `exact_bounds=true` then the voxels may not be cubes. Use with `show_stats=true` to see the corresponding voxel size. Default: 22^3 (10648) if `voxel_size` not set
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
-//   exact_bounds = When true, shrinks voxels as needed to fit whole voxels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. Default: false
+//   exact_bounds = When true, shrinks voxels as needed to fit whole voxels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. Default: false if ``f` is a function, true if `f` is an array
 //   show_stats = If true, display statistics in the console window about the isosurface: number of voxels that the surface passes through, number of triangles, VNF bounds, and voxel-rounded bounding box of the surface, which may help you reduce your bounding box to improve speed. Enabling this parameter has a slight speed penalty. Default: false
 //   show_box = (Module only) display the requested bounding box as transparent. This box may appear slightly different than specified if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
@@ -3506,7 +3525,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 // Example(3D,NoAxes): Example of a bounded isosurface.
 //   isosurface(
 //       function (x,y,z)
-//           let(a=xyz_to_spherical([x,y,z]), 
+//           let(a=xyz_to_spherical([x,y,z]),
 //               r=a[0],
 //               phi=a[1],
 //               theta=a[2]
@@ -3516,7 +3535,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //       voxel_size = 0.25);
 // Example(3D,NoAxes): Another example of a bounded isosurface.
 //   isosurface(function (x,y,z)
-//         2*(x^4 - 2*x*x + y^4 
+//         2*(x^4 - 2*x*x + y^4
 //            - 2*y*y + z^4 - 2*z*z) + 3,
 //       bounding_box=3, voxel_size=0.07,
 //       isovalue=[-INF,0]);
@@ -3587,49 +3606,31 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //          voxel_size=10);
 
 module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, _mball=false) {
-    vnf = isosurface(f, isovalue, bounding_box, voxel_size, voxel_count, reverse, closed, exact_bounds, show_stats, _mball);
-    vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
-        children();
+    levset = closed && !reverse && !show_stats && !is_undef($_SUPPORTED_FEATURE) && supported_feature("levelset");
+    if (levset) {
+        chk = _isochecks(f, isovalue, bounding_box, voxel_size, voxel_count, exact_bounds, _mball);
+        levelset(f, bounds=chk[2], isovalue=[chk[0],chk[1]], edge=chk[3][0])
+            children();
+    } else {
+        vnf = isosurface(f, isovalue, bounding_box, voxel_size, voxel_count, reverse, closed, exact_bounds, show_stats, _mball);
+        vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
+            children();
+    }
     if(show_box)
         let(
-            bbox0 = is_num(bounding_box)
-            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
-            : bounding_box,
-            autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
-            exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),
-            voxsize = _mball ? voxel_size : _getvoxsize(autovoxsize, bbox0, exactbounds),
-            bbox = _mball ? bounding_box : _getbbox(voxsize, bbox0, exactbounds, f)
+            chk = _isochecks(f, isovalue, bounding_box, voxel_size, voxel_count, exact_bounds, _mball), //isovalmin, isovalmax, bbox, voxsize
+            bbox = chk[2]
         ) %translate(bbox[0]) cube(bbox[1]-bbox[0]);
 }
 
-function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
-    assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
-    assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
-    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size,3) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
-    assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
-    assert(is_function(f) ||
-        (is_list(f) &&
-            // _mball=true allows voxel_size and bounding_box to coexist with f as array, because metaballs() already calculated them
-            (_mball || 
-                ((is_def(bounding_box) && is_undef(voxel_size)) || (is_undef(bounding_box) && is_def(voxel_size)))
-            )
-        )
-        , "\nWhen f is an array, either bounding_box or voxel_size is required (but not both).")
-    let(
-        isovalmin = is_list(isovalue) ? isovalue[0] : isovalue,
-        isovalmax = is_list(isovalue) ? isovalue[1] : INF,
-        dumiso1 = assert(isovalmin < isovalmax, str("\nBad isovalue range (", isovalmin, ", >= ", isovalmax, "), should be expressed as [min_value, max_value].")),
-        dumiso2 = assert(isovalmin != -INF || isovalmax != INF, "\nIsovalue range must be finite on one end."),
-        exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),
 
-        // new voxel or bounding box centered around original, to fit whole voxels
-        bbox0 = is_num(bounding_box)
-            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
-            : bounding_box,
-        autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
-        voxsize = _mball ? voxel_size : _getvoxsize(autovoxsize, bbox0, exactbounds),
-        bbox = _mball ? bounding_box : _getbbox(voxsize, bbox0, exactbounds, f),
-        bbcheck = assert(all_positive(bbox[1]-bbox[0]), "\nbounding_box must be a vector range [[xmin,ymin,zmin],[xmax,ymax,zmax]]."),
+function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
+    let(
+        chk = _isochecks(f, isovalue, bounding_box, voxel_size, voxel_count, exact_bounds, _mball),
+        isovalmin = chk[0],
+        isovalmax = chk[1],
+        bbox = chk[2],
+        voxsize = chk[3],
         // proceed with isosurface computations
         cubes = _isosurface_cubes(voxsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
@@ -3646,6 +3647,48 @@ function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, re
 ) [trianglepoints, faces];
 
 
+/// internal function: _isochecks()
+/// Do some input error checking, return final isovalues, bounding box, and voxel size.
+function _isochecks(f, isovalue, bounding_box, voxel_size, voxel_count, exact_bounds, _mball) =
+   let(flist = is_list(f), nf = flist ? [len(f)-1, len(f[0])-1, len(f[0][0])-1] : [0,0,0])
+    assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
+    assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
+    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size,3) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
+    assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
+    assert(is_function(f) ||
+        (flist &&
+            // _mball=true allows voxel_size and bounding_box to coexist with f as array, because metaballs() already calculated them
+            (_mball || 
+                ((is_def(bounding_box) && is_undef(voxel_size)) || (is_undef(bounding_box) && is_def(voxel_size)))
+            )
+        )
+        , "\nWhen f is an array, either bounding_box or voxel_size is required (but not both).")
+    assert(is_function(f) || _mball || (flist && is_undef(voxel_count)), "\nCannot specify voxel_count when f is an array; use only bounding_box or voxel_size.")
+    let(
+        isovalmin = is_list(isovalue) ? isovalue[0] : isovalue,
+        isovalmax = is_list(isovalue) ? isovalue[1] : INF,
+        dumiso1 = assert(isovalmin < isovalmax, str("\nBad isovalue range (", isovalmin, ", >= ", isovalmax, "), should be expressed as [min_value, max_value].")),
+        dumiso2 = assert(isovalmin != -INF || isovalmax != INF, "\nIsovalue range must be finite on one end."),
+        exactbounds = is_function(f) && is_def(exact_bounds) ? exact_bounds : flist,
+
+        // new voxel or bounding box centered around original, to fit whole voxels
+        bbox0 = is_num(bounding_box)
+            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
+            : is_undef(bounding_box) ? let(
+                vs=is_num(voxel_size) ? [voxel_size,voxel_size,voxel_size] : voxel_size,
+                hb = [vs.x*nf.x, vs.y*nf.y, vs.z*nf.z] / 2
+              ) [-hb, hb]
+            : bounding_box,
+        autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
+        voxsize = _mball ? voxel_size
+            : flist && is_def(bbox0) ? let(bsiz=bbox0[1]-bbox0[0])
+                [ bsiz.x/nf.x, bsiz.y/nf.y, bsiz.z/nf.z ]
+            : _getvoxsize(autovoxsize, bbox0, exactbounds),
+        bbox = _mball ? bbox0 : _getbbox(voxsize, bbox0, exactbounds, f),
+        bbcheck = assert(all_positive(bbox[1]-bbox[0]), "\nbounding_box must be a vector range [[xmin,ymin,zmin],[xmax,ymax,zmax]].")
+) [ isovalmin, isovalmax, bbox, voxsize ];
+
+
 /// internal function: get voxel size given a desired number of voxels in a bounding box
 function _getautovoxsize(bbox, numvoxels) =
     let(
@@ -3654,11 +3697,11 @@ function _getautovoxsize(bbox, numvoxels) =
         voxvol = bbvol/numvoxels
     ) voxvol^(1/3);
 
-    
+
 /// internal function: get voxel size, adjusted if necessary to fit bounding box
 function _getvoxsize(voxel_size, bounding_box, exactbounds) =
     let(voxsize0 = is_num(voxel_size) ? [voxel_size, voxel_size, voxel_size] : voxel_size)
-        exactbounds ? 
+        exactbounds ?
             let(
                 reqboxsize = bounding_box[1] - bounding_box[0],
                 bbnums = v_ceil(v_div(bounding_box[1]-bounding_box[0], voxsize0)),
@@ -3666,7 +3709,7 @@ function _getvoxsize(voxel_size, bounding_box, exactbounds) =
             ) v_mul(voxsize0, v_div(reqboxsize, newboxsize))
         : voxsize0; // if exactbounds==false, we don't adjust voxel size
 
-        
+
 /// internal function: get bounding box, adjusted in size and centered on requested box
 function _getbbox(voxel_size, bounding_box, exactbounds, f=undef) =
     let(
@@ -3685,7 +3728,7 @@ function _getbbox(voxel_size, bounding_box, exactbounds, f=undef) =
             halfbb = 0.5 * v_mul(voxsize0, bbnums)
         ) [bbcenter - halfbb, bbcenter + halfbb];
 
-        
+
 /// _showstats_isosurface() (Private function) - called by isosurface()
 /// Display statistics about isosurface
 function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
@@ -3713,7 +3756,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
         "\n   Voxel bounding box for isosurface = ", voxbounds,
         "\n"));
 
-        
+
 
 /// ---------- contour stuff starts here ----------
 
@@ -3827,16 +3870,16 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   isoval=-30;
 //   pixsize = 10;
 //   translate([0,0,isoval]) color("green") zrot(-90)
-//       contour(wave2d, 
+//       contour(wave2d,
 //           bounding_box=[[-50,-50],[50,50]],
 //           isovalue=[isoval,INF], pixel_size=pixsize);
 //   %plot3d(wave2d, [-50:pixsize:50],[-50:pixsize:50],
 //          style="quincunx",base=5);
-// Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.  
+// Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
 //   contour(f, isovalue=[-INF,3], bounding_box=8.1);
-// Example(2D,NoAxes): If we instead use a `+INF` bound then we get the bounding box with the flower shape removed.  
+// Example(2D,NoAxes): If we instead use a `+INF` bound then we get the bounding box with the flower shape removed.
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
 //   contour(f, isovalue=[3,INF], bounding_box=8.1);
@@ -3874,7 +3917,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //       r*sin(3*theta-theta^2/20+40*r);
 //   contour(g, bounding_box=[[-23,-13],[9,13]],
 //       isovalue=[0,INF], pixel_size=0.2);
- 
+
 module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_centers=true, smoothing=undef, exact_bounds=false, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, _mball=false) {
     pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, use_centers, smoothing, true, exact_bounds, show_stats, _mball);
     assert(len(pathlist)>0, "\nNo contour lines found! Cannot generate polygon. Check your isovalue.")
@@ -3898,7 +3941,7 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_c
     assert(is_function(f) ||
         (is_list(f) &&
             // _mball=true allows pixel_size and bounding_box to coexist with f as array, because metaballs2d() already calculated them
-            (_mball || 
+            (_mball ||
                 ((is_def(bounding_box) && is_undef(pixel_size)) || (is_undef(bounding_box) && is_def(pixel_size)))
             )
         )
@@ -3906,8 +3949,8 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_c
     assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]),
            "\nThe isovalue parameter must be a list of two numbers")
     let(
-        isovalmin = isovalue[0], 
-        isovalmax = isovalue[1], 
+        isovalmin = isovalue[0],
+        isovalmax = isovalue[1],
         dumiso1 = assert(isovalmin < isovalmax, str("\nBad isovalue range (", isovalmin, ", >= ", isovalmax, "), should be expressed as [min_value, max_value].")),
         dumiso2 = assert(isovalmin != -INF || isovalmax != INF, "\nIsovalue range must be finite on one end."),
         exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),
@@ -3973,11 +4016,11 @@ function _getautopixsize(bbox, numpixels) =
         pixarea = bbarea/numpixels
     ) sqrt(pixarea);
 
-    
+
 /// internal function: get pixel size, adjusted if necessary to fit bounding box
 function _getpixsize(pixel_size, bounding_box, exactbounds) =
     let(pixsize0 = is_num(pixel_size) ? [pixel_size, pixel_size] : pixel_size)
-        exactbounds ? 
+        exactbounds ?
             let(
                 reqboxsize = bounding_box[1] - bounding_box[0],
                 bbnums = v_ceil(v_div(bounding_box[1]-bounding_box[0], pixsize0)),
@@ -3985,7 +4028,7 @@ function _getpixsize(pixel_size, bounding_box, exactbounds) =
             ) v_mul(pixsize0, v_div(reqboxsize, newboxsize))
         : pixsize0; // if exactbounds==false, we don't adjust pixel size
 
-        
+
 /// internal function: get 2D bounding box, adjusted in size and centered on requested box
 function _getbbox2d(pixel_size, bounding_box, exactbounds, f=undef) =
     let(
@@ -4004,7 +4047,7 @@ function _getbbox2d(pixel_size, bounding_box, exactbounds, f=undef) =
             halfbb = 0.5 * v_mul(pixsize0, bbnums)
         ) [bbcenter - halfbb, bbcenter + halfbb];
 
-        
+
 /// _showstats_contour() (Private function) - called by contour()
 /// Display statistics about a contour region
 function _showstats_contour(pixelsize, bbox, isovalmin, isovalmax, pixels, pathlist) = let(
