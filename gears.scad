@@ -3206,27 +3206,18 @@ module enveloping_worm(
 // Usage: As a Module
 //   worm_gear(mod=|circ_pitch=|diam_pitch=, teeth, worm_diam, [worm_starts], [worm_arc], [crowning], [left_handed], [pressure_angle], [backlash], [clearance], [profile_shift], [slices], [shaft_diam], [gear_spin], [thickness=], [min_tip=], [face_chamfer=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Generates a wheel from the swept cutter envelope of a cylindrical worm.
-//   Specify exact axial thickness, or worm_arc, but not both. Without either,
-//   the width corresponds to worm_arc=45. The wheel's axial thickness is never
-//   silently reduced. Tooth tips are locally shortened to meet min_tip.
+//   Generates an enveloping worm gear (also called a worm wheel) that matches to a worm.
+//   You can specify the thickness or the angle that the worm gear wraps around the worm.
+//   A general rule of thumb for thickness is to stay below half the worm diameter.
 //   .
-//   min_tip measures the minimum three-dimensional separation of the two
-//   longitudinal tip-edge polylines of one tooth, including between slices.
-//   This accounts for tooth skew. Impossible requests raise an assertion.
-//   It is not a strength rating or an edge-rounding operation.
+//   The `min_tip` parameter measures the widths of the teeth tops.  The teeth
+//   will be shortened to ensure that they have at least this specified width
+//   on the top and do not come to sharp points.  
+//   The prevent sharp edges around the ring of the worm gear you can
+//   use `face_chamfer`.
 //   .
-//   face_chamfer makes conical trims at the two axial faces. Its length is
-//   an equal setback along the face and along the already shortened rim
-//   polyline in a radial-axial section. Bevel transition rows are inserted
-//   in addition to slices. The result must still satisfy min_tip; an
-//   excessive or subprecision chamfer is rejected, not silently relaxed.
-//   .
-//   For the generating axis distance use worm_gear_dist() with the same pitch,
-//   teeth, worm diameter, starts, pressure angle and profile shift. Choose either
-//   tooth thinning with worm_gear(backlash=...), or increased spacing with
-//   worm_gear_dist(backlash=...) and unthinned teeth; do not double-count play.
-//   Finite-mesh interference depends on slices and $gear_steps.
+//   To correctly position the worm gear relative to the worm use {{worm_gear_dist()}} with the same pitch,
+//   teeth, worm diameter, starts, pressure angle and profile shift. 
 // Arguments:
 //   teeth = Number of wheel teeth; integer greater than 7.
 //   worm_diam = Worm pitch diameter.
@@ -3491,8 +3482,8 @@ function _wormgear_tipchord(r,b,P) =
     let(gap=360/P[11]-(b[1]-b[0]))
     gap<=0 ? -1 : 2*r*sin(gap/2);
 
-// Bracket: lo has enough tip land, hi does not. Returning lo conservatively
-// preserves the target rather than a radius that might fall short of it.
+/// Bracket: lo has enough tip land, hi does not. Returning lo conservatively
+/// preserves the target rather than a radius that might fall short of it.
 function _wormgear_tipradius(z,P,lo,hi,target,nsearch,niters,n=30) =
     n==0 ? lo :
     let(mid=(lo+hi)/2,b=_wormgear_cutlimits(rho=mid,z=z,P=P,nsearch=nsearch,niters=niters))
