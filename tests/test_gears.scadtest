@@ -359,7 +359,7 @@ module test_globoid_worm_gear() {
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
-test_globoid_worm)gear();
+test_globoid_worm_gear();
 '''
 
 
