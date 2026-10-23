@@ -22,14 +22,17 @@ function _gear_legacy_merge(p,n,fname,name) =
     assert(is_undef(p) || is_undef(n), str("\n", fname, ": ",name," supplied positionally and by name"))
     is_undef(p) ? n : p;
 function _gear_legacy_args(fname,slots,extra,old_names,new_names,named,circ_pitch,mod,diam_pitch) =
-    assert(_gear_legacy_missing(extra),str("\n", fname, ": too many positional arguments; use names after the documented positional prefix"))
     let(
         explicit_size=num_defined([mod,circ_pitch,diam_pitch])>0,
         has_pos=!_gear_legacy_missing(slots[0]),
         legacy=has_pos && (len(new_names)==0 || is_undef(slots[0]) || !explicit_size),
         order=legacy?old_names:new_names,
-        excess=[for(i=[0:1:len(slots)-1]) if(i>=len(order) && !_gear_legacy_missing(slots[i])) i],
-        cp=_gear_legacy_merge(legacy && !_gear_legacy_missing(slots[0]) ? slots[0] : undef,circ_pitch,fname,"circ_pitch"),
+        excess=[for(i=[0:1:len(slots)-1]) if(i>=len(order) && !_gear_legacy_missing(slots[i])) i]
+    )
+    assert(_gear_legacy_missing(extra) && len(excess)==0,
+           str("\nToo many positional arguments (only ",len(order),
+               len(order)==1?" is accepted) for ":" are accepted) for ",fname))
+    let(cp=_gear_legacy_merge(legacy && !_gear_legacy_missing(slots[0]) ? slots[0] : undef,circ_pitch,fname,"circ_pitch"),
         names=new_names, values=named,
         dimensions=[for(i=[0:1:len(names)-1])
             let(k=_gear_legacy_index(names[i],order),
@@ -37,7 +40,6 @@ function _gear_legacy_args(fname,slots,extra,old_names,new_names,named,circ_pitc
             _gear_legacy_merge(_gear_legacy_missing(v)?undef:v,values[i],fname,names[i])],
         result=[cp,each dimensions]
     )
-    assert(len(excess)==0,str("\n", fname, ": too many positional arguments; use names after the documented positional prefix"))
     legacy ? echo(str("DEPRECATED: ",fname,
         len(new_names)==0 ? ": name the size measure: mod=, circ_pitch=, or diam_pitch=."
             : ": positional circular pitch; use a named size followed by dimensions, or name dimensions to inherit size.")) result : result;
@@ -131,44 +133,28 @@ function _gear_worm_starts(starts,worm_starts) =
            str("\nstarts (or worm_starts) must be a positive integer; got ",value))
     value;
 
-// Section: Argument conventions
-//   Arguments before the --- separator may be positional; those after it must
-//   be named. A private _named guard marks this boundary in the declarations.
-//   Use only one explicit tooth-size measure: mod=, circ_pitch=, or diam_pitch=.
-//   rack() and rack2d() also accept pitch= as an exact synonym for circ_pitch=;
-//   only one of the four size measures may be defined. Other routines do not
-//   accept named pitch=. Omitted optional parameters and explicit undef use the
-//   same default/inheritance resolution.
-//   Constructors with inheritance use an explicit size first, otherwise the
-//   parent's size, otherwise an error. Dimensional helpers without
-//   inheritance require an explicit size as shown in their Usage lines.
-//   For worm lengths, l, length, h, height, and worm_length are aliases on the
-//   worm constructors; only l is positional in worm(). The globoid wheel takes
-//   worm_length only, to distinguish the mating worm length from its own thickness.
-//   Both worm constructors accept d or worm_diam and starts or worm_starts.
-//   Omitted or undef aliases do not count as supplied; specify only one.
-//   Worm families use left_handed=false by default (right-handed). Only
-//   bevel_gear() also accepts the historical right_handed spelling; specify
-//   one handedness argument there, not both. Its left-handed default is unchanged.
-//   Signed helical controls on spur/ring/rack APIs are unchanged.
 
 // BEGIN GEAR_API_COMPAT
+
 // Section: Parameter order and migration
-//   Only Arguments listed before the --- separator are positional; all later
-//   arguments must be named. Usage marks named arguments with an equals sign.
-//   Size is always named in new calls. During migration, specify a size for
-//   a new positional call: `spur_gear(mod=2,20,10)`. To inherit size, name
-//   dimensions: `spur_gear(teeth=20,thickness=10)`.
-//   Old positional circular pitch is accepted with a deprecation message.
-//   Worm APIs preserve only that leading size spelling; subsequent dimensions
-//   use the current order (d,l for worm; teeth,worm_diam,thickness for worm_gear).
-//   Former positional starts, handedness and other options must now be named.
-//   An initial undef pitch placeholder also selects the old order. For racks,
-//   named pitch= selects the new order just like circ_pitch=, without a warning.
-//   Other routines do not accept named pitch=. Positionals past the documented
-//   prefix are not preserved. Do not combine a non-undef positional pitch with another size.
-//   Delete GEAR_API_COMPAT blocks with tools/remove_compat.py for the final API.
-// END GEAR_API_COMPAT
+
+
+// Section: Legacy Gear Parameters and Migration
+//   Legacy invocation of many gear modules and functions has the form
+//   `spur_gear(circ_pitch, teeth, thickness, ...)`
+//   The gears parameter order is migrating to a unified calling convention
+//   where the size **must** be given as a named parameter:
+//   `mod=`, `circ_pitch=`, or `diam_pitch=`.  You can still give the size first,
+//   so an invocation with 3 positional parameters becomes `spur_gear(circ_pitch=10, 47, 15)`.
+//   Gear parameters can be inherited from parent gears.  If you want to use inheritance, use all named arguments:
+//   `spur_gear(teeth=20, thickness=10)`. Fully named call will always work correctly.  
+//   An old style call such as `spur_gear(5,20,10)` still means circ_pitch 5, 20 teeth and
+//   thickness 10, and emits a deprecation message.  The legacy default gear size, which is no longer supported, was 
+//   `circ_pitch=5`.  The legacy support is temporary and will be removed in July 2027 with the
+//   final migration.  
+
+///   Delete GEAR_API_COMPAT blocks with tools/remove_compat.py for the final API.
+
 
 // Section: Quick Introduction to Gears
 //   This section gives a quick overview of gears with a focus on the information you need
@@ -231,7 +217,8 @@ function _gear_worm_starts(starts,worm_starts) =
 //   `PI*d/teeth` where `d` is the diameter of the pitch circle and `teeth` is the number of teeth on the gear.
 //   This simply divides up the pitch circle into the specified number of teeth.  However, the customary
 //   way to specify metric gears is using the module, ratio of the diameter of the gear to the number of teeth: `m=d/teeth`.
-//   The module is hence the circular pitch divided by a factor of π.  A third way to specify gear sizes is the diametral pitch,
+//   The module is hence the circular pitch divided by a factor of π.  A third way, and the most common for Imperial gears,
+//   is to give the size using the diametral pitch,
 //   which is the number of teeth that fit on a gear with a diameter of one inch, or π times the number of teeth per inch.
 //   Note that for the module or circular pitch, larger values make larger teeth,
 //   but for the diametral pitch, the opposite is true.  Throughout this library, module and circular pitch
@@ -410,15 +397,15 @@ function _gear_worm_starts(starts,worm_starts) =
 //   The effective pressure angle of helical gears is larger than the nominal pressure angle.  This can make it possible
 //   to avoid undercutting without having to use profile shifting, so smaller tooth count gears can be more effective
 //   using the helical form. 
-// Figure(Anim,Med,Frames=10,NoAxes,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible helical gears
+// Figure(Anim,Med,Frames=10,NoAxes,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible (coplanar) helical gears
 //   zrot($t*360/18)
-//     spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=-29, shaft_diam=15);
+//     color("lightblue")spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=-29, shaft_diam=15);
 //   right(gear_dist(mod=5, teeth1=18, teeth2=18, helical=29))
 //     zrot(360/18/2)
 //       zrot(-$t*360/18)
 //         spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=29, shaft_diam=15);
 // Continues:
-//   Helical gears can mesh in a second manner that is different from spur gears: they can turn on skew, or crossed axes.  These are also
+//   Helical gears can mesh in a second manner that is different from spur gears: they can rotate on skew, or crossed axes.  These are also
 //   sometimes called "screw gears".  The general requirement for two non-profile-shifted helical gears to mesh is that the angle 
 //   between the gears' axes must equal the sum of the helical angles of the two gears, thus for parallel axes, the helical
 //   angles must sum to zero.  If helical gears are profile shifted, then in addition to adjusting the distance between the
@@ -544,10 +531,12 @@ function _gear_worm_starts(starts,worm_starts) =
 //      fwd(d)
 //         spur_gear(mod=mod, teeth=teeth1, profile_shift=ps1,gear_spin=-ang*360/teeth1,helical=-30,thickness=15);
 // Subsection: Worm Drive
-//   A worm drive connects perpendicular, offset shafts. The screw-shaped {{worm()}}
-//   meshes with the enveloping wheel made by {{worm_gear()}}. In this pair, the
-//   wheel wraps partway around a cylindrical worm. The speed reduction is the
-//   wheel tooth count divided by the number of worm starts.
+//   A worm drive is a gear system for connecting perpendicular offset shafts.  They offer higher load capacity compared to
+//   crossed helical gears.  The assembly is driven by the "worm", which is a gear that resembles a screw.
+//   Like a screw, it can have one, or several starts.  These starts correspond to teeth on a helical gear;
+//   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
+//   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
+//   superficially resembles a helical gear at a very slight angle, but it has a very different tooth form.  
 //   .
 //   In a double-enveloping pair, {{globoid_worm()}} has an hourglass shape that wraps
 //   around {{globoid_worm_gear()}}, while the wheel also wraps around the worm.
@@ -562,43 +551,106 @@ function _gear_worm_starts(starts,worm_starts) =
 //   middle plane. Leave the wheel at the origin and put the worm at `back(a)` with
 //   `orient=RIGHT`. Use {{worm_dist()}} for `a` in a cylindrical pair or
 //   {{globoid_worm_dist()}} for a globoid pair. No initial tooth-phase rotation is needed.
-// Figure(3D,Med,NoAxes,VPR=[0,0,270]): A cylindrical worm and its enveloping wheel at zero phase.
-//   m=2; N=36; d=24; s=2;
-//   a=worm_dist(mod=m, teeth=N, worm_diam=d, worm_starts=s);
-//   color("lightblue") worm_gear(mod=m, N, d, 12, worm_starts=s);
-//   back(a) worm(mod=m, worm_diam=d, worm_length=36,
-//                             worm_starts=s, orient=RIGHT);
-// Continues:
-//   Match tooth size, start count, `pressure_angle`, and `left_handed`. For a
-//   globoid pair, match `worm_length` and `clearance` as well. `worm_length` means
-//   the working thread length, not a shaft extension. Changing that length
-//   requires updating the globoid wheel too. Its own size is set by `thickness`.
-// Figure(3D,Big,NoAxes,VPR=[0,0,270]): A double-enveloping pair with the ordinary minimum tip width.
-//   m=2; N=55; d=24; s=5; L=35;
-//   a=globoid_worm_dist(mod=m, teeth=N, worm_diam=d, worm_starts=s);
-//   color("lightblue") globoid_worm_gear(mod=m, N, d, 16,
-//                                      worm_starts=s, worm_length=L, backlash=0.1);
-//   back(a) globoid_worm(mod=m, N, d, worm_starts=s,
-//                                    worm_length=L, orient=RIGHT);
-// Continues:
-//   For animation in this reference pose, the wheel's `gear_spin` is
-//   `(left_handed ? -1 : 1)*starts/teeth` times the worm's `gear_spin`. There is
-//   no added initial phase. A rigid transform of the complete pair preserves
-//   this mesh; moving one part to the opposite side is a different arrangement.
-// Figure(3D,Med,Anim,Frames=24,NoAxes): A moving cylindrical pair in the reference pose.
-//   m=2; N=36; d=24; s=2; phase=360*$t; lh=false;
-//   a=worm_dist(mod=m, teeth=N, worm_diam=d, worm_starts=s);
-//   worm_gear(mod=m, N, d, 12, worm_starts=s,
-//             left_handed=lh, gear_spin=(lh?-1:1)*s/N*phase);
-//   back(a) worm(mod=m, d=d, l=36, starts=s, left_handed=lh,
-//                orient=RIGHT, gear_spin=phase);
-// Continues:
-//   The cylindrical wheel supports automatic profile shifting. Pass the same
-//   `profile_shift` and `pressure_angle` to {{worm_dist()}} as to {{worm_gear()}}.
-//   Positive `backlash` can thin teeth or increase the axis spacing; do not apply
-//   both methods for the same requested play. Globoid backlash is applied to its
-//   wheel; {{globoid_worm_dist()}} gives nominal spacing only.
 
+// Figure(3D,Med,NoAxes,VPT=[38.1941,-7.67869,7.95996],VPR=[56.4,0,25],VPD=361.364):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns, its screwing action drives the worm gear.  
+//   starts=2;
+//   ps=0;
+//   dist_ba=0;
+//   gear_ba=0;
+//     worm(
+//          d=44, 
+//          circ_pitch=3*PI,
+//          starts=starts,orient=BACK,lead_in=6,gear_spin=90);
+//   right(worm_dist(worm_diam=44,mod=3,teeth=30, worm_starts=starts,profile_shift=ps,backlash=dist_ba))
+//    color("lightblue")
+//       worm_gear(
+//          circ_pitch=3*PI, 
+//          teeth=30,
+//          worm_diam=44,profile_shift=ps,
+//          worm_starts=starts,backlash=gear_ba,gear_spin=90);
+//   color("black"){
+//      rot($vpr)left(45)back(25)text3d("worm",size=8);
+//      rot($vpr)right(55)back(27)text3d("worm gear",size=8);  
+//   }
+// Continues:
+//   A close look at the worm gear reveals that it differs significantly from a helical or spur gear.
+//   This gear is an "enveloping" gear, which is designed to follow the curved profile of the worm,
+//   resulting in much better contact between the teeth of the worm and the teeth of the worm gear.
+//   The worm shown above is a cylindrical worm, which is the most common type.
+//   It is possible to design the worm with an hourglass shape so it follows the curved shape of its mated gear, resulting
+//   in an enveloping worm.  This configuration, where both gears envelope each other is called double enveloping
+//   or "globoid".  This type of worm gear drive makes better contact between the gears 
+//   but is less often used due to manufacturing complexity and consequent expense.  
+// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): The enveloping (globoid) worm appears on the left in green.  Its sides curve so several teeth can mate with the worm gear, and it requires a complex tooth form.  A cylindrical worm appears on the right in blue.  Note its straight sides.
+//   tilt=20;
+//   starts=1;
+//   ps=0;
+//   pa=27;
+//   dist_ba=0;
+//   gear_ba=0;
+//   xdistribute(spacing=27){
+//      zrot(180)yrot(-tilt)  
+//      union(){
+//       color("lightgreen")
+//         xrot(90) 
+//         zrot(-90)
+//         globoid_worm(     teeth=60,$fn=128, l=50,
+//             d=14, pressure_angle=pa,  mod=3/2,
+//             starts=starts);
+//        right(globoid_worm_dist(worm_diam=14,mod=3/2,teeth=60,worm_starts=starts))
+//          zrot(360/30*.25)
+//            globoid_worm_gear(
+//             mod=3/2,pressure_angle=pa,
+//             teeth=60,worm_length=50,
+//             worm_diam=14,
+//             worm_starts=starts,backlash=gear_ba);
+//      }
+//      yrot(-tilt)
+//      union(){
+//       color("lightblue")
+//         xrot(90) 
+//         zrot(-90)
+//                                worm(l=50, $fn=128,
+//             d=14, pressure_angle=20, left_handed=true,
+//             mod=3/2,//circ_pitch=3*PI/2,
+//             starts=starts);
+//        right(worm_dist(worm_diam=14,mod=3/2,teeth=60, worm_starts=starts,profile_shift=ps,backlash=dist_ba,pressure_angle=pa))
+//          zrot(360/30*.25)
+//            worm_gear(
+//             mod=3/2,pressure_angle=20,
+//             teeth=60,crowning=0,left_handed=true,
+//             worm_diam=14,profile_shift=ps,
+//             worm_starts=starts,backlash=gear_ba);
+//      }  
+//   }
+// Continues:
+//   As usual, a proper mesh requires that the pressure angles match
+//   and the teeth of the worm and worm gear are the same size.
+//   Additionally the worm gear must be constructed to match the
+//   diameter of the worm and the number of starts on the worm.  The
+//   number of starts on the worm changes the angle at of the teeth on
+//   the worm, and hence requires a change to the angle of teeth on
+//   the worm gear.
+//   .
+//   For globoid pairs the worm gear must know the length of the worm
+//   in order to ensure that the teeth don't interfere anywhere along its length, and
+//   the worm needs to know the diameter of the worm gear, which it computes from the tooth count.
+//   Because the gear pairs are designed together, you cannot use a globoid worm with a regular worm
+//   gear, even though the two worm gears look similar.  
+//
+//   To achieve proper mesh, as usual you must separate the gears by the correct distance.  
+//   The {{worm_dist()}} and {{globoid_worm_dist()}} functions give the correct center spacing for the worm from its mating worm gear.  
+//   .  
+//   Worm drives are often "self-locking", which means that torque transmission can occur only from the worm to the worm gear,
+//   so they must be driven by the worm.  Self-locking results from the small lead angle of the worm threads, which produces
+//   high frictional forces at contact.  A multi-start worm has a higher lead angle and as a result is less likely
+//   to be self-locking, so a multi-start worm can be chosen to avoid self-locking.
+//   Since self-locking is associated with friction, self-locking drives have lower efficiency,
+//   usually less than 50%.  Worm drive efficiency can exceed 90% if self-locking is not required.  One consideration
+//   with self-locking systems is that if the worm gear moves a large mass and the drive is suddenly shut off, the
+//   worm gear is still trying to move due to inertia, which can create large loads that fracture the worm.
+//   In such cases, the worm cannot be stopped abruptly but must be allowed to rotate a little further (called "over travel")
+//   after switching off the drive.
 // Subsection: Bevel Gears
 //   Bevel gearing is another way of dealing with intersecting gear shafts.  For bevel gears, the teeth centers lie on
 //   the surface of an imaginary cone, which is the "pitch cone" of the bevel gear.  Two bevel gears can mesh when their pitch cone
@@ -970,7 +1022,7 @@ function spur_gear(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], thickness=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, thickness must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
 
     let(
         shaft_diam=is_undef(shaft_diam)?0:shaft_diam, hide=is_undef(hide)?0:hide,
@@ -1059,7 +1111,7 @@ module spur_gear(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], thickness=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, thickness must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
  
     let(
         shaft_diam=is_undef(shaft_diam)?0:shaft_diam, hide=is_undef(hide)?0:hide,
@@ -1298,7 +1350,7 @@ function spur_gear2d(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
 
     let(
         hide=is_undef(hide)?0:hide, backlash=is_undef(backlash)?0.0:backlash,
@@ -1372,7 +1424,7 @@ module spur_gear2d(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
  
     let(
         hide=is_undef(hide)?0:hide, backlash=is_undef(backlash)?0.0:backlash,
@@ -1504,7 +1556,7 @@ module ring_gear(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], thickness=_gear_args[2], backing=_gear_args[3])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, thickness, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
  
     let(
         herringbone=is_undef(herringbone)?false:herringbone,
@@ -1667,7 +1719,7 @@ module ring_gear2d(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], backing=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
  
     let(
         profile_shift=is_undef(profile_shift)?0:profile_shift,
@@ -1834,7 +1886,7 @@ module rack(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], thickness=_gear_args[2], backing=_gear_args[3])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, thickness, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
  
     let(
         backlash=is_undef(backlash)?0.0:backlash, herringbone=is_undef(herringbone)?false:herringbone,
@@ -1942,7 +1994,7 @@ function rack(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], thickness=_gear_args[2], backing=_gear_args[3])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, thickness, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(
         backlash=is_undef(backlash)?0.0:backlash, herringbone=is_undef(herringbone)?false:herringbone,
@@ -2089,7 +2141,7 @@ function rack2d(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], backing=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
 
     let(
         backlash=is_undef(backlash)?0:backlash, profile_shift=is_undef(profile_shift)?0:profile_shift,
@@ -2197,7 +2249,7 @@ module rack2d(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], backing=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, backing must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
  
     let(
         backlash=is_undef(backlash)?0:backlash, profile_shift=is_undef(profile_shift)?0:profile_shift,
@@ -2331,7 +2383,7 @@ function crown_gear(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], backing=_gear_args[2], face_width=_gear_args[3])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, backing, face_width must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(
         face_width=is_undef(face_width)?10:face_width,
@@ -2427,7 +2479,7 @@ module crown_gear(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], backing=_gear_args[2], face_width=_gear_args[3])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, backing, face_width must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
  
     let(
         face_width=is_undef(face_width)?10:face_width,
@@ -2640,7 +2692,7 @@ function bevel_gear(
     cone_backing, face_width, pressure_angle, clearance, backlash, spiral, cutter_radius,
     right_handed, slices, gear_spin, anchor, spin, orient, _return_anchors, left_handed
 ) =
-    assert(is_undef(_named), "\narguments after teeth, mate_teeth, shaft_angle must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(shaft_angle=default(shaft_angle,90),
         backlash=default(backlash,0.0),
@@ -2803,7 +2855,7 @@ module bevel_gear(
     cone_backing, face_width, shaft_diam, pressure_angle, clearance, backlash, spiral, cutter_radius,
     right_handed, slices, gear_spin, anchor, spin, orient, left_handed
 )
-    assert(is_undef(_named), "\narguments after teeth, mate_teeth, shaft_angle must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(shaft_angle=default(shaft_angle,90),
         cone_backing=default(cone_backing,true),
@@ -2865,6 +2917,12 @@ module bevel_gear(
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
+//   At large `pressure_angle`, adjacent thread flanks can meet before the nominal
+//   root depth, leaving a V-shaped valley instead of a flat root land. This is
+//   allowed; {{worm_root_radius()}} returns the resulting root radius. The
+//   nominal `clearance` depth may not be reached. The full-height thread must
+//   still have a nonzero crest; the error reports the limit when it does not.
+//   .
 //   The worm and wheel must have matching tooth size, start count, `pressure_angle`,
 //   and `left_handed`. On this worm, `d` and `worm_diam` are aliases, as are `starts`
 //   and `worm_starts`. Specify only one spelling of each quantity. The worm's length
@@ -2886,8 +2944,8 @@ module bevel_gear(
 //   `lead_in` makes each thread lower and narrower toward the root near both
 //   ends, avoiding the thin partial threads left by a flat cut. It is measured
 //   around the outside of the worm, not along its axis. A single rounded taper
-//   shape is used. A small bare-core region at the ends is normal. Zero
-//   retains flat-cut ends. A longer lead-in removes more working contact, so
+//   shape is used. The default lead-in is one full tooth depth. A small bare-core
+//   region at the ends is normal. Zero retains flat-cut ends. A longer lead-in removes more working contact, so
 //   keep the worm long enough for the wheel. The overall length, spacing, and
 //   zero-phase convention are unchanged. The core's end edges are not rounded.
 //   This is an attachable module; there is no function/VNF form.
@@ -2897,7 +2955,7 @@ module bevel_gear(
 //   ---
 //   worm_diam = Alias of d. Specify only one diameter spelling.
 //   worm_starts = Alias of starts. Specify only one start-count spelling.
-//   lead_in = Length of the rounded thread taper at each end, measured around the outside of the worm. Zero leaves flat-cut ends. Default: 0
+//   lead_in = Length of the rounded thread taper at each end, measured around the outside of the worm. Zero leaves flat-cut ends. Default: 2*module+clearance (one full tooth depth)
 //   starts = The number of lead starts.  Default: 1
 //   left_handed = If true, select the left-handed form. Default: false (right-handed).
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
@@ -2920,11 +2978,13 @@ module bevel_gear(
 //   worm(circ_pitch=8, d=30, l=50, starts=3, $fn=72);
 // Example: Left Handed
 //   worm(circ_pitch=8, d=30, l=50, starts=3, left_handed=true, $fn=72);
+// Example: High-pressure-angle worm with V-shaped root valleys.
+//   worm(mod=2,d=24,l=35,starts=1,pressure_angle=35,$fn=96);
 // Example: Rounded thread ends, without a bevel.
 //   worm(mod=2, d=24, l=35, starts=5, lead_in=6, $fn=96);
 
-/// The rack supplies the same rounded axial tooth profile as the original
-/// worm. generic_threaded_rod() takes pitch-normalized coordinates measured
+/// The rack supplies the axial tooth corners; _worm_thread_profile() fits
+/// their rounding within a single pitch. generic_threaded_rod() uses coordinates measured
 /// from the OUTSIDE diameter, not the worm pitch diameter. Its lattice begins
 /// at -l/2-pitch; compensate that length-dependent phase so a valley faces -Y
 /// in the middle plane for either handedness and for every start count.
@@ -2943,13 +3003,13 @@ module worm(
         [d,l], circ_pitch, mod, diam_pitch))
     let(circ_pitch=_gear_args[0], d=_gear_args[1], l=_gear_args[2])
     // END GEAR_API_COMPAT
-    assert(is_undef(_named), "\narguments after d and l must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
     let(
         d=_gear_worm_diameter(d,worm_diam,15), l=_gear_worm_length(l,length,h,height,worm_length),
         starts=_gear_worm_starts(starts,worm_starts),
         left_handed=default(left_handed,false), backlash=default(backlash,0),
         gear_spin=default(gear_spin,0), anchor=default(anchor,CENTER),
-        spin=default(spin,0), orient=default(orient,UP), lead_in=default(lead_in,0)
+        spin=default(spin,0), orient=default(orient,UP)
     )
 {
     cp = _inherit_gear_pitch("worm()",circ_pitch,diam_pitch,mod);
@@ -2966,41 +3026,76 @@ module worm(
     assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
     assert(is_bool(left_handed), "\nleft_handed must be boolean")
     assert(is_finite(gear_spin), "\ngear_spin must be finite")
-    assert(is_finite(lead_in) && lead_in>=0, "\nlead_in must be nonnegative and finite; use zero for flat-cut ends")
+    assert(is_undef(lead_in) || (is_finite(lead_in) && lead_in>=0), "\nlead_in must be nonnegative and finite; use zero for flat-cut ends")
     {
+        lead = default(lead_in,2*m+c);
         beta = asin(starts*m/d);
         axial_pitch = cp/cos(beta);
         outside_d = d+2*m;
         sides = quantup(max(36,segs(outside_d/2)),starts);
-        // Keep the rounded tooth, but omit the two valley-to-valley root-flat
-        // extensions. Threading connects profiles across that gap itself; its
-        // blunt-start margins must describe the raised tooth, not a full pitch.
-        tooth = select(rack2d(circ_pitch=cp,teeth=1,pressure_angle=pa,
-                             clearance=c,backlash=backlash,helical=beta,profile_shift=0),2,-3);
-        root_y = min([for(pt=tooth)pt.y]);
-        profile = [for(i=[0:len(tooth)-1])
-            [tooth[i].x/axial_pitch,
-             ((i==0 || i==len(tooth)-1 ? root_y : tooth[i].y)-m)/axial_pitch]];
+        profile = _worm_thread_profile(cp,beta,pa,c,backlash);
         // Check the same quantized limits as the threading generator before dispatch.
         da = 360/sides;
-        la = quantup(360*lead_in/(PI*outside_d),da);
+        la = quantup(360*lead/(PI*outside_d),da);
         first = 360*(-l/(2*axial_pitch)-1)/starts;
         cut1 = quantup(360*(-l/(2*axial_pitch)-profile[0].x)/starts+la-first,da)+first;
         cut2 = quantdn(360*( l/(2*axial_pitch)-last(profile).x)/starts-la-first,da)+first;
-        assert(lead_in==0 || cut1<cut2,
-               "\nlead_in leaves no full-height thread at this length and resolution; reduce lead_in, increase l, or use lead_in=0");
+        assert(lead==0 || cut1<cut2,
+               str("\nlead_in=",lead," leaves no full-height thread at this length and resolution; reduce lead_in, increase l, or use lead_in=0"));
         phase = -90+180/starts-(left_handed?-1:1)*180*l/(starts*axial_pitch);
         attachable(anchor,spin,orient,d=d,l=l) {
             zrot(gear_spin+phase)
                 generic_threaded_rod(d=outside_d,l=l,pitch=axial_pitch,profile=profile,
                     starts=starts,left_handed=left_handed,internal=false,
-                    blunt_start=lead_in>0,lead_in=lead_in,lead_in_shape="sqrt",
+                    blunt_start=lead>0,lead_in=lead,lead_in_shape="sqrt",
                     bevel=false,end_len=0,anchor=CENTER,spin=0,orient=UP,$fn=sides);
             children();
         }
     }
 }
 
+
+/// Actual dedendum of the periodic straight-flank worm. Adjacent threads may
+/// meet before the requested valley depth: keep their EXPOSED boundary rather
+/// than extending overlapping feet or compressing the whole tooth horizontally.
+/// backlash is the axial pitch-line tooth thinning used by worm()/rack2d().
+function _worm_thread_dedendum(m,beta,pa,c,backlash) =
+    pa==0 ? m+c : min(m+c,(PI*m/4+backlash*cos(beta)/2)/tan(pa));
+
+/// Use the rack's unrounded corners, limiting the root fillet to the available
+/// flat land. If adjacent flanks meet above the nominal root, their intersection
+/// is the new valley bottom and there is NO flat root land or root fillet.
+/// Exactly one periodic profile still fits generic_threaded_rod()'s [-.5,.5].
+/// Tip rounding and the straight working flanks are unchanged. The top must
+/// retain positive width; shortening a pointed crest is not done implicitly.
+function _worm_thread_profile(cp,beta,pa,c,backlash) =
+    let(m=cp/PI,ap=cp/cos(beta),dd=_worm_thread_dedendum(m,beta,pa,c,backlash),
+        pa_tip=atan((cp/4-backlash*cos(beta)/2)/m))
+    assert(pa<pa_tip,
+           str("\npressure_angle and backlash leave no full-height tooth tip. For current tooth size and backlash, pressure_angle must be less than ",pa_tip,"; got ",pa))
+    let(corners=select(rack2d(circ_pitch=cp,teeth=1,pressure_angle=pa,
+                            clearance=c,backlash=backlash,helical=beta,
+                            profile_shift=0,rounding=false),2,-3),
+        closed=corners[3].x>=ap/2,
+        A=[-ap/2,-dd],B=closed?A:corners[0],C=corners[1],D=corners[2],
+        F=[ap/2,-dd],E=closed?F:corners[3],
+        tangent=tan((90-atan(tan(pa)/cos(beta)))/2),
+        root_limit=max(0,(ap/2-E.x)/tangent),tip_limit=D.x/tangent,
+        root_r=closed?0:min(c,root_limit),tip_r=min(ap/16,tip_limit),
+        raw=[each (root_r>0?arc(n=4,r=root_r,corner=[A,B,C]):[B]),
+             each arc(n=4,r=tip_r,corner=[B,C,D]),
+             each arc(n=4,r=tip_r,corner=[C,D,E]),
+             each (root_r>0?arc(n=4,r=root_r,corner=[D,E,F]):[E])],
+        // Adjacent tip fillets can meet at exactly one point. Keep it once.
+        tooth=[for(i=[0:len(raw)-1])if(i==0 || norm(raw[i]-raw[i-1])>1e-12*ap)raw[i]],
+        capped=closed || root_r==root_limit,
+        profile=[for(i=[0:len(tooth)-1])
+            let(x=capped && i==0?-.5:capped && i==len(tooth)-1?.5:tooth[i].x/ap,
+                y=i==0 || i==len(tooth)-1?-dd:tooth[i].y)
+            [x,(y-m)/ap]])
+    assert(min([for(p=profile)p.x])>=-.5 && max([for(p=profile)p.x])<=.5,
+           "\nInternal worm profile exceeded one pitch; report the tooth size, diameter, starts, pressure_angle, clearance and backlash")
+    profile;
 
 // Function&Module: worm_gear()
 // Synopsis: Generates an enveloping wheel for a cylindrical worm, with blunt tooth tips.
@@ -3047,6 +3142,11 @@ module worm(
 //   `slices` and `$gear_steps` for smoother teeth and a closer mesh approximation;
 //   finer meshes take longer to generate. The function returns a VNF; the module
 //   creates an attachable solid and can add a `shaft_diam` hole.
+//   At large `pressure_angle`, the extended cutter reaches a point before the
+//   requested root-clearance depth. The wheel uses that shallower root instead
+//   of an inverted cutter tip. Its actual clearance can then be smaller than
+//   `clearance`. This does not change the center spacing or the working flanks.
+//   .
 // Arguments:
 //   teeth = Number of wheel teeth; integer greater than 7.
 //   worm_diam = Worm pitch diameter.
@@ -3097,7 +3197,7 @@ function worm_gear(
         [teeth,worm_diam,thickness], circ_pitch, mod, diam_pitch))
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], worm_diam=_gear_args[2], thickness=_gear_args[3])
     // END GEAR_API_COMPAT
-    assert(is_undef(_named), "\narguments after teeth, worm_diam, thickness must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(
         worm_starts=is_undef(worm_starts)?1:worm_starts, crowning=is_undef(crowning)?0.1:crowning,
@@ -3142,7 +3242,7 @@ module worm_gear(
         [teeth,worm_diam,thickness], circ_pitch, mod, diam_pitch))
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], worm_diam=_gear_args[2], thickness=_gear_args[3])
     // END GEAR_API_COMPAT
-    assert(is_undef(_named), "\narguments after teeth, worm_diam, thickness must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
  
     let(
         worm_starts=is_undef(worm_starts)?1:worm_starts, crowning=is_undef(crowning)?0.1:crowning,
@@ -3189,9 +3289,9 @@ module worm_gear(
 // Topics: Gears, Parts
 // See Also: globoid_worm_gear(), globoid_worm_dist(), worm(), worm_gear(), worm_dist(), globoid_worm_root_radius()
 // Usage: Function
-//   vnf = globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [min_tip=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=], [d=], [lead_in=]);
+//   vnf = globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=], [d=], [lead_in=]);
 // Usage: Module
-//   globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [min_tip=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=], [d=], [lead_in=]) [ATTACHMENTS];
+//   globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=], [d=], [lead_in=]) [ATTACHMENTS];
 // Description:
 //   Creates an enveloping, hourglass-shaped worm that meshes with
 //   {{globoid_worm_gear()}} to form a double-enveloping, or globoid, gear pair.
@@ -3230,15 +3330,26 @@ module worm_gear(
 //   not a manufacturing tolerance or a guarantee of no overlap. `$fn` controls the
 //   shaft hole, not the working tooth surfaces. Set backlash on the matching wheel.
 //   .
-//   `min_tip` sets the minimum width across the full-height tooth tips. An error
+//   `min_tip` sets the minimum retained width across the full-height tooth tips, after rounding. An error
 //   is reported if the nominal tooth shape cannot keep that width. It does not
 //   round the ordinary corners at the thread ends.
+//   .
+//   Optional `rounding` eases the crest shoulders and root corners without changing
+//   the main working flanks. It is a maximum setback in each cross-section, not a
+//   constant 3D fillet radius. Root easing is limited to half the available clearance
+//   region and is disabled when `clearance=0`. Large settings are limited by local
+//   tooth dimensions; a worm whose rounded crest cannot retain `min_tip` reports an error.
+//   The two parts may use different rounding settings. This operation is not a
+//   general edge roundover and does not round the axial end faces or shaft holes.
 //   .
 //   Each thread ends as a complete, blunt section before the flat axial face.
 //   With `lead_in=0`, it stops abruptly in a plane perpendicular to that face,
 //   rather than leaving a thin partial turn. Ordinary corners remain unrounded.
-//   A positive `lead_in` gradually lowers the thread into its curved root near
-//   both ends. This is a height-only transition; the sideways taper is not used.
+//   A positive `lead_in` gradually lowers and visibly narrows the thread near
+//   both ends, easing the entry corners without changing its full-height interior.
+//   The crest narrows smoothly toward half its full-height width as it disappears
+//   into the root. This target refers to the original crest, not the wider root.
+//   The default is one nominal tooth depth, `2*module+clearance`.
 //   `lead_in` is measured around the worm near its ends, not along its axis.
 //   The curved core continues to the requested end planes, so a small exposed
 //   core region is normal. Thread ends remove some potential end contact but do
@@ -3255,11 +3366,12 @@ module worm_gear(
 //   mod = Normal module; mutually exclusive with the other size measures.
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
-//   lead_in = Length of the height-only transition at each thread end, measured around the worm. Zero gives an abrupt blunt cutoff. Default: 0
+//   lead_in = Length of the rounded thread transition at each end, measured around the worm. Zero gives an abrupt blunt cutoff. Default: 2*module+clearance
 //   starts = Number of starts. Default: 1
 //   worm_length = Required full working thread length; l, length, h, and height are aliases. Supply the same length to the mating wheel. Shaft extensions are separate.
 //   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
 //   clearance = Radial tooth-root allowance. Default: module/4
+//   rounding = Maximum corner setback in a meridian or wheel section. Eases crests and fills roots only within the available clearance. Not a constant 3D fillet radius. Default: 0
 //   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
 //   min_tip = Minimum width across the tooth tips; see Description. Default: 0.4*module
 //   left_handed = If true, select the left-handed form. Default: false (right-handed).
@@ -3282,8 +3394,13 @@ module worm_gear(
 // Example: Left-handed worm.
 //   globoid_worm(circ_pitch=8, teeth=33, d=30,
 //                starts=3, worm_length=25, left_handed=true);
-// Example: A gradual lead-in on a five-start worm.
+// Example: A longer rounded lead-in on a five-start worm.
 //   globoid_worm(mod=2,55,24,starts=5,worm_length=35,lead_in=6);
+// Example(3D,Big): Abrupt ends on the left and the default rounded lead-in on the right.
+//   for (i=[0:1]) right(40*i)
+//       globoid_worm(mod=2,55,24,starts=1,worm_length=35,lead_in=i==0?0:undef);
+// Example: Stronger entry taper with optional crest and root easing.
+//   globoid_worm(mod=2, 55, 24, starts=5, worm_length=35, lead_in=6, rounding=0.2);
 // Example: Called as a function.
 //   vnf = globoid_worm(circ_pitch=8, teeth=37, d=35, starts=2,
 //                      worm_length=30, left_handed=true, pressure_angle=20);
@@ -3291,34 +3408,34 @@ module worm_gear(
 
 function globoid_worm(teeth,worm_diam,_named,
     mod,circ_pitch,diam_pitch,starts,worm_length,pressure_angle,clearance,
-    mesh_tol,gear_spin,anchor,spin,orient,left_handed,min_tip, l, length, h, height, d, worm_starts, lead_in
+    mesh_tol,gear_spin,anchor,spin,orient,left_handed,min_tip, l, length, h, height, d, worm_starts, lead_in, rounding
 ) =
     let(worm_length=_globoid_length(worm_length,l,length,h,height),
         worm_diam=_gear_worm_diameter(d,worm_diam),
         starts=_gear_worm_starts(starts,worm_starts))
 
-    assert(is_undef(_named),"\narguments after worm_diam must be named")
+    assert(is_undef(_named),"\nToo many positional arguments (only 2 are accepted)")
     let(P=_dew_parameters(teeth,worm_diam,mod,circ_pitch,diam_pitch,starts,
                           worm_length,pressure_angle,clearance,left_handed),
         tol=default(mesh_tol,P[0]/100),
-        vnf=_dew_worm(P,tol,default(min_tip,0.4*P[0]),default(lead_in,0)),
+        vnf=_dew_worm(P,tol,default(min_tip,0.4*P[0]),default(lead_in,2*P[0]+P[9]),default(rounding,0)),
         v=_dew_spin_vnf(vnf,default(gear_spin,0),-90+180/P[10]))
     reorient(default(anchor,CENTER),default(spin,0),default(orient,UP),
              r=_dew_worm_radius(P[3]-P[0],P[8],P),h=2*P[8],p=v);
 
 module globoid_worm(teeth,worm_diam,_named,
     mod,circ_pitch,diam_pitch,starts,worm_length,pressure_angle,clearance,
-    mesh_tol,gear_spin,shaft_diam,anchor,spin,orient,left_handed,min_tip, l, length, h, height, d, worm_starts, lead_in
+    mesh_tol,gear_spin,shaft_diam,anchor,spin,orient,left_handed,min_tip, l, length, h, height, d, worm_starts, lead_in, rounding
 ) 
     let(worm_length=_globoid_length(worm_length,l,length,h,height),
         worm_diam=_gear_worm_diameter(d,worm_diam),
         starts=_gear_worm_starts(starts,worm_starts))
 {
-    assert(is_undef(_named),"\narguments after worm_diam must be named");
+    assert(is_undef(_named),"\nToo many positional arguments (only 2 are accepted)");
     P=_dew_parameters(teeth,worm_diam,mod,circ_pitch,diam_pitch,starts,
                       worm_length,pressure_angle,clearance,left_handed);
     tol=default(mesh_tol,P[0]/100);
-    vnf=_dew_spin_vnf(_dew_worm(P,tol,default(min_tip,0.4*P[0]),default(lead_in,0)),default(gear_spin,0),-90+180/P[10]);
+    vnf=_dew_spin_vnf(_dew_worm(P,tol,default(min_tip,0.4*P[0]),default(lead_in,2*P[0]+P[9]),default(rounding,0)),default(gear_spin,0),-90+180/P[10]);
     bore=default(shaft_diam,0);
     assert(is_finite(bore) && bore>=0, str("\n", "shaft_diam must be nonnegative and finite; got ",bore));
     assert(bore<2*(P[2]-P[0]-P[9]), str("\n", "For current parameters, shaft_diam must be less than ",2*(P[2]-P[0]-P[9])," to stay below the tooth roots; got ",bore));
@@ -3339,9 +3456,9 @@ module globoid_worm(teeth,worm_diam,_named,
 // Topics: Gears, Parts
 // See Also: globoid_worm(), globoid_worm_dist(), worm(), worm_gear(), globoid_worm_gear(), worm_dist()
 // Usage: Function
-//   vnf = globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [search_steps=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=]);
+//   vnf = globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [rounding=], [search_steps=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=]);
 // Usage: Module
-//   globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [search_steps=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [rounding=], [search_steps=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates an enveloping wheel that meshes with {{globoid_worm()}} to form a
 //   double-enveloping, or globoid, gear pair. The wheel wraps partway around the
@@ -3368,6 +3485,14 @@ module globoid_worm(teeth,worm_diam,_named,
 //   throat shape. Reducing `min_tip` permits sharper tips, as the wide-wheel example
 //   below shows. Near-zero values are useful for inspecting the geometry, not as a
 //   printing recommendation. This parameter does not round corners or rate tooth strength.
+//   .
+//   Optional `rounding` eases the crest shoulders and root corners in each wheel
+//   section. It is a maximum setback, not a constant 3D fillet radius. Crest easing
+//   removes material; the final remaining crest is still checked against `min_tip`,
+//   so a rounded wheel may need shorter teeth. Root easing adds material only within
+//   half the available tip-clearance band, outside the nominal mating worm. It is
+//   disabled when `clearance=0`. The worm and wheel need not use matching rounding.
+//   Axial-face edges and the shaft hole are not rounded.
 //   .
 //   The wheel is centered on the origin with its axis along Z and one tooth centered
 //   on +Y. Place the worm with `back(a)` and `orient=RIGHT`, using {{globoid_worm_dist()}}
@@ -3399,6 +3524,7 @@ module globoid_worm(teeth,worm_diam,_named,
 //   clearance = Root clearance shared with the mating worm. Default: module/4
 //   backlash = Total wheel pitch-circle tooth-space widening, NOT an axis-distance correction. Default: 0
 //   min_tip = Minimum width across the tooth tips; see Description. Default: 0.4*module
+//   rounding = Maximum corner setback in a meridian or wheel section. Eases crests and fills roots only within the available clearance. Not a constant 3D fillet radius. Default: 0
 //   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
 //   search_steps = Accuracy of the tooth-shape calculation; normally leave at the default. Default: 16
 //   left_handed = If true, select the left-handed form. Default: false (right-handed).
@@ -3414,6 +3540,8 @@ module globoid_worm(teeth,worm_diam,_named,
 //       worm_starts=s, worm_length=L, backlash=0.1);
 //   color("gold") back(a) globoid_worm(mod=m, N, d,
 //       worm_starts=s, worm_length=L, orient=RIGHT);
+// Example: A wheel with eased crest and root corners; the remaining tips stay blunt.
+//   globoid_worm_gear(mod=2, 55, 24, 16, worm_starts=5, worm_length=35, rounding=0.2);
 // Example: A globoid wheel made as a VNF.
 //   vnf = globoid_worm_gear(mod=2, 55, 24, 16, worm_starts=5, worm_length=35);
 //   vnf_polyhedron(vnf);
@@ -3425,30 +3553,30 @@ module globoid_worm(teeth,worm_diam,_named,
 function globoid_worm_gear(teeth,worm_diam,thickness,_named,
     mod,circ_pitch,diam_pitch,worm_starts,worm_length,pressure_angle,clearance,
     backlash,min_tip,mesh_tol,search_steps,left_handed,
-    gear_spin,anchor,spin,orient
+    gear_spin,anchor,spin,orient,rounding
 ) =
 
-    assert(is_undef(_named),"\narguments after thickness must be named")
+    assert(is_undef(_named),"\nToo many positional arguments (only 3 are accepted)")
     let(P=_dew_parameters(teeth,worm_diam,mod,circ_pitch,diam_pitch,worm_starts,
                           worm_length,pressure_angle,clearance,left_handed),
         width=2*_wormgear_halfwidth(P[0],worm_diam,thickness),tol=default(mesh_tol,P[0]/100),
         vnf=_dew_wheel(P,width,default(backlash,0),default(min_tip,0.4*P[0]),
-                       tol,default(search_steps,16)),
+                       tol,default(search_steps,16),default(rounding,0)),
         v=_dew_spin_vnf(vnf,default(gear_spin,0)))
     reorient(default(anchor,CENTER),default(spin,0),default(orient,UP),r=P[3],h=width,p=v);
 
 module globoid_worm_gear(teeth,worm_diam,thickness,_named,
     mod,circ_pitch,diam_pitch,worm_starts,worm_length,pressure_angle,clearance,
     backlash,min_tip,mesh_tol,search_steps,left_handed,
-    gear_spin,shaft_diam,anchor,spin,orient
+    gear_spin,shaft_diam,anchor,spin,orient,rounding
 ) 
 {
-    assert(is_undef(_named),"\narguments after thickness must be named");
+    assert(is_undef(_named),"\nToo many positional arguments (only 3 are accepted)");
     P=_dew_parameters(teeth,worm_diam,mod,circ_pitch,diam_pitch,worm_starts,
                       worm_length,pressure_angle,clearance,left_handed);
     width=2*_wormgear_halfwidth(P[0],worm_diam,thickness);tol=default(mesh_tol,P[0]/100);
     vnf=_dew_spin_vnf(_dew_wheel(P,width,default(backlash,0),default(min_tip,0.4*P[0]),
-                       tol,default(search_steps,16)),default(gear_spin,0));
+                       tol,default(search_steps,16),default(rounding,0)),default(gear_spin,0));
     bore=default(shaft_diam,0);
     assert(is_finite(bore) && bore>=0, str("\n", "shaft_diam must be nonnegative and finite; got ",bore));
     assert(bore<2*(P[3]-P[0]-P[9]), str("\n", "For current parameters, shaft_diam must be less than ",2*(P[3]-P[0]-P[9])," to stay below the tooth roots; got ",bore));
@@ -3516,10 +3644,24 @@ function _wormgear_data(m,teeth,d,starts,pa,ps,clear,backlash,crown,
     )
     assert(is_finite(x=nt) && nt>0, str("\n", "min_tip must be greater than zero and finite; got ",nt))
     assert(ref[1]>rt, "\ncutter reaches the wheel axis; increase teeth")
-    assert(ref[5]/4-ref[3]*(m+clear)+backlash/2>1e-9*m,
-           "\nextended cutter tip is pointed or inverted; reduce pressure_angle or clearance")
+    assert(pa<atan(PI/4),
+           str("\nFull-height cylindrical worm teeth require pressure_angle less than ",
+               atan(PI/4)," at zero tooth thinning; got ",pa,
+               ". A greater angle requires a different addendum, not just a narrower wheel."))
     [ref[0],ref[1],ref[2],rt,d/2-m,ref[3],(left?-1:1)*ref[4],ref[5],H,
      backlash,crown,teeth,m,nt];
+
+/// Extended cutter flanks can meet before reaching the requested tip extension.
+/// Stop at that point. Crowning widens the interval locally, so its terminal
+/// radius is section-dependent. There is no arbitrary pressure-angle cap here.
+function _wormgear_cutter_radius(z,P) =
+    P[5]==0 ? P[3] :
+    min(P[3],P[2]+(P[7]/4+P[9]/2+P[10]*pow(z/P[8],2))/P[5]);
+
+/// A zero-width cutter tip produces a point valley in this wheel section.
+/// Its coincident root-arc vertices must be merged topologically, not displaced.
+function _wormgear_point_root(z,P) =
+    P[5]>0 && P[3]>=P[2]+(P[7]/4+P[9]/2+P[10]*pow(z/P[8],2))/P[5]-1e-12*P[12];
 
 /// Angular interval cut by ONE worm thread on a wheel-centered circle.
 /// Let t be the wheel angle at contact, with physical coordinates
@@ -3535,7 +3677,7 @@ function _wormgear_cutangle(t,rho,z,side,P) =
     let(
         x=P[1]-rho*cos(t),
         r=sqrt(x*x+z*z),
-        w=P[7]/4-P[5]*(r-P[2])+P[9]/2+P[10]*pow(z/P[8],2)
+        w=max(0,P[7]/4-P[5]*(r-P[2])+P[9]/2+P[10]*pow(z/P[8],2))
     )
     (rho*sin(t)+P[6]*atan2(z,x)*PI/180+side*w)/P[0]*180/PI-t;
 
@@ -3560,7 +3702,8 @@ function _wormgear_stationary(rho,z,side,P,lo,hi,dlo,n) =
 
 function _wormgear_cutlimits(rho,z,P,nsearch,niters) =
     let(
-        root=P[1]-sqrt(P[3]*P[3]-z*z),
+        rt=_wormgear_cutter_radius(z,P),
+        root=P[1]-sqrt(rt*rt-z*z),
         tmax=rho<=root*(1+1e-14) ? 0 : acos(min(1,max(-1,root/rho)))
     )
     tmax==0 ? [for(side=[-1,1]) _wormgear_cutangle(t=0,rho=rho,z=z,side=side,P=P)] :
@@ -3601,7 +3744,8 @@ function _wormgear_section(z,P,nprofile,narc,nsearch,niters,target,max_radius) =
     let(
         goal=is_undef(target)?P[13]:target,
         period=360/P[11], base=90-period/2,
-        root=P[1]-sqrt(P[3]*P[3]-z*z),
+        rt=_wormgear_cutter_radius(z,P),
+        root=P[1]-sqrt(rt*rt-z*z),
         blank0=P[1]-sqrt(P[4]*P[4]-z*z),
         blank=is_undef(max_radius)?blank0:min(blank0,max_radius),
         check=assert(blank>root+1e-8*P[12],
@@ -3624,7 +3768,15 @@ function _wormgear_section(z,P,nprofile,narc,nsearch,niters,target,max_radius) =
         last_good=clipped?good[len(good)-1]:0,
         top=clipped ? _wormgear_tipradius(z=z,P=P,lo=rr0[last_good],hi=rr0[last_good+1],
                                           target=goal,nsearch=nsearch,niters=niters) : blank,
-        rr=[for(j=[0:1:nprofile]) root+(top-root)*j/nprofile],
+        // When the extended tip is clipped, the clearance band may be much
+        // thinner than one uniform radial step. Resolve its outer boundary
+        // explicitly so a triangle does not bridge straight into the contact
+        // surface. Keep the same profile count and unchanged ordinary sampling.
+        working_root=P[1]-sqrt(pow(P[2]+P[12],2)-z*z),
+        band=_wormgear_point_root(0,P) && working_root>root+1e-10*P[12]
+             && working_root<root+(top-root)/nprofile,
+        rr=band ? [root,for(j=[1:1:nprofile]) working_root+(top-working_root)*(j-1)/(nprofile-1)]
+                : [for(j=[0:1:nprofile]) root+(top-root)*j/nprofile],
         bb=[for(r=rr) _wormgear_cutlimits(rho=r,z=z,P=P,nsearch=nsearch,niters=niters)],
         gaps=[for(b=bb) period-b[1]+b[0]]
     )
@@ -3727,6 +3879,23 @@ function _wormgear_mesh(rows) =
     ) [vertices,faces];
 
 
+/// Merge only the known collapsed root-arc vertices, including the next-tooth
+/// seam. Other vertices stay untouched. This also handles sections where a
+/// pointed root changes back to a finite root land as crowning increases.
+function _wormgear_close_point_roots(vnf,point_rows,nprofile,narc,teeth) =
+    !in_list(true,point_rows) ? vnf :
+    let(nt=2*nprofile+narc+1,nc=nt*teeth,
+        map=[for(i=[0:len(vnf[0])-1])
+            let(row=floor(i/nc),col=i%nc,k=floor(col/nt),j=col%nt)
+            point_rows[row] && j>=2*nprofile+1
+              ? row*nc+((k+1)%teeth)*nt : i],
+        keep=[for(i=[0:len(map)-1])map[i]==i?1:0],off=cumsum(keep),
+        faces=[for(f=vnf[1])
+            let(g=[for(i=f)off[map[i]]-1],
+                clean=[for(j=[0:len(g)-1])if(g[j]!=g[(j+len(g)-1)%len(g)])g[j]])
+            if(len(clean)>=3)clean])
+    [[for(i=[0:len(keep)-1])if(keep[i])vnf[0][i]],faces];
+
 /// Equal-setback conical face trims. These operate on the meridional (r,z)
 /// outside profile, NOT on the individual tooth-outline edges. The reference
 /// profile is the unchamfered, min_tip-compliant sampled rim. One endpoint is
@@ -3810,7 +3979,8 @@ function _wormgear_build(P,slices=10,nprofile=16,nsearch=24,niters=30,gear_spin=
             for(k=[0:1:P[11]-1],p=sec[0])
                 _wormgear_rotate(p=p,a=k*360/P[11]+gear_spin)
         ]]
-    ) _wormgear_mesh(rows=rows);
+    ) _wormgear_close_point_roots(_wormgear_mesh(rows=rows),
+          [for(sec=sections)_wormgear_point_root(sec[0][0].z,P)],nprofile,na,P[11]);
 
 /// Globoid construction notes (not user documentation).
 /// This is the straight-line-generated Hindley/TA family, not plane-generated TI.
@@ -3858,7 +4028,7 @@ function _dew_parameters(N,d,mod,cp,dp,starts,length,pa,clear,left) =
     let(m=_inherit_gear_pitch("globoid gears",cp,dp,mod)/PI,s=default(starts,1),an=_inherit_gear_pa(pa),
         c=default(clear,m/4),lh=default(left,false))
     assert(_globoid_check_reference(m,N,d,s), "\nInvalid gear parameters")
-    assert(is_finite(an) && an>0 && an<45,"\npressure_angle must be in (0,45) degrees")
+    assert(is_finite(an) && an>0 && an<90,"\npressure_angle must be greater than zero and less than 90 degrees")
     assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
     assert(c<d/2-m, str("\nFor current parameters, clearance must be less than ",d/2-m,"; got ",c))
     assert(is_bool(lh),"\nleft_handed must be boolean")
@@ -3870,9 +4040,40 @@ function _dew_parameters(N,d,mod,cp,dp,starts,length,pa,clear,left) =
            str("\n", "For current parameters, worm_length must be less than ",1.3*et,
                "; got ",length,". Use the same working length on both parts."))
     assert(et>b && _dew_half_tooth(et,P)>0.02*180/N,
-           "\nExtended hob tip is pointed; reduce pressure_angle or clearance, or increase teeth")
-    assert(_dew_half_tooth(er,P)<0.98*180/N,"\nWorm thread spaces close at the root; reduce clearance or pressure_angle")
+           str("\n",_globoid_profile_error(P,an,false)))
+    assert(_dew_half_tooth(er,P)<0.98*180/N,
+           str("\n",_globoid_profile_error(P,an,true)))
     P;
+/// Invert the existing minimum-width checks, not a new pressure-angle cap.
+/// W(e)=A+alpha-asin(R*sin(alpha)/e), A=90/N. Both checks leave
+/// 0.04*A at a tip or in a root space; eps=A-0.04*A.
+/// These bounds concern the nominal generating profile, not final min_tip,
+/// wheel thickness, finite length, or mesh feasibility.
+function _globoid_profile_limits(P) =
+    let(m=P[0],R=P[3],alpha=P[6],c=P[9],
+        cb=sqrt(1-pow(P[10]*m/(2*P[2]),2)),eps=0.96*90/P[1],
+        et=R-m-c,er=R+m+c,
+        tip_alpha=atan2(sin(eps),R/et-cos(eps)),
+        root_den=cos(eps)-R/er,
+        root_alpha=root_den<=0?90:atan2(sin(eps),root_den),
+        tip_c=R-m-R*sin(alpha)/sin(alpha+eps),
+        root_c=alpha<=eps?undef:R*sin(alpha)/sin(alpha-eps)-R-m)
+    [atan(cb*tan(tip_alpha)),root_alpha==90?90:atan(cb*tan(root_alpha)),
+     tip_c,root_c];
+function _globoid_profile_error(P,pa,root=false) =
+    let(limits=_globoid_profile_limits(P),i=root?1:0,
+        max_pa=limits[i],max_clear=limits[i+2])
+    str(root?"The globoid thread spaces close at the root. ":
+                       "The globoid generating tooth tip is too thin. ",
+        "For current parameters, pressure_angle must be less than ",max_pa,
+        " degrees with clearance=",P[9],"; got ",pa,".\n",
+        is_undef(max_clear) ? "This root-space check does not limit clearance at this pressure angle. " :
+        max_clear>0 ?
+          str("Alternatively, at pressure_angle=",pa,", clearance must be less than ",
+              max_clear,"; got ",P[9],". ") :
+          "No nonnegative clearance satisfies this check at the requested pressure_angle. ",
+        "Reduce pressure_angle or revise the tooth count and worm diameter. ",
+        "These limits address this profile check; min_tip and length limits still apply.");
 function _dew_half_tooth(e,P) = 90/P[1]+P[6]-asin(constrain(P[7]/e,-1,1));
 function _dew_worm_radius(e,u,P) = P[4]-sqrt(e*e-u*u);
 
@@ -3974,7 +4175,9 @@ function _dew_badlands(rows,goal) =
 /// Globoid worm surface and end treatment. Stations lie in axial meridians:
 /// p=q*theta, where theta is an unwrapped angle about the worm axis. The
 /// nominal flank is still the same straight generating line in that plane.
-/// Positive lead_in retains a shorter portion of the line; zero lead_in
+/// Positive lead_in lowers the thread and contracts its meridional width.
+/// At fixed e and azimuth the contracted angle remains in the nominal tooth;
+/// the continuous finished solid is therefore a subset. Zero lead_in
 /// terminates complete profiles with triangulated walls in meridian planes.
 /// Root gaps share the flank boundary vertices and their own sampling tracks.
 function _gw_constants(P)=
@@ -3985,7 +4188,7 @@ function _gw_constants(P)=
 /// The outermost root corner sets the meridian limit. This does not change
 /// the nominal generating length used for the wheel. At zero lead_in two
 /// coincident stations (root-only and full-height) bound the explicit end wall.
-/// A positive lead_in instead lowers the profile into the local curved root.
+/// Positive lead_in lowers and gently narrows the profile into the curved root.
 function _gw_lead_data(P,lead_in,tol) =
     assert(is_finite(lead_in) && lead_in>=0,
            "\nlead_in must be nonnegative and finite; zero makes abrupt blunt ends")
@@ -3993,10 +4196,10 @@ function _gw_lead_data(P,lead_in,tol) =
            str("\nlead_in is too small for stable end geometry; use at least ",1e-5*P[2],
                " or use lead_in=0 for abrupt blunt ends"))
     let(er=P[3]+P[0]+P[9],
-        root_extent=er*sin(_dew_half_tooth(er,P)),
+        root_extent=er*sin(_gw_section_width(er,P)),
         min_length=2*min(root_extent/.99,root_extent+tol/4),
         inset=min(tol/4,P[8]/100),
-        end=asin((P[8]-inset)/er)-_dew_half_tooth(er,P),
+        end=asin((P[8]-inset)/er)-_gw_section_width(er,P),
         radius=_dew_worm_radius(P[3]-P[0],P[8],P),
         span=abs(P[5])*lead_in/radius*180/PI)
     assert(end>0,
@@ -4014,19 +4217,60 @@ function _gw_lead_scale(p,lead) =
     abs(p)<=lead[0]-lead[1]?1:
     let(t=(lead[0]-abs(p))/lead[1],h0=_leadin_sqrt(0,lead[2]).y)
     (_leadin_sqrt(t,lead[2]).y-h0)/(1-h0);
+/// Smooth meridional corner easing. The controls are radial/circumferential
+/// setbacks, not an exact constant 3D fillet radius. The quarter-circle easing
+/// has zero slope at its flank end and a circular-land tangent at its land end.
+function _globoid_ease(u) = 1-sqrt(max(0,1-pow(constrain(u,0,1),2)));
+function _gw_round_data(P,size,tol) =
+    assert(is_finite(size) && size>=0,
+           str("\nrounding must be nonnegative and finite; got ",size))
+    let(et=P[3]-P[0],er=P[3]+P[0]+P[9],
+        dr=min(size,P[9]/2),dt=min(size,(er-et)/4),
+        kr=min(dr/er*180/PI,(180/P[1]-_dew_half_tooth(er,P))/2),
+        kt=min(dt/et*180/PI,_dew_half_tooth(et,P)/2))
+    [size,dr,kr,dt,kt,max(2,ceil(sqrt(max(dr,dt)/tol)))];
+function _gw_section_width(e,P,h=1) =
+    let(W=_dew_half_tooth(e,P),rd=len(P)>13?P[13]:undef)
+    is_undef(rd) || rd[0]==0 ? W :
+    let(er=P[3]+P[0]+P[9],T=lerp(P[11][6],P[11][7],h),
+        tip=sqrt(T*T+P[7]*P[7]),dt=min(rd[3],(er-tip)/4),
+        root=rd[1]>0 ? rd[2]*_globoid_ease((e-er+rd[1])/rd[1]):0,
+        crest=dt>0 ? h*rd[4]*_globoid_ease((tip+dt-e)/dt):0)
+    W+root-crest;
+/// Aim for HALF the full-height crest width at the end, rather than half the
+/// much wider root section. Along the lead-in, smoothstep blends that target
+/// to the unchanged full crest. Scaling angles at fixed e removes material;
+/// any added root easing stays in the protected clearance band.
+function _gw_lead_width(p,P,h) =
+    let(lead=len(P)>12?P[12]:undef)
+    is_undef(lead) || lead[1]==0 || h==1 ? 1 :
+    let(et=P[3]-P[0],T=lerp(P[11][6],P[11][7],h),e=sqrt(T*T+P[7]*P[7]),
+        t=constrain((lead[0]-abs(p))/lead[1],0,1),f=.5+.5*t*t*(3-2*t),
+        target=asin(constrain(et/e*sin(_gw_section_width(et,P))*f,0,1)))
+    min(1,target/_gw_section_width(e,P,h));
+function _gw_flank_tags(n,P) =
+    let(rd=len(P)>13?P[13]:[0]) rd[0]==0 ? [for(i=[0:n]) i/n] :
+    let(et=P[3]-P[0],er=P[3]+P[0]+P[9],tr=P[11][6],tt=P[11][7],
+        at=function(e) constrain((tr-sqrt(max(0,e*e-P[7]*P[7])))/(tr-tt),0,1),
+        lo=at(er-rd[1]),hi=at(et+rd[3]),k=rd[5])
+    [0,if(rd[1]>0) for(j=[1:k]) at(er-rd[1]+rd[1]*cos(90*j/k)),
+     for(j=[1:n])lerp(lo,hi,j/n),
+     for(j=[1:k])j==k?1:at(et+rd[3]-rd[3]*sin(90*j/k))];
 /// A station is one axial meridian, p=q*theta. Each entire tooth section
 /// is in that plane, so an abrupt termination is perpendicular to the end face.
 function _gw_wp(p,v,P,height) =
     let(C=len(P)>11?P[11]:_gw_constants(P),et=C[0],q=C[2],sg=C[3],tr=C[6],tt=C[7],
-        h=is_undef(height)?_gw_lead_scale(p,len(P)>12?P[12]:undef):height,
-        theta=p/q)
+        lead=len(P)>12?P[12]:undef,h=is_undef(height)?_gw_lead_scale(p,lead):height,
+        w=_gw_lead_width(p,P,h),theta=p/q,rounded=len(P)>13 && P[13][0]>0)
     v<=1 || v>=2 ?
         let(side=v<=1?-1:1,t=v<=1?v:3-v,T=lerp(tr,tt,t*h),
             delta=p-side*sg*(90/P[1]+P[6]))
-        cylindrical_to_xyz(P[4]-T*cos(delta)+side*sg*P[7]*sin(delta),theta,
-                           T*sin(delta)+side*sg*P[7]*cos(delta)):
+        w==1 && !rounded ? cylindrical_to_xyz(P[4]-T*cos(delta)+side*sg*P[7]*sin(delta),theta,
+                                             T*sin(delta)+side*sg*P[7]*cos(delta)) :
+        let(e=sqrt(T*T+P[7]*P[7]),phi=p-side*sg*w*_gw_section_width(e,P,h))
+        cylindrical_to_xyz(P[4]-e*cos(phi),theta,e*sin(phi)) :
         let(T=lerp(tr,tt,h),e=sqrt(T*T+P[7]*P[7]),f=2*(v-1)-1,
-            phi=p-f*sg*_dew_half_tooth(e,P))
+            phi=p-f*sg*w*_gw_section_width(e,P,h))
         cylindrical_to_xyz(P[4]-e*cos(phi),theta,e*sin(phi));
 /// Add local samples at the two taper boundaries; do not refine the whole worm
 /// to resolve a small end treatment. Squared spacing resolves the sqrt ramp.
@@ -4040,7 +4284,9 @@ function _gw_lead_stations(ps,P) =
 function _gw_raw(P,na,nf,nt) =
     let(et=P[3]-P[0],er=P[3]+P[0]+P[9],
         pm=asin(P[8]/et)+_dew_half_tooth(er,P)+1e-5,
-        tags=[for(i=[0:nf-1])i/nf,for(i=[0:nt-1])1+i/nt,for(i=[0:nf])2+i/nf],
+        ft=_gw_flank_tags(nf,P),
+        tags=[for(i=[0:len(ft)-2])ft[i],for(i=[0:nt-1])1+i/nt,
+              for(i=[len(ft)-1:-1:0])3-ft[i]],
         apron=ceil((360/P[1])/(2*pm/na))+1,
         ps=_gw_lead_stations([for(i=[-apron:na+apron])pm*(1-2*i/na)],P),
         lead=len(P)>12?P[12]:undef,
@@ -4085,17 +4331,23 @@ function _gw_root_zip(a,b,i=0,j=0) =
             concat([[A,B,b[j+1][1]]],_gw_root_zip(a,b,i,j+1));
 
 /// Join the opposite root edges at matching physical meridians. For this
-/// station chart their angular-index offsets are +/-q*180/starts. Extra
+/// station chart their angular-index offsets are +/-q*180/starts. Positive
+/// lead-in moves the boundary within each meridian but not its azimuth. Extra
 /// interior tracks are used only for root curvature; outer fans lie beyond
 /// the axial end planes and are discarded by clipping.
 function _gw_root_land(raw,P,nr,nz) =
     let(rows=raw[0],ps=raw[1],na=len(ps)-1,ns=len(raw[2]),
         N=P[10],nc=N*ns,offset=(na+1)*nc,er=P[3]+P[0]+P[9],q=P[5],
-        wr=_dew_half_tooth(er,P)/abs(q),gap=360/N-2*wr,
+        wr=_gw_section_width(er,P)/abs(q),gap=360/N-2*wr,
         shift=q*180/N,limit=abs(ps[0])+abs(shift),
         stations=[for(j=[0:nz])limit*(1-2*j/nz)],
+        lead=len(P)>12?P[12]:undef,
         base=[for(t=[1:1:nr-1],p=stations)
-            let(u=p+q*gap*(.5-t/nr))
+            let(w0=_gw_lead_width(p+shift,P,_gw_lead_scale(p+shift,lead)),
+                w1=_gw_lead_width(p-shift,P,_gw_lead_scale(p-shift,lead)),
+                u=w0==1 && w1==1 ? p+q*gap*(.5-t/nr) :
+                  lerp(p+shift-sign(q)*w0*_gw_section_width(er,P),
+                       p-shift+sign(q)*w1*_gw_section_width(er,P),t/nr))
             cylindrical_to_xyz(P[4]-er*cos(u),p/q+180/N,er*sin(u))],
         points=len(base)==0?[]:[for(k=[0:N-1])each zrot(k*360/N,p=base)],
         faces=[for(k=[0:N-1])each
@@ -4113,8 +4365,8 @@ function _gw_end_walls(raw,P,nf,nt,offset) =
         stops=[for(j=[0:len(ps)-2])if(ps[j]==ps[j+1])j],ni=(nf-1)*(nt-1),
         C=P[11],
         points=[for(t=[0:1:len(stops)-1],k=[0:P[10]-1],i=[1:1:nf-1],j=[1:1:nt-1])
-            let(p=ps[stops[t]],T=lerp(C[6],C[7],i/nf),e=sqrt(T*T+P[7]*P[7]),
-                phi=p-(2*j/nt-1)*C[3]*_dew_half_tooth(e,P))
+            let(p=ps[stops[t]],T=lerp(C[6],C[7],raw[2][i]),e=sqrt(T*T+P[7]*P[7]),
+                phi=p-(2*j/nt-1)*C[3]*_gw_section_width(e,P))
             cylindrical_to_xyz(P[4]-e*cos(phi),p/P[5]+k*360/P[10],e*sin(phi))],
         index=function(t,k,i,j)
             let(st=stops[t],full=raw[3][st]==1?st:st+1,flat=2*st+1-full)
@@ -4147,7 +4399,7 @@ function _gw_make_raw(P,na,nf,nt,nr,nz) =
             let(a=j*nc+k*ns+i,b=a+1,c=(j+1)*nc+k*ns+i,d=c+1)
             diags[j][i]==0?[[a,b,d],[a,d,c]]:[[a,b,c],[b,d,c]]],
         root=_gw_root_land(raw,P,nr,nz),
-        ends=_gw_end_walls(raw,P,nf,nt,(count+1)*nc+len(root[0])))
+        ends=_gw_end_walls(raw,P,(ns-nt-1)/2,nt,(count+1)*nc+len(root[0])))
     [[[for(row=rows)each row,each root[0],each ends[0]],concat(faces,root[1],ends[1])],err,raw,
      [for(j=[0:count],k=[0:P[10]-1],t=ts)4*k+t,each root[2],each ends[2]]];
 
@@ -4193,7 +4445,10 @@ function _gw_clipped_face(f,verts,edges,H)=
     [if(z0>=-H && z0<=H)a,
      for(z=planes)if(_gw_crosses(z0,z1,z))len(verts)+_gw_find(_gw_edgekey(a,b,z,len(verts)),edges)]];
 
-/// Contract only very short consecutive cap edges. Clipping a row almost on
+/// Contract only very short consecutive cap edges. Rounded profiles use a
+/// slightly larger cleanup threshold, still <= mesh_tol/16, to avoid sliver
+/// cap polygons that can stall direct CGAL bore operations.
+/// Clipping a row almost on
 /// the end plane can otherwise leave three near-collinear vertices which collapse
 /// on float32 STL export. Shared side faces use the same contractions.
 function _gw_cap_aliases(ids,points,eps,i=0,lastid) =
@@ -4259,10 +4514,10 @@ function _gw_clip(vnf,H,tags,period,eps,root_caps=false)=
                     [[f[0],f[1],f[2]],[f[0],f[2],f[3]]]:[f]],
                 root_caps?tops:[tops[0],[for(i=[len(tops[1])-1:-1:0])tops[1][i]]],eps);
 /// Clip the two crest polylines at the same axial planes as the mesh.
-/// Check the unchanged nominal crest using paired equal-height samples.
-/// This is independent of optional lead-in and the meridional mesh stations.
+/// Check the retained full-height crest, including optional corner easing.
+/// The paired equal-height samples are independent of optional lead-in.
 function _gw_tip_records(raw,nf,nt,H,P) =
-    let(e=P[3]-P[0],w=_dew_half_tooth(e,P)/abs(P[5]),n=len(raw[1])-1,
+    let(e=P[3]-P[0],w=_gw_section_width(e,P)/abs(P[5]),n=len(raw[1])-1,
         pm=asin(H/e))
     [for(j=[0:n])let(p=pm*(1-2*j/n),r=P[4]-e*cos(p),z=e*sin(p))
         [undef,cylindrical_to_xyz(r,p/P[5]-w,z),cylindrical_to_xyz(r,p/P[5]+w,z),undef,undef,z]];
@@ -4275,8 +4530,8 @@ function _gw_worm_build(P,tol,land,n=0) =
         nt=max(2,ceil(2*_dew_half_tooth(et,P)/(2*acos(1-tol/(2*et))))),
         root_tol=max(tol,min(4*tol,P[9]/4)),root_r=_dew_worm_radius(er,P[8],P),
         root_angle=2*acos(max(-1,1-root_tol/(2*root_r))),
-        gap=360/P[10]-2*_dew_half_tooth(er,P)/abs(P[5]),
-        nr=max(1,ceil(abs(P[5])*gap/(2*acos(max(-1,1-root_tol/(2*er)))))),
+        gap=360/P[10]-2*_gw_section_width(er,P)/abs(P[5]),
+        nr=max(!is_undef(P[12]) && P[12][1]>0?3:1,ceil(abs(P[5])*gap/(2*acos(max(-1,1-root_tol/(2*er)))))),
         root_span=pm+180/P[1],
         nz=max(2,ceil(2*root_span/abs(P[5])/root_angle),
                ceil(2*root_span/(2*acos(max(-1,1-root_tol/(2*er)))))),
@@ -4284,16 +4539,18 @@ function _gw_worm_build(P,tol,land,n=0) =
     raw[1]>tol?
         assert(n<8,"\nWorm mesh refinement did not converge; use a larger mesh_tol or report the parameter set")
         _gw_worm_build(P,tol,land,n+1):
-    let(eps=min(tol/16,1e-6*rmax),crests=_gw_tip_records(raw[2],nf,nt,P[8],P),
+    let(eps=min(tol/16,(P[13][0]>0?1e-4:1e-6)*rmax),crests=_gw_tip_records(raw[2],nf,nt,P[8],P),
         bad=_dew_badlands(crests,land+1e-6*P[0]+2*eps))
-    assert(len(bad)==0,"\nWorm crest is thinner than min_tip; revise pressure_angle or worm_length, or refine mesh_tol")
+    assert(len(bad)==0,"\nWorm crest is thinner than min_tip; reduce rounding, revise pressure_angle or worm_length, or refine mesh_tol")
     let(clean=_gw_flattened_rows(raw[0],raw[3],raw[2],P))
     [_gw_clip(clean[0],P[8],clean[1],4*P[10],eps,root_caps=true),[na,nf,nt,nr,raw[1],nz]];
-function _dew_worm(P,tol,land,lead_in=0) =
+function _dew_worm(P,tol,land,lead_in=0,rounding=0) =
     assert(_dew_mesh_tolerance(tol,P), "\nInvalid gear parameters")
     assert(is_finite(land)&&land>0,
            str("\nmin_tip must be greater than zero and finite; got ",land))
-    let(lead=_gw_lead_data(P,lead_in,tol),Q=concat(P,[_gw_constants(P),lead]))
+    let(rd=_gw_round_data(P,rounding,tol),
+        B=concat(P,[_gw_constants(P),undef,rd]),lead=_gw_lead_data(B,lead_in,tol),
+        Q=concat(P,[_gw_constants(P),lead,rd]))
     _gw_worm_build(Q,tol,land)[0];
 
 /// Exact wheel surface evaluator. The generating envelope is unchanged.
@@ -4304,15 +4561,19 @@ function _dew_flank(v,root,top,z,P,ba,ns)=
 
 /// Row/frame: [tagged_points, left_tip, right_tip, top, target, z, root, low_limits, top_limits].
 /// Frames do not sample the radial profile. Reuse them for interior surface probes.
-function _gww_frame(z,P,ba,goal,ns) =
+function _gww_frame(z,P,ba,goal,ns,rounding=0) =
     let(root=_dew_rim(P[3]-P[0]-P[9],z,P),blank=_dew_rim(P[3]+P[0],z,P),
         br=_dew_limits(root,z,P,ba,ns),bt0=_dew_limits(blank,z,P,ba,ns))
-    assert(_dew_land(root,br,P)>=goal,"\nCannot retain min_tip; reduce wheel thickness or worm length")
+    assert(_dew_land(root,br,P)>=goal,"\nCannot retain min_tip after rounding; reduce rounding, wheel thickness or worm length")
     let(top=_dew_land(blank,bt0,P)>=goal?blank:_dew_top(z,P,ba,goal,ns,root,blank),
         bt=top==blank?bt0:_dew_limits(top,z,P,ba,ns),base=90-180/P[1],
-        L=cylindrical_to_xyz(top,base-bt[0],z),R=cylindrical_to_xyz(top,base+360/P[1]-bt[1],z))
+        workroot=min(root+(top-root)/2,_dew_rim(P[3]-P[0],z,P)),
+        dr=min(rounding,max(0,workroot-root)/2),dt=min(rounding,(top-root)/4),
+        kr=min(dr/root*180/PI,(br[1]-br[0])/4),kt=dt/top*180/PI,
+        br2=[br[0]+kr,br[1]-kr],bt2=[bt[0]-kt,bt[1]+kt],
+        L=cylindrical_to_xyz(top,base-bt2[0],z),R=cylindrical_to_xyz(top,base+360/P[1]-bt2[1],z))
     assert(norm((L+R)/2-[0,0,z])>root+1e-7*P[0],"\nMinimum tip leaves no usable tooth height")
-    [[],L,R,top,goal,z,root,br,bt];
+    [[],L,R,top,goal,z,root,br2,bt2,dr,kr,dt,kt];
 
 /// Regular wheel grid. mesh_tol is a sampling scale, not a strict error bound.
 /// Spacing follows sqrt(tolerance*length scale), with no local patch splitting.
@@ -4320,18 +4581,19 @@ function _gww_frame(z,P,ba,goal,ns) =
 /// so side panels need only two triangles and no seam stitching / point sorting.
 /// Only the minimum tip width is iterated and checked exactly on the final
 /// sampled crest polylines; the geometric tolerance is deliberately approximate.
-function _gws_frames(P,width,ba,land,ns,nz,goal,n=0) =
-    let(target=is_undef(goal)?land+max(1e-5*P[0],1e-7*P[4]):goal,
-        rows=[for(j=[0:nz])_gww_frame(width*(.5-j/nz),P,ba,target,ns)],
+function _gws_frames(P,width,ba,land,ns,nz,goal,n=0,rounding=0) =
+    let(target=is_undef(goal)?land+2*rounding+max(1e-5*P[0],1e-7*P[4]):goal,
+        rows=[for(j=[0:nz])_gww_frame(width*(.5-j/nz),P,ba,target,ns,rounding)],
         bad=_dew_badlands(rows,land+1e-6*P[0]))
     len(bad)==0?rows:
-    assert(n<8,"\nWheel min_tip adjustment did not converge")
-    _gws_frames(P,width,ba,land,ns,nz,target*max([for(b=bad)b[2]]),n+1);
+    assert(n<8,"\nWheel min_tip adjustment did not converge; reduce rounding or revise the tooth parameters")
+    _gws_frames(P,width,ba,land,ns,nz,target*max([for(b=bad)b[2]]),n+1,rounding);
 /// Preserve a single boundary at the operating-tip reach. The extended hob
 /// creates the lower clearance band; bridging that steep transition with a
 /// triangle that also covers a working flank caused avoidable interference.
 /// Extremely small clearances do not create a nearly zero-area band.
-function _gws_row(frame,P,ba,ns,nf,nt,nr) =
+function _gws_row(frame,P,ba,ns,nf,nt,nr,rounding=0,nround=2) =
+    rounding>0 ? _gws_rounded_row(frame,P,ba,ns,nf,nt,nr,nround) :
     let(z=frame[5],root=frame[6],top=frame[3],br=frame[7],bt=frame[8],
         band=P[9]>1e-7*P[0],
         workroot=band?min(root+(top-root)/2, _dew_rim(P[3]-P[0],z,P)):root,
@@ -4345,6 +4607,32 @@ function _gws_row(frame,P,ba,ns,nf,nt,nr) =
      for(i=[1:nt-1])cylindrical_to_xyz(top,base-bt[0]+(360/P[1]+bt[0]-bt[1])*i/nt,z),
      for(i=[len(fs)-1:-1:0])fs[i][2],
      for(i=[1:nr-1])cylindrical_to_xyz(root,base+360/P[1]-br[1]+(br[1]-br[0])*i/nr,z)];
+
+/// Root easing is restricted to half the tip-clearance band. Any added material
+/// is outside the full nominal worm, irrespective of its flank phase. Crest
+/// easing only removes material. Intermediate points preserve the exact
+/// envelope outside the two short transition bands.
+function _gws_rounded_row(f,P,ba,ns,nf,nt,nr,nround) =
+    let(z=f[5],root=f[6],top=f[3],br=f[7],bt=f[8],dr=f[9],kr=f[10],dt=f[11],kt=f[12],
+        band=P[9]>1e-7*P[0],
+        workroot=band?min(root+(top-root)/2,_dew_rim(P[3]-P[0],z,P)):root,
+        rads=[root,
+              if(band) each [for(j=[1:nround])root+dr*(1-cos(90*j/nround)),workroot],
+              for(i=[1:nf])lerp(workroot,top-dt,i/nf),
+              for(j=[1:nround])j==nround?top:top-dt+dt*sin(90*j/nround)],
+        base=90-180/P[1],
+        fs=[for(i=[0:len(rads)-1])let(r=rads[i])
+            i==0?[cylindrical_to_xyz(root,base-br[0],z),cylindrical_to_xyz(root,base+360/P[1]-br[1],z)]:
+            i==len(rads)-1?[f[1],f[2]]:
+            let(b=_dew_limits(r,z,P,ba,ns),
+                v=(dt>0?kt*_globoid_ease((r-top+dt)/dt):0)
+                  -(dr>0?kr*_globoid_ease((root+dr-r)/dr):0))
+            [cylindrical_to_xyz(r,base-b[0]+v,z),cylindrical_to_xyz(r,base+360/P[1]-b[1]-v,z)]])
+    [for(g=fs)g[0],
+     for(i=[1:nt-1])cylindrical_to_xyz(top,base-bt[0]+(360/P[1]+bt[0]-bt[1])*i/nt,z),
+     for(i=[len(fs)-1:-1:0])fs[i][1],
+     for(i=[1:nr-1])cylindrical_to_xyz(root,base+360/P[1]-br[1]+(br[1]-br[0])*i/nr,z)];
+
 /// Keep one consistent diagonal pattern, mirrored for the opposite hand.
 /// This is a fixed pattern, not a per-panel optimization. Whole-tooth point
 /// arrays use BOSL2 zrot; the periodic root-gap edge reuses the next tooth.
@@ -4360,17 +4648,18 @@ function _gws_mesh(rows,P) =
           let(a=index(j,k,i),b=index(j,k,i+1),c=index(j+1,k,i),d=index(j+1,k,i+1))
           (P[5]>0?[[a,b,c],[b,d,c]]:[[a,b,d],[a,d,c]])])
     [vertices,concat([[for(i=[len(top)-1:-1:0])top[i]],bot],faces)];
-function _gws_build(P,width,ba,land,tol,ns) =
+function _gws_build(P,width,ba,land,tol,ns,rounding=0) =
     let(nz=max(4,2*ceil(width/(2*sqrt(4*tol*(P[2]-P[0]))))),
         nf=max(2,ceil(sqrt(P[0]/(8*tol)))),
-        frames=_gws_frames(P,width,ba,land,ns,nz),
+        frames=_gws_frames(P,width,ba,land,ns,nz,rounding=rounding),
         nt=max(2,max([for(f=frames)ceil((360/P[1]+f[8][0]-f[8][1])/
                                  (2*acos(max(-1,1-tol/f[3]))))])),
         nr=max(2,max([for(f=frames)ceil((f[7][1]-f[7][0])/
                                  (2*acos(max(-1,1-tol/f[6]))))])),
-        rows=[for(f=frames)_gws_row(f,P,ba,ns,nf,nt,nr)])
+        rows=[for(f=frames)_gws_row(f,P,ba,ns,nf,nt,nr,rounding,max(2,ceil(sqrt(max([for(g=frames)max(g[9],g[11])])/tol))))])
     [_gws_mesh(rows,P),[nz,nf,nt,nr]];
-function _dew_wheel(P,width,backlash,min_tip,tol,search_steps)=
+function _dew_wheel(P,width,backlash,min_tip,tol,search_steps,rounding=0)=
+    assert(is_finite(rounding) && rounding>=0, str("\nrounding must be nonnegative and finite; got ",rounding))
     assert(_dew_mesh_tolerance(tol,P), "\nInvalid gear parameters")
     assert(is_int(search_steps)&&search_steps>=8,"\nsearch_steps must be an integer >=8")
     assert(is_finite(width) && width>0,
@@ -4382,7 +4671,7 @@ function _dew_wheel(P,width,backlash,min_tip,tol,search_steps)=
            str("\n", "backlash must be nonnegative and finite; got ",backlash))
     assert(is_finite(min_tip)&&min_tip>0,
            str("\n", "min_tip must be greater than zero and finite; got ",min_tip))
-    _gws_build(P,width,backlash,min_tip,tol,search_steps)[0];
+    _gws_build(P,width,backlash,min_tip,tol,search_steps,rounding)[0];
 
 
 /// Function: _gear_tooth_profile()
@@ -4425,7 +4714,7 @@ function _gear_tooth_profile(
     teeth, pressure_angle=20, clearance, backlash=0.0, internal=false, center=false, _named,
     circ_pitch, diam_pitch, mod, helical=0, profile_shift=0.0, shorten=0
 ) =
-    assert(is_undef(_named), "\narguments after teeth, pressure_angle, clearance, backlash, internal, center must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
  let(
     // Calculate a point on the involute curve, by angle.
     _involute = function(base_r,a)
@@ -4680,7 +4969,7 @@ function planetary_gears(
     n, max_teeth, _named, mod, circ_pitch, diam_pitch, ring_carrier, carrier_ring, sun_carrier,
     carrier_sun, ring_sun, sun_ring, helical, gear_spin
 ) =
-    assert(is_undef(_named), "\narguments after n, max_teeth must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
 
     let(helical=default(helical,0),
         gear_spin=default(gear_spin,0))
@@ -4808,7 +5097,7 @@ function circular_pitch(
     let(circ_pitch=_gear_args[0])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after the function name must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 0 are accepted)")
 
     assert(num_defined([mod,circ_pitch,diam_pitch])==1,
            "\nspecify exactly one of mod=, circ_pitch=, or diam_pitch=")
@@ -4851,7 +5140,7 @@ function diametral_pitch(
     let(circ_pitch=_gear_args[0])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after the function name must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 0 are accepted)")
 
 
     let( circ_pitch = circular_pitch(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch) )
@@ -4894,7 +5183,7 @@ function module_value(
     let(circ_pitch=_gear_args[0])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after the function name must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 0 are accepted)")
 
 
     let( circ_pitch = circular_pitch(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch) )
@@ -4930,7 +5219,7 @@ function module_value(
 function _adendum(
     profile_shift=0, _named, circ_pitch, diam_pitch, mod, shorten=0
 ) =
-    assert(is_undef(_named), "\narguments after profile_shift must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
 
     let( mod = module_value(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch) )
     mod * (1 + profile_shift - shorten);
@@ -4966,7 +5255,7 @@ function _adendum(
 function _dedendum(
     clearance, profile_shift=0, _named, circ_pitch, diam_pitch, mod
 ) =
-    assert(is_undef(_named), "\narguments after clearance, profile_shift must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
  let(
         mod = module_value(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch),
         clearance = default(clearance, 0.25 * mod)
@@ -5025,7 +5314,7 @@ function pitch_radius(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1], helical=_gear_args[2])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth, helical must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
 
     let(
         helical=is_undef(helical)?0:helical
@@ -5093,7 +5382,7 @@ function outer_radius(
     let(circ_pitch=_gear_args[0], teeth=_gear_args[1])
     // END GEAR_API_COMPAT
 
-    assert(is_undef(_named), "\narguments after teeth must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
 
     let(
         internal=is_undef(internal)?false:internal, helical=is_undef(helical)?0:helical,
@@ -5148,7 +5437,7 @@ function root_radius(
     teeth, helical, _named, mod, circ_pitch, diam_pitch, profile_shift, pressure_angle, clearance,
     backlash, internal
 ) =
-    assert(is_undef(_named), "\narguments after teeth, helical must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
 
     let(helical=default(helical,0),
         internal=default(internal,false),
@@ -5196,7 +5485,7 @@ function root_radius(
 function _root_radius_basic(
     teeth, _named, circ_pitch, clearance, internal=false, helical=0, profile_shift=0, mod, diam_pitch
 ) =
-    assert(is_undef(_named), "\narguments after teeth must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
 
     let( circ_pitch = circular_pitch(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch) )
     pitch_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical) - (
@@ -5234,7 +5523,7 @@ function _root_radius_basic(
 function _base_radius(
     teeth, pressure_angle=20, helical=0, _named, mod, diam_pitch, circ_pitch
 ) =
-    assert(is_undef(_named), "\narguments after teeth, pressure_angle, helical must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(
         circ_pitch = circular_pitch(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch),
@@ -5275,7 +5564,7 @@ function _base_radius(
 function bevel_pitch_angle(
     teeth, mate_teeth, drive_angle, _named
 ) =
-    assert(is_undef(_named), "\narguments after teeth, mate_teeth, drive_angle must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(drive_angle=default(drive_angle,90))
 
@@ -5287,11 +5576,14 @@ function bevel_pitch_angle(
 // Topics: Gears, Parts
 // See Also: worm(), globoid_worm_root_radius(), worm_dist(), worm_gear(), globoid_worm_gear()
 // Usage:
-//   r = worm_root_radius([mod=|circ_pitch=|diam_pitch=], d, [clearance=], [worm_diam=]);
+//   r = worm_root_radius([mod=|circ_pitch=|diam_pitch=], d, [clearance=], [worm_diam=], [pressure_angle=], [backlash=], [starts=|worm_starts=]);
 // Description:
-//   Returns the nominal radius below the threads of {{worm()}}. It is constant
-//   along a cylindrical worm. Use the same pitch diameter, tooth size, and
-//   `clearance` as the worm. `worm_diam` is an alias of `d`.
+//   Returns the actual radius below the full-height threads of {{worm()}}. It is
+//   constant along a cylindrical worm. Use the same pitch diameter, tooth size,
+//   `clearance`, `pressure_angle`, `backlash`, and start count as the worm.
+//   `worm_diam` is an alias of `d`; `worm_starts` is an alias of `starts`.
+//   At high pressure angles, adjacent flanks can meet above the nominal root
+//   depth. The result accounts for that shallower, V-shaped valley.
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
@@ -5300,7 +5592,7 @@ function bevel_pitch_angle(
 //   value and overlap it with the worm. The difference leaves room for faceting
 //   and manufacturing tolerances. This is a geometric root radius, not a shaft
 //   strength recommendation or the largest shaft that could clear a mating wheel.
-//   It is independent of the worm's start count, `lead_in`, and handedness.
+//   `lead_in` and handedness do not change this full-height root radius.
 // Arguments:
 //   d = Worm pitch diameter. Required unless worm_diam is supplied.
 //   ---
@@ -5309,6 +5601,10 @@ function bevel_pitch_angle(
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   clearance = Radial clearance below the threads. Default: module/4
 //   worm_diam = Alias of d. Specify only one diameter spelling.
+//   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
+//   backlash = Axial tooth thinning, as supplied to worm(). Default: 0
+//   starts = Number of worm starts. Default: 1
+//   worm_starts = Alias of starts. Specify only one start-count spelling.
 // Example: An almost root-sized shaft through a cylindrical worm.
 //   m=2; d=24; L=35; c=m/4;
 //   shaft_r=worm_root_radius(mod=m,d=d,clearance=c)-0.1;
@@ -5316,16 +5612,21 @@ function bevel_pitch_angle(
 //       worm(mod=m,d=d,l=L,starts=5,clearance=c,lead_in=6);
 //       cyl(r=shaft_r,l=L+30,$fn=96);
 //   }
-function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam) =
-    assert(is_undef(_named), "\narguments after d must be named")
-    let(d=_gear_worm_diameter(d,worm_diam),
+function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam,
+                          pressure_angle,backlash,starts,worm_starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
+    let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
         m=_inherit_gear_pitch("worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
-        c=default(clearance,m/4))
-    assert(is_finite(d) && d>0, str("\nd (worm_diam) must be supplied and greater than zero and finite; got ",d))
+        c=default(clearance,m/4),pa=_inherit_gear_pa(pressure_angle),ba=default(backlash,0))
+    assert(is_int(s) && s>0, "\nstarts must be a positive integer")
+    assert(is_finite(d) && d>max(2,s)*m,
+           str("\nFor current parameters, d must be supplied and greater than ",max(2,s)*m,"; got ",d))
     assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
     assert(d>2*(m+c), str("\nFor current tooth size and clearance, d must be greater than ",2*(m+c),
-                         " to leave a positive root radius; got ",d))
-    d/2-m-c;
+                         " to leave a positive nominal root radius; got ",d))
+    assert(is_finite(pa) && pa>=0 && pa<90, "\npressure_angle must be at least zero and less than 90 degrees")
+    assert(is_finite(ba) && ba>=0, "\nbacklash must be nonnegative and finite")
+    d/2-_worm_thread_dedendum(m,asin(s*m/d),pa,c,ba);
 
 
 // Function: globoid_worm_root_radius()
@@ -5333,7 +5634,7 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 // Topics: Gears, Parts
 // See Also: globoid_worm(), worm_root_radius(), globoid_worm_dist(), worm_gear(), globoid_worm_gear()
 // Usage:
-//   r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [z=], [worm_starts=|starts=], [clearance=], [d=]);
+//   r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [z=], [worm_starts=|starts=], [clearance=], [d=], [worm_length=|l=|length=|h=|height=]);
 // Description:
 //   Returns the nominal root radius of {{globoid_worm()}} at local axial
 //   coordinate `z`, measured from the worm's middle plane. The radius is
@@ -5344,11 +5645,14 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 //   .
-//   Use the default `z=0` for a shaft that passes through the worm. For an
-//   end-only extension, evaluate at `z=worm_length/2-overlap`, the inner edge of
-//   the short overlap into the worm, and subtract a small radial margin. Do not
-//   extend that larger end shaft through the narrow throat. Choose `z` inside
-//   the intended working length; this helper does not take or select `worm_length`.
+//   Give `worm_length` (or `l`, `length`, `h`, or `height`) to query the radius
+//   at either end face. To query a different section, supply `z` explicitly;
+//   `z=0` gives the minimum radius for a through-shaft or bore. With neither
+//   a length nor `z`, the result is the minimum radius, as before.
+//   .
+//   For an end-only shaft overlapping into the worm, use `z=worm_length/2-overlap`
+//   and subtract a small radial margin. Do not extend the larger end shaft through
+//   the narrow throat. When a length is supplied, `z` must be within that length.
 //   .
 //   This is a geometric root radius, not a guaranteed maximum shaft size or a
 //   strength recommendation. Leave a margin for faceting and manufacturing.
@@ -5360,7 +5664,12 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   mod = Normal module; specify only one tooth-size measure.
 //   circ_pitch = Normal circular pitch.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
-//   z = Local axial position measured from the worm's center. Default: 0
+//   z = Local axial position measured from the worm's center. Default: half the supplied worm_length, or 0 when no length is supplied.
+//   worm_length = Working worm length; selects an end-face query when z is omitted. Optional if z is given or the minimum radius is wanted.
+//   l = Alias of worm_length. Specify only one length spelling.
+//   length = Alias of worm_length. Specify only one length spelling.
+//   h = Alias of worm_length. Specify only one length spelling.
+//   height = Alias of worm_length. Specify only one length spelling.
 //   worm_starts = Number of starts on the worm. Default: 1
 //   starts = Alias of worm_starts. Specify only one start-count spelling.
 //   clearance = Radial clearance below the threads. Default: module/4
@@ -5369,7 +5678,7 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   m=2; N=55; d=24; s=5; L=35; c=m/4;
 //   overlap=0.2; extension=20;
 //   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s,
-//                                   clearance=c,z=L/2-overlap)-0.1;
+//                                   clearance=c,worm_length=L,z=L/2-overlap)-0.1;
 //   union() {
 //       globoid_worm(mod=m,N,d,starts=s,worm_length=L,clearance=c,lead_in=6);
 //       for(side=[-1,1])
@@ -5377,17 +5686,24 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //               cyl(r=shaft_r,l=extension+overlap,$fn=96);
 //   }
 function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance,
-                                  mod,circ_pitch,diam_pitch,d,starts) =
-    assert(is_undef(_named), "\narguments after teeth and worm_diam must be named")
+                                  mod,circ_pitch,diam_pitch,d,starts,worm_length,l,length,h,height) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(L=_globoid_length(worm_length,l,length,h,height))
+    assert(is_undef(L) || (is_finite(L) && L>0),
+           str("\nworm_length must be greater than zero and finite; got ",L))
     let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
         m=_inherit_gear_pitch("globoid_worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
-        c=default(clearance,m/4),z=default(z,0))
+        c=default(clearance,m/4),z=default(z,is_undef(L)?0:L/2))
     assert(_globoid_check_reference(m,teeth,d,s), "\nInvalid globoid reference parameters")
     assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
     assert(c<d/2-m, str("\nFor current parameters, clearance must be less than ",d/2-m,
                        " to leave a positive throat root radius; got ",c))
     assert(is_finite(z), str("\nz must be finite; got ",z))
+    assert(is_undef(L) || abs(z)<=L/2,
+           str("\nz must be between ",-default(L,0)/2," and ",default(L,0)/2," for the supplied worm_length; got ",z))
     let(R=m*teeth/(2*sqrt(1-pow(s*m/d,2))),a=R+d/2,root_meridian=R+m+c)
+    assert(is_undef(L) || L<1.3*(R-m-c),
+           str("\nFor current parameters, worm_length must be less than ",1.3*(R-m-c),"; got ",L))
     assert(abs(z)<root_meridian, str("\nFor current parameters, abs(z) must be less than ",root_meridian,
                                    "; got ",z,". Choose a position inside the worm's working length."))
     a-sqrt(root_meridian*root_meridian-z*z);
@@ -5398,12 +5714,15 @@ function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), globoid_worm_gear()
 // Usage: As a Function
-//   value = worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=], [profile_shift=], [pressure_angle=], [backlash=]);
+//   value = worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [profile_shift=], [pressure_angle=], [backlash=], [d=]);
 // Description:
 //   Returns the center spacing between a cylindrical {{worm()}} and its mating
 //   {{worm_gear()}}. Use the same tooth size, `teeth`, `worm_diam`, `worm_starts`,
 //   `pressure_angle`, and `profile_shift` as the wheel. The default automatic
 //   profile shift must agree with the wheel's setting.
+//   .
+//   `d` and `starts` are aliases of `worm_diam` and `worm_starts`; specify only
+//   one spelling of each. Named calls using the older spellings remain supported.
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
@@ -5415,6 +5734,8 @@ function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance
 //   worm_diam = Worm pitch diameter.
 //   ---
 //   worm_starts = Number of worm starts. Default: 1
+//   starts = Alias of worm_starts. Specify only one start-count spelling.
+//   d = Alias of worm_diam. Specify only one diameter spelling.
 //   profile_shift = Wheel profile-shift coefficient. Default: "auto"
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
 //   mod = Normal module.
@@ -5430,10 +5751,12 @@ function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance
 // Do not also thin the teeth for the same requested play. The spacing relation
 // is not a guarantee of uniform clearance/contact across a wide worm wheel.
 function worm_dist(teeth,worm_diam,_named,worm_starts,profile_shift,pressure_angle,
-                   mod,circ_pitch,diam_pitch,backlash) =
-    assert(is_undef(_named), "\narguments after teeth and worm_diam must be named")
-    let(cp=_inherit_gear_pitch("worm_dist()",circ_pitch,diam_pitch,mod),
-        pa=_inherit_gear_pa(pressure_angle), s=default(worm_starts,1),
+                   mod,circ_pitch,diam_pitch,backlash,d,starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(worm_diam=_gear_worm_diameter(d,worm_diam),
+        s=_gear_worm_starts(starts,worm_starts),
+        cp=_inherit_gear_pitch("worm_dist()",circ_pitch,diam_pitch,mod),
+        pa=_inherit_gear_pa(pressure_angle),
         ps=_wormgear_resolve_shift(cp/PI,teeth,worm_diam,s,pa,profile_shift),
         ref=_wormgear_reference(cp/PI,teeth,worm_diam,s,pa,ps))
     _wormgear_spacing(ref,default(backlash,0));
@@ -5455,13 +5778,16 @@ function _wormgear_spacing(ref,backlash) =
 // Topics: Gears, Parts
 // See Also: globoid_worm(), globoid_worm_gear(), worm_dist(), worm_gear()
 // Usage:
-//   value = globoid_worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=]);
+//   value = globoid_worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [d=]);
 // Description:
 //   Returns the center spacing between {{globoid_worm()}} and {{globoid_worm_gear()}}.
 //   Use the same tooth size, `teeth`, `worm_diam`, and `worm_starts` as the wheel.
 //   The spacing is independent of `worm_length` and `pressure_angle`. Backlash is
 //   set on the wheel, not by increasing this distance. For a cylindrical pair,
 //   use {{worm_dist()}} instead.
+//   .
+//   `d` and `starts` are aliases of `worm_diam` and `worm_starts`; specify only
+//   one spelling of each. Named calls using the older spellings remain supported.
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
@@ -5473,10 +5799,13 @@ function _wormgear_spacing(ref,backlash) =
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   worm_starts = Number of starts. Default: 1
-function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm_starts) =
-    assert(is_undef(_named), "\narguments after teeth and worm_diam must be named")
-    let(m=_inherit_gear_pitch("globoid_worm_dist()",circ_pitch,diam_pitch,mod)/PI,
-        s=default(worm_starts,1))
+//   starts = Alias of worm_starts. Specify only one start-count spelling.
+//   d = Alias of worm_diam. Specify only one diameter spelling.
+function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm_starts,d,starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(worm_diam=_gear_worm_diameter(d,worm_diam),
+        s=_gear_worm_starts(starts,worm_starts),
+        m=_inherit_gear_pitch("globoid_worm_dist()",circ_pitch,diam_pitch,mod)/PI)
     assert(_globoid_check_reference(m,teeth,worm_diam,s), "\nInvalid gear parameters")
     worm_diam/2+m*teeth/(2*sqrt(1-pow(s*m/worm_diam,2)));
 
@@ -5547,7 +5876,7 @@ function gear_dist(
     teeth1, teeth2, helical, profile_shift1, profile_shift2, _named, mod, circ_pitch, diam_pitch,
     internal1, internal2, pressure_angle, backlash
 ) =
-    assert(is_undef(_named), "\narguments after teeth1, teeth2, helical, profile_shift1, profile_shift2 must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 5 are accepted)")
 
     let(helical=default(helical,0),
         internal1=default(internal1,false),
@@ -5650,7 +5979,7 @@ function gear_dist_skew(
     teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2, _named, mod, circ_pitch,
     diam_pitch, pressure_angle, backlash
 ) =
-    assert(is_undef(_named), "\narguments after teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2 must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
 
     let(pressure_angle=default(pressure_angle,20),
         backlash=default(backlash,0))
@@ -5714,7 +6043,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 function gear_skew_angle(
     teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2, _named, pressure_angle
 ) =
-    assert(is_undef(_named), "\narguments after teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2 must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
 
     let(pressure_angle=default(pressure_angle,20))
 
@@ -5814,7 +6143,7 @@ function get_profile_shift(
     desired, teeth1, teeth2, helical, _named, mod, circ_pitch, diam_pitch, internal1, internal2,
     pressure_angle
 ) =
-    assert(is_undef(_named), "\narguments after desired, teeth1, teeth2, helical must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 4 are accepted)")
 
     let(helical=default(helical,0),
         pressure_angle=default(pressure_angle,20),
@@ -5866,7 +6195,7 @@ function get_profile_shift(
 function auto_profile_shift(
     teeth, pressure_angle, helical, _named, min_teeth, get_min, profile_shift
 ) =
-    assert(is_undef(_named), "\narguments after teeth, pressure_angle, helical must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 3 are accepted)")
 
     let(pressure_angle=default(pressure_angle,20),
         helical=default(helical,0),
@@ -5927,7 +6256,7 @@ function auto_profile_shift(
 function gear_shorten(
     teeth1, teeth2, helical, profile_shift1, profile_shift2, _named, pressure_angle
 ) =
-    assert(is_undef(_named), "\narguments after teeth1, teeth2, helical, profile_shift1, profile_shift2 must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 5 are accepted)")
 
     let(helical=default(helical,0),
         profile_shift1=default(profile_shift1,"auto"),
@@ -5966,7 +6295,7 @@ function gear_shorten(
 function gear_shorten_skew(
     teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2, _named, pressure_angle
 ) =
-    assert(is_undef(_named), "\narguments after teeth1, teeth2, helical1, helical2, profile_shift1, profile_shift2 must be named")
+    assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
 
     let(profile_shift1=default(profile_shift1,"auto"),
         profile_shift2=default(profile_shift2,"auto"),
