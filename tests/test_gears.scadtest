@@ -173,24 +173,26 @@ include <../std.scad>
 include <../gears.scad>
 
 module test_worm_dist() {
-    d = worm_dist(d=10, starts=1, teeth=20, mod=2);
+    d = worm_dist(worm_diam=10, worm_starts=1, teeth=20, mod=2);
     assert(d > 0);
 }
 test_worm_dist();
 '''
 
+
 [[test]]
-name = "test_worm_gear_thickness"
+name = "test_globoid_worm_dist"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_worm_gear_thickness() {
-    t = worm_gear_thickness(mod=2, teeth=20, worm_diam=10);
-    assert(t > 0);
+module test_globoid_worm_dist() {
+    d = globoid_worm_dist(worm_diam=10, worm_starts=1, teeth=20, mod=2);
+    assert(d > 0);
 }
-test_worm_gear_thickness();
+test_globoid_worm_dist();
 '''
+
 
 [[test]]
 name = "test_spur_gear2d"
@@ -327,35 +329,68 @@ module test_bevel_gear() {
 test_bevel_gear();
 '''
 
+
 [[test]]
-name = "test_worm"
+name = "test_globoid_worm"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_worm() {
+module test_globoid_worm() {
     $fn = 8;
-    v = worm(mod=2, d=20, l=20);
+    v = globoid_worm(mod=2, teeth=20, d=20, l=10);    
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
-test_worm();
+test_globoid_worm();
 '''
 
+
+
 [[test]]
-name = "test_enveloping_worm"
+name = "test_globoid_worm_gear"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_enveloping_worm() {
+module test_globoid_worm_gear() {
     $fn = 8;
-    v = enveloping_worm(mod=2, mate_teeth=20, d=20);
+    v = globoid_worm_gear(mod=2, teeth=20, worm_diam=20, worm_length=10);        
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
-test_enveloping_worm();
+test_globoid_worm)gear();
 '''
+
+
+[[test]]
+name = "test_globoid_worm_root_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_globoid_worm_root_radius() {
+    r=globoid_worm_root_radius(mod=3, d=20, teeth=22);    
+    assert(r>0);
+}
+test_globoid_worm_root_radius();
+'''
+
+
+[[test]]
+name = "test_worm_root_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_root_radius() {
+    r=worm_root_radius(mod=3, d=20);    
+    assert(r>0);
+}
+test_worm_root_radius();
+'''
+
+
 
 [[test]]
 name = "test_worm_gear"
