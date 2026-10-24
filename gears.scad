@@ -134,10 +134,6 @@ function _gear_worm_starts(starts,worm_starts) =
     value;
 
 
-// BEGIN GEAR_API_COMPAT
-
-// Section: Parameter order and migration
-
 
 // Section: Legacy Gear Parameters and Migration
 //   Legacy invocation of many gear modules and functions has the form
@@ -537,21 +533,6 @@ function _gear_worm_starts(starts,worm_starts) =
 //   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
 //   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
 //   superficially resembles a helical gear at a very slight angle, but it has a very different tooth form.  
-//   .
-//   In a double-enveloping pair, {{globoid_worm()}} has an hourglass shape that wraps
-//   around {{globoid_worm_gear()}}, while the wheel also wraps around the worm.
-//   More tooth contact can distribute the load over a larger area. These complex
-//   shapes are harder to machine, but 3D printing makes them more accessible for
-//   prototypes. Printed performance still depends on material, finish, accuracy,
-//   lubrication, and alignment; greater efficiency is not guaranteed by the shape.
-//   The cylindrical and globoid parts are not interchangeable.
-//   .
-//   Both parts are constructed with their axes along Z. With `gear_spin=0`, the
-//   wheel has a tooth centered on +Y and the worm has a valley facing -Y at its
-//   middle plane. Leave the wheel at the origin and put the worm at `back(a)` with
-//   `orient=RIGHT`. Use {{worm_dist()}} for `a` in a cylindrical pair or
-//   {{globoid_worm_dist()}} for a globoid pair. No initial tooth-phase rotation is needed.
-
 // Figure(3D,Med,NoAxes,VPT=[38.1941,-7.67869,7.95996],VPR=[56.4,0,25],VPD=361.364):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns, its screwing action drives the worm gear.  
 //   starts=2;
 //   ps=0;
@@ -624,23 +605,23 @@ function _gear_worm_starts(starts,worm_starts) =
 //      }  
 //   }
 // Continues:
+//   The worm and its worm gear must be designed together.  
 //   As usual, a proper mesh requires that the pressure angles match
-//   and the teeth of the worm and worm gear are the same size.
+//   and the the teeth on the mating gears are the same size. 
 //   Additionally the worm gear must be constructed to match the
 //   diameter of the worm and the number of starts on the worm.  The
 //   number of starts on the worm changes the angle at of the teeth on
 //   the worm, and hence requires a change to the angle of teeth on
 //   the worm gear.
 //   .
-//   For globoid pairs the worm gear must know the length of the worm
+//   For globoid pairs the worm gear design takes into account the length of the worm
 //   in order to ensure that the teeth don't interfere anywhere along its length, and
-//   the worm needs to know the diameter of the worm gear, which it computes from the tooth count.
-//   Because the gear pairs are designed together, you cannot use a globoid worm with a regular worm
-//   gear, even though the two worm gears look similar.  
-//
+//   the worm design obviously requires the diameter of the worm gear, which it computes from the tooth count.
+//   You cannot use a globoid worm with a regular worm gear, even though the two worm gears look similar.  
+//   .
 //   To achieve proper mesh, as usual you must separate the gears by the correct distance.  
 //   The {{worm_dist()}} and {{globoid_worm_dist()}} functions give the correct center spacing for the worm from its mating worm gear.  
-//   .  
+//   .
 //   Worm drives are often "self-locking", which means that torque transmission can occur only from the worm to the worm gear,
 //   so they must be driven by the worm.  Self-locking results from the small lead angle of the worm threads, which produces
 //   high frictional forces at contact.  A multi-start worm has a higher lead angle and as a result is less likely
@@ -2903,85 +2884,67 @@ module bevel_gear(
 
 
 // Module: worm()
-// Synopsis: Creates a cylindrical worm for an enveloping worm wheel.
+// Synopsis: Creates a cylindrical worm that will mate with a worm gear.
 // SynTags: Geom
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), globoid_worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear(), worm_root_radius()
 // Usage: As a Module
-//   worm(mod=|circ_pitch=|diam_pitch=, [d], [l], [starts=|worm_starts=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [anchor=], [spin=], [orient=], [gear_spin=], [length=], [h=], [height=], [worm_length=], [worm_diam=], [lead_in=]) [ATTACHMENTS];
+//   worm(mod=|circ_pitch=|diam_pitch=, [d/worm_diam], [l/length/h/height/worm_length], [starts=|worm_starts=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [lead_in=], [anchor=], [spin=], [orient=], [gear_spin=]) [ATTACHMENTS];
 // Description:
 //   Creates a cylindrical worm, a screw-shaped gear that meshes with {{worm_gear()}}
-//   on perpendicular, offset shafts. The mating wheel wraps partway around the worm.
-//   For an hourglass worm and a double-enveloping pair, use {{globoid_worm()}} and
-//   {{globoid_worm_gear()}} instead; the two families are not interchangeable.
+//   on perpendicular, offset shafts.  See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
+//   You must specify tooth size using `mod=`, `circ_pitch=`, or `diam_pitch=` or inherit it from
+//   a parent gear.  The worm and its mated worm gear must have matching tooth size, starts,
+//   pressure angle and handedness. 
 //   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   At large `pressure_angle`, adjacent thread flanks can meet before the nominal
-//   root depth, leaving a V-shaped valley instead of a flat root land. This is
-//   allowed; {{worm_root_radius()}} returns the resulting root radius. The
-//   nominal `clearance` depth may not be reached. The full-height thread must
-//   still have a nonzero crest; the error reports the limit when it does not.
+//   The gear appears centered, oriented in the Z direction.  The FRONT point of the gear
+//   (on the Y- axis) is a tooth valley so it can mesh with a tooth on the worm gear.
+//   Use {{worm_dist()}} to determine the proper center-to-center space between the worm and its worm gear.
+//   For such applications as attaching a shaft or creating a hole it is useful to know the root radius
+//   of the gear.  You can calculate this using {{worm_root_radius()}}.
 //   .
-//   The worm and wheel must have matching tooth size, start count, `pressure_angle`,
-//   and `left_handed`. On this worm, `d` and `worm_diam` are aliases, as are `starts`
-//   and `worm_starts`. Specify only one spelling of each quantity. The worm's length
-//   is independent of the wheel's `thickness`.
+//   To create space for gears to mesh in practice you will need to set a positive value for backlash, or
+//   use the `backlash` argument to {{worm_dist()}} (but not both).  Low `$fn` values can create
+//   more interference with small or zero backlash.  The `clearance=` parameter specifies
+//   clearance at the bottom of the teeth valleys with a default of `mod/4`.  For very large pressure angles the
+//   valleys may rise and shrink the clearance below the requested value, or you may need
+//   to specify extra clearance to create a valid gear.
 //   .
-//   The worm is centered on the origin with its axis along Z. With `gear_spin=0`, a
-//   thread valley faces the front (-Y) at the XY middle plane. Leave the wheel at the
-//   origin and place the worm with `back(a)` and `orient=RIGHT`, where `a` is returned
-//   by {{worm_dist()}}. Both parts then mesh with `gear_spin=0`; no initial phase
-//   correction is needed. Use matching `profile_shift` and `pressure_angle` in the
-//   wheel and distance calculation.
-//   .
-//   Positive `backlash` provides extra space between the meshing teeth. Alternatively,
-//   {{worm_dist()}} can provide backlash by increasing the spacing; do not use both
-//   methods for the same requested play. Increasing `$fn` improves the worm's surface
-//   smoothness but takes longer to generate. Some small overlap may remain in coarse
-//   meshes with zero backlash, so inspect the assembled pair before printing.
-//   .
-//   `lead_in` makes each thread lower and narrower toward the root near both
-//   ends, avoiding the thin partial threads left by a flat cut. It is measured
-//   around the outside of the worm, not along its axis. A single rounded taper
-//   shape is used. The default lead-in is one full tooth depth. A small bare-core
-//   region at the ends is normal. Zero retains flat-cut ends. A longer lead-in removes more working contact, so
-//   keep the worm long enough for the wheel. The overall length, spacing, and
-//   zero-phase convention are unchanged. The core's end edges are not rounded.
-//   This is an attachable module; there is no function/VNF form.
+//   The worm gear has blunt start threads by default, with a lead in equal to the depth of one tooth.  
+//   You can set `lead_in` to zero to disable blunt start, or choose a different length of lead in.
 // Arguments:
-//   d = The pitch diameter of the worm.  Default: 15
-//   l = Full axial worm length. Alias of length, h, height, and worm_length; specify only one. Default: 100.
+//   d/worm_diam = The pitch diameter of the worm.  Default: 15
+//   l/length/h/height/worm_length = Length of the worm
 //   ---
-//   worm_diam = Alias of d. Specify only one diameter spelling.
-//   worm_starts = Alias of starts. Specify only one start-count spelling.
-//   lead_in = Length of the rounded thread taper at each end, measured around the outside of the worm. Zero leaves flat-cut ends. Default: 2*module+clearance (one full tooth depth)
-//   starts = The number of lead starts.  Default: 1
-//   left_handed = If true, select the left-handed form. Default: false (right-handed).
-//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   mod = The module of the gear (pitch diameter / teeth)
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
-//   gear_spin = Rotate the worm thread about its axis before anchoring; does not rotate children. Default: 0
-//   length = Alias of l; named only.
-//   h = Alias of l; named only.
-//   height = Alias of l; named only.
-//   worm_length = Alias of l, useful when sharing a working-length variable with a worm wheel; named only.
+//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
+//   starts/worm_starts = Number of lead starts.  Default: 1
+//   left_handed = If true, spiral in the left handed direction. Default: false (right-handed).
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the tooth valleys.  Default: module/4
+//   lead_in = Length of the thread taper at the ends, or zero for flat-cut ends.  Default: 2*module+clearance (tooth depth)
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   gear_spin = Rotate the worm this many degrees around its axis; does not rotate children.  Default: 0
 // Example:
-//   worm(circ_pitch=8, d=30, l=50, $fn=72);
+//   worm(mod=2, d=30, l=50, $fn=72);
 // Example: Multiple Starts.
-//   worm(circ_pitch=8, d=30, l=50, starts=3, $fn=72);
+//   worm(mod=2, d=30, l=50, starts=3, $fn=72);
 // Example: Left Handed
-//   worm(circ_pitch=8, d=30, l=50, starts=3, left_handed=true, $fn=72);
-// Example: High-pressure-angle worm with V-shaped root valleys.
-//   worm(mod=2,d=24,l=35,starts=1,pressure_angle=35,$fn=96);
-// Example: Rounded thread ends, without a bevel.
-//   worm(mod=2, d=24, l=35, starts=5, lead_in=6, $fn=96);
+//   worm(mod=2, d=30, l=50, starts=3, left_handed=true, $fn=72);
+// Example: High-pressure-angle worm
+//   worm(mod=2, d=24, l=35, starts=1, pressure_angle=35, $fn=96);
+// Example: With `lead_in=0` the worm has sharp edges at the ends
+//   worm(circ_pitch=8, d=30, l=50, lead_in=0, starts=3, $fn=72);
+// Example: Worm mated to a worm gear
+//   $fn=64;
+//   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
+//   worm_gear(mod=2, worm_diam=30, worm_starts=3, teeth=25);
+//   back(sep)
+//     worm(mod=2, d=30, l=50, starts=3, $fn=72, orient=RIGHT);
 
 /// The rack supplies the axial tooth corners; _worm_thread_profile() fits
 /// their rounding within a single pitch. generic_threaded_rod() uses coordinates measured
@@ -3107,79 +3070,73 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 // Usage: As a Module
 //   worm_gear(mod=|circ_pitch=|diam_pitch=, teeth, worm_diam, [thickness], [worm_starts=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=], [shaft_diam=], [gear_spin=], [min_tip=], [face_chamfer=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Creates an enveloping worm wheel that meshes with the cylindrical {{worm()}}.
-//   The wheel's teeth curve across its width to wrap partway around the worm. Use
-//   {{globoid_worm_gear()}} with {{globoid_worm()}} for a double-enveloping pair instead.
+//   Creates an enveloping worm gear (also called a worm wheel) that meshes with the cylindrical {{worm()}}
+//   on perpendicular, offset shafts.  See [A Quick Introduction to Gears: fWorm Drive](gears.scad#subsection-worm-drive).
+//   The worm gear's teeth curve across its width to wrap partway around the worm.  The worm_gear and its mated worm
+//   must have matching tooth size, starts, pressure angle and handedness. 
 //   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   Match the worm's pitch diameter, start count, tooth size, `pressure_angle`, and
-//   `left_handed`. Specify the wheel's axial size with `thickness`. Its default,
-//   `worm_diam/2`, is a starting value, not a recommended maximum or a strength rating.
-//   Very small worms may require an explicitly narrower wheel; the error reports the limit.
+//   You control the thickness using the `thickness` parameter, which defaults to `worm_diam/2`.
+//   Very small worms require a smaller thickness and give an error with the default.
+//   Far from the center plane of the gear the teeth naturally come to sharp points.
+//   The `min_tip=` parameter limits these fragile, sharp tips by imposing a minimum width
+//   across the tip of the gear, with a default of `0.4*mod`.  This process shortens the
+//   tips of the teeth near the edge, which will decrease their engagement with the worm.
 //   .
-//   The wheel is centered on the origin with its axis along Z and one tooth centered
-//   on +Y. Place the worm with `back(a)` and `orient=RIGHT`, using {{worm_dist()}} for
-//   `a`. Both parts mesh with `gear_spin=0`. Give the distance helper the same
-//   `profile_shift` and `pressure_angle` as the wheel; the default automatic profile
-//   shift can change the center spacing.
+//   The worm gear appears with a tooth centered on Y+.
+//   Use {{worm_dist()}} to determine the proper center-to-center space between the worm_gear and its worm.
+//   Profile shifting is supported and defaults to "auto" which applies profile shifts
+//   to small tooth gears to prevent undercut teeth.  You can also use profile shifting
+//   to adjust the space between the gears; if you specify `profile_shift=` be sure
+//   to pass the same value to {{worm_dist()}}.  
 //   .
-//   `min_tip` prevents thin, fragile, knife-like tooth tips. The wheel shortens teeth
-//   where needed to leave at least this width across their tips while preserving
-//   `thickness`. It can therefore have shorter teeth near its faces than in the middle.
-//   A very small positive `min_tip` permits sharp tips, as shown below; use this only
-//   to inspect the tooth form, not as a printing recommendation. `min_tip` does not
-//   round corners or specify the load the gear can carry.
+//   The `crowning=` adds relief to each flank, increasing quadratically from zero at the
+//   middle to the specified pitch-circle relief at each face.  A small amount of
+//   crowning is useful for preventing edge loading, toleration of misalignment, and reduction of
+//   noise and vibration.  
 //   .
-//   `face_chamfer` trims the outer rim at both axial faces with a simple bevel. Its
-//   value is the equal setback along the face and the outside profile, viewed in a
-//   section through the wheel axis. It does not bevel every edge of the tooth outline.
-//   `crowning` adds relief to each flank, increasing quadratically from zero at the
-//   middle to the specified pitch-circle relief at each face.
+//   The `chamfer=` parameter trims the outer rims with a simple bevel, with
+//   the specified amount of setback along the gear face and the outside.
 //   .
-//   Use `backlash` here to thin the wheel teeth, or in {{worm_dist()}} to increase the
-//   center spacing, but do not apply both for the same requested play. Increase
-//   `slices` and `$gear_steps` for smoother teeth and a closer mesh approximation;
-//   finer meshes take longer to generate. The function returns a VNF; the module
-//   creates an attachable solid and can add a `shaft_diam` hole.
-//   At large `pressure_angle`, the extended cutter reaches a point before the
-//   requested root-clearance depth. The wheel uses that shallower root instead
-//   of an inverted cutter tip. Its actual clearance can then be smaller than
-//   `clearance`. This does not change the center spacing or the working flanks.
-//   .
+//   To create space for gears to mesh in practice you will need to set a positive value for backlash, or
+//   use the `backlash=` argument to {{gear_dist()}} (but not both).  Low `$fn` values can create
+//   more interference with small or zero backlash.  The `clearance=` parameter specifies
+//   clearance at the bottom of the teeth valleys with a default of `mod/4`.  For very large pressure angles the
+//   valleys may rise and shrink the clearance below the requested value, or you may need
+//   to specify extra clearance to create a valid gear.  
 // Arguments:
 //   teeth = Number of wheel teeth; integer greater than 7.
 //   worm_diam = Worm pitch diameter.
 //   thickness = Full axial wheel thickness. Default: worm_diam/2.
 //   ---
-//   worm_starts = Number of worm starts. Default: 1
-//   crowning = Extra relief per flank, measured as wheel pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0.1
-//   left_handed = If true, select the left-handed form. Default: false (right-handed).
-//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
-//   backlash = Tooth thinning measured along the wheel pitch circle; the generating distance is unchanged. Default: 0
-//   clearance = Extra clearance below the mating worm tooth tips. Default: module/4
-//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
-//   slices = Width intervals, rounded up to an even number. Default: 10
-//   shaft_diam = Axial shaft hole; module only. Default: 0
-//   gear_spin = Tooth phase in degrees. Default: 0
 //   mod = Normal module.
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
+//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
+//   worm_starts = Number of worm starts. Default: 1
+//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
+//   left_handed = If true, select the left-handed form. Default: false (right-handed).
+//   crowning = Extra relief per flank, measured as wheel pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0.1
+//   backlash = Tooth thinning measured along the wheel pitch circle; the generating distance is unchanged. Default: 0
+//   clearance = Extra clearance below the mating worm tooth tips. Default: module/4
+//   slices = Number of slices used to construct the gear, rounded up to an even number. Default: 10
+//   shaft_diam = Axial shaft hole; module only. Default: 0
+//   gear_spin = Rotate the gear this many degrees around its axis; does not rotate children.  Default: 0
 //   min_tip = Minimum width across a tooth tip in model length units; must be positive. Default: 0.4*module
-//   face_chamfer = Equal setback length in a radial-axial section of the already shortened rim; makes conical trims at both faces. Preserves thickness. Default: 0
+//   chamfer = Equal setback length in a radial-axial section of the already shortened rim; makes conical trims at both faces. Preserves thickness. Default: 0
 //   anchor = Attachment anchor. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
 //   orient = Direction of the wheel axis. Default: UP
-// Example: Explicit thickness and minimum tip width.
-//   worm_gear(mod=3, 75, 44, 24, worm_starts=4,
-//             min_tip=1.2, profile_shift=0, crowning=0, slices=24);
-// Example: Bevels at the two axial faces.
-//   worm_gear(mod=3, 75, 44, 30, worm_starts=4,
-//             face_chamfer=0.6, crowning=0, slices=32);
-// Example(3D,Big): A wide wheel with normal blunt tips (left) and nearly pointed tips (right). The tiny min_tip is for inspecting the shape, not for printing.
-//   for (i=[0:1]) right(270*i)
-//       worm_gear(mod=3, 75, 44, 30, worm_starts=4,
-//                 crowning=0, min_tip=i==0?1.2:0.01, slices=24);
+// Example: 
+//   worm_gear(mod=3, teeth=20, worm_diam=38, thickness=30,$fn=32);
+// Example: Increasing mesh refinement with `slices` and `$fn` and adding a chamfer
+//   worm_gear(mod=3, teeth=20, worm_diam=38, thickness=30,
+//             slices=30, chamfer=2, $fn=64);
+// Example: With `min_tip` set very small you can see the sharp points that arise at the edges of the teeth
+//   worm_gear(mod=3, teeth=20, worm_diam=38, thickness=30,
+//             $fn=64, min_tip=.01);
+// Example: Worm gear for a multi-start worm with a shaft hole
+//   worm_gear(mod=3, teeth=20, worm_diam=38, thickness=30, worm_starts=5,
+//             $fn=64, shaft_diam=15);
 
 function worm_gear(
     // BEGIN GEAR_API_COMPAT
@@ -3188,7 +3145,7 @@ function worm_gear(
     // END GEAR_API_COMPAT
     teeth, worm_diam, thickness, _named, worm_starts, crowning, left_handed, pressure_angle,
     backlash, clearance, profile_shift, slices, gear_spin, mod, circ_pitch, diam_pitch, min_tip,
-    face_chamfer, anchor, spin, orient
+    chamfer, anchor, spin, orient
 ) =
     // BEGIN GEAR_API_COMPAT
     let(_gear_args=_gear_legacy_args(
@@ -3205,9 +3162,8 @@ function worm_gear(
         profile_shift=is_undef(profile_shift)?"auto":profile_shift, slices=is_undef(slices)?10:slices,
         gear_spin=is_undef(gear_spin)?0:gear_spin, anchor=is_undef(anchor)?CTR:anchor,
         spin=is_undef(spin)?0:spin, orient=is_undef(orient)?UP:orient,
-        face_chamfer=is_undef(face_chamfer)?0:face_chamfer
+        face_chamfer=is_undef(chamfer)?0:chamfer
     )
-
     let(
         cp = _inherit_gear_pitch(fname="worm_gear()", circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
         pa = _inherit_gear_pa(pressure_angle=pressure_angle),
@@ -3233,7 +3189,7 @@ module worm_gear(
     // END GEAR_API_COMPAT
     teeth, worm_diam, thickness, _named, worm_starts, crowning, left_handed, pressure_angle,
     backlash, clearance, profile_shift, slices, shaft_diam, gear_spin, mod, circ_pitch, diam_pitch,
-    min_tip, face_chamfer, anchor, spin, orient
+    min_tip, chamfer, anchor, spin, orient
 )
     // BEGIN GEAR_API_COMPAT
     let(_gear_args=_gear_legacy_args(
@@ -3250,7 +3206,7 @@ module worm_gear(
         profile_shift=is_undef(profile_shift)?"auto":profile_shift, slices=is_undef(slices)?10:slices,
         shaft_diam=is_undef(shaft_diam)?0:shaft_diam, gear_spin=is_undef(gear_spin)?0:gear_spin,
         anchor=is_undef(anchor)?CENTER:anchor, spin=is_undef(spin)?0:spin,
-        orient=is_undef(orient)?UP:orient, face_chamfer=is_undef(face_chamfer)?0:face_chamfer
+        orient=is_undef(orient)?UP:orient, chamfer=is_undef(chamfer)?0:chamfer
     )
 {
     cp = _inherit_gear_pitch(fname="worm_gear()",circ_pitch=circ_pitch,diam_pitch=diam_pitch,mod=mod);
@@ -3265,7 +3221,7 @@ module worm_gear(
         left_handed=left_handed, pressure_angle=pa, backlash=backlash,
         clearance=clearance, profile_shift=ps, slices=slices,
         thickness=thickness, min_tip=min_tip, gear_spin=gear_spin,
-        face_chamfer=face_chamfer,
+        chamfer=chamfer,
         anchor=CENTER, spin=0, orient=UP
     );
     // Uniform-height sections are ordered top to bottom.
@@ -3284,7 +3240,7 @@ module worm_gear(
 
 
 // Function&Module: globoid_worm()
-// Synopsis: Creates an hourglass worm for a double-enveloping gear pair.
+// Synopsis: Creates an hourglass-shaped worm for a double-enveloping gear pair.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: globoid_worm_gear(), globoid_worm_dist(), worm(), worm_gear(), worm_dist(), globoid_worm_root_radius()
@@ -3294,89 +3250,58 @@ module worm_gear(
 //   globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=], [d=], [lead_in=]) [ATTACHMENTS];
 // Description:
 //   Creates an enveloping, hourglass-shaped worm that meshes with
-//   {{globoid_worm_gear()}} to form a double-enveloping, or globoid, gear pair.
+//   a matching worm gear produced by {{globoid_worm_gear()}} to form a double-enveloping, or globoid, gear pair
+//   that mate using perpendicular, offset shafts.  
 //   The worm wraps around the wheel, and the wheel wraps around the worm. This can
 //   spread the load over more tooth contact than a cylindrical worm drive, allowing
-//   greater load capacity in a compact pair. It does not guarantee higher efficiency;
-//   material, surface finish, lubrication, and accurate alignment also matter.
+//   greater load capacity in a compact pair.
+//   See [A Quick Introduction to Gears: fWorm Drive](gears.scad#subsection-worm-drive).
+//   You must specify tooth size using `mod=`, `circ_pitch=`, or `diam_pitch=` or inherit it from
+//   a parent gear.   The worm and its mated globoid worm gear 
+//   must have matching tooth size, starts, pressure angle, clearance and handedness.
+//   The globoid worm gear uses the worm's length in its design so if you change the length
+//   of the globoid worm you must also update the length when you create the mate.  
 //   .
-//   These shapes are more demanding to machine than cylindrical worm gearing,
-//   which has limited their adoption. 3D printing makes the geometry easier to
-//   fabricate for prototypes and experimentation, but does not by itself guarantee
-//   the load capacity, wear resistance, or efficiency of a manufactured metal pair.
+//   The gear appears centered, oriented in the Z direction.  The FRONT point of the gear
+//   (on the Y- axis) is a tooth valley so it can mesh with a tooth on the worm gear.
+//   Use {{globoid_worm_dist()}} to determine the proper center-to-center space between the globoid worm and its worm gear.
+//   For such applications as attaching a shaft or creating a hole it is useful to know the root radius
+//   of the gear.  You can calculate this using {{globoid_worm_root_radius()}}.  
 //   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   `teeth` is the mating wheel's tooth count. `worm_diam` is the pitch diameter at
-//   the narrowest part of the worm, in its middle plane, not the outside diameter
-//   over its tooth tips. `d` is an alias of `worm_diam`; `starts` and `worm_starts`
-//   are aliases. Specify only one spelling of each quantity.
+//   The mesh quality is controlled by `mesh_tol`, which defaults to module/100.  Adjust this
+//   value to control how coarse or fine the mesh is.  The `$fn` and associated values only
+//   control the shaft hole.  
 //   .
-//   Supply `worm_length` explicitly, or use `l`, `length`, `h`, or `height`. This is
-//   the full working thread length, not a shaft extension. The worm and wheel must
-//   have the same `worm_length`, tooth size, `teeth`, `worm_diam`, start count,
-//   `pressure_angle`, `clearance`, and `left_handed`. Changing the working length
-//   requires updating the wheel too. This worm does not mate with {{worm_gear()}}.
-//   .
-//   The worm is centered on the origin with its axis along Z. At `gear_spin=0`, a
-//   thread valley faces the front (-Y) at the XY middle plane. Leave the wheel at the
-//   origin and place the worm with `back(a)` and `orient=RIGHT`, where `a` comes from
-//   {{globoid_worm_dist()}}. Both parts mesh with `gear_spin=0`. For animation in
-//   this arrangement, the wheel's `gear_spin` is
-//   `(left_handed ? -1 : 1)*starts/teeth` times the worm's `gear_spin`.
-//   .
-//   Smaller `mesh_tol` makes smoother surfaces at greater generation cost. The worm
-//   and wheel may use different values. It is an approximate mesh-quality control,
-//   not a manufacturing tolerance or a guarantee of no overlap. `$fn` controls the
-//   shaft hole, not the working tooth surfaces. Set backlash on the matching wheel.
-//   .
+//   Optional `rounding` eases the crest shoulders and root corners and specifies
+//   the maximum amount of rounding.  Root easing is
+//   limited to the available clearance region and is disabled when `clearance=0`.
+//   Rounding of the crests is limited by the available tooth width.  Use of large
+//   roundings may decrease the working flank size of the worm.  
 //   `min_tip` sets the minimum retained width across the full-height tooth tips, after rounding. An error
 //   is reported if the nominal tooth shape cannot keep that width. It does not
 //   round the ordinary corners at the thread ends.
 //   .
-//   Optional `rounding` eases the crest shoulders and root corners without changing
-//   the main working flanks. It is a maximum setback in each cross-section, not a
-//   constant 3D fillet radius. Root easing is limited to half the available clearance
-//   region and is disabled when `clearance=0`. Large settings are limited by local
-//   tooth dimensions; a worm whose rounded crest cannot retain `min_tip` reports an error.
-//   The two parts may use different rounding settings. This operation is not a
-//   general edge roundover and does not round the axial end faces or shaft holes.
-//   .
-//   Each thread ends as a complete, blunt section before the flat axial face.
-//   With `lead_in=0`, it stops abruptly in a plane perpendicular to that face,
-//   rather than leaving a thin partial turn. Ordinary corners remain unrounded.
-//   A positive `lead_in` gradually lowers and visibly narrows the thread near
-//   both ends, easing the entry corners without changing its full-height interior.
-//   The crest narrows smoothly toward half its full-height width as it disappears
-//   into the root. This target refers to the original crest, not the wider root.
-//   The default is one nominal tooth depth, `2*module+clearance`.
-//   `lead_in` is measured around the worm near its ends, not along its axis.
-//   The curved core continues to the requested end planes, so a small exposed
-//   core region is normal. Thread ends remove some potential end contact but do
-//   not change the overall length, spacing, or central phase. Use the SAME
-//   nominal `worm_length` on the wheel, which needs no `lead_in` setting.
-//   The function returns a VNF; the module creates an attachable solid and can
-//   add a `shaft_diam` hole. Shaft extensions are separate modeling operations.
+//   The threads end with a taper whose default is one nominal tooth depth: `2*module+clearance`.
+//   You can set `lead_in=0` to get an abrupt thread termination with no taper, or choose a different
+//   lead in length.  
 // Arguments:
 //   teeth = Number of teeth on the mating wheel. Required; integer >= 12.
-//   worm_diam = Worm pitch diameter at the throat. Required.
+//   worm_diam / d = Worm pitch diameter at the throat. Required.
 //   ---
-//   d = Alias of worm_diam. Specify only one diameter spelling.
-//   worm_starts = Alias of starts. Specify only one start-count spelling.
 //   mod = Normal module; mutually exclusive with the other size measures.
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
-//   lead_in = Length of the rounded thread transition at each end, measured around the worm. Zero gives an abrupt blunt cutoff. Default: 2*module+clearance
-//   starts = Number of starts. Default: 1
-//   worm_length = Required full working thread length; l, length, h, and height are aliases. Supply the same length to the mating wheel. Shaft extensions are separate.
+//   l/length/h/height/worm_length = Length of the worm
+//   starts / worm_starts = Number of starts. Default: 1
 //   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
 //   clearance = Radial tooth-root allowance. Default: module/4
 //   rounding = Maximum corner setback in a meridian or wheel section. Eases crests and fills roots only within the available clearance. Not a constant 3D fillet radius. Default: 0
-//   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
 //   min_tip = Minimum width across the tooth tips; see Description. Default: 0.4*module
+//   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
 //   left_handed = If true, select the left-handed form. Default: false (right-handed).
-//   gear_spin = Rotation about the worm axis before anchoring; does not rotate children. Default: 0
 //   shaft_diam = Through bore. Module only. Default: 0
+//   lead_in = Length of the rounded thread transition at each end, measured around the worm. Zero gives an abrupt blunt cutoff. Default: 2*module+clearance
+//   gear_spin = Rotation about the worm axis before anchoring; does not rotate children. Default: 0
 //   anchor = BOSL2 cylinder anchor using the maximum worm radius and full length. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
 //   orient = Direction of the worm axis. Default: UP
