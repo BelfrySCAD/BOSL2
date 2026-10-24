@@ -2887,8 +2887,8 @@ module bevel_gear(
 // Synopsis: Creates a cylindrical worm that will mate with a worm gear.
 // SynTags: Geom
 // Topics: Gears, Parts
-// See Also: worm(), worm_gear(), globoid_worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear(), worm_root_radius()
-// Usage: As a Module
+// See Also: worm_gear(), worm_dist(), worm_root_radius(), globoid_worm(), globoid_worm_gear()
+// Usage: 
 //   worm(mod=|circ_pitch=|diam_pitch=, [d/worm_diam], [l/length/h/height/worm_length], [starts=|worm_starts=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [lead_in=], [anchor=], [spin=], [orient=], [gear_spin=]) [ATTACHMENTS];
 // Description:
 //   Creates a cylindrical worm, a screw-shaped gear that meshes with {{worm_gear()}}
@@ -2922,7 +2922,7 @@ module bevel_gear(
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
 //   starts/worm_starts = Number of lead starts.  Default: 1
 //   left_handed = If true, spiral in the left handed direction. Default: false (right-handed).
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   backlash = Gap between two meshing teeth.  Default: 0
 //   clearance = Clearance gap at the bottom of the tooth valleys.  Default: module/4
 //   lead_in = Length of the thread taper at the ends, or zero for flat-cut ends.  Default: 2*module+clearance (tooth depth)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -2932,19 +2932,25 @@ module bevel_gear(
 // Example:
 //   worm(mod=2, d=30, l=50, $fn=72);
 // Example: Multiple Starts.
-//   worm(mod=2, d=30, l=50, starts=3, $fn=72);
+//   worm(mod=2, d=30, l=50, starts=5, $fn=72);
 // Example: Left Handed
-//   worm(mod=2, d=30, l=50, starts=3, left_handed=true, $fn=72);
+//   worm(mod=2, d=30, l=50, left_handed=true, $fn=72);
 // Example: High-pressure-angle worm
-//   worm(mod=2, d=24, l=35, starts=1, pressure_angle=35, $fn=96);
+//   worm(mod=2, d=24, l=35, pressure_angle=35, $fn=96);
 // Example: With `lead_in=0` the worm has sharp edges at the ends
-//   worm(circ_pitch=8, d=30, l=50, lead_in=0, starts=3, $fn=72);
-// Example: Worm mated to a worm gear
+//   worm(mod=2, d=30, l=50, lead_in=0, starts=3, $fn=72);
+// Example: Extending the shaft of the worm
+//   $fn=64;
+//   worm(mod=2, d=30, l=50)
+//     attach(TOP,BOT)
+//       cyl(r=worm_root_radius(mod=2, d=30), h=25);
+// Example: Worm mated to a worm gear; note the matching parameters
 //   $fn=64;
 //   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
-//   worm_gear(mod=2, worm_diam=30, worm_starts=3, teeth=25);
+//   worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
 //   back(sep)
-//     worm(mod=2, d=30, l=50, starts=3, $fn=72, orient=RIGHT);
+//     worm(mod=2, l=50, worm_diam=30, worm_starts=3, orient=RIGHT);
+
 
 /// The rack supplies the axial tooth corners; _worm_thread_profile() fits
 /// their rounding within a single pitch. generic_threaded_rod() uses coordinates measured
@@ -3061,19 +3067,20 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
     profile;
 
 // Function&Module: worm_gear()
-// Synopsis: Generates an enveloping wheel for a cylindrical worm, with blunt tooth tips.
+// Synopsis: Generates an enveloping worm gear for a cylindrical worm
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
-// See Also: worm(), worm_dist()
+// See Also: worm(), worm_dist(), worm_root_radius(), globoid_worm(), globoid_worm_gear()
 // Usage: As a Function
 //   vnf = worm_gear(mod=|circ_pitch=|diam_pitch=, teeth, worm_diam, [thickness], [worm_starts=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=], [gear_spin=], [min_tip=], [face_chamfer=], [anchor=], [spin=], [orient=]);
 // Usage: As a Module
 //   worm_gear(mod=|circ_pitch=|diam_pitch=, teeth, worm_diam, [thickness], [worm_starts=], [crowning=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [profile_shift=], [slices=], [shaft_diam=], [gear_spin=], [min_tip=], [face_chamfer=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates an enveloping worm gear (also called a worm wheel) that meshes with the cylindrical {{worm()}}
-//   on perpendicular, offset shafts.  See [A Quick Introduction to Gears: fWorm Drive](gears.scad#subsection-worm-drive).
-//   The worm gear's teeth curve across its width to wrap partway around the worm.  The worm_gear and its mated worm
-//   must have matching tooth size, starts, pressure angle and handedness. 
+//   on perpendicular, offset shafts.  See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
+//   The worm gear's teeth curve across its width to wrap partway around the worm.
+//   You must specify tooth size using `mod=`, `circ_pitch=`, or `diam_pitch=` or inherit it from a parent gear.
+//   The worm_gear and its mated worm must have matching tooth size, starts, pressure angle and handedness. 
 //   .
 //   You control the thickness using the `thickness` parameter, which defaults to `worm_diam/2`.
 //   Very small worms require a smaller thickness and give an error with the default.
@@ -3111,7 +3118,7 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 //   mod = Normal module.
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
-//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
+//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted.  Default: 20.
 //   worm_starts = Number of worm starts. Default: 1
 //   profile_shift = Wheel profile-shift coefficient. Default: "auto"
 //   left_handed = If true, select the left-handed form. Default: false (right-handed).
@@ -3137,6 +3144,13 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 // Example: Worm gear for a multi-start worm with a shaft hole
 //   worm_gear(mod=3, teeth=20, worm_diam=38, thickness=30, worm_starts=5,
 //             $fn=64, shaft_diam=15);
+// Example: Worm mated to a worm gear; note the matching parameters
+//   $fn=64;
+//   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
+//   worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
+//   back(sep)
+//     worm(mod=2, l=50, worm_diam=30, worm_starts=3, orient=RIGHT);
+
 
 function worm_gear(
     // BEGIN GEAR_API_COMPAT
@@ -3240,10 +3254,10 @@ module worm_gear(
 
 
 // Function&Module: globoid_worm()
-// Synopsis: Creates an hourglass-shaped worm for a double-enveloping gear pair.
+// Synopsis: Creates an enveloping hourglass-shaped worm for a double-enveloping worm drive pair.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
-// See Also: globoid_worm_gear(), globoid_worm_dist(), worm(), worm_gear(), worm_dist(), globoid_worm_root_radius()
+// See Also: globoid_worm_gear(), globoid_worm_dist(), globoid_worm_root_radius(), worm(), worm_gear()
 // Usage: Function
 //   vnf = globoid_worm([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [starts=|worm_starts=], worm_length=|l=|length=|h=|height=, [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=], [d=], [lead_in=]);
 // Usage: Module
@@ -3270,7 +3284,12 @@ module worm_gear(
 //   .
 //   The mesh quality is controlled by `mesh_tol`, which defaults to module/100.  Adjust this
 //   value to control how coarse or fine the mesh is.  The `$fn` and associated values only
-//   control the shaft hole.  
+//   control the shaft hole.
+//   .
+//   The `clearance=` parameter specifies
+//   clearance at the bottom of the teeth valleys with a default of `mod/4`.  For very large pressure angles the
+//   valleys may rise and shrink the clearance below the requested value, or you may need
+//   to specify extra clearance to create a valid gear.
 //   .
 //   Optional `rounding` eases the crest shoulders and root corners and specifies
 //   the maximum amount of rounding.  Root easing is
@@ -3305,31 +3324,30 @@ module worm_gear(
 //   anchor = BOSL2 cylinder anchor using the maximum worm radius and full length. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
 //   orient = Direction of the worm axis. Default: UP
-//   l = Named alias of worm_length. Specify only one length spelling.
-//   length = Named alias of worm_length. Specify only one length spelling.
-//   h = Named alias of worm_length. Specify only one length spelling.
-//   height = Named alias of worm_length. Specify only one length spelling.
-// Example: A single-start worm with abrupt, full-width thread ends.
-//   globoid_worm(mod=2,55,24,starts=1,worm_length=35,lead_in=0);
-// Example: An hourglass worm.
-//   globoid_worm(circ_pitch=8, teeth=45, d=30, worm_length=40);
-// Example: Multiple starts.
-//   globoid_worm(circ_pitch=8, teeth=33, worm_diam=30,
-//                worm_starts=3, worm_length=25);
+// Example: A single-start globoid worm.
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45);
+// Example: Same worm with 4 starts has steeper threads.
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,starts=4);
 // Example: Left-handed worm.
-//   globoid_worm(circ_pitch=8, teeth=33, d=30,
-//                starts=3, worm_length=25, left_handed=true);
-// Example: A longer rounded lead-in on a five-start worm.
-//   globoid_worm(mod=2,55,24,starts=5,worm_length=35,lead_in=6);
-// Example(3D,Big): Abrupt ends on the left and the default rounded lead-in on the right.
-//   for (i=[0:1]) right(40*i)
-//       globoid_worm(mod=2,55,24,starts=1,worm_length=35,lead_in=i==0?0:undef);
-// Example: Stronger entry taper with optional crest and root easing.
-//   globoid_worm(mod=2, 55, 24, starts=5, worm_length=35, lead_in=6, rounding=0.2);
-// Example: Called as a function.
-//   vnf = globoid_worm(circ_pitch=8, teeth=37, d=35, starts=2,
-//                      worm_length=30, left_handed=true, pressure_angle=20);
-//   vnf_polyhedron(vnf);
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,left_handed=true);
+// Example: Worm with no lead in.
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,lead_in=0);
+// Example: Worm with rounding
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,rounding=0.2);
+// Example: Worm with shaft extension
+//   rad = globoid_worm_root_radius(mod=2, d=30, teeth=44, length=50);
+//   globoid_worm(mod=2, d=30, l=50, teeth=44)
+//      attach(TOP,BOT)
+//        cyl(r=rad, h=25);
+// Example: Mating to a globoid worm gear
+//   mod = 2;
+//   diam = 24;
+//   teeth = 45;
+//   length = 40;
+//   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
+//   globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
+//   back(sep)
+//     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
 
 function globoid_worm(teeth,worm_diam,_named,
     mod,circ_pitch,diam_pitch,starts,worm_length,pressure_angle,clearance,
@@ -3376,48 +3394,32 @@ module globoid_worm(teeth,worm_diam,_named,
 
 
 // Function&Module: globoid_worm_gear()
-// Synopsis: Creates an enveloping wheel for a double-enveloping gear pair.
+// Synopsis: Creates an enveloping worm gear for a double-enveloping worm drive pair.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: globoid_worm(), globoid_worm_dist(), worm(), worm_gear(), globoid_worm_gear(), worm_dist()
 // Usage: Function
-//   vnf = globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [rounding=], [search_steps=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=]);
+//   vnf = globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], worm_length=, [worm_starts=], [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [rounding=], [search_steps=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=]);
 // Usage: Module
 //   globoid_worm_gear([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [thickness], [worm_starts=], worm_length=, [pressure_angle=], [clearance=], [backlash=], [min_tip=], [mesh_tol=], [rounding=], [search_steps=], [left_handed=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Creates an enveloping wheel that meshes with {{globoid_worm()}} to form a
-//   double-enveloping, or globoid, gear pair. The wheel wraps partway around the
-//   hourglass-shaped worm while the worm wraps around the wheel. Use {{worm_gear()}}
-//   with {{worm()}} for a cylindrical worm drive instead; the parts are not interchangeable.
+//   Creates an enveloping worm gear (also called a worm wheel) that meshes with a globoid worm produced by {{globoid_worm()}} to form a
+//   double-enveloping, or globoid, gear pair.
+//   See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
+//   The worm gear wraps partway around the  hourglass-shaped worm while the worm wraps around the wheel.
+//   The worm_gear and its mated worm must have matching tooth size, starts, pressure angle, worm length and handedness.
+//   A worm gear made for a shorter worm may interfere with the ends of a longer one.  
 //   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   Match the worm's tooth size, `teeth`, `worm_diam`, start count, `pressure_angle`,
-//   `clearance`, and `left_handed`. `worm_diam` is the worm's throat pitch diameter
-//   at its middle. Give `worm_length` explicitly and use the same working length
-//   on both parts. A wheel made for a shorter worm may interfere with the ends
-//   of a longer one. Optional `lead_in` on the worm does not change that nominal length.
-//   The wheel needs no lead-in setting.
+//   You control the thickness using the `thickness` parameter, which defaults to `worm_diam/2`.
+//   Very small worms require a smaller thickness and give an error with the default.
+//   Far from the center plane of the gear the teeth naturally come to sharp points.
+//   The `min_tip=` parameter limits these fragile, sharp tips by imposing a minimum width
+//   across the tip of the gear, with a default of `0.4*mod`.  This process shortens the
+//   tips of the teeth near the edge, which will decrease their engagement with the worm.
 //   .
-//   `thickness` is the wheel's full axial thickness. The default, `worm_diam/2`, is a
-//   convenient starting point, not a maximum useful width or a strength recommendation.
-//   The wheel does not inherit its thickness. A wider wheel can make the enveloping
-//   shape more pronounced, but may need shorter tips or different tooth proportions.
-//   .
-//   `min_tip` keeps the tooth tips blunt rather than thin and knife-like. Where needed,
-//   the teeth are shortened to leave this minimum width across their tips; the requested
-//   `thickness` is preserved. The resulting outer edge can be flatter than the unshortened
-//   throat shape. Reducing `min_tip` permits sharper tips, as the wide-wheel example
-//   below shows. Near-zero values are useful for inspecting the geometry, not as a
-//   printing recommendation. This parameter does not round corners or rate tooth strength.
-//   .
-//   Optional `rounding` eases the crest shoulders and root corners in each wheel
-//   section. It is a maximum setback, not a constant 3D fillet radius. Crest easing
-//   removes material; the final remaining crest is still checked against `min_tip`,
-//   so a rounded wheel may need shorter teeth. Root easing adds material only within
-//   half the available tip-clearance band, outside the nominal mating worm. It is
-//   disabled when `clearance=0`. The worm and wheel need not use matching rounding.
-//   Axial-face edges and the shaft hole are not rounded.
+//   The worm gear appears with a tooth centered on Y+.
+//   Use {{globoid_worm_dist()}} to determine the proper center-to-center space between the worm_gear and its worm.
+//   Profile shifting is **not** supported. 
 //   .
 //   The wheel is centered on the origin with its axis along Z and one tooth centered
 //   on +Y. Place the worm with `back(a)` and `orient=RIGHT`, using {{globoid_worm_dist()}}
@@ -3425,16 +3427,28 @@ module globoid_worm(teeth,worm_diam,_named,
 //   For animation, use `(left_handed ? -1 : 1)*worm_starts/teeth` times the worm's
 //   `gear_spin` for the wheel's `gear_spin`.
 //   .
-//   Set `backlash` on the wheel to make room between the teeth. Use the nominal center
-//   spacing from {{globoid_worm_dist()}}; this pair does not use distance-based backlash
-//   or the involute gears' automatic `profile_shift`. Smaller `mesh_tol` gives finer
-//   surfaces and can reduce small mesh overlaps, at greater generation cost. Different
-//   values may be used for the two parts. It is a mesh-quality control, not a guaranteed
-//   maximum interference or a manufacturing tolerance. `$fn` affects the shaft hole.
+//   The mesh quality is controlled by `mesh_tol`, which defaults to module/100.  Adjust this
+//   value to control how coarse or fine the mesh is.  The `$fn` and associated values only
+//   control the shaft hole.  
 //   .
-//   The function returns a VNF. The module creates an attachable solid and can add
-//   a `shaft_diam` hole. See {{globoid_worm()}} for the benefits and practical limitations
-//   of double-enveloping gearing.
+//   Optional `rounding` eases the crest shoulders and root corners in each wheel
+//   section. It is a maximum setback, not a constant 3D fillet radius. Crest easing
+//   removes material; the final remaining crest is still checked against `min_tip`,
+//   so a rounded wheel may need shorter teeth. Root easing adds material only within
+//   half the available tip-clearance band, outside the nominal mating worm. It is
+//   disabled when `clearance=0`. The worm and wheel need not use matching rounding.
+//   .
+//   To create space for gears to mesh in practice you will need to set a positive value for backlash,
+//   which creates extra space between the teeth.  Globoid gear pairs must have backlash applied
+//   on the worm gear.  You cannot apply it to the worm, nor create backlash by adjusting the spacing
+//   between the gears.  Lower mesh quality may result in more interference between parts when backlash is zero
+//   or very small.
+//   .
+//   The `clearance=` parameter specifies
+//   clearance at the bottom of the teeth valleys with a default of `mod/4`.  For very large pressure angles the
+//   valleys may rise and shrink the clearance below the requested value, or you may need
+//   to specify extra clearance to create a valid gear.
+//   .
 // Arguments:
 //   teeth = Number of wheel teeth. Required; integer >= 12.
 //   worm_diam = Matching worm throat pitch diameter. Required.
@@ -3443,11 +3457,11 @@ module globoid_worm(teeth,worm_diam,_named,
 //   mod = Normal module; mutually exclusive with circ_pitch and diam_pitch.
 //   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
+//   worm_length = Length of mating worm.  Must match length given to {{globoid_worm()}}
 //   worm_starts = Number of starts. Default: 1
-//   worm_length = Full working length of the mating worm; required. Must equal the length given to globoid_worm().
 //   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
 //   clearance = Root clearance shared with the mating worm. Default: module/4
-//   backlash = Total wheel pitch-circle tooth-space widening, NOT an axis-distance correction. Default: 0
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   min_tip = Minimum width across the tooth tips; see Description. Default: 0.4*module
 //   rounding = Maximum corner setback in a meridian or wheel section. Eases crests and fills roots only within the available clearance. Not a constant 3D fillet radius. Default: 0
 //   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
@@ -3458,22 +3472,27 @@ module globoid_worm(teeth,worm_diam,_named,
 //   anchor = BOSL2 cylinder anchor using pitch radius and full thickness. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
 //   orient = Wheel axis direction. Default: UP
-// Example(3D,Big): A double-enveloping pair at zero phase. The longer worm and wide wheel make both enveloping shapes visible.
-//   m=2; N=55; d=24; s=5; L=35;
-//   a=globoid_worm_dist(mod=m, teeth=N, worm_diam=d, worm_starts=s);
-//   color("lightblue") globoid_worm_gear(mod=m, N, d, 16,
-//       worm_starts=s, worm_length=L, backlash=0.1);
-//   color("gold") back(a) globoid_worm(mod=m, N, d,
-//       worm_starts=s, worm_length=L, orient=RIGHT);
-// Example: A wheel with eased crest and root corners; the remaining tips stay blunt.
-//   globoid_worm_gear(mod=2, 55, 24, 16, worm_starts=5, worm_length=35, rounding=0.2);
-// Example: A globoid wheel made as a VNF.
-//   vnf = globoid_worm_gear(mod=2, 55, 24, 16, worm_starts=5, worm_length=35);
-//   vnf_polyhedron(vnf);
-// Example(3D,Big): The wide wheel on the right has min_tip near zero, allowing sharp, pointed tips. The left wheel uses the normal 0.8 tip width. Do not use the tiny minimum merely to make a printed part look more enveloping.
-//   for (i=[0:1]) right(150*i)
-//       globoid_worm_gear(mod=2, 55, 24, 18, worm_starts=5,
-//                         worm_length=35, min_tip=i==0?0.8:0.02);
+// Example: 
+//   globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25);
+// Example: For multiple start worm
+//   globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25,
+//                     worm_starts=5);
+// Example: With rounding
+//  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25, rounding=0.2);
+// Example: A worm gear near the maximum allowed thickness
+//  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9, worm_length=33);
+// Example: Thick worm gip with very small `min_tip` value shows sharp edges on the teeth
+//  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9,
+//                    worm_length=33, min_tip=0.01);
+// Example: Mating to a globoid worm
+//   mod = 2;
+//   diam = 24;
+//   teeth = 45;
+//   length = 40;
+//   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
+//   globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
+//   back(sep)
+//     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
 
 function globoid_worm_gear(teeth,worm_diam,thickness,_named,
     mod,circ_pitch,diam_pitch,worm_starts,worm_length,pressure_angle,clearance,
@@ -5496,244 +5515,6 @@ function bevel_pitch_angle(
     atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
 
 
-// Function: worm_root_radius()
-// Synopsis: Returns the radius below a cylindrical worm's thread roots.
-// Topics: Gears, Parts
-// See Also: worm(), globoid_worm_root_radius(), worm_dist(), worm_gear(), globoid_worm_gear()
-// Usage:
-//   r = worm_root_radius([mod=|circ_pitch=|diam_pitch=], d, [clearance=], [worm_diam=], [pressure_angle=], [backlash=], [starts=|worm_starts=]);
-// Description:
-//   Returns the actual radius below the full-height threads of {{worm()}}. It is
-//   constant along a cylindrical worm. Use the same pitch diameter, tooth size,
-//   `clearance`, `pressure_angle`, `backlash`, and start count as the worm.
-//   `worm_diam` is an alias of `d`; `worm_starts` is an alias of `starts`.
-//   At high pressure angles, adjacent flanks can meet above the nominal root
-//   depth. The result accounts for that shallower, V-shaped valley.
-//   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
-//   To add a shaft, use a cylinder with a radius slightly smaller than this
-//   value and overlap it with the worm. The difference leaves room for faceting
-//   and manufacturing tolerances. This is a geometric root radius, not a shaft
-//   strength recommendation or the largest shaft that could clear a mating wheel.
-//   `lead_in` and handedness do not change this full-height root radius.
-// Arguments:
-//   d = Worm pitch diameter. Required unless worm_diam is supplied.
-//   ---
-//   mod = Normal module; specify only one tooth-size measure.
-//   circ_pitch = Normal circular pitch.
-//   diam_pitch = Normal diametral pitch, teeth per inch.
-//   clearance = Radial clearance below the threads. Default: module/4
-//   worm_diam = Alias of d. Specify only one diameter spelling.
-//   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
-//   backlash = Axial tooth thinning, as supplied to worm(). Default: 0
-//   starts = Number of worm starts. Default: 1
-//   worm_starts = Alias of starts. Specify only one start-count spelling.
-// Example: An almost root-sized shaft through a cylindrical worm.
-//   m=2; d=24; L=35; c=m/4;
-//   shaft_r=worm_root_radius(mod=m,d=d,clearance=c)-0.1;
-//   union() {
-//       worm(mod=m,d=d,l=L,starts=5,clearance=c,lead_in=6);
-//       cyl(r=shaft_r,l=L+30,$fn=96);
-//   }
-function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam,
-                          pressure_angle,backlash,starts,worm_starts) =
-    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
-    let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
-        m=_inherit_gear_pitch("worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
-        c=default(clearance,m/4),pa=_inherit_gear_pa(pressure_angle),ba=default(backlash,0))
-    assert(is_int(s) && s>0, "\nstarts must be a positive integer")
-    assert(is_finite(d) && d>max(2,s)*m,
-           str("\nFor current parameters, d must be supplied and greater than ",max(2,s)*m,"; got ",d))
-    assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
-    assert(d>2*(m+c), str("\nFor current tooth size and clearance, d must be greater than ",2*(m+c),
-                         " to leave a positive nominal root radius; got ",d))
-    assert(is_finite(pa) && pa>=0 && pa<90, "\npressure_angle must be at least zero and less than 90 degrees")
-    assert(is_finite(ba) && ba>=0, "\nbacklash must be nonnegative and finite")
-    d/2-_worm_thread_dedendum(m,asin(s*m/d),pa,c,ba);
-
-
-// Function: globoid_worm_root_radius()
-// Synopsis: Returns the radius below a globoid worm's threads at an axial position.
-// Topics: Gears, Parts
-// See Also: globoid_worm(), worm_root_radius(), globoid_worm_dist(), worm_gear(), globoid_worm_gear()
-// Usage:
-//   r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [z=], [worm_starts=|starts=], [clearance=], [d=], [worm_length=|l=|length=|h=|height=]);
-// Description:
-//   Returns the nominal root radius of {{globoid_worm()}} at local axial
-//   coordinate `z`, measured from the worm's middle plane. The radius is
-//   smallest at `z=0` and increases toward either end of the hourglass.
-//   Use the same `teeth`, `worm_diam`, start count, tooth size, and `clearance`
-//   as the worm. `d` and `starts` are aliases of `worm_diam` and `worm_starts`.
-//   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
-//   Give `worm_length` (or `l`, `length`, `h`, or `height`) to query the radius
-//   at either end face. To query a different section, supply `z` explicitly;
-//   `z=0` gives the minimum radius for a through-shaft or bore. With neither
-//   a length nor `z`, the result is the minimum radius, as before.
-//   .
-//   For an end-only shaft overlapping into the worm, use `z=worm_length/2-overlap`
-//   and subtract a small radial margin. Do not extend the larger end shaft through
-//   the narrow throat. When a length is supplied, `z` must be within that length.
-//   .
-//   This is a geometric root radius, not a guaranteed maximum shaft size or a
-//   strength recommendation. Leave a margin for faceting and manufacturing.
-//   `lead_in` and handedness do not change the nominal root surface.
-// Arguments:
-//   teeth = Number of teeth on the mating wheel.
-//   worm_diam = Worm throat pitch diameter. Required unless d is supplied.
-//   ---
-//   mod = Normal module; specify only one tooth-size measure.
-//   circ_pitch = Normal circular pitch.
-//   diam_pitch = Normal diametral pitch, teeth per inch.
-//   z = Local axial position measured from the worm's center. Default: half the supplied worm_length, or 0 when no length is supplied.
-//   worm_length = Working worm length; selects an end-face query when z is omitted. Optional if z is given or the minimum radius is wanted.
-//   l = Alias of worm_length. Specify only one length spelling.
-//   length = Alias of worm_length. Specify only one length spelling.
-//   h = Alias of worm_length. Specify only one length spelling.
-//   height = Alias of worm_length. Specify only one length spelling.
-//   worm_starts = Number of starts on the worm. Default: 1
-//   starts = Alias of worm_starts. Specify only one start-count spelling.
-//   clearance = Radial clearance below the threads. Default: module/4
-//   d = Alias of worm_diam. Specify only one diameter spelling.
-// Example: Large end shafts, with a small overlap and radial margin.
-//   m=2; N=55; d=24; s=5; L=35; c=m/4;
-//   overlap=0.2; extension=20;
-//   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s,
-//                                   clearance=c,worm_length=L,z=L/2-overlap)-0.1;
-//   union() {
-//       globoid_worm(mod=m,N,d,starts=s,worm_length=L,clearance=c,lead_in=6);
-//       for(side=[-1,1])
-//           up(side*(L/2+(extension-overlap)/2))
-//               cyl(r=shaft_r,l=extension+overlap,$fn=96);
-//   }
-function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance,
-                                  mod,circ_pitch,diam_pitch,d,starts,worm_length,l,length,h,height) =
-    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
-    let(L=_globoid_length(worm_length,l,length,h,height))
-    assert(is_undef(L) || (is_finite(L) && L>0),
-           str("\nworm_length must be greater than zero and finite; got ",L))
-    let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
-        m=_inherit_gear_pitch("globoid_worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
-        c=default(clearance,m/4),z=default(z,is_undef(L)?0:L/2))
-    assert(_globoid_check_reference(m,teeth,d,s), "\nInvalid globoid reference parameters")
-    assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
-    assert(c<d/2-m, str("\nFor current parameters, clearance must be less than ",d/2-m,
-                       " to leave a positive throat root radius; got ",c))
-    assert(is_finite(z), str("\nz must be finite; got ",z))
-    assert(is_undef(L) || abs(z)<=L/2,
-           str("\nz must be between ",-default(L,0)/2," and ",default(L,0)/2," for the supplied worm_length; got ",z))
-    let(R=m*teeth/(2*sqrt(1-pow(s*m/d,2))),a=R+d/2,root_meridian=R+m+c)
-    assert(is_undef(L) || L<1.3*(R-m-c),
-           str("\nFor current parameters, worm_length must be less than ",1.3*(R-m-c),"; got ",L))
-    assert(abs(z)<root_meridian, str("\nFor current parameters, abs(z) must be less than ",root_meridian,
-                                   "; got ",z,". Choose a position inside the worm's working length."))
-    a-sqrt(root_meridian*root_meridian-z*z);
-
-
-// Function: worm_dist()
-// Synopsis: Center spacing between a cylindrical worm and its worm gear.
-// Topics: Gears, Parts
-// See Also: worm(), worm_gear(), globoid_worm_gear()
-// Usage: As a Function
-//   value = worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [profile_shift=], [pressure_angle=], [backlash=], [d=]);
-// Description:
-//   Returns the center spacing between a cylindrical {{worm()}} and its mating
-//   {{worm_gear()}}. Use the same tooth size, `teeth`, `worm_diam`, `worm_starts`,
-//   `pressure_angle`, and `profile_shift` as the wheel. The default automatic
-//   profile shift must agree with the wheel's setting.
-//   .
-//   `d` and `starts` are aliases of `worm_diam` and `worm_starts`; specify only
-//   one spelling of each. Named calls using the older spellings remain supported.
-//   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   Positive `backlash` creates play by moving the axes farther apart. Use this or
-//   tooth thinning, not both for the same requested play. For a double-enveloping
-//   pair, use {{globoid_worm_dist()}} instead.
-// Arguments:
-//   teeth = Number of wheel teeth.
-//   worm_diam = Worm pitch diameter.
-//   ---
-//   worm_starts = Number of worm starts. Default: 1
-//   starts = Alias of worm_starts. Specify only one start-count spelling.
-//   d = Alias of worm_diam. Specify only one diameter spelling.
-//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
-//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted or undef; fallback: 20.
-//   mod = Normal module.
-//   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
-//   diam_pitch = Normal diametral pitch, teeth per inch.
-//   backlash = Increase spacing for total nominal wheel backlash 2*backlash. Default: 0
-
-// Assembly center distance for a cylindrical worm-wheel pair. With backlash=0
-// this is exactly the nominal GENERATING distance. Positive backlash moves the
-// axes apart instead of thinning either part. As in BOSL2's other dist helpers,
-// the argument targets TOTAL wheel pitch-circle backlash 2*backlash, using the
-// center-plane straight-flank relation. No tooth-thinning value is an input.
-// Do not also thin the teeth for the same requested play. The spacing relation
-// is not a guarantee of uniform clearance/contact across a wide worm wheel.
-function worm_dist(teeth,worm_diam,_named,worm_starts,profile_shift,pressure_angle,
-                   mod,circ_pitch,diam_pitch,backlash,d,starts) =
-    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
-    let(worm_diam=_gear_worm_diameter(d,worm_diam),
-        s=_gear_worm_starts(starts,worm_starts),
-        cp=_inherit_gear_pitch("worm_dist()",circ_pitch,diam_pitch,mod),
-        pa=_inherit_gear_pa(pressure_angle),
-        ps=_wormgear_resolve_shift(cp/PI,teeth,worm_diam,s,pa,profile_shift),
-        ref=_wormgear_reference(cp/PI,teeth,worm_diam,s,pa,ps))
-    _wormgear_spacing(ref,default(backlash,0));
-
-
-
-function _wormgear_spacing(ref,backlash) =
-    assert(is_finite(x=backlash) && backlash>=0,
-           "\nworm distance: backlash must be finite and nonnegative")
-    // Avoid 0/0 at zero pressure angle when no spacing backlash was requested.
-    backlash==0 ? ref[1] :
-    assert(ref[3]>0,
-           "\nworm distance: positive distance backlash requires pressure_angle > 0")
-    ref[1]+backlash/ref[3];
-
-
-// Function: globoid_worm_dist()
-// Synopsis: Center spacing between a globoid worm and its worm gear.
-// Topics: Gears, Parts
-// See Also: globoid_worm(), globoid_worm_gear(), worm_dist(), worm_gear()
-// Usage:
-//   value = globoid_worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [d=]);
-// Description:
-//   Returns the center spacing between {{globoid_worm()}} and {{globoid_worm_gear()}}.
-//   Use the same tooth size, `teeth`, `worm_diam`, and `worm_starts` as the wheel.
-//   The spacing is independent of `worm_length` and `pressure_angle`. Backlash is
-//   set on the wheel, not by increasing this distance. For a cylindrical pair,
-//   use {{worm_dist()}} instead.
-//   .
-//   `d` and `starts` are aliases of `worm_diam` and `worm_starts`; specify only
-//   one spelling of each. Named calls using the older spellings remain supported.
-//   .
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-// Arguments:
-//   teeth = Number of wheel teeth.
-//   worm_diam = Worm throat pitch diameter.
-//   ---
-//   mod = Normal module.
-//   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
-//   diam_pitch = Normal diametral pitch, teeth per inch.
-//   worm_starts = Number of starts. Default: 1
-//   starts = Alias of worm_starts. Specify only one start-count spelling.
-//   d = Alias of worm_diam. Specify only one diameter spelling.
-function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm_starts,d,starts) =
-    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
-    let(worm_diam=_gear_worm_diameter(d,worm_diam),
-        s=_gear_worm_starts(starts,worm_starts),
-        m=_inherit_gear_pitch("globoid_worm_dist()",circ_pitch,diam_pitch,mod)/PI)
-    assert(_globoid_check_reference(m,teeth,worm_diam,s), "\nInvalid gear parameters")
-    worm_diam/2+m*teeth/(2*sqrt(1-pow(s*m/worm_diam,2)));
-
 
 // Function: gear_dist()
 // Synopsis: Returns the distance between two gear centers for spur gears or parallel axis helical gears.
@@ -6302,6 +6083,216 @@ module _show_gear_tooth_profile(
         }
     }
 }
+
+// Function: worm_dist()
+// Synopsis: Returns the center spacing between a cylindrical worm and its worm gear.
+// Topics: Gears, Parts
+// See Also: worm(), worm_gear(), globoid_worm_dist()
+// Usage: As a Function
+//   value = worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [profile_shift=], [pressure_angle=], [backlash=], [d=]);
+// Description:
+//   Returns the center spacing between a cylindrical worm and its mating worm gear, produced by {{worm()}} and
+//   {{worm_gear()}}. Use the same tooth size, `teeth`, `worm_diam`, `worm_starts`,
+//   `pressure_angle`, and `profile_shift` as the worm and worm gear. The default automatic
+//   profile shift must agree with the worm gear's setting.
+//   .
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch` or inherit it.  
+//   Positive `backlash` creates play by moving the axes farther apart. Use this or
+//   tooth thinning, not both, to get the requested space.  For a double-enveloping
+//   pair, use {{globoid_worm_dist()}} instead.
+// Arguments:
+//   teeth = Number of wheel teeth.
+//   worm_diam/d = Worm pitch diameter.
+//   ---
+//   mod = Normal module.
+//   circ_pitch = Normal circular pitch.
+//   diam_pitch = Normal diametral pitch, teeth per inch.
+//   worm_starts/starts = Number of worm starts. Default: 1
+//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
+//   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted.  Default: 20
+//   backlash = Increase spacing for total nominal wheel backlash 2*backlash. Default: 0
+
+// Assembly center distance for a cylindrical worm-wheel pair. With backlash=0
+// this is exactly the nominal GENERATING distance. Positive backlash moves the
+// axes apart instead of thinning either part. As in BOSL2's other dist helpers,
+// the argument targets TOTAL wheel pitch-circle backlash 2*backlash, using the
+// center-plane straight-flank relation. No tooth-thinning value is an input.
+// Do not also thin the teeth for the same requested play. The spacing relation
+// is not a guarantee of uniform clearance/contact across a wide worm wheel.
+function worm_dist(teeth,worm_diam,_named,worm_starts,profile_shift,pressure_angle,
+                   mod,circ_pitch,diam_pitch,backlash,d,starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(worm_diam=_gear_worm_diameter(d,worm_diam),
+        s=_gear_worm_starts(starts,worm_starts),
+        cp=_inherit_gear_pitch("worm_dist()",circ_pitch,diam_pitch,mod),
+        pa=_inherit_gear_pa(pressure_angle),
+        ps=_wormgear_resolve_shift(cp/PI,teeth,worm_diam,s,pa,profile_shift),
+        ref=_wormgear_reference(cp/PI,teeth,worm_diam,s,pa,ps))
+    _wormgear_spacing(ref,default(backlash,0));
+
+
+
+function _wormgear_spacing(ref,backlash) =
+    assert(is_finite(x=backlash) && backlash>=0,
+           "\nworm distance: backlash must be finite and nonnegative")
+    // Avoid 0/0 at zero pressure angle when no spacing backlash was requested.
+    backlash==0 ? ref[1] :
+    assert(ref[3]>0,
+           "\nworm distance: positive distance backlash requires pressure_angle > 0")
+    ref[1]+backlash/ref[3];
+
+
+// Function: globoid_worm_dist()
+// Synopsis: Returns the center spacing between a globoid worm and its worm gear.
+// Topics: Gears, Parts
+// See Also: globoid_worm(), globoid_worm_gear(), worm_dist()
+// Usage:
+//   value = globoid_worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam, [worm_starts=|starts=], [d=]);
+// Description:
+//   Returns the center spacing between a globoid worm gear pair produced by {{globoid_worm()}} and {{globoid_worm_gear()}}.
+//   Use the same tooth size, `teeth`, `worm_diam`, and `worm_starts` as the wheel.
+//   The spacing is independent of `worm_length` and `pressure_angle`. Backlash is
+//   set on the wheel, not by increasing this distance. For a cylindrical pair,
+//   use {{worm_dist()}} instead.
+//   .
+// Arguments:
+//   teeth = Number of wheel teeth.
+//   worm_diam/d = Worm throat pitch diameter.
+//   ---
+//   mod = Normal module.
+//   circ_pitch = Normal circular pitch; specify only one tooth-size measure.
+//   diam_pitch = Normal diametral pitch, teeth per inch.
+//   worm_starts/starts = Number of starts. Default: 1
+function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm_starts,d,starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(worm_diam=_gear_worm_diameter(d,worm_diam),
+        s=_gear_worm_starts(starts,worm_starts),
+        m=_inherit_gear_pitch("globoid_worm_dist()",circ_pitch,diam_pitch,mod)/PI)
+    assert(_globoid_check_reference(m,teeth,worm_diam,s), "\nInvalid gear parameters")
+    worm_diam/2+m*teeth/(2*sqrt(1-pow(s*m/worm_diam,2)));
+
+// Function: worm_root_radius()
+// Synopsis: Returns the root radius of a cylindrical worm.
+// Topics: Gears, Parts
+// See Also: worm(), globoid_worm_root_radius()
+// Usage:
+//   r = worm_root_radius([mod=|circ_pitch=|diam_pitch=], d, [clearance=], [worm_diam=], [pressure_angle=], [backlash=], [starts=|worm_starts=]);
+// Description:
+//   Returns the actual radius below the full-height threads of {{worm()}}. It is
+//   constant along a cylindrical worm. Use the same pitch diameter, tooth size,
+//   `clearance`, `pressure_angle`, `backlash`, and start count as the worm.
+//   `worm_diam` is an alias of `d`; `worm_starts` is an alias of `starts`.
+//   At high pressure angles, adjacent flanks can meet above the nominal root
+//   depth. The result accounts for that shallower, V-shaped valley.
+//   .
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
+//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
+//   .
+//   To add a shaft, use a cylinder with a radius slightly smaller than this
+//   value and overlap it with the worm. The difference leaves room for faceting
+//   and manufacturing tolerances. This is a geometric root radius, not a shaft
+//   strength recommendation or the largest shaft that could clear a mating wheel.
+//   `lead_in` and handedness do not change this full-height root radius.
+// Arguments:
+//   d/worm_diam = Worm pitch diameter. 
+//   ---
+//   mod = Normal module; specify only one tooth-size measure.
+//   circ_pitch = Normal circular pitch.
+//   diam_pitch = Normal diametral pitch, teeth per inch.
+//   clearance = Radial clearance below the threads. Default: module/4
+//   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
+//   backlash = Axial tooth thinning, as supplied to worm(). Default: 0
+//   starts/worm_starts = Number of worm starts. Default: 1
+// Example: Shaft through a cylindrical worm.
+//   m=2; d=24; L=35; 
+//   shaft_r=worm_root_radius(mod=m,d=d);
+//   worm(mod=m,d=d,l=L,starts=5);
+//   cyl(r=shaft_r,l=L+30,$fn=96);
+
+function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam,
+                          pressure_angle,backlash,starts,worm_starts) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)")
+    let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
+        m=_inherit_gear_pitch("worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
+        c=default(clearance,m/4),pa=_inherit_gear_pa(pressure_angle),ba=default(backlash,0))
+    assert(is_int(s) && s>0, "\nstarts must be a positive integer")
+    assert(is_finite(d) && d>max(2,s)*m,
+           str("\nFor current parameters, d must be supplied and greater than ",max(2,s)*m,"; got ",d))
+    assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
+    assert(d>2*(m+c), str("\nFor current tooth size and clearance, d must be greater than ",2*(m+c),
+                         " to leave a positive nominal root radius; got ",d))
+    assert(is_finite(pa) && pa>=0 && pa<90, "\npressure_angle must be at least zero and less than 90 degrees")
+    assert(is_finite(ba) && ba>=0, "\nbacklash must be nonnegative and finite")
+    d/2-_worm_thread_dedendum(m,asin(s*m/d),pa,c,ba);
+
+
+// Function: globoid_worm_root_radius()
+// Synopsis: Returns the root radius of a globoid worm at an axial position.
+// Topics: Gears, Parts
+// See Also: globoid_worm(), worm_root_radius()
+// Usage:
+//   r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam/d=, [worm_length=|l=|length=|h=|height=], [z=], [worm_starts=|starts=], [clearance=]);
+// Description:
+//   Returns the nominal root radius of {{globoid_worm()}} at local axial
+//   coordinate `z=`, measured from the worm's middle plane. The radius is
+//   smallest at `z=0` and increases toward either end of the hourglass.
+//   Use the same `teeth`, `worm_diam`, start count, tooth size, and `clearance`
+//   as the worm. Instead of `z=` you can specify `worm_length=` to get the
+//   radius at the end of the worm.  
+//   .
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch` or inherit it from a parent gear. 
+//   .
+// Arguments:
+//   teeth = Number of teeth on the mating wheel.
+//   worm_diam/d = Worm throat pitch diameter. Required unless d is supplied.
+//   ---
+//   mod = Normal module; specify only one tooth-size measure.
+//   circ_pitch = Normal circular pitch.
+//   diam_pitch = Normal diametral pitch, teeth per inch.
+//   z = Local axial position measured from the worm's center. Default: half the supplied worm_length, or 0 when no length is supplied.
+//   worm_length/l/length/h/height = Working worm length; selects an end-face query when z is omitted. Optional if z is given or the minimum radius is wanted.
+//   worm_starts/starts = Number of starts on the worm. Default: 1
+//   clearance = Clearance below the threads. Default: module/4
+// Example: Add end shafts to a globoid worm
+//   m=2; N=55; d=24; s=5; L=35;
+//   extension=20;
+//   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s, worm_length=L);
+//   globoid_worm(mod=m,N,d,starts=s,worm_length=L)
+//     attach([BOT,TOP],BOT)
+//       cyl(r=shaft_r,l=extension,$fn=96);
+// Example: Create a hole in the globoid worm with a safe wall thickness at the center (z=0)
+//   m=2; N=55; d=24; s=5; L=35;
+//   wall = 2;  // 2 unit minimum wall thickness
+//   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s,z=0)-wall;
+//   difference(){
+//     globoid_worm(mod=m,N,d,starts=s,worm_length=L);
+//     cyl(r=shaft_r,l=2*L,$fn=96);
+//   }
+
+function globoid_worm_root_radius(teeth,worm_diam,_named,z,worm_starts,clearance,
+                                  mod,circ_pitch,diam_pitch,d,starts,worm_length,l,length,h,height) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(L=_globoid_length(worm_length,l,length,h,height))
+    assert(is_undef(L) || (is_finite(L) && L>0),
+           str("\nworm_length must be greater than zero and finite; got ",L))
+    let(d=_gear_worm_diameter(d,worm_diam),s=_gear_worm_starts(starts,worm_starts),
+        m=_inherit_gear_pitch("globoid_worm_root_radius()",circ_pitch,diam_pitch,mod)/PI,
+        c=default(clearance,m/4),z=default(z,is_undef(L)?undef:L/2))
+    assert(is_def(z), "\nMust give length or z position")
+    assert(_globoid_check_reference(m,teeth,d,s), "\nInvalid globoid reference parameters")
+    assert(is_finite(c) && c>=0, str("\nclearance must be nonnegative and finite; got ",c))
+    assert(c<d/2-m, str("\nFor current parameters, clearance must be less than ",d/2-m,
+                       " to leave a positive throat root radius; got ",c))
+    assert(is_finite(z), str("\nz must be finite; got ",z))
+    assert(is_undef(L) || abs(z)<=L/2,
+           str("\nz must be between ",-default(L,0)/2," and ",default(L,0)/2," for the supplied worm_length; got ",z))
+    let(R=m*teeth/(2*sqrt(1-pow(s*m/d,2))),a=R+d/2,root_meridian=R+m+c)
+    assert(is_undef(L) || L<1.3*(R-m-c),
+           str("\nFor current parameters, worm_length must be less than ",1.3*(R-m-c),"; got ",L))
+    assert(abs(z)<root_meridian, str("\nFor current parameters, abs(z) must be less than ",root_meridian,
+                                   "; got ",z,". Choose a position inside the worm's working length."))
+    a-sqrt(root_meridian*root_meridian-z*z);
+
 
 
 

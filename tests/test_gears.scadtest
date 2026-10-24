@@ -370,7 +370,7 @@ include <../std.scad>
 include <../gears.scad>
 
 module test_globoid_worm_root_radius() {
-    r=globoid_worm_root_radius(mod=3, d=20, teeth=22);    
+    r=globoid_worm_root_radius(mod=3, d=20, teeth=22, z=2);    
     assert(r>0);
 }
 test_globoid_worm_root_radius();
