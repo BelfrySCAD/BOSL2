@@ -173,24 +173,26 @@ include <../std.scad>
 include <../gears.scad>
 
 module test_worm_dist() {
-    d = worm_dist(d=10, starts=1, teeth=20, mod=2);
+    d = worm_dist(worm_diam=10, worm_starts=1, teeth=20, mod=2);
     assert(d > 0);
 }
 test_worm_dist();
 '''
 
+
 [[test]]
-name = "test_worm_gear_thickness"
+name = "test_globoid_worm_dist"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_worm_gear_thickness() {
-    t = worm_gear_thickness(mod=2, teeth=20, worm_diam=10);
-    assert(t > 0);
+module test_globoid_worm_dist() {
+    d = globoid_worm_dist(worm_diam=10, worm_starts=1, teeth=20, mod=2);
+    assert(d > 0);
 }
-test_worm_gear_thickness();
+test_globoid_worm_dist();
 '''
+
 
 [[test]]
 name = "test_spur_gear2d"
@@ -209,7 +211,6 @@ test_spur_gear2d();
 
 [[test]]
 name = "test_spur_gear"
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
@@ -221,6 +222,28 @@ module test_spur_gear() {
     assert(len(v[0]) > 0);
 }
 test_spur_gear();
+'''
+
+[[test]]
+name = "test_spur_gear_herringbone"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_spur_gear_herringbone() {
+    $fn = 4;
+    // How far the top face's points are from the bottom face's, seen from above.
+    function ends_apart(vnf) = let(
+        zs = [for (p = vnf[0]) p.z],
+        top = [for (p = vnf[0]) if (approx(p.z, max(zs))) point2d(p)],
+        bot = [for (p = vnf[0]) if (approx(p.z, min(zs))) point2d(p)]
+    ) max([for (p = top) min([for (q = bot) norm(p - q)])]);
+    // A herringbone gear's ends are twisted the same way from its middle, so its top face is its bottom face moved up.
+    assert(ends_apart(spur_gear(mod=2, teeth=12, thickness=10, helical=30, herringbone=true)) < 1e-6);
+    // A helical gear's ends are twisted opposite ways.
+    assert(ends_apart(spur_gear(mod=2, teeth=12, thickness=10, helical=30)) > 0.1);
+}
+test_spur_gear_herringbone();
 '''
 
 [[test]]
@@ -306,35 +329,68 @@ module test_bevel_gear() {
 test_bevel_gear();
 '''
 
+
 [[test]]
-name = "test_worm"
+name = "test_globoid_worm"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_worm() {
+module test_globoid_worm() {
     $fn = 8;
-    v = worm(mod=2, d=20, l=20);
+    v = globoid_worm(mod=2, teeth=20, d=20, l=10);    
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
-test_worm();
+test_globoid_worm();
 '''
 
+
+
 [[test]]
-name = "test_enveloping_worm"
+name = "test_globoid_worm_gear"
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
-module test_enveloping_worm() {
+module test_globoid_worm_gear() {
     $fn = 8;
-    v = enveloping_worm(mod=2, mate_teeth=20, d=20);
+    v = globoid_worm_gear(mod=2, teeth=20, worm_diam=20, worm_length=10);        
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
-test_enveloping_worm();
+test_globoid_worm_gear();
 '''
+
+
+[[test]]
+name = "test_globoid_worm_root_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_globoid_worm_root_radius() {
+    r=globoid_worm_root_radius(mod=3, d=20, teeth=22, z=2);    
+    assert(r>0);
+}
+test_globoid_worm_root_radius();
+'''
+
+
+[[test]]
+name = "test_worm_root_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_root_radius() {
+    r=worm_root_radius(mod=3, d=20);    
+    assert(r>0);
+}
+test_worm_root_radius();
+'''
+
+
 
 [[test]]
 name = "test_worm_gear"
@@ -381,17 +437,12 @@ test_gear_skew_angle();
 
 [[test]]
 name = "test_gear_shorten_skew"
-expect_success = false
-assert_no_warnings = false
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
 
 module test_gear_shorten_skew() {
-    // gear_shorten_skew has a BOSL2 bug: uses undefined variable 'helical'
-    // The function returns undef due to the bug; we just verify it doesn't crash hard
-    s = gear_shorten_skew(teeth1=15, teeth2=24, helical1=45, helical2=30);
+    assert_approx(gear_shorten_skew(teeth1=5, teeth2=7, helical1=45, helical2=30),0.236429832966);
 }
 test_gear_shorten_skew();
 '''
