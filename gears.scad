@@ -3533,7 +3533,7 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   teeth = 45;
 //   length = 40;
 //   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
-//   color("lightblue")n
+//   color("lightblue")
 //     globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
 //   back(sep)
 //     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
