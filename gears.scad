@@ -2929,7 +2929,7 @@ module bevel_gear(
 //   valleys may rise and shrink the clearance below the requested value, or you may need
 //   to specify extra clearance to create a valid gear.
 //   .
-//   The `$fn`/`$fa`/`$fs` parameters control the faceting of the gear with a minimum of 36 segments round to
+//   The `$fn`/`$fa`/`$fs` parameters control the faceting of the gear with a minimum of 36 segments, rounded to
 //   a multiple of `starts`.  
 //   .
 //   The worm has tapered thread ends by default, with `lead_in` equal to one nominal tooth depth: `2*module+clearance`. 
@@ -2966,10 +2966,11 @@ module bevel_gear(
 //   worm(mod=2, d=30, l=50)
 //   attach(TOP,BOT)
 //       cyl(r=worm_root_radius(mod=2, d=30), h=25);
-// Example: Worm mated to a worm gear; note the matching parameters
+// Example(3D,Med): Worm mated to a worm gear; note the matching parameters
 //   $fn=64;
 //   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
-//   worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
+//   color("lightblue")
+//     worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
 //   back(sep)
 //     worm(mod=2, l=50, worm_diam=30, worm_starts=3, orient=RIGHT);
 
@@ -3170,10 +3171,11 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 // Example: Worm gear for a multi-start worm with a shaft hole
 //   worm_gear(mod=2, worm_diam=30, teeth=25, worm_starts=5,
 //             $fn=64, shaft_diam=15);
-// Example: Worm mated to a worm gear; note the matching parameters
+// Example(3D,Med): Worm mated to a worm gear; note the matching parameters
 //   $fn=64;
 //   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
-//   worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
+//   color("lightblue")
+//     worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
 //   back(sep)
 //     worm(mod=2, l=50, worm_diam=30, worm_starts=3, orient=RIGHT);
 
@@ -3334,31 +3336,34 @@ module worm_gear(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example: A single-start globoid worm.
+// Example(VPR=[83.00,0.00,20.80]): A single-start globoid worm.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45);
-// Example: Same worm with 4 starts has steeper threads.
+// Example(VPR=[83.00,0.00,20.80]): Same worm with 4 starts has steeper threads.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,starts=4);
-// Example: Left-handed worm.
-//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,left_handed=true);
-// Example: Worm with no lead in.
+// Example(VPR=[83.00,0.00,20.80]): Left-handed worm.
+//   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,
+//                left_handed=true);
+// Example(VPR=[83.00,0.00,20.80]): Worm with no lead in.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,lead_in=0);
-// Example: Worm with rounding
+// Example(VPR=[83.00,0.00,20.80]): Worm with rounding
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,rounding=0.2);
-// Example: Worm with shaft extension
-//   rad = globoid_worm_root_radius(mod=2, d=30, teeth=44, length=50);
+// Example(VPR=[83.00,0.00,20.80]): Worm with shaft extension
+//   rad = globoid_worm_root_radius(mod=2, d=30,
+//                                  teeth=44, length=50);
 //   globoid_worm(mod=2, d=30, l=50, teeth=44)
 //      attach(TOP,BOT)
 //        cyl(r=rad, h=25);
-// Example: Mating to a globoid worm gear
+// Example(3D,Med): Mating to a globoid worm gear
 //   mod = 2;
 //   diam = 24;
 //   teeth = 45;
 //   length = 40;
 //   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
-//   globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
+//   color("lightblue")
+//     globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
 //   back(sep)
 //     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
-// Example: A globoid worm machined from a cylindrical blank will have the threads fade away into the blank.  To get this effect you can intersect the worm with a suitably sized cylinder.  Depending on the worm this process may clip the teeth in the middle of the worm.  We construct the worm oversized to get threads that run off the ends and clip it back to the finished length.  The mating worm gear should use the `worm_length=finished_length`, not the longer pre-trimmed length.  
+// Example(VPR=[83.00,0.00,20.80]): A globoid worm machined from a cylindrical blank will have the threads fade away into the blank.  To get this effect you can intersect the worm with a suitably sized cylinder.  Depending on the worm this process may clip the teeth in the middle of the worm.  We construct the worm oversized to get threads that run off the ends and clip it back to the finished length.  The mating worm gear should use the `worm_length=finished_length`, not the longer pre-trimmed length.  
 //   m=2; N=55; d=24; starts=5; finished_length=60; stock_length=70;
 //   limit_r=globoid_worm_root_radius(mod=m,teeth=N,d=d,starts=starts,l=finished_length);
 //   intersection() {
@@ -3368,13 +3373,9 @@ module worm_gear(
 //   }
 //   zflip_copy()
 //     up(finished_length/2) cyl(r=limit_r, l=15, $fn=144, anchor=BOT);
-// Example: Standard globoid worms may not be printable without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
+// Example(VPR=[83.00,0.00,20.80]): Standard globoid worms may not be printable without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
 //     globoid_worm(mod=2,24,45,mate_teeth=55,
 //                  pressure_angle=[45,5]);
-// Example(3D,Big): Reversing the angle pair exchanges the shallow and steep flanks.
-//   for(i=[0:1]) right(42*i)
-//       globoid_worm(mod=2,24,35,mate_teeth=55,starts=5,
-//                    pressure_angle=i==0?[45,5]:[5,45],rounding=.2);
 
 
 function globoid_worm(d,l,_named,teeth,worm_diam,
@@ -3526,13 +3527,14 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 // Example: Thick worm gip with very small `min_tip` value shows sharp edges on the teeth
 //  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9,
 //                    worm_length=33, min_tip=0.01);
-// Example: Mating to a globoid worm
+// Example(3D,Med): Mating to a globoid worm
 //   mod = 2;
 //   diam = 24;
 //   teeth = 45;
 //   length = 40;
 //   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
-//   globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
+//   color("lightblue")
+//     globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
 //   back(sep)
 //     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
 // Example(3D): Asymmetric worm gear
