@@ -2540,9 +2540,9 @@ module crown_gear(
 // Topics: Gears, Parts
 // See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Function
-//   vnf = bevel_gear([mod=|circ_pitch=|diam_pitch=], teeth, mate_teeth, [shaft_angle|drive_angle=], [backing=], [bottom=], [thickness=], [cone_backing=], [face_width=], [pressure_angle=], [clearance=], [backlash=], [spiral=], [cutter_radius=], [slices=], [gear_spin=], [anchor=], [spin=], [orient=], [left_handed=/right_handed=]);
+//   vnf = bevel_gear([mod=|circ_pitch=|diam_pitch=], teeth, mate_teeth, [shaft_angle|drive_angle=], [backing=], [bottom=], [thickness=], [cone_backing=], [face_width=], [pressure_angle=], [clearance=], [backlash=], [spiral=], [cutter_radius=], [slices=], [gear_spin=], [anchor=], [spin=], [orient=], [left_handed=|right_handed=]);
 // Usage: As a Module
-//   bevel_gear([mod=|circ_pitch=|diam_pitch=], teeth, mate_teeth, [shaft_angle|drive_angle=], [backing=], [bottom=], [thickness=], [cone_backing=], [face_width=], [shaft_diam=], [pressure_angle=], [clearance=], [backlash=], [spiral=], [cutter_radius=], [slices=], [gear_spin=], [anchor=], [spin=], [orient=], [left_handed=/right_handed=]) [ATTACHMENTS];
+//   bevel_gear([mod=|circ_pitch=|diam_pitch=], teeth, mate_teeth, [shaft_angle|drive_angle=], [backing=], [bottom=], [thickness=], [cone_backing=], [face_width=], [shaft_diam=], [pressure_angle=], [clearance=], [backlash=], [spiral=], [cutter_radius=], [slices=], [gear_spin=], [anchor=], [spin=], [orient=], [left_handed=|right_handed=]) [ATTACHMENTS];
 // Description:
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
@@ -2908,7 +2908,7 @@ module bevel_gear(
 // Topics: Gears, Parts
 // See Also: worm_gear(), worm_dist(), worm_root_radius(), globoid_worm(), globoid_worm_gear()
 // Usage: 
-//   worm([mod=|circ_pitch=|diam_pitch=], [d/worm_diam=], [l/length=/h=/height=/worm_length=], [starts=/worm_starts=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [lead_in=], [anchor=], [spin=], [orient=], [gear_spin=]) [ATTACHMENTS];
+//   worm([mod=|circ_pitch=|diam_pitch=], [d|worm_diam=], [l|length=|h=|height=|worm_length=], [starts=|worm_starts=], [left_handed=], [pressure_angle=], [backlash=], [clearance=], [lead_in=], [anchor=], [spin=], [orient=], [gear_spin=]) [ATTACHMENTS];
 // Description:
 //   Creates a cylindrical worm, a screw-shaped gear that meshes with {{worm_gear()}}
 //   on perpendicular, offset shafts.  See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
@@ -3263,9 +3263,9 @@ module worm_gear(
 // Topics: Gears, Parts
 // See Also: globoid_worm_gear(), globoid_worm_dist(), globoid_worm_root_radius(), worm(), worm_gear()
 // Usage: Function
-//   vnf = globoid_worm([mod=|circ_pitch=|diam_pitch=], d/worm_diam=, l/length=/h=/height=/worm_length=, teeth=/mate_teeth=, [starts=/worm_starts=], [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=], [lead_in=]);
+//   vnf = globoid_worm([mod=|circ_pitch=|diam_pitch=], d|worm_diam=, l|length=|h=|height=|worm_length=, teeth=|mate_teeth=, [starts=|worm_starts=], [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [gear_spin=], [anchor=], [spin=], [orient=], [lead_in=]);
 // Usage: Module
-//   globoid_worm([mod=|circ_pitch=|diam_pitch=], d/worm_diam=, l/length=/h=/height=/worm_length=, teeth=/mate_teeth=, [starts=/worm_starts=], [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [lead_in=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   globoid_worm([mod=|circ_pitch=|diam_pitch=], d|worm_diam=, l|length=|h=|height=|worm_length=, teeth=|mate_teeth=, [starts=|worm_starts=], [pressure_angle=], [clearance=], [mesh_tol=], [rounding=], [min_tip=], [left_handed=], [lead_in=], [gear_spin=], [shaft_diam=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates an enveloping, hourglass-shaped worm that meshes with
 //   a matching worm gear produced by {{globoid_worm_gear()}} to form a double-enveloping, or globoid, gear pair
@@ -3516,7 +3516,7 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   orient = Wheel axis direction. Default: UP
 // Example: 
 //   globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25);
-//   Example: For multiple start worm
+// Example: Multiple start worm
 //   globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25,
 //                     worm_starts=5);
 // Example: With rounding
@@ -5842,7 +5842,7 @@ function _base_radius(
 // Topics: Gears, Parts
 // See Also: bevel_gear(), pitch_radius(), outer_radius()
 // Usage: As a Function
-//   value = bevel_pitch_angle(teeth, mate_teeth, [drive_angle/shaft_angle=]);
+//   value = bevel_pitch_angle(teeth, mate_teeth, [drive_angle|shaft_angle=]);
 // Description:
 //   Returns the correct pitch cone angle for a bevel gear with a given number of teeth, that is
 //   matched to another bevel gear with a (possibly different) number of teeth.
@@ -6599,7 +6599,7 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 // Topics: Gears, Parts
 // See Also: globoid_worm(), worm_root_radius()
 // Usage:
-//     r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam/d=, [worm_length=|l=|length=|h=|height=], [z=], [worm_starts=|starts=], [clearance=]);
+//     r = globoid_worm_root_radius([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam|d=, [worm_length=|l=|length=|h=|height=], [z=], [worm_starts=|starts=], [clearance=]);
 // Description:
 //   Returns the nominal root radius of {{globoid_worm()}} at local axial
 //   coordinate `z=`, measured from the worm's middle plane. The radius is
