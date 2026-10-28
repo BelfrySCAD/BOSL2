@@ -2140,7 +2140,7 @@ function rack(
                 xrot(90),
                 left(adj_ang_to_opp(thickness/2,helical)) *
                     fwd(thickness/2) * xrot(90),
-            ], style="alt", orient=FWD)
+            ], style="alt")
           : skew(axy=-helical, p=linear_sweep(path, height=thickness, anchor="origin", orient=FWD)),
         out = right(gear_travel, p=vnf),
         size = [l, thickness, 2*bottom],
