@@ -1,7 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 // LibFile: gears.scad
-//   Spur Gears, Bevel Gears, Racks, Cylindrical and Globoid Worm Gears.
-//   Inspired by code by Leemon Baird, 2011, Leemon@Leemon.com
+//   Provides involute spur gears, ring gears crown face gears and racks, with the option to
+//   create helical and herringbone forms.  Provides octoid bevel gears and enveloping and
+//   globoid (double enveloping) worm drives; the globoid worm can be constructed with asymmetric
+//   teeth for easier printing.
+//   .
+//   The {{attach_gear()}} module lets you assemble and then automatically drive
+//   a meshing gear chain without having to manually fiddle with gear spacing or teeth alignment for
+//   the proper mesh.
+//   .
+//   Originally inspired by code by Leemon Baird, 2011, Leemon@Leemon.com.
+// 
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/gears.scad>
@@ -579,7 +588,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   in an enveloping worm.  This configuration, where both gears envelope each other is called double enveloping
 //   or "globoid".  This type of worm gear drive makes better contact between the gears 
 //   but is less often used due to manufacturing complexity and consequent expense.  
-// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): The enveloping (globoid) worm appears on the left in green.  Its sides curve so several teeth can mate with the worm gear, and it requires a complex tooth form.  A cylindrical worm appears on the right in blue.  Note its straight sides.
+// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): The cylindrical worm appears on the left in blue; it has straight sides.  The globoid (enveloping) worm appears on the right in green.  Its sides curve around its worm gear so that several teeth can mate with the worm gear, which requires a more complex tooth form.
 //   tilt=20;
 //   starts=1;
 //   ps=0;
@@ -3625,6 +3634,8 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
         _gear_publish(_spec,_pose) children();
     }
 }
+
+
 // Function&Module: globoid_worm_gear()
 // Synopsis: Creates an enveloping worm gear for a double-enveloping worm drive pair.
 // SynTags: Geom, VNF
@@ -6687,6 +6698,8 @@ function _root_radius_basic(
           ? _adendum(circ_pitch=circ_pitch, profile_shift=-profile_shift)
           : _dedendum(circ_pitch=circ_pitch, clearance=clearance, profile_shift=profile_shift)
     );
+
+
 /// Function: _base_radius()
 /// Usage: As a Function
 ///   value = _base_radius(mod=|circ_pitch=|diam_pitch=, teeth, pressure_angle, [helical]);
@@ -6720,6 +6733,8 @@ function _base_radius(
         trans_pa = atan(tan(pressure_angle)/cos(helical))
     )
     pitch_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical) * cos(trans_pa);
+
+
 // Function: bevel_pitch_angle()
 // Synopsis: Returns the pitch cone angle for a bevel gear.
 // Topics: Gears, Parts
@@ -6727,22 +6742,20 @@ function _base_radius(
 // Usage: As a Function
 //   value = bevel_pitch_angle(teeth, mate_teeth, [drive_angle|shaft_angle=]);
 // Description:
-//   Returns the correct pitch cone angle for a bevel gear with a given number of teeth, that is
-//   matched to another bevel gear with a (possibly different) number of teeth.
+//   Returns the pitch cone angle for a bevel gear with a given number of teeth, designed
+//   for a mate with a possibly different tooth count, and with the specified shaft angle between the gears.  
 // Arguments:
 //   teeth = Number of teeth that this gear has.
 //   mate_teeth = Number of teeth that the matching gear has.
 //   drive_angle/shaft_angle = Angle between the shafts.  Default: 90.
-// Example:
+// Example:  
 //   ang = bevel_pitch_angle(teeth=18, mate_teeth=30);
-// Example(2D):
+// Example(3D,Med,NoAxes,VPR=[0.00,0.00,0.00],VPD=60.27,VPT=[0.06,-9.80,-6.88]):
 //   t1 = 13; t2 = 19; pitch=5;
-//   pang = bevel_pitch_angle(teeth=t1, mate_teeth=t2, drive_angle=90);
-//   color("black") {
-//       zrot_copies([0,pang])
-//           stroke([[0,0,0], [0,-20,0]],width=0.2);
-//       stroke(arc(r=3, angle=[270,270+pang]),width=0.2);
-//   }
+//   pang = bevel_pitch_angle(teeth=t1, mate_teeth=t2);
+//   zrot_copies([0,pang])
+//      stroke([[0,0,0], [0,-20,0]],width=0.3,color="black");
+//   stroke(arc(n=10,r=3, angle=[270,270+pang]),width=0.3);
 //   #bevel_gear(
 //       circ_pitch=5, teeth=t1, mate_teeth=t2,
 //       spiral=0, cutter_radius=1000,
@@ -6756,6 +6769,8 @@ function bevel_pitch_angle(
            "\nteeth and mate_teeth must be supplied as positive finite numbers")
     let(drive_angle=_gear_shaft_angle(shaft_angle,drive_angle))
     atan2(sin(drive_angle),(mate_teeth/teeth)+cos(drive_angle));
+
+
 // Function: gear_dist()
 // Synopsis: Returns the distance between two gear centers for spur gears or parallel axis helical gears.
 // Topics: Gears, Parts
@@ -6900,6 +6915,8 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
       pa_eff = root_find(function (x) _invol(a=x)-rhs, 1, 75)
   )
   pa_eff;
+
+
 // Function: gear_dist_skew()
 // Synopsis: Returns the distance between two helical gear centers with skew axes.  
 // Topics: Gears, Parts
@@ -6963,12 +6980,14 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
       pa_eff_normal = root_find(function (x) _invol(a=x)-rhs, 5, 75)
   )
   pa_eff_normal;
+
+
 // Function: gear_skew_angle()
 // Usage: As a Function
 //   value = gear_skew_angle(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
 // Synopsis: Returns corrected skew angle between two profile shifted helical gears.  
 // Description:
-//   Compute the correct skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
+//   Compute the corrected skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
 //   the gears is a rack, this angle is simply the sum of the helical angles of the two gears.  But with profile shifted gears, a small
 //   correction to the skew angle is needed for proper meshing.  
 // Arguments:
@@ -7111,6 +7130,8 @@ function get_profile_shift(
        pa_eff = acos(teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical)))
   )
   teethsum * (_invol(a=pa_eff)-_invol(a=pressure_angle_trans))/2/tan(pressure_angle);
+
+
 // Function: auto_profile_shift()
 // Synopsis: Returns the recommended profile shift for a gear.
 // Topics: Gears, Parts
@@ -7149,6 +7170,8 @@ function auto_profile_shift(
     )
     !get_min && teeth > floor(min_teeth)? 0
   : (1 - (teeth / min_teeth))/cos(helical);
+
+
 // Function: gear_shorten()
 // Usage: As a Function
 //   value = gear_shorten(teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
@@ -7206,6 +7229,8 @@ function gear_shorten(
          y = ax - (teeth1+teeth2)/2/cos(helical)
     )
     profile_shift1+profile_shift2-y;
+
+
 // Function: gear_shorten_skew()
 // Usage: As a Function
 //   value = gear_shorten_skew(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
@@ -7306,6 +7331,8 @@ module _show_gear_tooth_profile(
         }
     }
 }
+
+
 // Function: worm_dist()
 // Synopsis: Returns the center spacing between a cylindrical worm and its worm gear.
 // Topics: Gears, Parts
@@ -7352,6 +7379,8 @@ function _wormgear_spacing(ref,backlash) =
     assert(ref[3]>0,
            "\nworm distance: positive distance backlash requires pressure_angle > 0")
     ref[1]+backlash/ref[3];
+
+
 // Function: globoid_worm_dist()
 // Synopsis: Returns the center spacing between a globoid worm and its worm gear.
 // Topics: Gears, Parts
@@ -7380,6 +7409,8 @@ function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm
         m=_inherit_gear_pitch("globoid_worm_dist()",circ_pitch,diam_pitch,mod)/PI)
     assert(_globoid_check_reference(m,teeth,worm_diam,s), "\nInvalid gear parameters")
     worm_diam/2+m*teeth/(2*sqrt(1-pow(s*m/worm_diam,2)));
+
+
 // Function: worm_root_radius()
 // Synopsis: Returns the root radius of a cylindrical worm.
 // Topics: Gears, Parts
@@ -7401,7 +7432,7 @@ function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm
 //   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
 //   backlash = Gap between two meshing teeth, as supplied to {{worm()}}. Default: 0
 //   starts/worm_starts = Number of worm starts. Inherits when available. Default: 1
-// Example: Shaft through a cylindrical worm.
+// Example(3D): Shaft through a cylindrical worm.
 //   m=2; d=24; L=35; 
 //   shaft_r=worm_root_radius(mod=m,d=d,starts=5);
 //   worm(mod=m,d=d,l=L,starts=5);
@@ -7438,7 +7469,6 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   radius at the end of the worm.  
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch` or inherit it from a parent gear. 
-//   .
 // Arguments:
 //   teeth = Number of teeth on the mating worm gear. Required.
 //   worm_diam/d = Worm throat pitch diameter. Inherits when available.
@@ -7450,14 +7480,14 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   z = Local axial position measured from the worm's center. Default: `worm_length/2` if worm_length is given or inherited.  
 //   worm_starts/starts = Number of starts on the worm. Inherits when available. Default: 1
 //   clearance = Nominal extra root-depth allowance at the throat, as supplied to {{globoid_worm()}}. Default: module/4
-// Example: Add end shafts to a globoid worm
+// Example(3D): Add end shafts to a globoid worm
 //   m=2; N=55; d=24; s=5; L=35;
 //   extension=20;
 //   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s, worm_length=L);
 //   globoid_worm(mod=m,d,L,teeth=N,starts=s)
 //     attach([BOT,TOP],BOT)
 //       cyl(r=shaft_r,l=extension,$fn=96);
-// Example: Create a hole in the globoid worm with a safe wall thickness at the center (z=0)
+// Example(3D): Create a hole in the globoid worm with a safe wall thickness at the center (z=0)
 //   m=2; N=55; d=24; s=5; L=35;
 //   wall = 2;  // 2 unit minimum wall thickness
 //   shaft_r=globoid_worm_root_radius(mod=m,N,d,worm_starts=s,z=0)-wall;
