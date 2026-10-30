@@ -63,22 +63,25 @@ $parent_gear_wheel_teeth = undef;
 $parent_gear_left_handed = undef;
 $parent_gear_clearance = undef;
 $parent_gear_herringbone = undef;
-$parent_gear_rotation = 0;
-$parent_gear_phase = 0;
-$parent_gear_ratio = 1;
-$parent_gear_travel = 0;
-$parent_gear_travel_phase = 0;
-$parent_gear_travel_ratio = 0;
-$parent_gear_input = "rotation";
-$parent_gear_contact_dir = undef;
-$parent_gear_contact_angle = undef;
-$parent_gear_locs = [];
-$parent_gear_axes = [];
+$gear_rotation = 0;
+$_gear_tooth_angle = 0;
+$gear_ratio = 0;
+$gear_travel = 0;
+$_gear_tooth_travel = 0;
+$gear_travel_ratio = 0;
+$gear_input = undef;
+$gear_contact_dir = undef;
+$gear_contact_angle = undef;
+$gear_chain_locs = [];
+$gear_chain_axes = [];
 /// Private mating and coordinate-frame bookkeeping.
 $_gear_parent_spec = undef;
 $_gear_attach_request = undef;
 $_gear_frame_motion = ident(4);
 $_gear_chain_active = false;
+$_gear_driver = undef;
+$gear_angle_offset = 0;
+$gear_travel_offset = 0;
 function _inherit_gear_param(name, val, pval, dflt, invert=false) =
     let(resolved=is_undef(val) ? default(pval,dflt) : val)
     assert(is_finite(resolved), str("\n", name," must be a finite number; got ",resolved))
@@ -373,10 +376,10 @@ function _gear_worm_starts(starts,worm_starts) =
 //   fwd(2)right(d/2+25)color("black"){back(4)text("Normal",size=6);
 //                           fwd(4)text("Clearance",size=6);}
 // Subsection: Helical Gears
-//   Helicals gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
+//   Helical gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
 //   following a slanted, helical path.  The angled teeth engage more gradually than spur gear teeth, so they run more smoothly
 //   and quietly.  A disadvantage of helical gears is that they have thrust along the axis of the gear that must be 
-//   accomodated.  Helical gears also have more sliding friction between the meshing teeth compared to spur gears. 
+//   accommodated.  Helical gears also have more sliding friction between the meshing teeth compared to spur gears. 
 // Figure(3D,Med,NoAxes,VPT=[3.5641,-7.03148,4.86523],VPR=[62.7,0,29.2],VPD=263.285): A Helical Gear
 //   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=35,helical=-29,shaft_diam=15,slices=15);
 // Continues:
@@ -621,7 +624,7 @@ function _gear_worm_starts(starts,worm_starts) =
 // Continues:
 //   The worm and its worm gear must be designed together.  
 //   As usual, a proper mesh requires that the pressure angles match
-//   and the the teeth on the mating gears are the same size. 
+//   and the teeth on the mating gears are the same size. 
 //   Additionally the worm gear must be constructed to match the
 //   diameter of the worm and the number of starts on the worm.  The
 //   number of starts on the worm changes the angle at of the teeth on
@@ -813,7 +816,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 //   .
 //   Creates a involute spur gear, helical gear, herringbone gear, or a mask for an internal ring gear.
-//   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-a-quick-introduction-to-gears).
+//   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-quick-introduction-to-gears).
 //   Give the number of teeth.
 //   Spur gears have straight teeth and
 //   mesh together on parallel shafts without creating any axial thrust.  The teeth engage suddenly across their
@@ -826,7 +829,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   The module creates the gear in the XY plane, centered on the origin, with one tooth centered on the positive Y axis.
 //   In order for two gears to mesh they must have the same tooth size and `pressure_angle`, and
 //   generally the helical angles should be of opposite sign.  
-//   The pressure angle inherits from the parent, with fallback 20 degrees.  Another common value is 14.5 degrees.
+//   The pressure angle inherits from the parent when available; otherwise it defaults to 20 degrees. Another common value is 14.5 degrees.
 //   Ideally the teeth count of two meshing gears will be relatively prime because this ensures that
 //   every tooth on one gear will meet every tooth on the other, creating even wear.
 //   .
@@ -854,9 +857,8 @@ function _gear_worm_starts(starts,worm_starts) =
 //   .
 //   You can position gears directly using {{gear_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
-//   When using {{attach_gear()}} only TOP, BOTTOM and CENTER anchors are permitted and they
-//   control the alignment of the gear to its parent, aligning to the same anchor on the parent.
-//   So for example, a TOP anchor will line up the two top faces of the parent and child. 
+//   When using {{attach_gear()}} for parallel axis gears only TOP, BOTTOM and CENTER anchors are permitted and they
+//   align the corresponding gear faces or midpoints.  Skew pairs and helical herringbone gears only accept the CENTER anchor.
 // Arguments:
 //   teeth = Total number of teeth around the entire perimeter
 //   thickness = Axial thickness. Default: inherited from the parent gear if available, 10 otherwise.
@@ -867,12 +869,12 @@ function _gear_worm_starts(starts,worm_starts) =
 //   helical = Teeth spiral around the gear at this angle, positive for left handed, negative for right handed. Inherits to mate with parent when omitted.  Default: 0
 //   herringbone = If true, and helical is set, creates a herringbone gear.  Default: inherited from the parent gear if available, false otherwise.
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
-//   profile_shift = Profile shift factor x.  Default: "auto"
+//   profile_shift = Profile shift factor x.  Profile shift is not inherited. Default: "auto"
 //   shorten = Shorten gear tips by the module times this value.  Needed for large profile shifted gears.  Default: 0
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   shaft_diam = Diameter of the central hole. Default: 0 (no hole).
 //   hide = Number of teeth to omit for a partial gear. Default: 0.
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: mod/4
 //   slices = Number of axial extrusion intervals. Calculated from twist and curve resolution when omitted or undef.
 //   internal = If true, create an internal-tooth mask. Default: false.
@@ -884,16 +886,19 @@ function _gear_worm_starts(starts,worm_starts) =
 //   interior = Deprecated alias for internal.
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
 //   If internal is true then the default tag is "remove"
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Anchor Types:
 //   root = anchor on the root circle
 //   pitch = anchor on the pitch circle (default)
@@ -1227,12 +1232,12 @@ module spur_gear(
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 //   .
 //   Creates a 2D involute spur gear, or a mask for an internal ring gear.
-//   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-a-quick-introduction-to-gears).
+//   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-quick-introduction-to-gears).
 //   Give the number of teeth.
 //   .
 //   The module creates the gear in centered on the origin, with one tooth centered on the positive Y axis.
 //   In order for two gears to mesh they must have the same tooth size and `pressure_angle`
-//   The pressure angle inherits from the parent, with fallback 20 degrees.  Another common value is 14.5 degrees.
+//   The pressure angle inherits from the parent when available; otherwise it defaults to 20 degrees. Another common value is 14.5 degrees.
 //   Ideally the teeth count of two meshing gears will be relatively prime because this ensures that
 //   every tooth on one gear will meet every tooth on the other, creating even wear.
 //   .
@@ -1260,12 +1265,12 @@ module spur_gear(
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = Normal circular pitch.
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
-//   profile_shift = Profile shift factor x.  Default: "auto"
+//   profile_shift = Profile shift factor x.  Profile shift is not inherited. Default: "auto"
 //   shorten = Shorten gear tips by the module times this value.  Needed for large profile shifted gears.  Default: 0
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   helical = Cross-section of teeth spiraling at this angle, positive for left handed, negative for right handed. Inherits to mate with parent when omitted.  Default: 0
 //   hide = Number of teeth to omit for a partial gear. Default: 0.
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear.  Default: mod/4
 //   internal = If true, create an internal-tooth mask. Default: false.
 //   $gear_steps = Number of points to sample gear profile.  Default: 16
@@ -1276,16 +1281,19 @@ module spur_gear(
 //   interior = Deprecated alias for internal.
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
 //   If internal is true then the default tag is "remove"
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Anchor Types:
 //   root = anchor on the root circle
 //   pitch = anchor on the pitch circle (default)
@@ -1504,7 +1512,7 @@ module spur_gear2d(
 //   Additionally, you must have more teeth on an internal gear than its mating external gear, and
 //   the profile shift on the ring gear must be at least as big as the profile shift on the mating gear.
 //   The ring gear's `profile_shift` defaults to zero, even when the mating spur gear may automatically profile shift.
-//   You may need to use {{auto_profile_shift()}} to find the the profile shift of a mating spur gear if it has a small number of teeth
+//   You may need to use {{auto_profile_shift()}} to find the profile shift of a mating spur gear if it has a small number of teeth
 //   and you use the default "auto" profile shift.  The gear spacing is given by {{gear_dist()}}.  
 //   .
 //   You can position gears directly using {{gear_dist()}}, but it may be easier to use
@@ -1513,7 +1521,7 @@ module spur_gear2d(
 //   control the alignment of the gear to its parent, aligning to the same anchor on the parent.
 //   So for example, a TOP anchor will line up the two top faces of the parent and child. 
 // Arguments:
-//   teeth = Total number of teeth around the spur gear.
+//   teeth = Total number of teeth around the ring gear.
 //   thickness = Axial thickness. Default: inherited from the parent gear if available, 10 otherwise.
 //   backing = The width of the ring gear backing.  Default: height of teeth
 //   ---
@@ -1526,7 +1534,7 @@ module spur_gear2d(
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
 //   helical = Teeth spiral around the gear at this angle, positive for left handed, negative for right handed. Inherits to mate with parent when omitted.  Default: 0
 //   herringbone = Make a herringbone gear when true and helical is nonzero. Default: inherited from the parent gear if available, false otherwise.
-//   profile_shift = Profile shift factor x for tooth profile.  Must be at least as big as profile shift of the mating gear.  Default: 0
+//   profile_shift = Profile shift factor for tooth profile.  Must be at least as big as profile shift of the mating gear.  Profile shift is not inherited. Default: 0
 //   clearance = Tooth-root clearance. Default: module/4.
 //   backlash = Tooth-thinning backlash at the pitch circle. Default: 0.
 //   $gear_steps = Number of points to sample gear profile.  Default: 16
@@ -1534,19 +1542,22 @@ module spur_gear2d(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Anchoring radius: "pitch" or "outside". Default: "pitch"
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 //   slices = Axial slices used by the extrusion; calculated from twist when omitted or undef.
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example:
 //   ring_gear(circ_pitch=5, teeth=48, thickness=10);
 // Example: Adjusting Backing
@@ -1685,13 +1696,13 @@ module ring_gear(
 //   Additionally, you must have more teeth on an internal gear than its mating external gear, and
 //   the profile shift on the ring gear must be at least as big as the profile shift on the mating gear.
 //   The ring gear's `profile_shift` defaults to zero, even when the mating spur gear may automatically profile shift.
-//   You may need to use {{auto_profile_shift()}} to find the the profile shift of a mating spur gear if it has a small number of teeth
+//   You may need to use {{auto_profile_shift()}} to find the profile shift of a mating spur gear if it has a small number of teeth
 //   and you use the default "auto" profile shift.  The gear spacing is given by {{gear_dist()}}.  
 //   .
 //   You can position gears directly using {{gear_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 // Arguments:
-//   teeth = Total number of teeth around the spur gear.
+//   teeth = Total number of teeth around the ring gear.
 //   backing = The width of the ring gear backing.  Default: height of teeth
 //   ---
 //   mod = The module of the gear (pitch diameter / teeth)
@@ -1702,26 +1713,29 @@ module ring_gear(
 //   width = width of the ring, measuring from tips of teeth to outside of ring.  
 //   helical = Cross-section of teeth spiraling at this angle, positive for left handed, negative for right handed. Inherits to mate with parent when omitted.  Default: 0
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
-//   profile_shift = Profile shift factor x for tooth profile.  Must be at least as big as profile shift of the mating gear.  Default: 0
+//   profile_shift = Profile shift factor for tooth profile.  Must be at least as big as profile shift of the mating gear.  Profile shift is not inherited. Default: 0
 //   clearance = Tooth-root clearance. Default: module/4.
 //   backlash = Tooth-thinning backlash at the pitch circle. Default: 0.
 //   $gear_steps = Number of points to sample gear profile.  Default: 16
 //   anchor = For a child of {{attach_gear()}} must be CENTER.  Otherwise translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Anchoring radius: "pitch" or "outside". Default: "pitch"
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 //   shorten = Shorten tips by this factor times the module. Default: 0
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Anchor Types:
 //   pitch = anchor on the pitch circle (default)
 //   outside = outside edge of the gear
@@ -1832,12 +1846,13 @@ module ring_gear2d(
 // Description:
 //   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   A rack has no pitch circle so `pitch=` specifies the straight-line tooth pitch and `circ_pitch=` is permitted
+//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
 //   as a synonym for consistency and compatibility with other gears.
 //   .
 //   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
-//   A rack can mesh with any gear that has the same `circ_pitch` and `pressure_angle`.  A helical rack meshes with a gear with the opposite
-//   helical angle.   
+//   A rack meshes with an external spur or helical pinion using the same normal tooth size and pressure angle.
+//   The helical angle of the mating gear must be the negative of the rack's helical angle for the usual planar engagement.
+//   Other angles angles require engagement at a skew angle determined by the sum of the  helical angles of the two gears. 
 //   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
 //   When called as a module, creates a 3D rack shape.
 //   .
@@ -1852,11 +1867,11 @@ module ring_gear2d(
 //   .
 //   You can position gears directly using {{gear_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
-//   When using {{attach_gear()}} only the FWD, BACK and CENTER anchors align the rack
+//   When using {{attach_gear()}} with parallel engagement the FWD, BACK and CENTER anchors align the rack
 //   with the TOP, BOTTOM and CENTER of the parent respectively.  For consistency with other
-//   gears you can also use TOP and BOTTOM instead of FWD and BACK.
-//   You can also add LEFT or RIGHT components to your anchor to select which end of the RACK
-//   aligns with the parent gear.  
+//   gears you can also use TOP and BOTTOM instead of FWD and BACK.  For skew engagement only CENTER is permitted.
+//   In either the parallel or skew case you can add LEFT or RIGHT components to your anchor to select which end of the RACK
+//   aligns with the parent gear.
 // Arguments:
 //   teeth = Total number of teeth along the rack. Required.
 //   thickness = Axial thickness. Default: inherited from the parent gear if available, 10 otherwise.
@@ -1869,28 +1884,28 @@ module ring_gear2d(
 //   width = Distance from base of rack to tips of teeth (alternative to bottom and backing).
 //   helical = Angle of the rack teeth away from perpendicular to its length. Inherits to mate with parent when omitted.  Default: 0
 //   herringbone = Make a herringbone rack when true and helical is nonzero. Default: inherited from the parent gear if available, false otherwise.
-//   profile_shift = Profile shift factor x.  Default: 0
+//   profile_shift = Profile shift factor x.  Profile shift is not inherited. Default: 0
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
-//   anchor = As a child of {{attach_gear()}} specifies face and end alignment of the rack to the parent.  Otherweise translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = As a child of {{attach_gear()}} specifies face and end alignment of the rack to the parent.  Otherwise translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   gear_travel = Translate the rack along its length without moving its anchors or children. Default: 0
+//   gear_travel = Translate the rack along its length without moving its anchors or children.  Use {{gear_travel()}} to drive the rack and its children. Default: 0
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
-//   `$parent_gear_travel` is set to mechanical rack displacement in model units, excluding tooth-only offsets. Zero for rotary gears.
-//   `$parent_gear_travel_phase` is set to rack displacement from its initial placement, including local `gear_travel`, in model units. Zero for rotary gears.
-//   `$parent_gear_travel_ratio` is set to signed linear gain: model units/input degree for rotational input, or output model units/input model unit for travel input.
+//   Sets internal variables for gear inheritance.
+//   `$gear_travel` is set to the displacement in model units of the rack resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root. 
+//   `$gear_travel_offset` is set to the local `gear_travel` offset in model units.
+//   `$gear_travel_ratio` is set to signed linear gain: (output travel)/(input rotation) for rotational input, or (output travel)/(input travel) for travel input. 
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the engagement direction with the parent in the current child frame, which is always UP for 3D racks engaged with a parent.
+//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90 degrees for racks.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_rotation` is set to zero.
+//   `$gear_angle_offset` is set to zero.
+//   `$gear_ratio` is set to zero.
 // Named Anchors:
 //   "root" = At the base of the teeth, at the center of rack.
 //   "root-left" = At the base of the teeth, at the left end of the rack.
@@ -2133,6 +2148,8 @@ function rack(
             named_anchor("root-back",   [0, thickness/2,-d], UP),
         ]
     ) reorient(anchor,spin,orient, size=size, anchors=anchors, p=out);
+
+
 // Function&Module: rack2d()
 // Synopsis: Creates a 2D gear rack.
 // SynTags: Geom, Path
@@ -2145,7 +2162,7 @@ function rack(
 // Description:
 //   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   A rack has no pitch circle so `pitch=` specifies the straight-line tooth pitch and `circ_pitch=` is permitted
+//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
 //   for consistency and compatibility with other gears.
 //   .
 //   Create a 2D rack, a linear bar with teeth that a gear can roll along.
@@ -2175,27 +2192,27 @@ function rack(
 //   width = Distance from base of rack to tips of teeth (alternative to bottom and backing).
 //   helical = Angle of the rack teeth away from perpendicular to its length. Inherits to mate with parent when omitted.  Default: 0
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
-//   profile_shift = Profile shift factor x for tooth shape.  Default: 0
+//   profile_shift = Profile shift factor for tooth shape.  Profile shift is not inherited. Default: 0
 //   backlash = Tooth-thinning backlash along the rack pitch line. Default: 0.
 //   clearance = Tooth-root clearance. Default: module/4.
-//   gear_travel = The distance the rack should be moved by linearly.  Default: 0
+//   gear_travel = Translate the rack along its length without moving its anchors or children.  Use {{gear_travel()}} to drive the rack and its children. Default: 0
 //   rounding = If true, rack tips and valleys are slightly rounded.  Default: true
-//   anchor = As a child of {{attach_gear()}} used LEFT, RIGHT or CENTER to specify end alignment.  Otherwise translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = As a child of {{attach_gear()}} use LEFT, RIGHT or CENTER to specify end alignment.  Otherwise translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
-//   `$parent_gear_travel` is set to mechanical rack displacement in model units, excluding tooth-only offsets. Zero for rotary gears.
-//   `$parent_gear_travel_phase` is set to rack displacement from its initial placement, including local `gear_travel`, in model units. Zero for rotary gears.
-//   `$parent_gear_travel_ratio` is set to signed linear gain: model units/input degree for rotational input, or output model units/input model unit for travel input.
+//   Sets internal variables for gear inheritance.
+//   `$gear_travel` is set to the displacement in model units of the rack resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root. 
+//   `$gear_travel_offset` is set to the local `gear_travel` offset in model units.
+//   `$gear_travel_ratio` is set to signed linear gain: (output travel)/(input rotation) for rotational input, or (output travel)/(input travel) for travel input. 
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the engagement direction with the parent in the current child frame, which is always BACK for 2D racks engaged to a parent.
+//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90 degrees for racks.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_rotation` is set to zero.
+//   `$gear_angle_offset` is set to zero.
+//   `$gear_ratio` is set to zero.
 // Named Anchors:
 //   "root" = At the height of the teeth, at the center of rack.
 //   "root-left" = At the height of the teeth, at the left end of the rack.
@@ -2403,9 +2420,8 @@ module rack2d(
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 //   .
-//   Creates a crown gear.  The module `crown_gear()` gives a crown gear, with reasonable defaults
-//   for all the parameters.  Normally, you should just choose the first 4 parameters, and let the
-//   rest be default values.
+//   Creates a crown gear. Specify tooth size and tooth count, and set the backing
+//   and toothed face width as needed.
 //   .
 //   The module `crown_gear()` gives a crown gear in the XY plane, centered on the origin, with one tooth
 //   centered on the positive Y axis.  The crown gear will have the pitch circle of the teeth at Z=0 by default.
@@ -2429,23 +2445,26 @@ module rack2d(
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   profile_shift = Profile shift factor x. Default: 0
+//   profile_shift = Profile shift factor x. Profile shift is not inherited. Default: 0
 //   slices = Number of radial samples across the toothed face. Must be an integer >= 2. Default: 10
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to a gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example:
 //   crown_gear(mod=1, teeth=40, backing=3, face_width=5, pressure_angle=20);
 // Example:
@@ -2628,6 +2647,9 @@ module crown_gear(
         _gear_publish(_spec,_pose) children();
     }
 }
+
+
+
 // Function&Module: bevel_gear()
 // Synopsis: Creates a straight, zerol, or spiral bevel gear.
 // SynTags: Geom, VNF
@@ -2642,26 +2664,27 @@ module crown_gear(
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 //   .
 //   Creates a spiral, zerol, or straight bevel gear.  In straight bevel gear sets, when each tooth
-//   engages it inpacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
+//   engages it impacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
 //   which makes them more prone to breakage.  Spiral bevel gears have teeth formed along spirals so
 //   they engage more gradually, resulting in a less abrupt transfer of force, so they are quieter
 //   in operation and less likely to break.
 //   .
-//   Bevel gears must be created in mated pairs to work together at a chosen shaft angle.  You therefore
+//   Bevel gears are designed as mated pairs to work together at a chosen shaft angle.  You therefore
 //   must specify both the number of teeth on the gear and the number of teeth on its mating gear.
 //   Additional requirements for bevel gears to mesh are that they share the same
 //   tooth size and the same pressure angle and they must be of opposite handedness.
 //   The pressure angle controls how much the teeth bulge at their
 //   sides and is almost always 20 degrees for standard bevel gears.  The ratio of `teeth` for two meshing gears
 //   gives how many times one will make a full
-//   revolution when the the other makes one full revolution.  If the two numbers are coprime (i.e.
+//   revolution when the other makes one full revolution.  If the two numbers are coprime (i.e.
 //   are not both divisible by the same number greater than 1), then every tooth on one gear will meet
 //   every tooth on the other, for more even wear.  So relatively prime numbers of teeth are good.
 //   .
 //   The gear appears centered on the origin, with one tooth
-//   centered on the positive Y axis.  The base of the pitch cone (the "pitchbase") will lie in the XY plane.  This is
-//   the natural position: in order to mesh the mating gear must be positioned so their pitch bases are tangent.
-//   The apexes of the pitch cones must coincide.
+//   centered on the Y+ axis.  The base of the pitch cone (the "pitchbase") will lie in the XY plane.
+//   To manually mate two gears you must position them so that their pitch bases are tangent, they are rotated
+//   to the specified shaft angle, and the apexes of the pitch cones coincide.  The "apex" anchor
+//   can make it easier to align two gears.  
 //   . 
 //   By default backing will be added to ensure
 //   that the center of the gear (where there are no teeth) is at least half the face width in thickness.
@@ -2672,7 +2695,7 @@ module crown_gear(
 //   You can position bevel gears directly by aligning their pitch-cone apexes, but it may be easier
 //   to use {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 //   A bevel gear child inherits a mating design: teeth and mate_teeth are exchanged, handedness
-//   is flipped, and shaft angle, face width, spiral, and cutter settings are shared. 
+//   is flipped, and shaft angle, face width, spiral, and cutter settings are shared.
 // Arguments:
 //   teeth = Number of teeth on this gear. When omitted, inherits mate_teeth from a bevel parent. 
 //   mate_teeth = Design tooth count of the matching gear. When omitted, inherits teeth from a bevel parent.
@@ -2695,21 +2718,24 @@ module crown_gear(
 //   right_handed = Select right-hand teeth when true, or left handed when false.  Default: reverse the parent's handedness, or left-handed if no parent bevel gear exists.
 //   left_handed = Select left-hand teeth when true and right-hand teeth when false. Default: reverse the parent's handedness, or left-handed if no parent bevel gear exists.
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 5
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "pitchbase"
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
+//   anchor = For a child of {{attach_gear()}} must be set to the default value.  Otherwise, translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "pitchbase"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Named Anchors:
 //   "pitchbase" = With the base of the pitch cone in the XY plane, centered at the origin.  This is the natural height for the gear, and the default anchor.
 //   "apex" = At the pitch cone apex for the bevel gear.
@@ -2833,8 +2859,8 @@ function bevel_gear(
         pr = pitch_radius(circ_pitch=circ_pitch, teeth=teeth),
         rr = _root_radius_basic(circ_pitch=circ_pitch, teeth=teeth, clearance=clearance),
         pitchoff = (pr-rr) * sin(pitch_angle),
-        ocone_rad = pitch_angle<90 ? opp_ang_to_hyp(pr, pitch_angle)
-                                   : opp_ang_to_hyp(pitch_radius(circ_pitch=circ_pitch,teeth=mate_teeth), shaft_angle-pitch_angle),
+        ocone_rad = pr / sin(pitch_angle),
+        apex_height = pr * cos(pitch_angle) / sin(pitch_angle),
         default_face_width = min(ocone_rad/3, 10*module_value(circ_pitch=circ_pitch)),
         face_width = _inherit_gear_thickness(thickness=face_width,dflt=default_face_width),
         icone_rad = ocone_rad - face_width,
@@ -2865,7 +2891,7 @@ function bevel_gear(
             ) [
                 let(
                     u = dist / ocone_rad,
-                    m = up((1-u) * pr / tan(pitch_angle)) *
+                    m = up((1-u) * apex_height) *
                         up(pitchoff) *
                         zrot(ang/sin(pitch_angle)) *
                         back(u * pr) *
@@ -2895,17 +2921,21 @@ function bevel_gear(
                       assert(thick_OK, str("\n", "thickness is invalid or too small for teeth; thickness must be larger than ",abs(ctr_thickness)))
                       thickness-ctr_thickness
                 : is_def(bottom)?
-                    assert(is_finite(bottom) && bottom-pitchoff>minbacking,
-                           str("\n", "bottom is invalid or too small for teeth, must exceed ",minbacking+pitchoff))
-                    bottom-pitchoff
+                    assert(is_finite(bottom) && bottom-pitchoff+botz>minbacking,
+                           str("\nbottom is too small for these teeth; it must exceed ",minbacking+pitchoff-botz))
+                    bottom-pitchoff+botz
                 : ctr_thickness>face_width/2 ? 0
                 : -ctr_thickness+face_width/2,
         cpz = (topz + botz - backing) / 2,
         teeth_top_faces =[
-            for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-1]) each [
-                [i*face_pts+j, (i+1)*face_pts-j-1, (i+1)*face_pts-j-2],
-                [i*face_pts+j, (i+1)*face_pts-j-2, i*face_pts+j+1]
-            ]
+            // Join opposing flanks only while their boundary indices are distinct.
+            // Odd boundaries finish with one triangle; even boundaries with a quad.
+            for (i=[0:1:teeth-1], j=[0:1:ceil(face_pts/2)-2])
+                let(lo=i*face_pts+j, hi=(i+1)*face_pts-j-1)
+                each [
+                    [lo, hi, hi-1],
+                    if (hi-1>lo+1) [lo, hi-1, lo+1]
+                ]
         ],
         flat_top_faces = [    
             for (i=[0:1:teeth-1]) each [
@@ -2954,9 +2984,9 @@ function bevel_gear(
         lvnf = right_handed? vnf1 : xflip(p=vnf1),
         vnf = zrot(gear_spin,down(cpz, p=lvnf)),
         anchors = [
-            named_anchor("pitchbase", [0,0,pitchoff-ctr_thickness/2+backing/2]),
-            named_anchor("flattop", [0,0,ctr_thickness/2+backing/2]),
-            named_anchor("apex", [0,0,hyp_ang_to_opp(pitch_angle<90?ocone_rad:icone_rad,90-pitch_angle)+pitchoff-ctr_thickness/2+backing/2])
+            named_anchor("pitchbase", [0,0,pitchoff-cpz]),
+            named_anchor("flattop", [0,0,topz-cpz]),
+            named_anchor("apex", [0,0,pitchoff-cpz+apex_height])
         ],
         final_vnf = reorient(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors, p=vnf)
     )
@@ -3037,7 +3067,7 @@ module bevel_gear(
 //   To create space for gears to mesh in practice you will need to set a positive value for backlash, or
 //   use the `backlash` argument to {{worm_dist()}} (but not both).  Low `$fn` values can create
 //   more interference with small or zero backlash.
-//   `clearance` requests extra root depth below the mating wheel's tooth tips.
+//   The `clearance=` parameter requests extra root depth below the mating worm gear's tooth tips.
 //   At high pressure angles, adjacent thread flanks can meet before the requested depth,
 //   leaving a shallower valley. Increasing clearance cannot deepen that valley once the flanks
 //   meet; reduce the pressure angle or revise the tooth proportions instead.
@@ -3051,33 +3081,36 @@ module bevel_gear(
 //   You can position gears directly using {{worm_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 // Arguments:
-//   d/worm_diam = The pitch diameter of the worm.  Default: 15
-//   l/length/h/height/worm_length = Length of the worm
+//   d/worm_diam = Pitch diameter of the worm. Inherits when available. Default: 15
+//   l/length/h/height/worm_length = Length of the worm. Inherits when available. Default: 100
 //   ---
 //   mod = The module of the gear (pitch diameter / teeth)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = Normal circular pitch.
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted. Default: 20.
-//   starts/worm_starts = Number of lead starts.  Default: 1
-//   left_handed = If true, spiral in the left handed direction. Default: false (right-handed).
+//   starts/worm_starts = Number of starts. Inherits when available. Default: 1
+//   left_handed = Select left-handed teeth when true. Inherits from the parent when available. Default: false (right-handed).
 //   backlash = Gap between two meshing teeth.  Default: 0
-//   clearance = Nominal extra thread-root depth; can be reduced by converging flanks at high pressure angles. Inherits from a cylindrical worm-family parent when omitted. Default: module/4
+//   clearance = Nominal extra thread-root depth; can be reduced by converging flanks at high pressure angles. Inherits from a parent {{worm()}} or {{worm_gear()}} when omitted. Default: module/4
 //   lead_in = Length of the thread taper at the ends, or zero for flat-cut ends.  Default: 2*module+clearance (tooth depth)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example:
 //   worm(mod=2, d=30, l=50, $fn=72);
 // Example: Multiple Starts.
@@ -3095,7 +3128,7 @@ module bevel_gear(
 //       cyl(r=worm_root_radius(mod=2, d=30), h=25);
 // Example(3D,Med): Worm mated to a worm gear; note the matching parameters
 //   $fn=64;
-//   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
+//   sep = worm_dist(mod=2, worm_diam=30, teeth=25, worm_starts=3);
 //   color("lightblue")
 //     worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
 //   back(sep)
@@ -3231,7 +3264,7 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 //   You must specify tooth size using `mod=`, `circ_pitch=`, or `diam_pitch=` or inherit it from a parent gear.
 //   The worm_gear and its mated worm must have matching tooth size, starts, pressure angle and handedness. 
 //   .
-//   You control the thickness using the `thickness` parameter, which defaults to `worm_diam/2`.
+//   You control the thickness using the `thickness` parameter, which inherits from any parent that provides thickness, and otherwise defaults to `worm_diam/2`.
 //   Very small worms require a smaller thickness and give an error with the default.
 //   Far from the center plane of the gear the teeth naturally come to sharp points.
 //   The `min_tip=` parameter limits these fragile, sharp tips by imposing a minimum width
@@ -3255,11 +3288,11 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 //   .
 //   To create space for gears to mesh in practice you will need to set a positive value for backlash, or
 //   use the `backlash=` argument to {{worm_dist()}} (but not both).
-//   The `clearance` parameter requests extra wheel-root depth below the worm's tooth tips, independently of
+//   The `clearance` parameter requests extra worm gear-root depth below the worm's tooth tips, independently of
 //   the root depth on the worm itself. 
 //   At high pressure angles the achievable root depth can be limited by converging tooth-space
 //   flanks. Increasing clearance then need not deepen the roots. The remaining allowance can
-//   vary across the wheel, especially with backlash or crowning; it is not a uniform minimum gap.
+//   vary across the worm gear, especially with backlash or crowning; it is not a uniform minimum gap.
 //   .
 //   The mesh sampling of the worm gear is governed by `slices` (axial samples) and `$gear_steps` (radial sampling).
 //   During the calculation the generating motion is divided into `search_steps` intervals to check for limits.
@@ -3269,43 +3302,46 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 //   You can position gears directly using {{worm_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 // Arguments:
-//   teeth = Number of wheel teeth; integer greater than 7.
-//   thickness = Full axial wheel thickness. Default: inherited physical face width if available, worm_diam/2 otherwise. Worm length and 2D thickness are not inherited as face width.
+//   teeth = Number of worm gear teeth; integer greater than 7.
+//   thickness = Full axial thickness. Inherits thickness from any parent that provides it. Default: worm_diam/2.
 //   ---
-//   worm_diam = Mated worm pitch diameter. Inherited from a parent worm when available.
+//   worm_diam = Mating worm pitch diameter. Inherits when available.
 //   mod = Normal module.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted.  Default: 20.
-//   worm_starts = Number of worm starts. Default: 1
-//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
-//   left_handed = If true, select the left-handed form. Default: false (right-handed).
-//   crowning = Extra relief per flank, measured as wheel pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0.1
-//   backlash = Tooth thinning measured along the wheel pitch circle; the generating distance is unchanged. Default: 0
-//   clearance = Nominal extra wheel-root depth below the worm tips; can be limited at high pressure angles. Inherits from a cylindrical worm-family parent when omitted. Default: module/4
+//   worm_starts = Number of worm starts. Inherits when available. Default: 1
+//   profile_shift = Worm-gear profile-shift coefficient. Profile shift is not inherited. Default: "auto"
+//   left_handed = Select left-handed teeth when true. Inherits from the parent when available. Default: false (right-handed).
+//   crowning = Extra relief per flank, measured as worm gear pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0.1
+//   backlash = Tooth thinning measured along the worm gear pitch circle; the generating distance is unchanged. Default: 0
+//   clearance = Nominal extra worm gear-root depth below the worm tips; can be limited at high pressure angles. Inherits from a parent {{worm()}} or {{worm_gear()}} when omitted. Default: module/4
 //   slices = Number of slices used to construct the gear, rounded up to an even number. Default: 10
 //   shaft_diam = Axial shaft hole; module only. Default: 0
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
-//   min_tip = Minimum width across a tooth tip in model length units; must be positive. Default: 0.4*module
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
+//   min_tip = Minimum width across a tooth tip before rounding in model length units; must be positive. Default: 0.4*module
 //   chamfer = Amount to trim outer rims of the teeth. Default: 0
 //   search_steps = Sampling intervals for locating generating-envelope limits, integer at least 8.  Increase only when checking numerical convergence. Default: 24
 //   anchor = Attachment anchor. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
-//   orient = Direction of the wheel axis. Default: UP
+//   orient = Direction of the worm gear axis. Default: UP
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example:
 //   worm_gear(mod=2, worm_diam=30, teeth=25);
-// Example: Increasing wheel detail with `slices` and `$gear_steps`, and adding `chamfer`.
+// Example: Increasing worm gear detail with `slices` and `$gear_steps`, and adding `chamfer`.
 //   $gear_steps=32;
 //   worm_gear(mod=2, teeth=25, worm_diam=30, slices=30, chamfer=2);
 // Example: With `min_tip` set very small you can see sharp points at the edges of the teeth
@@ -3316,7 +3352,7 @@ function _worm_thread_profile(cp,beta,pa,c,backlash) =
 //             $fn=64, shaft_diam=15);
 // Example(3D,Med): Worm mated to a worm gear; note the matching parameters
 //   $fn=64;
-//   sep = worm_dist(mod=2, worm_diam=30, teeth=25);
+//   sep = worm_dist(mod=2, worm_diam=30, teeth=25, worm_starts=3);
 //   color("lightblue")
 //     worm_gear(mod=2, teeth=25, worm_diam=30, worm_starts=3);
 //   back(sep)
@@ -3423,7 +3459,7 @@ module worm_gear(
 //   Creates an enveloping, hourglass-shaped worm that meshes with
 //   a matching worm gear produced by {{globoid_worm_gear()}} to form a double-enveloping, or globoid, gear pair
 //   that mate using perpendicular, offset shafts.  
-//   The worm wraps around the wheel, and the wheel wraps around the worm. This can
+//   The worm wraps around the worm gear, and the worm gear wraps around the worm. This can
 //   spread the load over more tooth contact than a cylindrical worm drive, allowing
 //   greater load capacity in a compact pair.
 //   See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
@@ -3441,27 +3477,26 @@ module worm_gear(
 //   .
 //   The `pressure_angle` can be a scalar valued angle to produce standard
 //   symmetric teeth, but you can also give a pair, `[pa_bot,pa_top]` to produce a worm with asymmetric teeth.
-//   In this case `pa_bot` gives the pressure angle of the tooth bottom and `pa_top` gives the pressure
-//   angle of the top of the tooth.  A value like `[45,5]` gives an asymmetric form
-//   that is easier to 3d print without support, but due to the high pressure angle on the bottom
+//   In this case `pa_bot` gives the pressure angle of the tooth bottom (flank facing Z-) and `pa_top` gives the pressure
+//   angle of the top of the tooth (flank facing Z+).  A pair like `[45,5]` gives an asymmetric form
+//   can reduce overhangs for 3D printing, but due to the high pressure angle on the bottom
 //   it is best suited to driving only in one direction.  
-//   Give the mating wheel the SAME ordered pair.  The asymmetric worm assembles
+//   Give the mating worm gear the SAME ordered pair.  The asymmetric worm assembles
 //   with the same spacing as a standard worm.  Giving a pair like `[20,20]` is equivalent
 //   to giving a scalar value.  
 //   .
 //   The mesh quality is controlled by `mesh_tol`, which defaults to module/100.  Adjust this
-//   value to control how coarse or fine the mesh is, with smaller valuels giving a finer mesh.
-//   The `$fn`, `$fs` and `$fa` parameters only controls the segments on the shaft hole. 
+//   value to control how coarse or fine the mesh is, with smaller values giving a finer mesh.
+//   The `$fn`, `$fs` and `$fa` parameters only control the segments on the shaft hole. 
 //   .
 //   The `clearance=` parameter specifies
 //   the nominal extra root-depth allowance, measured radially at the worm's
 //   throat. Use the same clearance on both members for matched geometry.  
 //   High pressure angles or excessive clearance can leave too little tooth-tip or root space.
-//   Follow numerica limits given in the error message.  
+//   Follow numerical limits given in the error message.  
 //   .
 //   Optional `rounding` eases the crest shoulders and root corners and specifies
-//   the maximum amount of rounding.  Root easing is
-//   limited to the available clearance region and is disabled when `clearance=0`.
+//   the maximum amount of rounding.  Root rounding fills part of the clearance allowance and is disabled when `clearance=0`.
 //   .
 //   The threads end with a taper whose default is one nominal tooth depth: `2*module+clearance`.
 //   The `lead_in` value sets the length of the taper, or you can set it to zero to get abrupt thread termination.
@@ -3469,36 +3504,39 @@ module worm_gear(
 //   You can position gears directly using {{globoid_worm_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 // Arguments:
-//   worm_diam / d = Worm pitch diameter at the throat.
-//   l/length/h/height/worm_length = Worm length.
+//   d/worm_diam = Worm pitch diameter at the throat. Inherits when available.
+//   l/length/h/height/worm_length = Worm length. Inherits when available.
 //   ---
 //   mod = Normal module; mutually exclusive with the other size measures.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
-//   teeth/mate_teeth = Number of teeth on the mating wheel, at least 12. Both are named-only aliases.
-//   starts/worm_starts = Number of worm starts. Default: 1
+//   teeth/mate_teeth = Number of teeth on the mating worm gear, at least 12. Inherits when available.
+//   starts/worm_starts = Number of worm starts. Inherits when available. Default: 1
 //   pressure_angle = Normal pressure angle, or [pa_bot, pa_top] pair. Default: inherited from the parent gear if available, 20 otherwise.
-//   clearance = Nominal extra root depth at the throat. Use the same value on the mate. Inherits from a globoid parent when omitted. Default: module/4
-//   rounding = Maximum corner setback in a meridian or wheel section. Eases crests and fills roots up to this value within the available clearance. Default: 0
+//   clearance = Nominal extra root depth at the throat. Use the same value on the mate. Inherits from a parent {{globoid_worm()}} or {{globoid_worm_gear()}} when omitted. Default: module/4
+//   rounding = Maximum corner ROUNDING. Eases crests and fills roots up to this value within the available clearance. Default: 0
 //   mesh_tol = Approximate surface-detail tolerance. Smaller values give finer meshes. Default: module/100
-//   left_handed = If true, select the left-handed form. Default: false (right-handed).
+//   left_handed = Select left-handed teeth when true. Inherits from the parent when available. Default: false (right-handed).
 //   shaft_diam = Through bore. Module only. Default: 0
 //   lead_in = Length of the thread taper at each end, or zero for an abrupt cutoff.  Default: one tooth depth (`2*module+clearance`)
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example(VPR=[83.00,0.00,20.80]): A single-start globoid worm.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45);
 // Example(VPR=[83.00,0.00,20.80]): Same worm with 4 starts has steeper threads.
@@ -3536,7 +3574,7 @@ module worm_gear(
 //   }
 //   zflip_copy()
 //     up(finished_length/2) cyl(r=limit_r, l=15, $fn=144, anchor=BOT);
-// Example(VPR=[83.00,0.00,20.80]): Standard globoid worms may not be printable without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
+// Example(VPR=[83.00,0.00,20.80]): Standard globoid worms may not be printable vertically without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
 //     globoid_worm(mod=2,24,45,mate_teeth=55,
 //                  pressure_angle=[45,5]);
 function globoid_worm(d,l,_named,teeth,worm_diam,
@@ -3582,7 +3620,7 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
     attachable(default(anchor,CENTER),default(spin,0),default(orient,UP),geom=_geom) {
         difference() {
             polyhedron(vnf[0],vnf[1],convexity=20);
-            if(bore>0) cylinder(d=bore,h=4*P[8]+1,center=true,$fn=max(24,$fn));
+            if(bore>0) cylinder(d=bore,h=4*P[8]+1,center=true);
         }
         _gear_publish(_spec,_pose) children();
     }
@@ -3600,11 +3638,11 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   Creates an enveloping worm gear (also called a worm wheel) that meshes with a globoid worm produced by {{globoid_worm()}} to form a
 //   double-enveloping, or globoid, gear pair.
 //   See [A Quick Introduction to Gears: Worm Drive](gears.scad#subsection-worm-drive).
-//   The worm gear wraps partway around the  hourglass-shaped worm while the worm wraps around the wheel.
+//   The worm gear wraps partway around the hourglass-shaped worm while the worm wraps around the worm gear.
 //   The worm_gear and its mated worm must have matching tooth size, starts, pressure angle, worm length and handedness.
 //   A worm gear made for a shorter worm may interfere with the ends of a longer one.  
 //   .
-//   You control the thickness using the `thickness` parameter, which defaults to `worm_diam/2`.
+//   You control the thickness using the `thickness` parameter, which inherits from any parent that provides thickness, and otherwise defaults to `worm_diam/2`.
 //   Very small worms require a smaller thickness and give an error with the default.
 //   Far from the center plane of the gear the teeth naturally come to sharp points.
 //   The `min_tip=` parameter limits these fragile, sharp tips by imposing a minimum width
@@ -3621,19 +3659,18 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   Use {{globoid_worm_dist()}} to determine the proper center-to-center space between the worm_gear and its worm.
 //   Profile shifting is **not** supported. 
 //   .
-//   The wheel is centered on the origin with its axis along Z and one tooth centered
-//   on +Y. Place the worm with `back(a)` and `orient=RIGHT`, using {{globoid_worm_dist()}}
-//   for `a`. Both parts mesh with `gear_spin=0`; no initial phase correction is needed.
+//   The worm gear is centered on the origin with its axis along Z and one tooth centered
+//   on Y+. Place the worm with `back(a)` and `orient=RIGHT`, using {{globoid_worm_dist()}}
+//   for `a`. 
 //   For animation, use `(left_handed ? -1 : 1)*worm_starts/teeth` times the worm's
-//   `gear_spin` for the wheel's `gear_spin`.
+//   `gear_spin` for the worm gear's `gear_spin`.
 //   .
 //   The mesh quality is controlled by `mesh_tol`, which defaults to module/100.  Adjust this
-//   value to control how coarse or fine the mesh is, with smaller valuels giving a finer mesh.
-//   The `$fn`, `$fs` and `$fa` parameters only controls the segments on the shaft hole. 
+//   value to control how coarse or fine the mesh is, with smaller values giving a finer mesh.
+//   The `$fn`, `$fs` and `$fa` parameters only control the segments on the shaft hole. 
 //   .
 //   Optional `rounding` eases the crest shoulders and root corners and specifies
-//   the maximum amount of rounding.  Root easing is
-//   limited to the available clearance region and is disabled when `clearance=0`.
+//   the maximum amount of rounding.  Root rounding fills part of the clearance allowance and is disabled when `clearance=0`.
 //   .
 //   The `crowning=` adds relief to each flank, increasing quadratically from zero at the
 //   middle to the specified pitch-circle relief at each face.  A small amount of
@@ -3655,47 +3692,50 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   The `mesh_tol=` parameter, which defaults to module/100, controls surface sampling. The computation divides
 //   the generating motion into `search_steps=` intervals 
 //   that are used to locate candidate contact limits. Smaller `mesh_tol` smooths
-//   facets, so increase this to produce a finer mesh.  If interference between mating gears persists,
+//   facets, so decrease this to produce a finer mesh.  If interference between mating gears persists,
 //   then try doubling `search_steps`.
 //   .
 //   You can position gears directly using {{globoid_worm_dist()}}, but it may be easier to use
 //   {{attach_gear()}}, which positions the gears and aligns the teeth automatically.
 // Arguments:
-//   teeth = Number of wheel teeth. Required; integer >= 12.
-//   thickness = Full axial wheel thickness. Default: inherited physical face width if available, worm_diam/2 otherwise. Worm length and 2D thickness are not inherited as face width.
+//   teeth = Number of worm gear teeth, at least 12. Inherits mate_teeth from a parent globoid worm, or teeth from a parent worm gear.
+//   thickness = Full axial thickness. Inherits thickness from any parent that provides it. Default: worm_diam/2.
 //   ---
 //   mod = Normal module; mutually exclusive with circ_pitch and diam_pitch.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
-//   worm_diam = Matching worm throat pitch diameter.
-//   worm_length = Length of mating worm.  Must match length given to {{globoid_worm()}}
-//   worm_starts = Number of starts. Default: 1
+//   worm_diam = Mating worm throat pitch diameter. Inherits when available; required otherwise.
+//   worm_length = Length of mating worm.  Inherits when available.  Must match length given to {{globoid_worm()}}
+//   worm_starts = Number of worm starts. Inherits when available. Default: 1
 //   pressure_angle = Normal pressure angle, or [pa_bot, pa_top] pair. Default: inherited from the parent gear if available, 20 otherwise.
-//   clearance = Nominal extra root allowance for the matched pair. Use the same value on the worm. Inherits from a globoid parent when omitted. Default: module/4
+//   clearance = Nominal extra root allowance for the matched pair. Use the same value on the worm. Inherits from a parent {{globoid_worm()}} or {{globoid_worm_gear()}} when omitted. Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   min_tip = Minimum width across the tooth tips. Default: 0.4*module
+//   min_tip = Minimum width across the tooth tips before rounding. Default: 0.4*module
 //   rounding = Eases crests and fills roots only within the available clearance up to this maximum. Default: 0
 //   chamfer = Amount to trim outer rims of the teeth. Default: 0
-//   crowning = Extra relief per flank, measured as wheel pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0
+//   crowning = Extra relief per flank, measured as worm gear pitch-circle arc length; quadratic from zero at the middle to this value at each axial face. Default: 0
 //   mesh_tol = Approximate surface-detail tolerance in model units. Smaller values give finer meshes. Default: module/100
-//   left_handed = If true, select the left-handed form. Default: false (right-handed).
-//   gear_spin = Rotates the gear around its center by the given number of degrees, propagating rotation through {{attach_gear()}}. Does not affect children created without {{attach_gear()}}. Default: 0
+//   gear_spin = Rotates the gear around its center by the given number of degrees without affecting any children. Use {{gear_spin()}} to drive the gear and its children.  Default: 0
+//   left_handed = Select left-handed teeth when true. Inherits from the parent when available. Default: false (right-handed).
 //   shaft_diam = Through bore. Module only. Default: 0
 //   search_steps = Number of sampling intervals used to locate candidate contact limits in the generating motion; integer at least 8. Increase only when checking numerical convergence.  Default: 16
 //   anchor = BOSL2 cylinder anchor using pitch radius and full thickness. Default: CENTER
 //   spin = Rotation after anchoring. Default: 0
-//   orient = Wheel axis direction. Default: UP
+//   orient = Worm-gear axis direction. Default: UP
 // Side Effects:
 //   See {{attach_gear()}} for reference frames, units, and inheritance details.
-//   Sets internal variables for gear-parameter inheritance.
-//   `$parent_gear_rotation` is set to mechanical angular displacement in unwrapped degrees, excluding fixed tooth phase. Zero for racks and tilted carried frames.
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_ratio` is set to signed angular gain: output degrees/input degree for rotational input, or degrees/model unit for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_contact_dir` is set to the nominal incoming engagement direction in the current child frame.
-//   `$parent_gear_contact_angle` is set to the angle of the incoming engagement direction.
-//   `$parent_gear_locs` is set to the root-to-current list of gear reference locations in the current child frame.
-//   `$parent_gear_axes` is set to the corresponding shaft directions, with undef for racks.
+//   Sets internal variables for gear inheritance.
+//   `$gear_rotation` is set to the total gear rotation resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set to signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_travel` is set to zero.
+//   `$gear_travel_offset` is set to zero.
+//   `$gear_travel_ratio` is set to zero.
 // Example: 
 //   globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25);
 // Example: Multiple start worm
@@ -3705,7 +3745,7 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, worm_length=25, rounding=0.2);
 // Example: A worm gear near the maximum allowed thickness
 //  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9, worm_length=33);
-// Example: Thick worm gip with very small `min_tip` value shows sharp edges on the teeth
+// Example: Thick worm gear with very small `min_tip` value shows sharp edges on the teeth
 //  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9,
 //                    worm_length=33, min_tip=0.01);
 // Example(3D,Med): Mating to a globoid worm
@@ -3769,7 +3809,7 @@ module globoid_worm_gear(teeth,thickness,_named,worm_diam,
     attachable(default(anchor,CENTER),default(spin,0),default(orient,UP),geom=_geom) {
         difference() {
             polyhedron(vnf[0],vnf[1],convexity=20);
-            if(bore>0) cylinder(d=bore,h=2*width+1,center=true,$fn=max(24,$fn));
+            if(bore>0) cylinder(d=bore,h=2*width+1,center=true);
         }
         _gear_publish(_spec,_pose) children();
     }
@@ -5088,7 +5128,7 @@ function _dew_wheel(P,width,backlash,min_tip,tol,search_steps,rounding=0,crownin
 ///   internal = If true, create a mask for difference()ing from something else.
 ///   center = If true, centers the pitch circle of the tooth profile at the origin.  Default: false.
 ///   ---
-///   mod = The module of the gear (pitch diameter / teeth)
+///   mod = Normal module: normal circular pitch divided by PI.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 ///   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 ///   helical = Helix angle. Default: 0
@@ -5295,10 +5335,10 @@ function _gear_tooth_profile(
 //   always be zero.  If you set `gear_spin` then the drive gear for the ratio you specified will be rotated by the specified angle and all
 //   of the other gears will be rotated appropriately.
 //   .
-//   The computation of planetary gear assembles is about determining the teeth counts on the sun, ring and planet gears,
+//   The computation of planetary gear assemblies determines the tooth counts on the sun, ring and planet gears,
 //   and the angular positions of the planet gears.
 //   The tooth size or helical angle are needed only for determining proper profile shifting and for determining the
-//   gear positions for the profiled shifted gears.  To control the size of the assembly, do a planetary calculation
+//   gear positions for the profile-shifted gears. To control the size of the assembly, do a planetary calculation
 //   with a module of 1 and then scale the module to produce the required gear dimensions.  Remember, you should never
 //   use `scale()` on gears; change their size by scaling the module or one of the other tooth size parameters.  
 // Arguments:
@@ -5416,34 +5456,29 @@ function planetary_gears(
      ["ratio", final_ratio]
    ];
 // Section: Gear Attachment
-
 //   Gear modules propagate construction parameters such as gear type, tooth size and tooth number, 
 //   which enables child gear modules to inherit those parameters and construct a compatible
 //   gear that will mate with the parent. 
-//   Child gears inherit inherit tooth size and applicable matching gear dimensions and parameters unless you explicitly provide them.
+//   Child gears inherit tooth size and applicable matching gear dimensions and parameters unless you explicitly provide them.
 //   For spur gears helical angles are chosen to be equal and opposite in sign, and the herringbone
 //   form inherits.  Bevel gears propagate their teeth counts and numerous parameters.  
-//   Crown face width maps to pinion thickness and vise versa. Worm-pair dimensions also
-//   propagate in the obvious fashion.  An "auto" profile shift propagates as "auto", not
-//   as the specifically calculated value for the given parent.  Bore, backing, backlash, and
-//   finishing settings do not inherit.  
-//   Meshing partners must agree on normal module and pressure angle. Independent shaft bores,
-//   backing dimensions, backlash, and finishing settings are not automatically made equal.
+//   Crown face width maps to pinion thickness and vice versa. Worm-pair dimensions also
+//   propagate in the obvious fashion.  Profile shift is not inherited, and settings like
+//   bore, backing, backlash, and finishing settings do not inherit.
 //   .
 //   You can use {{attach_gear()}} to attach a child gear to a parent gear in a designated location
-//   so that the teeth mesh properly.  Furthermore, a `gear_spin` or `gear_travel` applied at
-//   the top level propagates through the gear chain, making gear animations a simple matter.
-//   A child attached with {{attach_gear()}} rotates both itself and any children it has,
-//   so it can in turn have a child gear that shares a shaft, with the two rotating together.
+//   so that the teeth mesh properly.  You can drive a chain of gears built using nested {{attach_gear()}}
+//   calls by using {{gear_spin()}} before the first gear in the chain (or {{gear_travel()}} if the first gear is a rack).  
+//   The specified driving motion propagates to the gear chain, making gear animations a simple matter.  
+//   Each gear in the chain carries its ordinary children with its rotation or travel,
+//   so it can have a child gear that shares a shaft, with the two rotating together.
 //   To create children like that use the usual {{attach()}} or {{align()}} modules, or simply
 //   make the gear a child of its parent.  
-//   The top gear in a gear chain rotates its gear geometry in response to `gear_spin` or
-//   `gear_travel` **without** propagating this rotation to any children.  
 //   .
 //   The gear assembly necessarily proceeds pairwise in a tree-like fashion, with each
 //   gear constructed to mate properly with its parent.  If a gear meets an earlier gear
-//   in the chain then it is your responsibility to ensure that the correct mesh occurs.
-//   (Due to the nature of OpenSCAD data flow it is not possible to check this.)
+//   in the chain then it is your responsibility to ensure that the mesh is compatible. 
+
 
 // Module: attach_gear()
 // Synopsis: Positions a gear as a child of another gear with proper tooth mesh
@@ -5454,21 +5489,88 @@ function planetary_gears(
 // Usage: Pinions along a rack
 //   attach_gear([pos=], [shift=]) CHILD_PINION;
 // Description:
-//   Places a child gear relative to a parent, properly meshed so the parent can propagate motion to the child.
+//   Places a child gear relative to its parent with meshing teeth, and propagates motion to the child
+//   specified using {{gear_spin()}} (or {{gear_travel()}} for racks).
 //   The child gear must be compatible with the parent, which will happen automatically if you
-//   allow its parameters to inherit from the parent as described above.  
+//   allow its parameters to inherit from the parent as described above.
 //   .
-//   You specify the location of the child gear on the parent in one of two ways.  You can
-//   give the `angle` parameter, which is measured counterclockwise from X+ in the parent's
-//   frame of reference.  If you provide a list of angles then a copy of the child gear will be placed
-//   at each angle.  Alternatively give `dir=`, a direction vector lying in the XY plane or a list
+//   Gear placement is defined before the drive rotation or travel is applied.  
+//   You specify the location of a child gear on the parent in one of two ways, using the
+//   `angle` parameter or the `dir` parameter.  For planar arrangements of parallel axis gears attachment
+//   angles and directions use the common reference frame defined by the first gear.  Angle is measured counterclockwise from X+
+//   in that reference frame.  
+//   If you provide a list of angles then a copy of the child gear will be placed
+//   at each angle.  Alternatively `dir=` is a direction vector lying in the XY plane or a list
 //   of direction vectors.  The children will appear in the directions of the listed vectors.
-//   The vector magnitude is ignored.  For attaching a pinion along a rack give `pos=` instead, which
-//   gives the position of the child relative to the centerpoint of the rack.
+//   The vector magnitude is ignored.  
 //   .
+//   A worm, bevel, crown, or skew mesh establishes a new local frame for its child. Subsequent
+//   placements use that child's X and Y axes, with Z along its shaft.
 //   When meshing spur gears if you do not give `helical` then it is chosen to create a parallel
 //   axis configuration, but if you give the helical value for the child, the appropriate skew
-//   axis configuration is produced.
+//   axis configuration is produced.  If you place the gear in the original planar coordinate system
+//   and then rotate it around the line that connects the gear centers the result is the new skewed
+//   coordinate system.
+// Figure(Med,3D,NoScales,VPR=[55.00,0.00,86.60]): The blue parent gear lies in the XY plane and the black line shows the rotational axis, the line between the two gear centers.  The yellow gear starts with the same coordinate system as the blue one but then rotates around the black axis, resulting in the coordinate system shown below with X in red and Y in green. 
+//   w=5;
+//   ang=45;
+//   color_this("lightblue")
+//   spur_gear(mod=3, teeth=27)
+//     attach_gear(ang)
+//   spur_gear(teeth=19, helical=35) {
+//       stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
+//       stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
+//   }
+//   stroke([-zrot(45,RIGHT)/2, zrot(45,RIGHT)]*170, color="black", width=w*.8);
+// Figure(3D,Med,NoAxes,VPR=[50.80,0.00,11.70]):  For a worm parent, the child worm gear's X+ (red) follows the worm's shaft (in the Z+ direction) and the child's Y+ (green) points toward the worm.
+//   w=3;
+//   color_this("lightblue")worm(mod=3, d=44, l=75)
+//     attach_gear(30)
+//      worm_gear(teeth=33)
+//    {
+//          stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
+//          stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
+//      }
+// Figure(3D,Med,NoAxes,PR=[63.40,0.00,61.40]):  For a worm gear parent, the child worm's X+ (red) is opposite the worm's shaft (in the Z- direction) and the child's Y+ (green) points away from the worm gear
+//   w=3;
+//   color_this("lightblue")worm(mod=3, d=44, l=75)
+//     attach_gear(30)
+//      worm_gear(teeth=33)
+//    {
+//          stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
+//          stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
+//      }
+// Figure(3D,VPR=[66.90,0.00,63.50],Med,NoAxes): For a crown gear parent the spur gear has its Z+ axis pointing outward, the X+ axis (red) is tangent to the crown gear and the Y+ axis (green) points opposite the crown gear's shaft (in the Z- direction).
+//   w=3; color_this("lightblue")
+//   crown_gear(mod=4, teeth=32, backing=13, face_width=17)
+//       attach_gear(0)
+//            spur_gear(teeth=9)
+//    {
+//       stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
+//       stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
+//   }
+// Figure(3D,Med,NoAxes,VPR=[55.00,0.00,309.40]): With a crown gear child the Y+ axis (green) points toward the parent spur gear and the X+ axis (red) in on it's right side as seen from above the crown gear.  
+//    w=3;  color_this("lightblue")
+//        spur_gear(teeth=9,mod=4)
+//           attach_gear(0,crown_pos=DOWN)
+//       crown_gear(mod=4, teeth=32, backing=13, face_width=17)
+//        {
+//           stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
+//           stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
+//       }
+// Continues:
+//   For bevels, the child frame is tilted in the plane
+//   of the shafts: its engagement with the parent is at the attachment angle plus 180 degrees.
+//   Thus attachment at 0 gives child engagement on X-, and attachment at 90 gives Y-.
+//   .
+//   For attaching a spur gear to a rack give `pos=`, which gives the position of the child
+//   on the rack, with zero at the rack center.  
+//   When the rack is the child the usual `angle` or `dir` parameters identify the engagement point
+//   on the parent.  By default the rack engages 
+//   as near as possible to its midpoint while forming a correct mesh. 
+//   Adding LEFT or RIGHT to the rack's anchor selects engagement near the specified end,
+//   and in this case, `rack_inset=` controls the number of teeth inward to shift
+//   from the very end.  
 //   .
 //   The thickness of gears inherits but if you create gears with differing thickness they
 //   will align on their centers by default.  You can give `anchor=TOP` or `anchor=BOT` to
@@ -5478,16 +5580,9 @@ function planetary_gears(
 //   spur gear or rack perpendicular to the gear's face.  This adjustment is relative to the alignment
 //   you specify using the gear's anchor parameter.  For helical gears, shifting the gear also
 //   requires adjusting its rotation for proper tooth mesh, so you cannot make this adjustment with
-//   a direct translation in those cases.  Herringbone gears require center alignment.
+//   a direct translation in those cases.  Herringbone gears and skew helicals require center alignment.
 //   .
-//   When a rack is the parent the `pos=` parameter determines the location of its child spur gear.
-//   When the rack is the child, however, another mechanism is needed.  By default the rack
-//   appears as near as possible to its midpoint while correctly engaging the teeth.  
-//   If you add LEFT or RIGHT to its anchor then that causes it to appear at the right or left
-//   end instead, and in this case, `rack_inset=` controls the number of teeth inward to shift
-//   from the very end.  
-//   .
-//   Worm gear pairs inherit the shared worm diameter, worm starts, pressure angle and for
+//   Worm drive pairs inherit the shared worm diameter, worm starts, pressure angle and for
 //   globoids, the teeth counts and working length.  They can be nested in either order and
 //   the child is automatically rotated 90 degrees to create the proper mesh.  The child
 //   cannot have any anchor but CENTER.  
@@ -5500,49 +5595,61 @@ function planetary_gears(
 //   the crown face; a child crown inherits its face width from the pinion's thickness.  
 //   The spur gear is always centered on the face width of the crown gear. 
 //   .
-//   Bevel gears inherit tooth counts, shaft_angle, face_width, spiral, and cutter_radius,
-//   and take opposite handedness by default.  Baking, bore and body thickness do not propagate.
+//   Bevel gears inherit tooth counts, `shaft_angle`, `face_width`, `spiral`, and `cutter_radius`,
+//   and take opposite handedness by default. Backing, bore, and body thickness are not inherited. 
 //   The `angle` parameter to `attach_gear()` selects the position where the gears mate;
 //   the `drive_angle` and `shaft_angle` parameters specify the angle between the shafts of
-//   the two bevel gears.  A bevel child accepts CENTER,
-//   "pitchbase", or "apex" anchors. Automatic pairing currently supports external pitch cones below
-//   90 degrees on both parts, including non-right-angle shafts; use manual placement for
-//   internal-like bevels or a 90-degree pitch cone. Matching face_width, spiral, and cutter_radius
-//   are required. Body backing and bore dimensions may differ.
+//   the two bevel gears.  A bevel child accepts only the default "pitchbase" anchor. 
 //   .
-//   Motion of the top level parent provided by `gear_spin` (or for racks, `gear_travel`) propagates
+//   Motion of the top level parent provided by {{gear_spin()}} (or for racks, {{gear_travel()}}) propagates
 //   through the entire gear chain automatically.  You can animate the entire assembly by simply
-//   changing the top level parameter.  If a gear in the chain meets a previous gear, it is your
-//   responsibility to ensure that it meshes correctly; no check for this can be performed.
+//   changing the top level parameter.  Each gear and its regular attachments will move
+//   in accordance with the driven gear motion.  If a gear in the chain meets a previous gear, it is your
+//   responsibility to ensure that it meshes correctly.  
 //   If you apply `gear_spin` to any child the spin applies on top of the above positioning,
 //   which will lead to an incorrect mesh if your spin is not an even multiple of a tooth angle. 
 //   .
 //   When you provide multiple angles or directions the `$idx` variable indexes them in the
-//   order you give them, and `$ang` anso provides the angle, or for racks, `$pos` provides
+//   order you give them, and `$ang` also provides the angle, or for racks, `$pos` provides
 //   the position.
 //   .
-//   The `$parent_gear_contact_dir` and `$parent_gear_contact_angle`
-//   variables give the direction and angle to the point of contact
-//   to the parent from the point of reference of the child (this will change as the child rotates).  
+//   Several variables starting with `$gear` are provided inside the child gear that you
+//   create using `gear_attach()`.  The `$gear_contact_dir` and `$gear_contact_angle`
+//   variables give the direction and angle to the nominal engagement point 
+//   to the parent in the current child reference frame (which will change as the child rotates).
+//   For external spur pairs it points toward the parent shaft.  For a pinion inside a parent ring
+//   it points outward toward the ring teeth.  Actual tooth contact moves as the gears turn, so
+//   this does not identify the actual point of contact.
+//   For a rack the direction is the toothed-side, UP (Z+) for 3D racks and BACK (Y+) for 2D racks.  A root gear has no parent engagement
+//   and reports undef.
 //   .
-//   You can also extract the gear ratio.  For a rotational input, `$parent_gear_ratio` is the
-//   (output angle)/(input angle) and `$parent_travel_ratio` is (output distance)/(input angle).
-//   For a travel input, `$parent_gear_ratio` is (output angle)/(input distance) and
-//   `$parent_travel_ratio` is (output distance)/(input distance).  The angles are measured
+//   You can also extract the gear ratio.  For a rotational input, `$gear_ratio` is the
+//   (output angle)/(input angle) and `$gear_travel_ratio` is (output distance)/(input angle).
+//   For a travel input, `$gear_ratio` is (output angle)/(input distance) and
+//   `$gear_travel_ratio` is (output distance)/(input distance).  The angles are measured
 //   in degrees and the distances in model units.  A rack has zero angular gain and a rotating
 //   gear has zero travel distance.  When the direction reverses the ratio will be negative.  
-//   .
+//   
 //   For placing gear shafts or shaft holes with automatically generated gears, you can use
-//   `$parent_gear_locs` and `$parent_gear_axes`.  The first one contains the locations of
+//   `$gear_chain_locs` and `$gear_chain_axes`.  The first one contains the locations of
 //   the gear centers in the gear chain, starting at the root gear and working up to the current gear.
-//   For racks it gives the pitch line center.  Ths second gives the direction of the gear rotational axes
-//   for each gear in the same order, or undef for racks.  
+//   For racks it gives the pitch-line origin. The second gives shaft-axis unit vectors
+//   in the same order, or undef for racks. Both lists use the current child frame.
+//
+//   The `$gear_rotation` parameter reports the driven rotation of the current gear around its shaft.
+//   The `$gear_angle_offset` parameter reports the tooth-alignment offset  
+//   plus any user specified local `gear_spin=` passed to the gear as a parameter.
+//   Within the rotating child frame, this is
+//   the extra angle needed to align a feature with the constructor's reference tooth geometry.
+//   For racks, `$gear_travel` reports motion from the initially placed rack position, and
+//   `$gear_travel_offset` reports the additional locally specified `gear_travel=` offset in model units.
+//   The initial tooth-alignment translation is part of the rack's placement.
 // Arguments:
-//   angle = Placement angle in degrees, or a list of angles. Default: 0 for a non-rack parent when dir is omitted.
+//   angle = Placement angle in degrees, or a list of angles. Default: 0 for a non-rack parent when `dir` is omitted.
 //   ---
-//   dir = One 2D/3D direction vector, or a list of direction vectors, in the parent's stationary XY plane. Alternative to angle.
-//   pos = Exact pinion mounting position along a parent rack's local X axis, or a list of positions. Default: 0 for a rack parent.
-//   shift = Additional signed distance moving the child along the parent shaft for parallel 3D spur/ring pairs, or along the pinion shaft for either order of a 3D rack/pinion pair. Applied after face alignment. Default: 0
+//   dir = One 2D/3D direction vector, or a list of direction vectors, in the parent's stationary XY plane. Magnitude is ignored.   
+//   pos = Exact pinion mounting position along the parent rack's X axis, or a list of positions. Default: 0 for a rack parent.
+//   shift = Signed distance to shift child geare along the parent shaft for parallel 3D spur and ring gear pairs, or along the pinion shaft for a 3D rack and pinion pair. Applied after face alignment. Default: 0
 //   rack_inset = Nonnegative integer pitch count added inward from the most extreme mesh-compatible position at a child rack placed with LEFT or RIGHT. Default: 1
 //   crown_pos = UP or DOWN in the spur parent's shaft frame, selecting where a child crown extends. Only for spur parent with crown child. Default: DOWN
 // Side Effects:
@@ -5550,54 +5657,67 @@ function planetary_gears(
 //   `$ang` is set to the resolved placement angle, or undef for a rack parent.
 //   `$pos` is set to the along-rack mounting position, or undef for a non-rack parent.
 //   Sets internal variables requesting mating placement and gear inheritance.
-//   `$parent_gear_rotation` is set to the angular displacement of the gear.  Zero for racks.  
-//   `$parent_gear_travel` is set to travel displacemtn in model units. Zero for rotary gears.
-//   `$parent_gear_ratio` is set to signed angular gain: (output degrees)/(input degree) for rotational input, or (output degrees)/(input travel) for travel input.
-//   `$parent_gear_travel_ratio` is set to signed linear gain: (output travel)/(input degree) for rotational input, or (output travel)/(input travel) for travel input.
-//   `$parent_gear_input` is set to "rotation" (input in degrees) or "travel" (input in model units).
-//   `$parent_gear_phase` is set to tooth orientation in degrees, including motion, meshing alignment, and local `gear_spin`, in the stationary local shaft frame.
-//   `$parent_gear_travel_phase` is set to rack displacement from its initial placement, including local `gear_travel`, in model units. Zero for rotary gears.
-//   `$parent_gear_contact_dir` is set to the nominal engagement direction to the parent gear in the current frame
-//   `$parent_gear_contact_angle` is set to the angle to the nominal engagement point on the parent gear in the current frame. 
-//   `$parent_gear_locs` is set to a list of the gear centers coordinates (pitch line origins for racks), with the root gear first and the current gear last. 
-//   `$parent_gear_axes` is set to a list of the gear rotational axes (undef for racks), with the root gear first and the current gear last.  
-// Example(2D): Three inherited-size spur mates.
-//   spur_gear2d(mod=2,teeth=24,gear_spin=360*$t)
+//   `$gear_rotation` is set inside the child gear to the total gear rotation of a rotating gear resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_angle_offset` is set inside the child gear to the angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_angle_offset` is set inside the child gear to its angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_ratio` is set inside the child gear to the signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
+//   `$gear_travel` is set inside the child rack to the displacement in model units of the rack resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
+//   `$gear_travel_offset` is set inside the child rack to the local `gear_travel`, in model units.
+//   `$gear_travel_ratio` is set inside the child rack to signed linear gain: (out travel)/(input rotation) for rotational input, or (output travel)/(input travel) for travel input. 
+//   `$gear_input` is set inside the child gear to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
+//   `$gear_contact_dir` is set inside the child gear to the nominal engagement direction with the parent in the current child frame.
+//   `$gear_contact_angle` is set inside the child gear to the corresponding engagement angle in degrees in the current child frame.
+//   `$gear_chain_locs` is set inside the child gear to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
+//   `$gear_chain_axes` is set inside the child gear to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
+// Example(2D,NoScales): Three attached spur gears with different sizes using `$idx`.
+//   gear_spin(360*$t)  // For animation
+//   color_this("lightblue")
+//   spur_gear2d(mod=2,teeth=24)
 //     attach_gear([0,120,240])
 //       spur_gear2d(teeth=16+5*$idx);
-// Example(2D): Attach a rack to a spur gear, starting at the left edge of the rack (relative to the rack, so it looks like the right below)
-//   spur_gear2d(mod=2,teeth=14,gear_spin=-90*$t)
+// Example(2D,NoScales): Attach a rack to a spur gear, starting at the left edge of the rack (relative to the rack, so it looks like the right below)
+//   gear_spin(-90*$t)  // For animation
+//   color_this("lightblue")
+//   spur_gear2d(mod=2,teeth=14)
 //     attach_gear(90,rack_inset=2)
-//       rack2d(teeth=30,anchor=LEFT);
-// Example(2D): A rack drives two stationary-axis pinions.
-//   rack2d(mod=2,teeth=40,gear_travel=30*$t)
-//       attach_gear(pos=[-35,35])
-//         spur_gear2d(teeth=24);
-// Example: A matched bevel child inherits its pair definition.
-//   bevel_gear(mod=2,teeth=20,mate_teeth=30,face_width=6,gear_spin=360*$t)
-//       attach_gear(90) bevel_gear();
-// Example: A crown child extending toward the spur's positive shaft end.
-//   spur_gear(mod=2,teeth=20,thickness=6,gear_spin=360*$t)
+//       rack2d(teeth=15,anchor=LEFT);
+// Example(2D,VPD=550,NoScales): A rack drives two stationary-axis pinions.
+//   rack2d(mod=4,teeth=20,spin=-45)
+//       attach_gear(pos=[-45,45])
+//         spur_gear2d(teeth=14);
+// Example(3D,NoScales): A matched bevel child inherits its pair definition.
+//   bevel_gear(mod=2,teeth=20,mate_teeth=30,face_width=6)
+//       recolor("lightblue")attach_gear(90) bevel_gear();
+// Example(3D,NoScales,VPR=[79.10,0.00,44.10],VPD=172.84,VPT=[5.76,-3.86,2.72]): An internal-like bevel pair
+//    gear_spin(30*sin(360*$t))
+//       bevel_gear(mod=2,teeth=35,mate_teeth=15,shaft_angle=135,
+//                  face_width=5,spiral=35,backing=4,backlash=.2)
+//         color_this("lightblue")
+//         attach_gear(90) bevel_gear(backing=4,backlash=.2);
+// Example(3D,NoScales): A crown child extending toward the spur's positive shaft end.
+//   gear_spin(360*$t)
+//   spur_gear(mod=2,teeth=20,thickness=6)
+//       recolor("lightblue")   
 //       attach_gear(90,crown_pos=UP) crown_gear(teeth=40);
-// Example(3D): Place a helical child 4 units below the top of its parent
+// Example(3D,NoScales): Place a helical child 4 units below the top of its parent
 //   $fn=64;
 //   spur_gear(mod=2,teeth=24,thickness=28,helical=25,backlash=.1,slices=24)
 //       attach_gear(25,shift=-4)
 //           recolor("lightblue") spur_gear(teeth=36,thickness=14,anchor=TOP,backlash=.1,slices=36);
-// Example(3D,Med,Anim,Frames=90,FrameMS=45): A two-level compound train changes tooth size on the common shaft before driving its next mate.
+// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=237.09,VPT=[33.17,10.33,-6.65],NoScales,Anim,Frames=90,FrameMS=45): A two-level compound train changes tooth size on the common shaft before driving its next mate.
 //   $fn=64;
-//   spur_gear(mod=2,teeth=24,thickness=6,gear_spin=360*$t,shaft_diam=4)
+//   gear_spin(360*$t)
+//   spur_gear(mod=2,teeth=24,thickness=6,shaft_diam=4)
 //       attach_gear(0)
 //           recolor("lightblue") spur_gear(teeth=36,shaft_diam=4)
 //               attach(TOP,BOT)
 //                   recolor("orange") spur_gear(mod=1,teeth=20,thickness=5,shaft_diam=4)
 //                       attach_gear(90)
 //                           recolor("gold") spur_gear(teeth=40,shaft_diam=4);
-//
-// Example(3D,Big,VPR=[80.90,0.00,306.60]): A crossed-helical input drives a coaxial cylindrical worm and a second compound spur stage.
+// Example(3D,Big,NoScales,VPR=[80.90,0.00,306.60],VPD=237,VPD=213.38,VPT=[7.82,-32.82,-6.88]): A crossed-helical input drives a coaxial cylindrical worm and a second compound spur stage.
 //   $fn=48; $gear_steps=12;
-//   spur_gear(mod=1,teeth=24,thickness=8,helical=20,profile_shift=0,
-//             gear_spin=90*sin(360*$t),backlash=.1,slices=24)
+//   gear_spin(90*sin(360*$t))
+//   spur_gear(mod=1,teeth=24,thickness=8,helical=20,profile_shift=0,backlash=.1,slices=24)
 //       attach_gear(0)
 //           recolor("lightblue") spur_gear(teeth=36,helical=30,profile_shift=0,backlash=.1,slices=32)
 //               attach(TOP,BOT)
@@ -5608,11 +5728,12 @@ function planetary_gears(
 //                                   recolor("lightgreen") spur_gear(mod=1,teeth=20,thickness=4,helical=0)
 //                                       attach_gear(-90)
 //                                           recolor("pink") spur_gear(teeth=40)
-//                                              echo($parent_gear_ratio);   // Prints 0.03333333
-// Example(3D,Big,VPR=[84.40,0.00,296.10]): An asymmetric globoid stage followed by a two-level helical output with axial clearance.
+//                                              echo($gear_ratio);   // Prints 0.03333333
+// Example(3D,Big,VPR=[86.50,0.00,295.40],VPD=361.36,VPT=[20.49,-61.32,-2.35],NoScales): An asymmetric globoid stage followed by a two-level helical output with axial clearance.
 //   $fn=48;
+//   gear_spin(90*sin(360*$t))
 //   globoid_worm(mod=2,d=24,l=35,mate_teeth=55,starts=5,pressure_angle=[45,5],
-//                rounding=.2,mesh_tol=.08,gear_spin=90*sin(360*$t))
+//                rounding=.2,mesh_tol=.08)
 //       attach_gear(dir=FRONT)
 //           recolor("lightblue") globoid_worm_gear(thickness=12,backlash=.15,rounding=.2,mesh_tol=.08)
 //               attach(TOP,BOT)
@@ -5621,20 +5742,25 @@ function planetary_gears(
 //                                            helical=20,profile_shift=0,backlash=.1,slices=20)
 //                       attach_gear(0,shift=3)
 //                           recolor("gold") spur_gear(teeth=36,helical=-20,profile_shift=0,backlash=.1,slices=24);
-// Example(2D,Med,Anim,Frames=120,FrameMS=40): A pinion rolling along a fixed rack: cancel out the rack travel from the completed assembly.
+// Example(3D,Med,Anim,FrameMS=60,Frames=90,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
+//   gear_spin(-180*8/12*(0.5+0.5*cos(360*$t))) 
+//       spur_gear(mod=2,teeth=24,thickness=10,helical=17.5,backlash=.15,slices=32)
+//           attach_gear(90,rack_inset=2)
+//               recolor("lightblue") rack(teeth=12,thickness=10,helical=22.5,anchor=LEFT,backlash=.15);
+// Example(2D,Med,Anim,Frames=100,FrameMS=40,VPD=325,NoScales): A pinion rolling along a fixed rack is created by canceling the rack travel with an opposite movement
 //   travel=30*sin(360*$t);
-//   left(travel)
-//       rack2d(mod=1.5,teeth=32,gear_travel=travel)
+//   left(travel) gear_travel(travel)
+//       rack2d(mod=1.5,teeth=32)
 //           attach_gear(pos=0)
 //               recolor("lightblue") spur_gear2d(teeth=20,profile_shift=0) {
 //                   // Ordinary children of this automatically driven pinion follow its rotation.
 //                   color("red") right(6) circle(d=3,$fn=16);
 //               }
-// Example(2D,Med,Anim,Frames=120,FrameMS=30): A pinion rolling around a fixed spur: counter-rotate the full chain, not a transform between its gears.
-//   q=360*$t;
-//   zrot(-q)
-//       spur_gear2d(mod=1.5,teeth=36,profile_shift=0,gear_spin=q) {
-//           color("black") zrot(q) right(8) circle(d=3,$fn=16);
+// Example(2D,Med,Anim,NoScales,Frames=120,VPD=325,FrameMS=30): The same method creates a pinion rolling around a fixed spur gear.
+//   spin=360*$t;
+//   zrot(-spin) gear_spin(spin)
+//       spur_gear2d(mod=1.5,teeth=36) {
+//           recolor("black") right(8) circle(d=3,$fn=16);
 //           attach_gear(0)
 //               recolor("lightblue") spur_gear2d(teeth=18,profile_shift=0) {
 //                   color("red") right(5) circle(d=2.5,$fn=16);
@@ -5645,8 +5771,10 @@ function planetary_gears(
 //   helical=25;
 //   spin = 360/27*$t;
 //   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical);
-//   ring_gear(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], helical=helical, gear_spin=spin, backing=2)
+//   gear_spin(spin)
+//   ring_gear(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], helical=helical, backing=2)
 //     attach_gear(gear_data[2][5])
+//       color_this("red")
 //       spur_gear(teeth=gear_data[2][1], profile_shift=gear_data[2][2])
 //         if ($idx==0)
 //           attach_gear(180)
@@ -5654,23 +5782,26 @@ function planetary_gears(
 // Example(2D,Med,NoAxes,Anim,Frames=90,FrameMS=30,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): Planetary gear with fixed sun: build from the sun to the ring and counter-rotate the whole assembly to zero out the sun's rotation
 //   gear_data = planetary_gears(mod=1, n=3, max_teeth=28, ring_carrier=1.341);
 //   spin = 360*$t/3;
-//   zrot(-spin)
-//   spur_gear2d(mod=1, teeth=gear_data[0][1], profile_shift=gear_data[0][2],gear_spin=spin)   //sun
+//   zrot(-spin) gear_spin(spin)
+//   spur_gear2d(mod=1, teeth=gear_data[0][1], profile_shift=gear_data[0][2])   //sun
 //     attach_gear(gear_data[2][5])
+//       color_this("green")  
 //       spur_gear2d(teeth=gear_data[2][1],profile_shift=gear_data[2][2])
 //         if($idx==0)
 //           attach_gear(180)ring_gear2d(teeth=gear_data[1][1], profile_shift=gear_data[1][2],backing=2);
-// Example(2D,Med,NoAxes,Anim,FrameMS=60,Frames=90,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
+// Example(2D,Med,NoAxes,Anim,FrameMS=60,Frames=80,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6);
 //   spin=360/5*$t;
-//   zrot(-spin)
-//   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=spin, backing=2)
+//   zrot(-spin) gear_spin(spin)
+//   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], backing=2)
 //     attach_gear(gear_data[2][5])
+//       color_this("purple")  
 //       spur_gear2d(teeth=gear_data[2][1], profile_shift=gear_data[2][2])
 //         if ($idx==0)
 //           attach_gear(180)
 //             spur_gear2d(teeth=gear_data[0][1], profile_shift=gear_data[0][2]);
+
 
 module attach_gear(angle, _named, dir, pos, rack_inset, crown_pos, shift) {
     assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)");
@@ -5767,10 +5898,16 @@ function _gear_anchor_transform(S,anchor) =
 function _gear_pose(S,phase=0,anchor=CENTER,spin=0,orient=UP,travel=0,geom) =
     assert(is_finite(phase), "\ngear_spin must be finite")
     assert(is_finite(travel), "\ngear_travel must be finite")
+    let(rack=_gear_is_rack(S[0]),driven=!is_undef($_gear_driver),
+        q=driven?$_gear_driver[1]:0)
+    assert(!driven || ($_gear_driver[0]=="travel")==rack,
+           str("\n",rack?"Use gear_travel() to drive a rack":"Use gear_spin() to drive a rotary gear"))
     is_undef($_gear_parent_spec) ?
-        let(rack=_gear_is_rack(S[0]))
-        [ident(4),phase,rack?0:phase,rack?0:phase,rack?0:1,undef,[rack?[travel,0,0]:[0,0,0]],
-         [rack?undef:UP],ident(4),travel,travel,rack?1:0,travel,ident(4),rack?"travel":"rotation",false] :
+        let(motion=rack?0:q,slide=rack?q:0,
+            full=rack?right(slide):zrot(motion))
+        [ident(4),phase+motion,motion,rack?0:phase+motion,driven&&!rack?1:0,
+         undef,[[0,0,0]],[rack?undef:UP],full,slide,slide+travel,driven&&rack?1:0,
+         slide+travel,full,driven?$_gear_driver[0]:undef,driven] :
     let(mate=!is_undef($_gear_attach_request),
         anchor=mate && S[0]=="rack" ? _gear_rack_anchor(default(anchor,CENTER)) : default(anchor,CENTER),
         spin=default(spin,0),orient=default(orient,UP))
@@ -5791,30 +5928,35 @@ function _gear_parent_attachment() =
 /// A driven parent's rotation/translation is already outside its children.
 /// Re-express that motion only when it is about the child's own shaft/slide;
 /// an offset or tilted child otherwise stays in the inherited moving frame.
-/// A manual child starts its own drive input; explicit local phase remains local.
+/// A manual child keeps its local offsets; a drive module supplies physical input.
 function _gear_compound_pose(S,phase,anchor,spin,orient,travel,geom) =
     let(rack=_gear_is_rack(S[0]),prack=_gear_is_rack($_gear_parent_spec[0]),
         B=_gear_parent_attachment(),
         C=is_undef(geom) ? rot(spin,from=UP,to=orient)*_gear_anchor_transform(S,anchor) :
           _attach_transform(anchor,spin,is_undef($anchor_override)?orient:UP,_change_anchors(geom)),
-        D=B*C,active=$_gear_chain_active,
+        D=B*C,active=$_gear_chain_active,driven=!is_undef($_gear_driver),
+        q=driven?$_gear_driver[1]:0,
         axis=_gear_vector_in(D,UP),length_axis=_gear_vector_in(D,RIGHT),
-        parallel=!rack && !prack && norm(cross(axis,UP))<1e-9,
+        parallel=!rack && !prack && norm(cross(axis,UP))<1e-9 &&
+                 norm(cross(point3d([D[0][3],D[1][3],D[2][3]]),UP))<1e-9,
         sliding=rack && prack && norm(cross(length_axis,RIGHT))<1e-9,
         sense=parallel?sign(axis.z):sliding?sign(length_axis.x):1,
-        motion=active ? (parallel?sense*$parent_gear_rotation:0) : (rack?0:phase),
-        slide=active ? (sliding?sense*$parent_gear_travel:0) : (rack?travel:0),
-        actual=active?motion+phase:phase,
-        travel_phase=active?slide+travel:travel,
-        gain=active ? (parallel?sense*$parent_gear_ratio:0) : (rack?0:1),
-        linear_gain=active ? (sliding?sense*$parent_gear_travel_ratio:0) : (rack?1:0),
-        full=!active?ident(4):parallel?zrot(motion):sliding?right(slide):ident(4),
-        inv=rot_inverse(D),contact=_gear_vector_in(inv,$parent_gear_contact_dir))
-    [ident(4),phase,motion,actual,gain,contact,
-     concat(apply(inv,$parent_gear_locs),[rack && !active?[travel,0,0]:[0,0,0]]),
-     concat(_gear_axes_in(inv,$parent_gear_axes),[rack?undef:UP]),ident(4),
-     slide,travel_phase,linear_gain,travel,full,
-     active?$parent_gear_input:rack?"travel":"rotation",active];
+        motion=driven ? (rack?0:q) : active&&parallel?sense*$gear_rotation:0,
+        slide=driven ? (rack?q:0) : active&&sliding?sense*$gear_travel:0,
+        actual=motion+phase,travel_phase=slide+travel,
+        gain=driven ? (rack?0:1) : active&&parallel?sense*$gear_ratio:0,
+        linear_gain=driven ? (rack?1:0) : active&&sliding?sense*$gear_travel_ratio:0,
+        full=driven ? (rack?right(slide):zrot(motion)) :
+             !active?ident(4):parallel?zrot(motion):sliding?right(slide):ident(4),
+        childmotion=driven?full:ident(4),
+        inv=rot_inverse(D*childmotion),contact=_gear_vector_in(inv,$gear_contact_dir))
+    [ident(4),phase+(driven?motion:0),motion,actual,gain,contact,
+     concat(apply(inv,$gear_chain_locs),[[0,0,0]]),
+     concat(_gear_axes_in(inv,$gear_chain_axes),[rack?undef:UP]),childmotion,
+     slide,travel_phase,linear_gain,travel+(driven?slide:0),full,
+     driven?$_gear_driver[0]:$gear_input,active||driven];
+
+
 function _gear_mate_pose(A,B,request,offset,anchor,travel=0) =
     assert(_gear_same_number(A[1],B[1]),
            str("\nMeshing gears must have the same normal module; parent=",A[1],", child=",B[1]))
@@ -5851,24 +5993,28 @@ function _gear_mate_pose(A,B,request,offset,anchor,travel=0) =
 /// The stationary placement T includes the initial rack phase translation, but
 /// never modulo-reduces mechanical motion. The same inverse rigid transform
 /// converts location histories and cancels only motion actually applied above.
+
 function _gear_finish_rotary(T,motion,actual,gain,contact,C=ident(4)) =
     let(relative=rot_inverse($_gear_frame_motion)*T,full=zrot(motion),
         inv=rot_inverse(relative*full),d=_gear_vector_in(rot_inverse(full),contact))
     [relative*rot_inverse(C),actual,motion,actual,gain,d,
-     concat(apply(inv,$parent_gear_locs),[[0,0,0]]),
-     concat(_gear_axes_in(inv,$parent_gear_axes),[UP]),full,
-     0,0,0,0,full,$parent_gear_input,true];
+     concat(apply(inv,$gear_chain_locs),[[0,0,0]]),
+     concat(_gear_axes_in(inv,$gear_chain_axes),[UP]),full,
+     0,0,0,0,full,$gear_input,$_gear_chain_active];
+
 function _gear_finish_pose(T,slope,phase,offset,period,contact,C=ident(4)) =
     let(p=phase-period*round(phase/period)+offset)
-    _gear_finish_rotary(T,slope*$parent_gear_rotation,slope*$parent_gear_phase+p,
-                       slope*$parent_gear_ratio,contact,C);
+    _gear_finish_rotary(T,slope*$gear_rotation,slope*$_gear_tooth_angle+p,
+                       slope*$gear_ratio,contact,C);
+
 function _gear_finish_linear(T,motion,offset,gain,contact,C=ident(4)) =
     let(relative=rot_inverse($_gear_frame_motion)*T,full=right(motion),
         inv=rot_inverse(relative*full))
     [relative*rot_inverse(C),0,0,0,0,contact,
-     concat(apply(inv,$parent_gear_locs),[[0,0,0]]),
-     concat(_gear_axes_in(inv,$parent_gear_axes),[undef]),full,
-     motion,motion+offset,gain,motion+offset,full,$parent_gear_input,true];
+     concat(apply(inv,$gear_chain_locs),[[0,0,0]]),
+     concat(_gear_axes_in(inv,$gear_chain_axes),[undef]),full,
+     motion,motion+offset,gain,motion+offset,full,$gear_input,$_gear_chain_active];
+
 /// Existing circular and worm pair equations retain their geometry and phase conventions.
 function _gear_circular_pose(A,B,angle,offset,anchor=CENTER,shift=0) =
     assert(A[14]==B[14], "\nBoth meshing spur/ring gears must have the same dimensionality")
@@ -5906,6 +6052,7 @@ function _gear_circular_pose(A,B,angle,offset,anchor=CENTER,shift=0) =
         incoming=A[12]?u:-u,
         C=move(-anchor*default(B[5],0)/2))
     _gear_finish_pose(move(a*u+[0,0,dz])*R,slope,phase,offset,360/B[2],incoming,C);
+
 function _gear_worm_pose(A,B,angle,offset) =
     let(pworm=_gear_is_worm(A[0]),W=pworm?A:B,G=pworm?B:A,
         globoid=_gear_worm_family(W[0])==2,
@@ -5926,29 +6073,39 @@ function _gear_worm_pose(A,B,angle,offset) =
         slope=hand*(pworm?W[8]/G[2]:G[2]/W[8]))
     _gear_finish_pose(move(a*u)*R,slope,-slope*delta,offset,
                       360/(pworm?G[2]:W[8]),pworm?[0,1,0]:[0,-1,0]);
+
 /// Normalize phase at integer-pitch boundaries before selecting a finite rack
 /// tooth. Floating-point remainder can otherwise return p instead of zero.
 function _gear_pitch_remainder(x,p) =
-    let(v=x/p,rem=v-floor(v)) rem<1e-10 || rem>1-1e-10 ? 0 : p*rem;
+  let(v=x/p,rem=v-floor(v)) rem<1e-10 || rem>1-1e-10 ? 0 : p*rem;
+
 /// A rack's local +X is its length; teeth face +Y in 2D and +Z in 3D.
 /// In 3D the automatic pinion axis points along rack -Y. In either dimension
 /// positive pinion spin advances the rack toward its own +X.
 function _gear_rack_pose(A,B,Q,offset,anchor,travel) =
     let(prack=_gear_is_rack(A[0]),K=prack?B:A,R=prack?A:B,
         p=PI*R[1]/cos(R[4]),k=K[2]*p/360,
-        valley=R[2]%2==0?0:p/2)
+        valley=R[2]%2==0?0:p/2,
+        parallel=abs(R[4]+(R[13]?-1:1)*K[4])<1e-9,
+        skew=parallel?0:R[4]+K[4])
     assert(!K[12],"\nA rack needs an external pinion, not a ring gear")
     assert(A[14]==B[14],"\nA rack and pinion must have the same dimensionality")
-    assert(abs(R[4]+(R[13]?-1:1)*K[4])<1e-9,
-           str("\nRack attachment requires ",R[13]?"equal":"opposite",
-               " signed helix angles in its canonical orientation; skew rack engagement is not supported"))
+    assert(parallel || (!R[14] && !R[13] && !K[13]),
+           "\nSkew rack attachment requires ordinary 3D helical gears, not 2D or herringbone gears")
+    assert(parallel || (default(Q[4],0)==0 &&
+                         (prack ? anchor==CENTER : in_list(anchor,[CENTER,LEFT,RIGHT]))),
+           str("\nSkew rack attachment requires centered face-width alignment and shift=0. ",
+               prack ? "Use anchor=CENTER on the pinion." :
+                       "Use anchor=CENTER, LEFT, or RIGHT on the rack."))
     assert(R[4]==0 || R[13]==K[13],"\nA herringbone rack needs a herringbone pinion")
     assert(prack ? (R[14]?anchor==CENTER:in_list(anchor,[CENTER,TOP,BOT])) :
            (is_vector(anchor,3) && anchor.z==0 && in_list(anchor.x,[-1,0,1]) &&
             (R[14]?anchor.y==0:in_list(anchor.y,[-1,0,1]))),
            str("\n",prack?"A pinion attached to a rack accepts CENTER, TOP, or BOT (CENTER in 2D)":
                  "An attached rack accepts CENTER, LEFT, or RIGHT; in 3D combine with FWD or BACK for face alignment"))
-    let(a=gear_dist(mod=K[1],teeth1=K[2],teeth2=0,helical=K[4],
+    let(a=parallel ? gear_dist(mod=K[1],teeth1=K[2],teeth2=0,helical=K[4],
+                   profile_shift1=K[6],profile_shift2=R[6],pressure_angle=K[3]) :
+                   gear_dist_skew(mod=K[1],teeth1=K[2],teeth2=0,helical1=K[4],helical2=R[4],
                    profile_shift1=K[6],profile_shift2=R[6],pressure_angle=K[3]),
         // shift translates the CHILD along the pinion's +Z in either order.
         // A rack has no shaft; its +Y points opposite this direction.
@@ -5957,18 +6114,18 @@ function _gear_rack_pose(A,B,Q,offset,anchor,travel) =
     assert(R[4]==0 || !R[13] || abs(dz)<1e-10,
            "\nHelical herringbone rack mates must share their width middle plane; revise anchor and shift")
     prack ?
-        let(x=Q[1],M=R[14]?ident(4):xrot(90),
+        let(x=Q[1],M=R[14]?ident(4):zrot(skew)*xrot(90),
             T=move(R[14]?[x,a,0]:[x,-dz,a])*M,
             advance=-tan(K[4])/pitch_radius(mod=K[1],teeth=K[2],helical=K[4])*180/PI,
             base=(valley-x)/k-180+advance*dz,
             initial=base-360/K[2]*round(base/(360/K[2])),
-            motion=$parent_gear_travel/k,
-            actual=$parent_gear_travel_phase/k+initial+offset)
-        _gear_finish_rotary(T,motion,actual,$parent_gear_travel_ratio/k,FRONT,
+            motion=$gear_travel/k,
+            actual=$_gear_tooth_travel/k+initial+offset)
+        _gear_finish_rotary(T,motion,actual,$gear_travel_ratio/k,FRONT,
                            _gear_anchor_transform(K,anchor)) :
         let(angle=Q[0],u=[cos(angle),sin(angle),0],
-            M=zrot(angle+90)*(R[14]?ident(4):xrot(-90)),
-            zero=$parent_gear_phase-$parent_gear_rotation,
+            M=zrot(angle+90)*(R[14]?ident(4):xrot(-90)*zrot(-skew)),
+            zero=$_gear_tooth_angle-$gear_rotation,
             raw=k*(zero-angle+90)-valley+dz*tan(R[4]),
             s0=_gear_pitch_remainder(raw+p/2,p)-p/2,L=R[16][0],inset=default(Q[2],1),
             delta=anchor.x<0?_gear_pitch_remainder(-raw+L/2,p):_gear_pitch_remainder(L/2+raw,p),
@@ -5977,8 +6134,8 @@ function _gear_rack_pose(A,B,Q,offset,anchor,travel) =
         assert(anchor.x==0 || inset_dist<L,
                str("\nrack_inset=",inset," leaves no phase-compatible position on this ",R[2],
                    "-tooth rack. Reduce rack_inset, lengthen the rack, or use anchor=CENTER."))
-        _gear_finish_linear(move(a*u+[0,0,dz])*M*right(s),k*$parent_gear_rotation,travel,
-                            k*$parent_gear_ratio,R[14]?BACK:UP,_gear_anchor_transform(R,anchor));
+        _gear_finish_linear(move(a*u+[0,0,dz])*M*right(s),k*$gear_rotation,travel,
+                            k*$gear_ratio,R[14]?BACK:UP,_gear_anchor_transform(R,anchor));
 /// Crown-parent placement has one canonical orientation: the spur's +Z points
 /// radially outward. For a crown child, crown_pos selects its center on the
 /// spur's +Z/-Z side without changing the selected circumferential contact.
@@ -5996,7 +6153,9 @@ function _gear_crown_pose(A,B,angle,offset,anchor,crown_pos) =
         let(s=crown_pos.z,k=-s*G[2]/C[2],
             M=zrot(angle-90)*xrot(90)*zrot(s>0?180:0))
         _gear_finish_pose(move(d*u+[0,0,s*r])*M,k,-k*(angle-90)+180/C[2],offset,360/C[2],BACK);
-/// Both positive bevel axes point toward their pitch apex. The child axis is
+/// The child shaft is tilted away from the selected contact azimuth. Signed
+/// cone heights cover external, flat, and internal-like bevel pitch surfaces.
+/// The child axis is
 /// tilted away from the chosen contact azimuth; coincide the actual returned
 /// apex anchors so independent backing changes do not change the mesh.
 function _gear_bevel_pose(A,B,angle,offset,anchor) =
@@ -6006,9 +6165,8 @@ function _gear_bevel_pose(A,B,angle,offset,anchor) =
            str("\nBevel mate_teeth must be reciprocal; parent expects ",a[0],
                " teeth and child has ",B[2],"; child expects ",b[0]," and parent has ",A[2]))
     assert(_gear_same_number(a[1],b[1]),"\nBevel gears must use the same shaft_angle")
-    assert(da<90 && db<90,
-           str("\nAutomatic bevel attachment currently needs two external pitch cones below 90 degrees; got ",
-               da," and ",db,". Use manual placement for crown/internal-like bevel configurations."))
+    assert(anchor=="pitchbase",
+           "\nAn automatically meshed bevel uses anchor=\"pitchbase\"; omit the child anchor")
     assert(_gear_same_number(a[2],b[2]) && _gear_same_number(a[3],b[3]) && _gear_same_number(a[4],b[4]),
            "\nMatched bevel attachment requires the same face_width, spiral, and cutter_radius")
     assert(a[5]!=b[5],"\nMatched bevel gears must have opposite handedness")
@@ -6020,7 +6178,7 @@ function _gear_bevel_pose(A,B,angle,offset,anchor) =
 /// BOSL2's attach() context is deliberately kept for supported compound stacking.
 module _gear_place(pose) {
     multmatrix(pose[0])
-    let($_gear_attach_request=undef,$_gear_parent_spec=undef,
+    let($_gear_attach_request=undef,$_gear_parent_spec=undef,$_gear_driver=undef,
         $_gear_frame_motion=ident(4),$_gear_chain_active=false,
         $parent_gear_type=undef,$parent_gear_mod=undef,
         $parent_gear_teeth=undef,$parent_gear_pa=undef,$parent_gear_helical=undef,
@@ -6028,17 +6186,18 @@ module _gear_place(pose) {
         $parent_gear_starts=undef,$parent_gear_worm_length=undef,
         $parent_gear_wheel_teeth=undef,$parent_gear_left_handed=undef,
         $parent_gear_clearance=undef,$parent_gear_profile_shift=undef,
-        $parent_gear_herringbone=undef,$parent_gear_rotation=0,
-        $parent_gear_phase=0,$parent_gear_ratio=1,
-        $parent_gear_travel=0,$parent_gear_travel_phase=0,$parent_gear_travel_ratio=0,
-        $parent_gear_input="rotation",
-        $parent_gear_contact_dir=undef,$parent_gear_contact_angle=undef,
-        $parent_gear_locs=[],$parent_gear_axes=[])
+        $parent_gear_herringbone=undef,$gear_rotation=0,
+        $_gear_tooth_angle=0,$gear_ratio=0,
+        $gear_angle_offset=0,$gear_travel_offset=0,
+        $gear_travel=0,$_gear_tooth_travel=0,$gear_travel_ratio=0,
+        $gear_input=undef,
+        $gear_contact_dir=undef,$gear_contact_angle=undef,
+        $gear_chain_locs=[],$gear_chain_axes=[])
         children();
 }
 module _gear_publish(S,pose) {
     multmatrix(pose[8])
-    let($_gear_attach_request=undef,$_gear_parent_spec=S,
+    let($_gear_attach_request=undef,$_gear_parent_spec=S,$_gear_driver=undef,
         $_gear_frame_motion=pose[13],$_gear_chain_active=pose[15],
         $parent_gear_type=S[0],$parent_gear_mod=S[1],
         $parent_gear_teeth=S[2],$parent_gear_pa=S[3],$parent_gear_helical=S[4],
@@ -6049,20 +6208,82 @@ module _gear_publish(S,pose) {
         $parent_gear_wheel_teeth=_gear_is_wheel(S[0])||S[0]=="globoid_worm"?S[2]:undef,
         $parent_gear_left_handed=_gear_worm_family(S[0])>0?S[10]:S[0]=="bevel"?S[16][5]:undef,
         $parent_gear_clearance=S[11],$parent_gear_herringbone=S[13],
-        $parent_gear_rotation=pose[2],$parent_gear_phase=pose[3],$parent_gear_ratio=pose[4],
-        $parent_gear_travel=pose[9],$parent_gear_travel_phase=pose[10],$parent_gear_travel_ratio=pose[11],
-        $parent_gear_input=pose[14],
-        $parent_gear_contact_dir=pose[5],
-        $parent_gear_contact_angle=is_undef(pose[5])?undef:
+        $gear_rotation=pose[2],$_gear_tooth_angle=pose[3],$gear_ratio=pose[4],
+        $gear_angle_offset=pose[3]-pose[2],$gear_travel_offset=pose[10]-pose[9],
+        $gear_travel=pose[9],$_gear_tooth_travel=pose[10],$gear_travel_ratio=pose[11],
+        $gear_input=pose[14],
+        $gear_contact_dir=pose[5],
+        $gear_contact_angle=is_undef(pose[5])?undef:
             let(v=S[0]=="rack"?[pose[5].x,pose[5].z]:[pose[5].x,pose[5].y])
             norm(v)<1e-12?undef:atan2(v.y,v.x),
-        $parent_gear_locs=pose[6],$parent_gear_axes=pose[7])
+        $gear_chain_locs=pose[6],$gear_chain_axes=pose[7])
         children();
 }
+
+// Module: gear_spin()
+// Synopsis: Drives a rotary gear chain by an angle.
+// Topics: Gears, Attachments
+// See Also: gear_travel(), attach_gear()
+// Usage:
+//   gear_spin(angle) gear_1() attach_gear() gear_2() ...
+// Description:
+//   Applies rotation to its child gear.  This rotation propagates through a chain of gears constructed with nested {{attach_gear()}} invocations.
+//   The root's `anchor`, `spin`, and `orient` place its reference frame normally.  Adding another `gear_spin()` or a {{gear_travel()}} into
+//   the gear chain is not permitted. 
+// Arguments:
+//   angle = Angle to rotate the gear
+// Side Effects:
+//   Sets internal variables requesting rotational drive for the root gear.
+// Example(2D,Anim,Frames=100,FrameMS=60,VPD=263.43,VPT=[35.99,-1.57,-6.88],NoScales,Frames=120): The central gear is driven and transfers it's motion to the child
+//   gear_spin(360*$t)
+//       spur_gear2d(mod=2,teeth=24) {
+//           color("red") right(12) circle(d=3,$fn=16);
+//           attach_gear(0) spur_gear2d(teeth=36)
+//               color("blue") right(18) circle(d=3,$fn=16);
+//        }
+module gear_spin(angle)
+{
+    assert(is_finite(angle), "\nangle must be a finite number of degrees");
+    _gear_drive("rotation",angle) children();
+}
+// Module: gear_travel()
+// Synopsis: Drives a rack chain by a linear displacement.
+// Topics: Gears, Attachments
+// See Also: gear_spin(), attach_gear()
+// Usage:
+//   gear_travel(distance) rack() attach_gear() gear() ...
+// Description:
+//   Applies translation to its child rack.  This translation propagates through a chain of gears constrcuted with tested {{attach_gear()}} invocations.
+//   Child gears placed with {{attach_gear()}} remain at their mounting locations and rotate according to the rack travel.
+//   Adding another `gear_travel()` or a {{gear_spin()}} into the gear chain is not permitted.
+// Arguments:
+//   distance = Mechanical displacement in model units.
+// Side Effects:
+//   Sets internal variables requesting linear drive for the root rack.
+// Example(2D,Anim,NoAxes,FrameMS=60,Frames=90): A sliding rack drives a fixed-axis pinion.
+//   gear_travel(30*sin(360*$t))
+//       rack2d(mod=4,teeth=12)
+//           attach_gear(pos=0) spur_gear2d(teeth=10);
+module gear_travel(distance) {
+    assert(is_finite(distance), "\ndistance must be finite");
+    _gear_drive("travel",distance) children();
+}
+module _gear_drive(kind,value) {
+    assert(!$_gear_chain_active && is_undef($_gear_driver),
+           "\nA driven gear chain cannot contain another gear_spin() or gear_travel()");
+    assert(is_undef($_gear_attach_request),
+           "\nPlace the drive module before the root gear, not between attach_gear() and its child");
+    let($_gear_driver=[kind,value]) children();
+}
+
+
 // Section: Computing Gear Dimensions
-//   These functions let the user find the derived dimensions of the gear.
-//   A gear fits within a circle of radius outer_radius, and two gears should have
-//   their centers separated by the sum of their pitch_radius.
+//   These functions provide gear dimensions and mating distances. Use {{outer_radius()}}
+//   for the tooth-tip envelope and {{pitch_radius()}} for the reference pitch circle.
+//   For mating placement, use {{gear_dist()}}, {{gear_dist_skew()}}, {{worm_dist()}},
+//   or {{globoid_worm_dist()}} as appropriate.
+
+
 // Function: circular_pitch()
 // Synopsis: Returns tooth density expressed as "circular pitch".
 // Topics: Gears, Parts
@@ -6160,9 +6381,9 @@ function diametral_pitch(
 //   value = module_value(mod=|circ_pitch=|diam_pitch=);
 // Description:
 //   Get tooth size expressed as "module".  The module is the pitch
-//   diameter of the gear divided by the number of teeth on the gear.  For example, a gear with a pitch
-//   diameter of 40 mm, with 20 teeth on it will have a modulus of 2 mm.  For circ_pitch and mod this
-//   calculation does not depend on untis.  If you give diametral pitch, which is based on inputs, then
+//   diameter of a straight-tooth gear divided by its tooth count. For example, a straight-tooth gear with a pitch
+//   diameter of 40 mm and 20 teeth has a module of 2 mm. For `circ_pitch` and `mod` this
+//   calculation preserves the model's length unit. Diametral pitch is based on inches, so
 //   the module is returned in millimeters.  
 // Arguments:
 //   ---
@@ -6198,7 +6419,7 @@ function module_value(
 /// Arguments:
 ///   profile_shift = Profile shift factor x.  Default: 0 
 ///   ---
-///   mod = The module of the gear (pitch diameter / teeth)
+///   mod = Normal module: normal circular pitch divided by PI.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 ///   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 ///   shorten = Tip shortening factor. Default: 0
@@ -6230,7 +6451,7 @@ function _adendum(
 ///   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
 ///   profile_shift = Profile shift factor x.  Default: 0
 ///   ---
-///   mod = The module of the gear (pitch diameter / teeth)
+///   mod = Normal module: normal circular pitch divided by PI.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 ///   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 /// Example:
@@ -6261,8 +6482,9 @@ function _dedendum(
 // Usage: As a Function
 //   value = pitch_radius(mod=|circ_pitch=|diam_pitch=, teeth, [helical]);
 // Description:
-//   Calculates the pitch radius for the gear.  Two mated gears will have their centers spaced apart
-//   by the sum of the two gear's pitch radii.
+//   Calculates the reference pitch radius. Unshifted external gears with parallel axes
+//   mesh at the sum of their pitch radii; an unshifted ring/pinion pair uses the difference.
+//   Use {{gear_dist()}} for placement with profile shift or spacing backlash.
 // Arguments:
 //   teeth = The number of teeth on the gear.
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
@@ -6388,7 +6610,7 @@ function outer_radius(
 // Usage: As a Function
 //   value = root_radius(mod=|circ_pitch=|diam_pitch=, teeth, [helical], [profile_shift=], [pressure_angle=], [clearance=], [backlash=], [internal=]);
 // Description:
-//   Calculates the actual radius of the roots of the teeth.  The root radius is usually given as a straight forward calcluation, but
+//   Calculates the actual radius of the roots of the teeth.  The root radius is usually given as a straight forward calculation, but
 //   when large pressure-angle teeth are clipped, it is more difficult to determine this radius.  This function calculates the actual
 //   root radius so that you can, for example, place a partial tooth gear onto a matching circle.   The `backlash` parameter may seem
 //   unnecessary, but when large pressure angle teeth are clipped, the value of backlash changes the clipping radius.  For regular
@@ -6443,7 +6665,7 @@ function root_radius(
 ///   internal = If true, calculate for an internal gear.
 ///   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
 ///   profile_shift = Profile shift factor x.  Default:0
-///   mod = The module of the gear (pitch diameter / teeth)
+///   mod = Normal module: normal circular pitch divided by PI.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 /// Example:
 ///   rr = _root_radius_basic(circ_pitch=5, teeth=11);
@@ -6476,7 +6698,7 @@ function _root_radius_basic(
 ///   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.
 ///   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
 ///   ---
-///   mod = The module of the gear (pitch diameter / teeth)
+///   mod = Normal module: normal circular pitch divided by PI.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 ///   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 /// Example:
@@ -6541,9 +6763,9 @@ function bevel_pitch_angle(
 // Usage: As a Function
 //   value = gear_dist(mod=|circ_pitch=|diam_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [internal1=], [internal2=], [pressure_angle=], [backlash=]);
 // Description:
-//   Calculate the distance between the centers of two spur gears gears or helical gears with parallel axes,
+//   Calculate the distance between the centers of two spur gears or helical gears with parallel axes,
 //   taking into account profile shifting and helical angle.  You can give the helical angle as either positive or negative.  
-//   If you set one of the tooth counts to zero than that gear will be treated as a rack and the distance returned is the
+//   If you set one of the tooth counts to zero then that gear is treated as a rack and the distance returned is the
 //   distance between the rack's pitch line and the gear's center.  If you set internal1 or internal2 to true then the
 //   specified gear is a ring gear;  the returned distance is still the distance between the centers of the gears.  
 //   For a regular gear and ring gear to be compatible the ring gear must have more teeth and at least as much profile shift
@@ -6791,6 +7013,8 @@ function gear_skew_angle(
         beta2 = atan(dw2/d2*tan(helical2))
    )
    beta1+beta2;
+
+
 // Function: get_profile_shift()
 // Usage: As a Function
 //   value = get_profile_shift(mod=|circ_pitch=|diam_pitch=, desired, teeth1, teeth2, [helical], [internal1=], [internal2=], [pressure_angle=]);
@@ -6895,7 +7119,7 @@ function get_profile_shift(
 //   value = auto_profile_shift(teeth, [pressure_angle], [helical], [min_teeth=], [get_min=], [profile_shift=]);
 // Description:
 //   Calculates the recommended profile shift to avoid gear tooth undercutting.  You can set `min_teeth` to a
-//   value to allow small undercutting, and only activate the profile shift for more extreme cases.  Is is common
+//   value to allow small undercutting, and only activate the profile shift for more extreme cases. It is common
 //   practice to make gears with 15-17 teeth with undercutting with the standard 20 deg pressure angle.
 //   .
 //   The `get_min` argument returns the minimum profile shift needed to avoid undercutting for the specified
@@ -7092,30 +7316,24 @@ module _show_gear_tooth_profile(
 //   Returns the center spacing between a cylindrical worm and its mating worm gear, produced by {{worm()}} and
 //   {{worm_gear()}}. Use the same tooth size, `teeth`, `worm_diam`, `worm_starts`,
 //   `pressure_angle`, and `profile_shift` as the worm and worm gear. The default automatic
-//   profile shift must agree with the worm gear's setting.
+//   profile shift must agree with the worm gear's setting.  Positive backlash
+//   moves the gears apart, targeting a total pitch-circle backlash of `2*backlash`.
 //   .
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch` or inherit it.  
 //   Positive `backlash` creates play by moving the axes farther apart. Use this or
 //   tooth thinning, not both, to get the requested space.  For a double-enveloping
 //   pair, use {{globoid_worm_dist()}} instead.
 // Arguments:
-//   teeth = Number of wheel teeth.
-//   worm_diam/d = Worm pitch diameter.
+//   teeth = Number of worm gear teeth.
+//   worm_diam/d = Worm pitch diameter. Inherits when available.
 //   ---
 //   mod = Normal module.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
-//   worm_starts/starts = Number of worm starts. Default: 1
-//   profile_shift = Wheel profile-shift coefficient. Default: "auto"
+//   worm_starts/starts = Number of worm starts. Inherits when available. Default: 1
+//   profile_shift = Worm-gear profile-shift coefficient. Profile shift is not inherited. Default: "auto"
 //   pressure_angle = Normal pressure angle in degrees. Inherits from the parent when omitted.  Default: 20
-//   backlash = Increase spacing for total nominal wheel backlash 2*backlash. Default: 0
-// Assembly center distance for a cylindrical worm-wheel pair. With backlash=0
-// this is exactly the nominal GENERATING distance. Positive backlash moves the
-// axes apart instead of thinning either part. As in BOSL2's other dist helpers,
-// the argument targets TOTAL wheel pitch-circle backlash 2*backlash, using the
-// center-plane straight-flank relation. No tooth-thinning value is an input.
-// Do not also thin the teeth for the same requested play. The spacing relation
-// is not a guarantee of uniform clearance/contact across a wide worm wheel.
+//   backlash = Increase spacing for total nominal worm gear backlash 2*backlash. Default: 0
 function worm_dist(teeth,worm_diam,_named,worm_starts,profile_shift,pressure_angle,
                    mod,circ_pitch,diam_pitch,backlash,d,starts) =
     assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
@@ -7142,19 +7360,19 @@ function _wormgear_spacing(ref,backlash) =
 //   value = globoid_worm_dist([mod=|circ_pitch=|diam_pitch=], teeth, worm_diam|d=, [worm_starts=|starts=]);
 // Description:
 //   Returns the center spacing between a globoid worm gear pair produced by {{globoid_worm()}} and {{globoid_worm_gear()}}.
-//   Use the same tooth size, `teeth`, `worm_diam`, and `worm_starts` as the wheel.
+//   Use the same tooth size, `teeth`, `worm_diam`, and `worm_starts` as the worm gear.
 //   The spacing is independent of `worm_length` and `pressure_angle`. Backlash is
-//   set on the wheel, not by increasing this distance. For a cylindrical pair,
+//   set on the worm gear, not by increasing this distance. For a cylindrical pair,
 //   use {{worm_dist()}} instead.
 //   .
 // Arguments:
-//   teeth = Number of wheel teeth.
-//   worm_diam/d = Worm throat pitch diameter.
+//   teeth = Number of worm gear teeth.
+//   worm_diam/d = Worm throat pitch diameter. Inherits when available.
 //   ---
 //   mod = Normal module.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
-//   worm_starts/starts = Number of starts. Default: 1
+//   worm_starts/starts = Number of starts. Inherits when available. Default: 1
 function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm_starts,d,starts) =
     assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
     let(worm_diam=_gear_worm_diameter(d,worm_diam),
@@ -7174,7 +7392,7 @@ function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you don't give a tooth
 //   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
 // Arguments:
-//   d/worm_diam = Worm pitch diameter. 
+//   d/worm_diam = Worm pitch diameter. Inherits when available.
 //   ---
 //   mod = Normal module; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
@@ -7182,10 +7400,10 @@ function globoid_worm_dist(teeth,worm_diam,_named,mod,circ_pitch,diam_pitch,worm
 //   clearance = Requested extra thread-root depth, as supplied to {{worm()}}; the returned radius accounts for converging flanks. Default: module/4
 //   pressure_angle = Normal pressure angle in degrees. Default: inherited from the parent gear if available, 20 otherwise.
 //   backlash = Gap between two meshing teeth, as supplied to {{worm()}}. Default: 0
-//   starts/worm_starts = Number of worm starts. Default: 1
+//   starts/worm_starts = Number of worm starts. Inherits when available. Default: 1
 // Example: Shaft through a cylindrical worm.
 //   m=2; d=24; L=35; 
-//   shaft_r=worm_root_radius(mod=m,d=d);
+//   shaft_r=worm_root_radius(mod=m,d=d,starts=5);
 //   worm(mod=m,d=d,l=L,starts=5);
 //   cyl(r=shaft_r,l=L+30,$fn=96);
 function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam,
@@ -7203,6 +7421,8 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
     assert(is_finite(pa) && pa>=0 && pa<90, "\npressure_angle must be at least zero and less than 90 degrees")
     assert(is_finite(ba) && ba>=0, "\nbacklash must be nonnegative and finite")
     d/2-_worm_thread_dedendum(m,asin(s*m/d),pa,c,ba);
+
+
 // Function: globoid_worm_root_radius()
 // Synopsis: Returns the root radius of a globoid worm at an axial position.
 // Topics: Gears, Parts
@@ -7220,15 +7440,15 @@ function worm_root_radius(d,_named,mod,circ_pitch,diam_pitch,clearance,worm_diam
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch` or inherit it from a parent gear. 
 //   .
 // Arguments:
-//   teeth = Number of teeth on the mating wheel.
-//   worm_diam/d = Worm throat pitch diameter. Required unless d is supplied.
+//   teeth = Number of teeth on the mating worm gear. Required.
+//   worm_diam/d = Worm throat pitch diameter. Inherits when available.
 //   ---
 //   mod = Normal module; specify only one tooth-size measure.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
-//   z = Local axial position measured from the worm's center. Default: half the supplied worm_length, or 0 when no length is supplied.
-//   worm_length/l/length/h/height = Working worm length; selects an end-face query when z is omitted. Optional if z is given or the minimum radius is wanted.
-//   worm_starts/starts = Number of starts on the worm. Default: 1
+//   worm_length/l/length/h/height = Working worm length. Inherits when available.
+//   z = Local axial position measured from the worm's center. Default: `worm_length/2` if worm_length is given or inherited.  
+//   worm_starts/starts = Number of starts on the worm. Inherits when available. Default: 1
 //   clearance = Nominal extra root-depth allowance at the throat, as supplied to {{globoid_worm()}}. Default: module/4
 // Example: Add end shafts to a globoid worm
 //   m=2; N=55; d=24; s=5; L=35;
