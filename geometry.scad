@@ -1599,10 +1599,14 @@ function _region_centroid(region,eps=_EPSILON) =
 ///   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function _polygon_centroid(poly, eps=_EPSILON) =
     assert( is_path(poly,dim=[2,3]), "\nThe input must be a 2D or 3D polygon." )
+    assert(len(poly)>=3, "\nThe polygon must contain at least three points.")
     let(
         n = len(poly[0])==2 ? 1 :
-            let( plane = plane_from_points(poly, check_coplanar=true))
-            assert(!is_undef(plane), "\nThe polygon must be planar." )
+            let( plane = plane_from_points(poly, check_coplanar=true, eps=eps))
+            assert(!is_undef(plane),
+                   is_undef(plane) && _noncollinear_triple(poly,error=false,eps=eps)==[]
+                     ? "\nThe polygon has zero area; its points are collinear or coincident."
+                     : "\nThe polygon must be planar.")
             plane_normal(plane),
         v0 = poly[0] ,
         val = sum([
@@ -1614,7 +1618,7 @@ function _polygon_centroid(poly, eps=_EPSILON) =
             ) [ area, (v0+v1+v2)*area ]
         ])
     )
-    assert(!approx(val[0],0, eps), "\nThe polygon is self-intersecting or its points are collinear.")
+    assert(!approx(val[0],0, eps), "\nThe polygon has zero signed area; it is degenerate or self-intersecting.")
     val[1]/val[0]/3;
 
 
