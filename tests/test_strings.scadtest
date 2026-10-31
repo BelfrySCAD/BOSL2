@@ -540,6 +540,17 @@ test_str_replace_char();
 '''
 
 [[test]]
+name = "test_str_collapse_char"
+script = '''
+include <../std.scad>
+
+module test_str_collapse_char() {
+   assert_equal(str_collapse_char("a-b--c---d----e", "-"), "a-b-c-d-e");
+}
+test_str_collapse_char();
+'''
+
+[[test]]
 name = "test_substr_errors"
 expect_success = false
 script = '''
