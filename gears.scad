@@ -3609,12 +3609,12 @@ module worm_gear(
 //     globoid_worm(mod=2,24,45,mate_teeth=55,
 //                  pressure_angle=[45,5]);
 // Example(3D): A maximum-length worm with end shafts chosen to give a desired total length.
-//   req_len = 45;
+//   req_len = 145;
 //   globoid_worm(mod=2,d=24,length="max",mate_teeth=55,starts=5,mesh_tol=.08) {
 //     for (end=[BOT,TOP])
 //       attach(end,BOT)
 //         cyl(r=globoid_worm_root_radius(),
-//             l=(req_len-$work_length)/2, $fn=48);
+//             l=(req_len-$worm_length)/2, $fn=48);
 //           attach_gear(0)
 //             globoid_worm_gear(thickness=8,backlash=.15,mesh_tol=.08);
 //   }
@@ -5662,8 +5662,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //           }
 //       }
 //   }
-//   Continues: 
-//   .
+// Continues: 
 //   A worm, bevel, crown, or skew mesh establishes a new local frame for its child. Subsequent
 //   placements use that child's X and Y axes, with Z along its shaft.
 //   When meshing spur gears if you do not give `helical` then the helical angle is chosen to create a parallel
