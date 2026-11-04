@@ -3666,10 +3666,14 @@ function _find_anchor(anchor, geom)=
             vlist = [for(i=idx(veflist)) if (veflist[i][0]!=[]) veflist[i][0]],
             elist = [for(i=idx(veflist)) if (veflist[i][1]!=[] && !approx(rpts[veflist[i][1][0]],rpts[veflist[i][1][1]])) veflist[i][1]],
             flist = [for(i=idx(veflist)) if (veflist[i][2]!=[])  veflist[i][2]],
-            faceinfo = [for(face=flist) let(poly=select(vnf[0],face)) [polygon_area(poly), centroid(poly)]],  //[ area, centroid]
+            // Collapsed support faces carry no area and have no polygon centroid.
+            faceinfo = [for(face=flist)
+                          let(poly=select(vnf[0],face), area=polygon_area(poly))
+                          if (!is_finite(area) || !approx(area,0))
+                              [area, centroid(poly)]],  // [area, centroid]
             facearea = len(faceinfo)==0 ? 0 : sum(column(faceinfo,0)),
             basic_spin = _compute_spin(anchor, v_abs(anchor)==UP ? BACK: UP),
-            res = len(flist)>0 && !approx(facearea,0) ?
+            res = len(faceinfo)>0 && !approx(facearea,0) ?
                       let(
                           center = column(faceinfo,0)*column(faceinfo,1)/facearea
                       )
