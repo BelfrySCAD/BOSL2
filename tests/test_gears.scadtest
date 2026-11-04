@@ -446,3 +446,116 @@ module test_gear_shorten_skew() {
 }
 test_gear_shorten_skew();
 '''
+
+[[test]]
+name = "test_worm_outer_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_outer_radius() {
+    // pitch radius plus module
+    assert_approx(worm_outer_radius(mod=2, d=24), 14);
+    assert_approx(worm_outer_radius(mod=2, worm_diam=24), 14);
+    // other tooth size measures give the same result
+    assert_approx(worm_outer_radius(circ_pitch=2*PI, d=24), 14);
+    // larger than the root radius
+    assert(worm_outer_radius(mod=3, d=20) > worm_root_radius(mod=3, d=20));
+}
+test_worm_outer_radius();
+'''
+
+[[test]]
+name = "test_globoid_worm_max_length"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_globoid_worm_max_length() {
+    m=2; N=55; d=24; s=5;
+    cb = sqrt(1-pow(s*m/d,2));
+    R = m*N/(2*cb);
+    // default clearance is module/4
+    assert_approx(globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s),
+                  1.3*(R-m-m/4));
+    // explicit clearance reduces the limit
+    assert_approx(globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s, clearance=1),
+                  1.3*(R-m-1));
+    assert(globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s, clearance=1)
+           < globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s));
+    // aliases
+    assert_approx(globoid_worm_max_length(mod=m, teeth=N, worm_diam=d, worm_starts=s),
+                  globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s));
+}
+test_globoid_worm_max_length();
+'''
+
+[[test]]
+name = "test_globoid_worm_outer_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_globoid_worm_outer_radius() {
+    // At the throat the outer radius is pitch radius plus module
+    assert_approx(globoid_worm_outer_radius(mod=3, d=20, teeth=22, z=0), 13);
+    // Radius grows away from the middle
+    r2 = globoid_worm_outer_radius(mod=3, d=20, teeth=22, z=2);
+    r5 = globoid_worm_outer_radius(mod=3, d=20, teeth=22, z=5);
+    assert(r2 > 13);
+    assert(r5 > r2);
+    // Symmetric about the middle plane
+    assert_approx(globoid_worm_outer_radius(mod=3, d=20, teeth=22, z=-5), r5);
+    // Default z is half the worm length
+    assert_approx(globoid_worm_outer_radius(mod=3, d=20, teeth=22, worm_length=10), r5);
+}
+test_globoid_worm_outer_radius();
+'''
+
+[[test]]
+name = "test_worm_gear_radius_bound"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_gear_radius_bound() {
+    m=2; N=25; d=30; t=12;
+    b = worm_gear_radius_bound(mod=m, teeth=N, thickness=t, worm_diam=d);
+    expected = worm_dist(mod=m, teeth=N, worm_diam=d) - sqrt(pow(d/2-m,2)-pow(t/2,2));
+    assert_approx(b, expected);
+    // Bound must exceed the pitch radius
+    assert(b > N*m/2);
+    // aliases
+    assert_approx(worm_gear_radius_bound(mod=m, teeth=N, thickness=t, d=d), b);
+    // Thicker gear gives a larger bound
+    assert(worm_gear_radius_bound(mod=m, teeth=N, thickness=16, worm_diam=d) > b);
+}
+test_worm_gear_radius_bound();
+'''
+
+[[test]]
+name = "test_globoid_worm_gear_radius_bound"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_globoid_worm_gear_radius_bound() {
+    m=2; N=55; d=24; s=5; L=35; t=12;
+    b = globoid_worm_gear_radius_bound(mod=m, teeth=N, thickness=t, d=d, starts=s, length=L);
+    R = m*N/(2*sqrt(1-pow(s*m/d,2)));
+    a = R+d/2;
+    H = L/2;
+    r = a-sqrt(pow(R+m,2)-H*H);
+    expected = sqrt(pow(a-sqrt(r*r-t*t/4),2)+H*H);
+    assert_approx(b, expected);
+    assert(b > R);
+    // length aliases agree
+    assert_approx(globoid_worm_gear_radius_bound(mod=m, teeth=N, thickness=t, worm_diam=d,
+                                                 worm_starts=s, worm_length=L), b);
+    // "max" selects the maximum supported length
+    Lmax = globoid_worm_max_length(mod=m, teeth=N, d=d, starts=s);
+    assert_approx(globoid_worm_gear_radius_bound(mod=m, teeth=N, thickness=t, d=d, starts=s, length="max"),
+                  globoid_worm_gear_radius_bound(mod=m, teeth=N, thickness=t, d=d, starts=s, length=Lmax));
+}
+test_globoid_worm_gear_radius_bound();
+'''
