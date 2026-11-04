@@ -273,6 +273,12 @@ module test_rack() {
     v = rack(mod=2, teeth=10, thickness=5, backing=5, helical=20, herringbone=true);
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
+    // Teeth point UP, the thickness runs along Y and the end faces are shifted toward -X, as in the module form.
+    hl = 10*PI/cos(20);  // half length
+    shift = 2.5*tan(20);
+    assert_approx(pointlist_bounds(v[0]), [[-hl-shift, -2.5, -7.5], [hl, 2.5, 2]]);
+    back_face = [for (p=v[0]) if (approx(p.y, 2.5)) p];
+    assert_approx(min(column(back_face,0)), -hl-shift);
 }
 test_rack();
 '''
