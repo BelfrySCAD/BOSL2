@@ -5820,7 +5820,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   ---
 //   dir = One 2D/3D direction vector, or a list of direction vectors, in the parent's stationary XY plane. Magnitude is ignored.   
 //   pos = Exact pinion mounting position along the parent rack's X axis, or a list of positions. Default: 0 for a rack parent.
-//   shift = Signed distance to shift child geare along the parent shaft for parallel 3D spur and ring gear pairs, or along the pinion shaft for a 3D rack and pinion pair. Applied after face alignment. Default: 0
+//   shift = Signed distance to shift child gear along the parent shaft for parallel 3D spur and ring gear pairs, or along the pinion shaft for a 3D rack and pinion pair. Applied after face alignment. Default: 0
 //   rack_inset = Nonnegative integer pitch count added inward from the most extreme mesh-compatible position at a child rack placed with LEFT or RIGHT. Default: 1
 //   crown_pos = UP or DOWN in the spur parent's shaft frame, selecting where a child crown extends. Only for spur parent with crown child. Default: DOWN
 // Side Effects:
@@ -5892,12 +5892,12 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //       attach_gear(0)
 //           recolor("lightblue") spur_gear(teeth=36,helical=30,profile_shift=0,backlash=.1,slices=32)
 //               attach(TOP,BOT)
-//                   recolor("gold") worm(mod=1,d=14,l=30,starts=3)
+//                   recolor("gold") worm(mod=1,d=14,l=38,starts=3)
 //                       attach_gear(dir=FRONT)
 //                           recolor("orange") worm_gear(teeth=30,thickness=6,backlash=.1,slices=8)
 //                               attach(TOP,BOT)
 //                                   recolor("lightgreen") spur_gear(mod=1,teeth=20,thickness=4,helical=0)
-//                                       attach_gear(-90)
+//                                       attach_gear(25)
 //                                           recolor("pink") spur_gear(teeth=40)
 //                                              echo($gear_ratio);   // Prints 0.03333333
 // Example(3D,Big,VPR=[86.50,0.00,295.40],VPD=361.36,VPT=[20.49,-61.32,-2.35],NoScales): An asymmetric globoid stage followed by a two-level helical output with axial clearance.
@@ -5911,7 +5911,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //                   // The compound is a new tooth family: give its scalar pressure angle explicitly.
 //                   recolor("orange") spur_gear(mod=1,teeth=24,thickness=6,pressure_angle=20,
 //                                            helical=20,profile_shift=0,backlash=.1,slices=20)
-//                       attach_gear(0,shift=3)
+//                       attach_gear(-25,shift=3)
 //                           recolor("gold") spur_gear(teeth=36,helical=-20,profile_shift=0,backlash=.1,slices=24);
 // Example(3D,Med,Anim,FrameMS=60,Frames=90,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
 //   gear_spin(-180*8/12*(0.5+0.5*cos(360*$t))) 
