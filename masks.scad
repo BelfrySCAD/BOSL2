@@ -2679,10 +2679,6 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 module edge_mask(edges=EDGES_ALL, except=[]) {
     req_children($children);
     assert($parent_geom != undef, "\nNo object to attach to!");
-    assert($parent_geom[0] == "prismoid"
-           && point2d($parent_geom[1]) == $parent_geom[2]
-           && $parent_geom[3] == [0,0],
-           "\nParent must be a cuboid.");
     edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
