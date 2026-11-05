@@ -4255,11 +4255,15 @@ function _globoid_length(worm_length,l,length,h,height) =
     first_defined([worm_length,l,length,h,height,$parent_gear_worm_length]);
 /// ---------------------- Native geometry core ----------------------
 /// Pair-defining inputs shared by the geometry and distance query.
+/// The reference diameter must exceed both two modules and starts*module.
+/// Clearance-dependent root radius and resolved wheel thickness are checked
+/// separately. The default wheel thickness d/2 requires d>4*m, but an
+/// explicitly thinner wheel permits smaller diameters.
 function _globoid_check_reference(m,N,d,s) =
     assert(is_int(N) && N>=12, str("\n", "teeth must be an integer at least 12; got ",N))
     assert(is_int(s) && s>0, str("\n", "starts (worm_starts on the wheel) must be a positive integer; got ",s))
     assert(is_finite(d) && d>0, str("\n", "worm_diam must be supplied and must be greater than zero and finite; got ",d))
-    assert(d>max(4,s)*m, str("\n", "For current parameters, worm_diam must be greater than ",max(4,s)*m,"; got ",d))
+    assert(d>max(2,s)*m, str("\n", "For current parameters, worm_diam must be greater than ",max(2,s)*m,"; got ",d))
     true;
 /// P=[module, teeth, throat_radius, wheel_pr, center_distance, signed_starts/teeth,
 ///    transverse_pressure_angle, blade_base_radius, half_worm_length, clearance, starts]
