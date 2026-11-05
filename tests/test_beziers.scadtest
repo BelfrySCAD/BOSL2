@@ -470,3 +470,42 @@ module test_bezier_sheet() {
 }
 test_bezier_sheet();
 '''
+
+[[test]]
+name = "test_bezier_patch_join"
+script = '''
+include <../std.scad>
+
+module test_bezier_patch_join() {
+    // Teste 1: juntar dois patches planos pela edge u1→u0
+    p1 = bezier_patch_flat([80,80], N=3, orient=UP, trans=[-50,0,0]);
+    p2 = bezier_patch_flat([80,80], N=3, orient=UP, trans=[50,0,40]);
+    jp = bezier_patch_join(p1, "u1", p2, "u0");
+    assert(is_bezier_patch(jp));
+    assert(len(jp) == 4);  // cubico em u
+    assert(len(jp[0]) == len(p1[0]));  // mesmas colunas
+    // Continuidade G0: edges compartilhadas
+    for(j=[0:1:len(jp[0])-1]) {
+        assert(approx(jp[0][j], p1[len(p1)-1][j]));
+        assert(approx(jp[3][j], p2[0][j]));
+    }
+
+    // Teste 2: juntar pela edge v
+    p3 = bezier_patch_flat([60,60], N=3, orient=UP, trans=[0,-40,0]);
+    p4 = bezier_patch_flat([60,60], N=3, orient=RIGHT, trans=[0,40,30]);
+    jp2 = bezier_patch_join(p3, "v1", p4, "v0");
+    assert(is_bezier_patch(jp2));
+
+    // Teste 3: gerar VNF valido
+    vnf = bezier_vnf([p1, p2, jp], splinesteps=8);
+    assert(is_vnf(vnf));
+    assert(len(vnf[0]) > 0);
+
+    // Teste 4: tangent_len customizado
+    jp3 = bezier_patch_join(p1, "u1", p2, "u0", tangent_len=0.5);
+    assert(is_bezier_patch(jp3));
+    // Pontos internos devem diferir com tangent_len diferente
+    assert(!approx(jp[1][0], jp3[1][0]));
+}
+test_bezier_patch_join();
+'''
