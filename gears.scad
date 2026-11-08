@@ -4330,8 +4330,7 @@ function _wfg_geom(P,body) =
 // Arguments:
 //   teeth = Number of face-gear teeth; integer at least 3. Required or inherited from a face-gear parent.
 //   backing = Material below the actual root plane. Alternative to bottom or thickness. Default: nominal tooth depth.
-// !!!   face_width = Radial tooth-band width. Inherits from a face gear. Default: two axial worm-thread pitches.
-// +++   face_width = Radial tooth-band width. Inherits from a face gear. Default: three axial worm-thread pitches.
+//   face_width = Radial tooth-band width. Inherits from a face gear. Default: three axial worm-thread pitches.
 //   ---
 //   worm_root_diam = Positive nominal minimum worm-core diameter; alternative to worm_diam. Uses tooth size and clearance; does not cut a bore.
 //   mod = Normal module, shared with the worm. Inherits when omitted.
@@ -9853,8 +9852,7 @@ function worm_face_dist(worm_diam,_named,d,worm_root_diam,mod,circ_pitch,diam_pi
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Nonnegative shaft-axis separation; inherits from a face gear, otherwise calculated.
 //   gear_diam = Wheel outside diameter; inherits from a face gear, otherwise calculated.
-// !!!   face_width = Radial tooth-band width; inherits from a face gear, otherwise two axial thread pitches.
-// +++   face_width = Radial tooth-band width; inherits from a face gear, otherwise three axial thread pitches.
+//   face_width = Radial tooth-band width; inherits from a face gear, otherwise three axial thread pitches.
 //   worm_starts = Worm start count. Default: inherited or 1.
 //   pressure_angle = Matching scalar or ordered pressure-angle pair. Default: inherited or 20.
 //   left_handed = Worm handedness. Default: inherited or false.
@@ -9971,8 +9969,7 @@ function worm_face_gear_radius_bound(teeth,worm_diam,_named,mod,circ_pitch,diam_
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Distance between shaft axes; inherits from a face gear or is computed.
 //   gear_diam = Matching outside diameter; inherits from a face gear or is computed.
-// !!!   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
-// +++   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
+//   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
 //   backlash = Matching wheel tooth thinning. Default: inherited from a face gear or $backlash.
 //   min_tip = Matching minimum tip chord. Default: inherited from a face gear or 0.4*module.
 //   worm_starts = Number of worm starts. Default: inherited or 1.
@@ -10023,8 +10020,7 @@ function worm_face_gear_worm_pos(teeth,worm_diam,_named,mod,circ_pitch,diam_pitc
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Distance between shaft axes; inherits from a face gear or is computed.
 //   gear_diam = Matching outside diameter; inherits from a face gear or is computed.
-// !!!   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
-// +++   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
+//   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
 //   backlash = Matching wheel tooth thinning. Default: inherited from a face gear or $backlash.
 //   min_tip = Matching minimum tip chord. Default: inherited from a face gear or 0.4*module.
 //   worm_starts = Number of worm starts. Default: inherited or 1.
