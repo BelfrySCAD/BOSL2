@@ -1162,3 +1162,203 @@ module test_nurbs_cut_param_list_too_short_errors() {
 }
 test_nurbs_cut_param_list_too_short_errors();
 '''
+
+[[test]]
+name = "test_nurbs_elevate_degree"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+// A line elevated twice is the same line, with the expected cubic controls.
+line = nurbs_elevate_degree([[0,0],[3,6]],1,times=2);
+assert_equal(line[1],3);
+assert_approx(line[2],[[0,0],[1,2],[2,4],[3,6]]);
+params = ["clamped",2,[[0,0],[1,2],[3,1],[4,0]],undef,undef,undef];
+assert_equal(nurbs_elevate_degree(params,times=0),params);
+u = [0,.07,.25,.5,.8,1];
+for(kind=["clamped","open"]) {
+    control = [[0,0],[1,3],[2,-1],[4,2],[5,0]];
+    elevated = nurbs_elevate_degree(control,2,type=kind,times=2);
+    assert_equal(elevated[1],4);
+    assert(approx(nurbs_curve(elevated,u=u),nurbs_curve(control,2,type=kind,u=u),1e-7));
+}
+// Rational quarter circle: elevation must preserve both shape and derivatives.
+circle = ["clamped",2,[[1,0],[1,1],[0,1]],undef,undef,[1,sqrt(.5),1]];
+high = nurbs_elevate_degree(circle,times=2);
+assert_equal(high[1],4);
+assert_equal(len(high[5]),len(high[2]));
+for(p=nurbs_curve(high,u=u)) assert(approx(norm(p),1,1e-8));
+assert(approx(nurbs_curve(high,u=u),nurbs_curve(circle,u=u),1e-8));
+assert(approx(nurbs_curve(high,u=u,deriv=1),nurbs_curve(circle,u=u,deriv=1),1e-7));
+// An irregular open knot vector and nonuniform weights also retain the domain.
+open_rational = ["open",2,[[0,0],[1,3],[2,-1],[4,2],[5,0]],
+                 [-2,-1,0,.2,.7,1,2,4],undef,[1,2,1,.5,1]];
+for(times=[1,2,3]) {
+    elevated = nurbs_elevate_degree(open_rational,times=times);
+    assert(approx(nurbs_curve(elevated,u=u),nurbs_curve(open_rational,u=u),1e-7));
+    assert(approx(nurbs_curve(elevated,u=u,deriv=1),nurbs_curve(open_rational,u=u,deriv=1),1e-7));
+}
+'''
+
+[[test]]
+name = "test_nurbs_elevate_degree_closed_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_elevate_degree([[0,0],[1,0],[1,1],[0,1]],2,type="closed"));
+'''
+
+[[test]]
+name = "test_nurbs_interp"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+points = [[0,0],[1,2],[3,-1],[5,3],[7,0]];
+for(method=["length","centripetal","dynamic","foley","fang"]) {
+    curve = nurbs_interp(points,3,method=method);
+    assert_equal(curve[0],"clamped");
+    assert_equal(curve[1],3);
+    assert(approx(nurbs_curve(curve,u=curve[6]),points,1e-7));
+}
+constrained = nurbs_interp(points,3,start_deriv=[1,0],end_deriv=[0,-1]);
+assert(approx(nurbs_curve(constrained,u=constrained[6]),points,1e-7));
+assert(approx(nurbs_curve(constrained,u=0,deriv=1),path_length(points)*[1,0],1e-7));
+assert(approx(nurbs_curve(constrained,u=1,deriv=1),path_length(points)*[0,-1],1e-7));
+loop = [[0,0],[2,0],[3,1],[2,3],[0,2],[-1,1]];
+closed = nurbs_interp(loop,3,closed=true);
+assert(approx(nurbs_curve(closed,u=closed[6]),loop,1e-7));
+assert(approx(nurbs_curve(closed,u=0),nurbs_curve(closed,u=1),1e-7));
+assert(approx(nurbs_curve(closed,u=0,deriv=1),nurbs_curve(closed,u=1,deriv=1),1e-6));
+corner = nurbs_interp([[0,0],[1,0],[1,1]],2,corners=[1]);
+assert(approx(nurbs_curve(corner,u=corner[6]),[[0,0],[1,0],[1,1]],1e-7));
+assert(approx(unit(nurbs_curve(corner,u=corner[6][1]-.001,deriv=1)),[1,0],1e-7));
+assert(approx(unit(nurbs_curve(corner,u=corner[6][1]+.001,deriv=1)),[0,1],1e-7));
+'''
+
+[[test]]
+name = "test_nurbs_interp_duplicate_points_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_interp([[0,0],[1,0],[1,0],[2,1]],3));
+'''
+
+[[test]]
+name = "test_nurbs_interp_surface"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+grid = [for(i=[0:3]) [for(j=[0:4]) [2*i,3*j,.2*i*j]]];
+surface = nurbs_interp_surface(grid,[2,3]);
+assert_equal(surface[1],[2,3]);
+assert(approx(nurbs_patch_points(surface,u=surface[6][0],v=surface[6][1]),grid,1e-7));
+plane = [for(i=[0:3]) [for(j=[0:3]) [i,j,2*i-j+4]]];
+flat = nurbs_interp_surface(plane,3);
+for(row=nurbs_patch_points(flat,splinesteps=3),p=row)
+    assert(approx(p.z,2*p.x-p.y+4,1e-7));
+// Periodic columns must interpolate the original grid and join at the seam.
+tube = [for(z=[0:2]) [for(a=[0:60:300]) [cos(a),sin(a),z]]];
+wrapped = nurbs_interp_surface(tube,2,col_wrap=true);
+assert(approx(nurbs_patch_points(wrapped,u=wrapped[6][0],v=wrapped[6][1]),tube,1e-7));
+assert(approx(nurbs_patch_points(wrapped,u=[0,.4,1],v=0),
+              nurbs_patch_points(wrapped,u=[0,.4,1],v=1),1e-7));
+for(extra=[0,2]) {
+    cols = nurbs_interp_surface(tube,2,col_wrap=true,extra_pts=[0,extra]);
+    rows = nurbs_interp_surface(transpose(tube),2,row_wrap=true,extra_pts=[extra,0]);
+    assert(approx(nurbs_patch_points(cols,u=cols[6][0],v=cols[6][1]),tube,1e-7));
+    assert(approx(nurbs_patch_points(rows,u=rows[6][0],v=rows[6][1]),transpose(tube),1e-7));
+}
+torus = [for(a=[0:90:270]) [for(b=[0:60:300])
+    [(3+cos(b))*cos(a),(3+cos(b))*sin(a),sin(b)]]];
+closed = nurbs_interp_surface(torus,2,row_wrap=true,col_wrap=true);
+assert(approx(nurbs_patch_points(closed,u=closed[6][0],v=closed[6][1]),torus,1e-7));
+'''
+
+[[test]]
+name = "test_nurbs_interp_surface_invalid_degree_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_interp_surface([[[0,0,0],[1,0,0]],[[0,1,0],[1,1,0]]],0));
+'''
+
+[[test]]
+name = "test_nurbs_normals"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+plane = [for(i=[0:1]) [for(j=[0:1]) [2*i,3*j,i+2*j]]];
+normal = unit([-3,-4,6]);
+assert(approx(nurbs_normals(plane,1,u=.3,v=.7),normal,1e-8));
+normals = nurbs_normals(plane,1,splinesteps=[2,3]);
+assert_equal([len(normals),len(normals[0])],[3,4]);
+for(row=normals,n=row) assert(approx(n,normal,1e-8));
+assert(approx(nurbs_normals(plane,1,u=.3,v=.7,two_sided=true),[normal],1e-8));
+assert(approx(nurbs_normals(plane,1,u=.3,v=.7,weights=[[1,2],[3,4]]),normal,1e-8));
+fold = [for(i=[0:2]) [for(j=[0:1]) [i,j,i==1?1:0]]];
+assert(is_nan(nurbs_normals(fold,1,u=.5,v=.4)));
+sectors = nurbs_normals(fold,1,u=.5,v=.4,two_sided=true);
+assert(approx(sectors,[[unit([-1,0,1]),unit([-1,0,1])],
+                       [unit([1,0,1]),unit([1,0,1])]],1e-8));
+degenerate = repeat(repeat([0,0,0],2),2);
+assert(is_nan(nurbs_normals(degenerate,1,u=.5,v=.5)));
+'''
+
+[[test]]
+name = "test_nurbs_normals_incomplete_uv_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_normals([[[0,0,0],[1,0,0]],[[0,1,0],[1,1,0]]],1,u=.5));
+'''
+
+[[test]]
+name = "test_nurbs_sheet"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+// Patch winding has exterior toward Z-, so offsets [-.5,.5] bound this box.
+plane = [for(i=[0:1]) [for(j=[0:1]) [3*i,2*j,0]]];
+params = [["clamped","clamped"],[1,1],plane,[undef,undef],[undef,undef],undef];
+for(edge=["sharp","chamfer","round"]) {
+    sheet = nurbs_sheet([-.5,.5],plane,1,splinesteps=2,edge=edge);
+    assert(is_vnf(sheet));
+    assert(approx(pointlist_bounds(sheet[0]),[[0,0,-.5],[3,2,.5]],1e-8));
+    assert(approx(vnf_volume(sheet),6,1e-7));
+    assert(approx(vnf_volume(nurbs_sheet([.5,-.5],params,splinesteps=2,edge=edge)),6,1e-7));
+}
+// Exercise the crease joins; all three modes must produce a closed shell.
+fold = [for(i=[0:2]) [for(j=[0:1]) [i,j,i==1?.3:0]]];
+for(edge=["sharp","chamfer","round"]) {
+    sheet = nurbs_sheet([0,.05],fold,1,splinesteps=2,edge=edge,$fn=8);
+    assert(is_vnf(sheet));
+    assert(vnf_volume(sheet)>0);
+    assert(vnf_volume(sheet)>.09 && vnf_volume(sheet)<.12);
+}
+'''
+
+[[test]]
+name = "test_nurbs_sheet_equal_offsets_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_sheet([1,1],[[[0,0,0],[1,0,0]],[[0,1,0],[1,1,0]]],1));
+'''
+
+[[test]]
+name = "test_nurbs_sheet_degenerate_patch_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+echo(nurbs_sheet([0,.1],repeat(repeat([0,0,0],2),2),1));
+'''

@@ -2651,6 +2651,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 //   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
 //   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  If no tag is set
 //   then `edge_mask` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
+//   Other parent geometries, including tapered or shifted prismoids, are not supported.
 //   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
 // Figure: A Typical Edge Rounding Mask
@@ -2668,7 +2669,8 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //   `$idx` is set to the index number of each edge.
 //   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$parent_size` is set to the size of the parent object.
+//   `$edge_angle` is set to the inner angle of the current edge.
+//   `$edge_length` is set to the length of the current edge.
 // Example:
 //   diff()
 //   cube([50,60,70],center=true)
@@ -2694,8 +2696,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         $attach_anchor = anch;
         rotang =
             vec.z<0? [90,0,180+v_theta(vec)] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            vec.z==0? 135+v_theta(vec) :
             [-90,0,180+v_theta(vec)];
         translate(anch[1]) rot(rotang)
            default_tag("remove") children();

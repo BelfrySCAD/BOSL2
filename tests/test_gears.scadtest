@@ -313,7 +313,7 @@ include <../gears.scad>
 
 module test_crown_gear() {
     $fn = 8;
-    v = crown_gear(mod=2, teeth=20, backing=3, face_width=5);
+    v = crown_gear(mod=2, teeth=20, mate_teeth=9, backing=3, face_width=5);
     assert(is_vnf(v));
     assert(len(v[0]) > 0);
 }
@@ -564,4 +564,265 @@ module test_globoid_worm_gear_radius_bound() {
                   globoid_worm_gear_radius_bound(mod=m, teeth=N, thickness=t, d=d, starts=s, length=Lmax));
 }
 test_globoid_worm_gear_radius_bound();
+'''
+
+[[test]]
+name = "test_globoid_worm_pressure_angle_limit"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+limit = globoid_worm_pressure_angle_limit(.1,mod=2,teeth=20,worm_diam=16,clearance=.5);
+assert(is_finite(limit) && limit>40 && limit<50);
+// A uniform change of length units must not change the angular limit.
+assert_approx(globoid_worm_pressure_angle_limit(.1,mod=6,teeth=20,worm_diam=48,clearance=1.5),limit);
+assert_approx(globoid_worm_pressure_angle_limit(.1,circ_pitch=2*PI,mate_teeth=20,d=16,starts=1,clearance=.5),limit);
+assert_approx(globoid_worm_pressure_angle_limit(.1,mod=2,teeth=20,worm_root_diam=11,clearance=.5),limit);
+assert(globoid_worm_pressure_angle_limit(.1,mod=2,teeth=20,worm_diam=16,clearance=.2)>limit);
+assert(globoid_worm_pressure_angle_limit(20,mod=2,teeth=20,worm_diam=16,clearance=.5)<limit);
+assert(is_undef(globoid_worm_pressure_angle_limit(89,mod=2,teeth=20,worm_diam=16)));
+multi = globoid_worm_pressure_angle_limit(.1,mod=2,teeth=20,worm_diam=16,worm_starts=3);
+assert(is_finite(multi) && multi>0 && multi<90);
+'''
+
+[[test]]
+name = "test_globoid_worm_pressure_angle_limit_invalid_angle_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(globoid_worm_pressure_angle_limit(0,mod=2,teeth=20,worm_diam=16));
+'''
+
+[[test]]
+name = "test_worm_face_dist"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+assert_equal(worm_face_dist(20),10);
+assert_equal(worm_face_dist(d=20),10);
+assert_equal(worm_face_dist(worm_root_diam=15,mod=2),10);
+assert_equal(worm_face_dist(worm_root_diam=15,mod=2,clearance=1),10.5);
+let($parent_gear_worm_diam=30) {
+    assert_equal(worm_face_dist(),15);
+    assert_equal(worm_face_dist(20),10);
+    assert_equal(worm_face_dist(worm_root_diam=15,mod=2),10);
+}
+'''
+
+[[test]]
+name = "test_worm_face_dist_conflicting_diameters_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(worm_face_dist(worm_diam=20,worm_root_diam=15,mod=2));
+'''
+
+[[test]]
+name = "test_worm_face_gear_info"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+auto = worm_face_gear_info(40,20,mod=2);
+d = struct_val(auto,"gear_diam");
+e = struct_val(auto,"shaft_offset");
+w = struct_val(auto,"face_width");
+assert_approx(w,3*2*PI/sqrt(1-pow(2/20,2)));
+assert(d>2*w && e>=0);
+assert_approx(struct_val(auto,"band_radius"),d/2-w/2);
+assert_approx(struct_val(auto,"worm_pos"),struct_val(auto,"mesh_center"));
+assert_approx(mean(struct_val(auto,"thread_span")),0);
+assert(struct_val(auto,"overlap")>=1.5);
+reused = worm_face_gear_info(40,20,mod=2,gear_diam=d,shaft_offset=e,face_width=w);
+for(key=["gear_diam","shaft_offset","face_width","worm_pos","worm_spin","thread_span"])
+    assert_approx(struct_val(reused,key),struct_val(auto,key));
+rotated = worm_face_gear_info(40,20,mod=2,gear_diam=d,shaft_offset=e,face_width=w,angle=135,shift=3);
+assert_approx(struct_val(rotated,"worm_pos"),zrot(45,p=struct_val(auto,"worm_pos")+[3,0,0]));
+assert_approx(struct_val(rotated,"mesh_center"),zrot(45,p=struct_val(auto,"mesh_center")));
+assert_approx(struct_val(rotated,"thread_span"),struct_val(auto,"thread_span")-[3,3]);
+// An explicit width overrides the default, and inherits only from a face gear.
+explicit=worm_face_gear_info(40,20,mod=2,shaft_offset=35,face_width=8);
+assert_equal(struct_val(explicit,"face_width"),8);
+'''
+
+[[test]]
+name = "test_worm_face_gear"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+$gear_steps=4;
+mesh = worm_face_gear(40,3,8,mod=2,worm_diam=20,shaft_offset=35,slices=2,search_steps=8);
+assert(is_vnf(mesh));
+assert(len(mesh[0])>0 && len(mesh[1])>0);
+assert(vnf_volume(mesh)>0);
+// Every edge must occur twice, with opposite winding, in the closed VNF.
+nv=len(mesh[0]);
+edges=sort([for(f=mesh[1],i=[0:len(f)-1])
+    let(a=f[i],b=f[(i+1)%len(f)]) 2*(min(a,b)*nv+max(a,b))+(a>b?1:0)]);
+assert(len(edges)%2==0);
+for(i=[0:2:len(edges)-2]) assert_equal(edges[i+1],edges[i]+1);
+bound = worm_face_gear_radius_bound(40,20,mod=2,shaft_offset=35,face_width=8);
+assert_approx(max([for(p=mesh[0]) norm([p.x,p.y])]),bound);
+assert_approx(min(column(mesh[0],2)),-5.5);
+assert(max(column(mesh[0],2))<=2+1e-8);
+left = worm_face_gear(40,3,8,mod=2,worm_diam=20,shaft_offset=35,slices=2,search_steps=8,left_handed=true);
+assert_approx(vnf_volume(left),vnf_volume(mesh));
+assert_approx(left[0],xflip(p=mesh[0]));
+turned = worm_face_gear(40,3,8,mod=2,worm_diam=20,shaft_offset=35,slices=2,search_steps=8,gear_spin=17);
+assert_approx(turned[0],zrot(17,p=mesh[0]));
+'''
+
+[[test]]
+name = "test_worm_face_gear_invalid_sampling_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(worm_face_gear(40,mod=2,worm_diam=20,shaft_offset=35,face_width=8,slices=1));
+'''
+
+[[test]]
+name = "test_worm_face_gear_radius_bound"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+info = worm_face_gear_info(40,20,mod=2,shaft_offset=35,face_width=8);
+d = struct_val(info,"gear_diam");
+r = worm_face_gear_radius_bound(40,20,mod=2,shaft_offset=35,face_width=8);
+assert_approx(r,d/2);
+assert_approx(worm_face_gear_radius_bound(40,20,mod=2,shaft_offset=35,gear_diam=d,face_width=8),d/2);
+assert_approx(worm_face_gear_radius_bound(40,mod=2,worm_root_diam=15,shaft_offset=35,face_width=8),r);
+assert_approx(worm_face_gear_radius_bound(40,40,mod=4,shaft_offset=70,face_width=16),2*r);
+'''
+
+[[test]]
+name = "test_worm_face_gear_worm_pos"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+right = worm_face_gear_worm_pos(40,20,mod=2,shaft_offset=35,face_width=8);
+left = worm_face_gear_worm_pos(40,20,mod=2,shaft_offset=35,face_width=8,left_handed=true);
+assert(right.x>0);
+assert_approx([right.y,right.z],[35,10]);
+assert_approx(left,[-right.x,right.y,right.z]);
+assert_approx(worm_face_gear_worm_pos(40,20,mod=2,shaft_offset=35,face_width=8,shift=3),right+[3,0,0]);
+assert_approx(worm_face_gear_worm_pos(40,20,mod=2,shaft_offset=35,face_width=8,shift=3,left_handed=true),left+[3,0,0]);
+assert_approx(worm_face_gear_worm_pos(40,40,mod=4,shaft_offset=70,face_width=16),2*right);
+'''
+
+[[test]]
+name = "test_worm_face_gear_worm_spin"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+// Compare modulo one thread period: the helper returns a reduced rotation.
+function phase_error(a,b,period) = let(x=a-b) x-period*round(x/period);
+function phase(lh,s,angle=90,gear_spin=0,shift=0) =
+    worm_face_gear_worm_spin(40,20,mod=2,worm_starts=s,left_handed=lh,
+        pressure_angle=[35,10],face_width=18,
+        angle=angle,gear_spin=gear_spin,shift=shift);
+for(lh=[false,true],s=[1,2]) {
+    q=lh?-1:1;
+    base=phase(lh,s);
+    period=360/s;
+    pitch=2*PI/sqrt(1-pow(s*2/20,2));
+    assert(abs(base)<=period/2+1e-8);
+    assert_approx(phase_error(phase(lh,s,gear_spin=1),base+q*40/s,period),0);
+    assert_approx(phase_error(phase(lh,s,angle=91),base-q*40/s,period),0);
+    assert_approx(phase_error(phase(lh,s,shift=pitch/4),base+q*90/s,period),0);
+    assert_approx(phase_error(phase(lh,s,shift=pitch),base,period),0);
+}
+'''
+
+[[test]]
+name = "test_worm_face_gear_info_invalid_diameter_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(worm_face_gear_info(40,20,mod=2,gear_diam=10,face_width=8));
+'''
+
+[[test]]
+name = "test_stepped_planetary"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+function phase_error(a) = a-360*round(a/360);
+module check_design(d,n,h1=0,h2=0) {
+    s=d[0][1]; r=d[1][1]; p=d[2][1][0]; q=d[2][1][1];
+    m=d[4][1]; xs=d[0][2]; xr=d[1][2]; xp=d[2][2];
+    angles=d[2][5]; centers=d[2][4]; spins=d[2][3];
+    a1=gear_dist(s,p,mod=m[0],helical=h1,profile_shift1=xs,profile_shift2=xp[0]);
+    a2=gear_dist(r,q,mod=m[1],helical=h2,profile_shift1=xr,profile_shift2=xp[1],internal1=true);
+    assert(approx(a1,a2,1e-7));
+    assert_equal([len(angles),len(centers),len(spins)],[n,n,n]);
+    assert(min([s,p,q])>=8 && min([s,p,q,r])>0 && max([s,p,q,r])<=40);
+    for(i=[0:n-1]) {
+        assert(approx(centers[i],a1*[cos(angles[i]),sin(angles[i])],1e-7));
+        // Independent tooth-phase congruences for both meshes. Each compound
+        // has one common rotation; a wrong tooth index can pass only one layer.
+        assert(approx(phase_error(s*(d[0][3]-angles[i])+p*(spins[i]-angles[i])-90*(p-s)-180),0,1e-6));
+        assert(approx(phase_error(r*(d[1][3]-angles[i])-q*(spins[i]-angles[i])-90*(q-r)),0,1e-6));
+    }
+}
+base=stepped_planetary(4,40,mod1=1,sun_carrier=6,uniform=true,exact=true);
+moving=stepped_planetary(4,40,mod1=1,sun_carrier=6,uniform=true,exact=true,gear_spin=137);
+check_design(base,4);
+check_design(moving,4);
+assert_approx(base[3][1],6);
+assert_equal(base[4][1][0],1);
+assert(base[4][1][1]>=.5 && base[4][1][1]<=2);
+assert_approx(base[2][5],[0,90,180,270]);
+assert_approx(moving[2][5]-base[2][5],repeat(137/6,4));
+assert_approx(moving[0][3]-base[0][3],137);
+assert_approx(moving[1][3]-base[1][3],0);
+fixed=stepped_planetary(3,40,mod=1,sun_carrier=4,exact=true);
+check_design(fixed,3);
+assert_equal(fixed[4][1],[1,1]);
+assert_approx(fixed[3][1],4);
+other=stepped_planetary(3,40,mod2=1,sun_carrier=4.5,exact=true,helical1=20,helical2=-15);
+check_design(other,3,20,-15);
+assert_equal(other[4][1][1],1);
+assert_approx(other[3][1],4.5);
+interval=stepped_planetary(3,24,mod1=1,sun_carrier=[4,6],optimize="diameter");
+check_design(interval,3);
+assert(interval[3][1]>=4 && interval[3][1]<=6);
+alias=stepped_planetary(4,40,circ_pitch1=PI,sun_carrier=6,uniform=true,exact=true);
+assert_approx(alias,base);
+'''
+
+[[test]]
+name = "test_stepped_planetary_conflicting_sizes_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(stepped_planetary(3,20,mod=1,mod1=1,sun_carrier=4));
+'''
+
+[[test]]
+name = "test_stepped_planetary_exact_interval_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(stepped_planetary(3,20,mod=1,sun_carrier=[3,4],exact=true));
+'''
+
+[[test]]
+name = "test_stepped_planetary_no_feasible_diameter_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+echo(stepped_planetary(3,16,mod1=1,sun_carrier=4,max_diam=.1));
 '''
