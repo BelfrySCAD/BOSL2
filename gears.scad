@@ -7670,9 +7670,9 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //                                            helical=20,profile_shift=0,backlash=.1,slices=20)
 //                       attach_gear(-25,shift=3)
 //                           recolor("gold") spur_gear(teeth=36,helical=-20,profile_shift=0,backlash=.1,slices=24);
-// Example(3D,NoAxes,Med,VPR=[90.00,0.00,0.00],VPD=1036.38,VPT=[-15.51,37.07,1.21]): The left hand image shows a worm face gear attached with `worm_face_pos=LEFT` and the right hand image shows `worm_face_pos=RIGHT` (the default). 
-//   xcopies(n=2,spacing=300)   
-//      worm(mod=3,worm_diam=45,worm_length=75)
+// Example(3D,NoAxes,Med,VPR=[90.00,0.00,0.00],VPD=1150,VPT=[-15.51,37.07,1.21]): The left hand image shows a worm face gear attached with `worm_face_pos=LEFT` and the right hand image shows `worm_face_pos=RIGHT` (the default). 
+//   xcopies(n=2,spacing=330)   
+//      worm(mod=3,worm_diam=45,worm_length=85)
 //          attach_gear(dir=BACK,worm_face_pos=$idx ? LEFT:RIGHT)
 //              worm_face_gear(teeth=47,shaft_offset=58);
 // Example(3D,Med,Anim,FrameMS=60,Frames=90,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
