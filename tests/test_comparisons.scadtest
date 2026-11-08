@@ -655,3 +655,38 @@ module test_close_path() {
 }
 test_close_path();
 '''
+
+[[test]]
+name = "test_list_largest"
+script = '''
+include <../std.scad>
+
+// Output order is unspecified, but duplicates must retain their multiplicity.
+assert_equal(list_largest([],0), []);
+assert_equal(list_largest([9],0), []);
+assert_equal(list_largest([9],1), [9]);
+assert_equal(sort(list_largest([3,-2,7,7,1,0],3)), [3,7,7]);
+assert_equal(sort(list_largest([5,5,5,5],2)), [5,5]);
+assert_equal(sort(list_largest(["b","d","a","d","c"],3)), ["c","d","d"]);
+values = [for(i=[0:39]) (i*17)%13-6];
+ordered = sort(values);
+for(k=[0:len(values)])
+    assert_equal(sort(list_largest(values,k)),
+                 k==0 ? [] : [for(i=[len(values)-k:len(values)-1]) ordered[i]]);
+'''
+
+[[test]]
+name = "test_list_largest_excess_count_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+echo(list_largest([1,2],3));
+'''
+
+[[test]]
+name = "test_list_largest_fractional_count_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+echo(list_largest([1,2],1.5));
+'''
