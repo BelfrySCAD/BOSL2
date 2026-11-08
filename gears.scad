@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 // LibFile: gears.scad
-//   Provides involute spur gears, ring gears crown face gears and racks, with the option to
+//   Provides involute spur gears, ring gears, crown face gears, and racks, with the option to
 //   create helical and herringbone forms.  Provides octoid bevel gears and enveloping and
 //   globoid (double enveloping) worm drives; the globoid worm can be constructed with asymmetric
 //   teeth for easier printing.
@@ -786,11 +786,11 @@ function _gear_worm_starts(starts,worm_starts) =
 //   of a crown gear affects tooth height: toward the outer edge, min_tip may require shorter teeth.
 //   A very wide face may add little useful contact area once the outer teeth have been shortened.
 // Subsection: Worm Face Drive
-//   A worm face drive combines a cylindrical worm with a worm face gear that looks similar to the crown face gear, except is has spiral teeth.
-//   It meshes with a worm that whose shaft is parallel to the face and offset to one side of the face gear axis.
+//   A worm face drive combines a cylindrical worm with a worm face gear that looks similar to the crown face gear, except it has spiral teeth.
+//   It meshes with a worm whose shaft is parallel to the face and offset to one side of the face gear axis.
 //   As with a standard worm drive, one worm revolution advances the mated gear by one tooth per worm start,
 //   so the reduction ratio is the face gear's tooth count divided by the worm start count.
-//   Cylindrical worm face drives are often refered to by the trade name Helicon.  The Spiroid is a related
+//   Cylindrical worm face drives are often referred to by the trade name Helicon.  The Spiroid is a related
 //   trade named gear form where a tapered worm engages a beveled gear.  [Comparison](https://www.spiroidgearing.com/products/spiroid/spiroid-and-helicon-comparison/).
 // Figure(3D,Med,NoAxes): A cylindrical worm meshes with vertical spiral teeth on the face of an offset wheel.
 //   worm_face_gear(mod=2, teeth=40, worm_diam=20, shaft_offset=35,
@@ -803,10 +803,11 @@ function _gear_worm_starts(starts,worm_starts) =
 //   Like other worm drives, the contact involves substantial sliding, so friction, lubrication, material
 //   choice and wear matter. 
 //   .
-//   The shaft offset is the distance between the axis of the worm and the axis of the worm face gear.  
-//   Changing this offset changes the radius of the worm: the teeth angles change, and the size
-//   required to fit in a specified teeth count changes as a result.  
-//   The face gear diameter will be larger when the shaft offset is smaller, which requires teeth that are closer to the tangent direction on the gear face.  
+//   The shaft offset is the distance between the axis of the worm and the axis of the worm face gear.
+//   If the tooth count and mating worm are fixed then the shaft offset and the worm face gear diameter
+//   together determine the angle of the teeth.  If you choose only one of these values and let the library
+//   select the other you will get an optimized tooth form.  Typically 
+//   The face gear diameter will be larger when the shaft offset is smaller, as this requires teeth that are closer to the tangent direction on the gear face.  
 // Figure(3D,Med,NoAxes,VPR=[0.00,0.00,0.00],VPD=755.52,VPT=[-22.66,0.81,-15.03]): These worm drives differ only in their shaft offset parameter:
 //   xdistribute(spacing=205){
 //      worm_face_gear(mod=2, teeth=40, worm_diam=20, shaft_offset=10,
@@ -819,7 +820,7 @@ function _gear_worm_starts(starts,worm_starts) =
 // Continues:
 //   You can slide the worm along its axis without changing its engagement until you run out of worm length.
 //   Its height above the worm face gear is provided by {{worm_face_dist()}}.  The library supports asymmetric pressure
-//   angles. Helicon gears are commonly with a small angle like 10 degrees on the drive side and a large
+//   angles. Helicon gears commonly use a small angle like 10 degrees on the drive side and a large
 //   angle like 35 degrees on the coast side.
 // Section: Backlash (Fitting Real Gears Together)
 //   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
@@ -2892,9 +2893,9 @@ function _crown_geom(P,body) =
 //   .
 //   The `min_tip=` parameter sets the minimum tooth tip width to avoid sharp teeth, and
 //   `mesh_tol=`, which defaults to `mod/100`, controls the mesh quality, with smaller values giving a finer mesh.
-//   The `slices=` parameters sets a minimum number of radial slices, and `$gear_steps` 
+//   The `slices=` parameter sets a minimum number of radial slices, and `$gear_steps` 
 //   controls the generating tooth profile.  The `search_steps` parameter controls the number of search steps used for internal
-//   estimation and should usually be left at its default. Normally leave `slices` and `$gear_steps` at their defaults and adjust only `mesh_tol` to adjust
+//   estimation and should usually be left at its default unless you suspect convergence issues. Normally leave `slices` and `$gear_steps` at their defaults and adjust only `mesh_tol` to adjust
 //   the mesh refinement.  
 //   .
 //   The module `crown_gear()` gives a crown gear in the XY plane, centered on the origin, with one tooth
@@ -2925,7 +2926,7 @@ function _crown_geom(P,body) =
 //   min_tip = Minimum width of tooth tips.  Default: 0.4*module.
 //   mesh_tol = Mesh tolerance in model units.  Default: module/100
 //   $gear_steps = Resolution of the generating spur gear.  Default: 16
-//   search_steps = Number of search intervals used to internally, at least 8. Adjust only when investigating numerical issues.  Default: 16.
+//   search_steps = Number of search intervals used internally, at least 8. Adjust only when investigating numerical issues.  Default: 16.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -4227,7 +4228,7 @@ function _wfg_finish_layout(F,e,r,fw,c,ba,nt,fixed,n=30) =
        _wfg_finish_layout(F,e,r+.02*F[0],fw,c,ba,nt,false,n-1);
 
 function _wfg_resolve(F,shaft_offset,gear_diam,face_width,clearance,backlash,min_tip) =
-    let(m=F[0],fw=default(face_width,2*F[5]),c=default(clearance,m/4),nt=default(min_tip,.4*m))
+    let(m=F[0],fw=default(face_width,3*F[5]),c=default(clearance,m/4),nt=default(min_tip,.4*m))
     assert(is_undef(shaft_offset) || (is_finite(shaft_offset) && shaft_offset>=0),
            "\nshaft_offset must be nonnegative and finite")
     assert(is_finite(fw) && fw>0,"\nface_width must be positive and finite")
@@ -4286,21 +4287,20 @@ function _wfg_geom(P,body) =
 // Topics: Gears, Parts
 // See Also: worm(), attach_gear(), worm_face_dist(), worm_face_gear_radius_bound(), worm_face_gear_worm_pos(), worm_face_gear_worm_spin()
 // Usage: As a Function
-//    vnf = worm_face_gear(teeth, [backing], [face_width], mod=|circ_pitch=|diam_pitch=, worm_diam=, shaft_offset=, [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]);
 //    vnf = worm_face_gear(teeth, [backing], [face_width], mod=|circ_pitch=|diam_pitch=, worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]);
 // Usage: As a Module
 //   worm_face_gear(teeth, [backing], [face_width], mod=|circ_pitch=|diam_pitch=, worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [shaft_diam=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a face gear for the existing cylindrical {{worm()}} on perpendicular, offset shafts.
-//   See [Worm Face Drives](gears.scad#subsection-worm-face-drives) for an overview.
+//   See [Worm Face Drives](gears.scad#subsection-worm-face-drive) for an overview.
 //   Tooth size, worm diameter, worm starts and handedness must match the worm.
 //   .
-//   The `face_width=` parameter gives the radial width of toothed portion of the worm, and
+//   The `face_width=` parameter gives the radial width of toothed portion of the worm face gear, and
 //   `shaft_offset=` specifies the offset between the worm shaft and the worm face gear shaft.
 //   You can combine this with `gear_diam` which specifies the diameter of the gear, but you
 //   may want to allow automatic selection of one parameter because automatic selection
 //   makes a choice based on tooth quality metrics including tooth height, tooth thickness and thread overlap.  
-//   If give only `gear_diam=` then the shaft offset is calculated to optimize the tooth quality.
+//   If you give only `gear_diam=` then the shaft offset is calculated to optimize the tooth quality.
 //   If you give only `shaft_offset=` then the smallest acceptable diameter is chosen.  If you give
 //   neither parameter then the search returns a compact wheel that also meets the tooth quality criteria.
 //   If you want to manually position a worm you may use {{worm_face_gear_info()}}, which returns
@@ -4311,8 +4311,9 @@ function _wfg_geom(P,body) =
 //   In this case `pa_bot` gives the pressure angle of the tooth bottom (flank facing Z-) and `pa_top` gives the pressure
 //   angle of the top of the tooth (flank facing Z+). 
 //   Pressure angles match or may need to be reversed depending on how the worm is positioned on the worm face gear.
-//   If you use {{attach_gear()}} then `worm_face_pos=LEFT` requires reversed pressure angles.
-//   Shared values inherit from a parent worm if you omit them.
+//   If you use {{attach_gear()}} then `worm_face_pos=LEFT` requires reversed pressure angles; if you allow the pressure
+//   angle to inherit it will be correctly reversed as needed, but if you supply it explicitly you must manually
+//   reverse it when required.  
 //   .
 //   The gear is constructed with teeth pointing towards Z+ and the reference pitch plane at Z=0. 
 //   A tooth is centered on Y+ at the nominal radius.
@@ -4329,7 +4330,8 @@ function _wfg_geom(P,body) =
 // Arguments:
 //   teeth = Number of face-gear teeth; integer at least 3. Required or inherited from a face-gear parent.
 //   backing = Material below the actual root plane. Alternative to bottom or thickness. Default: nominal tooth depth.
-//   face_width = Radial tooth-band width. Inherits from a face gear. Default: two axial worm-thread pitches.
+// !!!   face_width = Radial tooth-band width. Inherits from a face gear. Default: two axial worm-thread pitches.
+// +++   face_width = Radial tooth-band width. Inherits from a face gear. Default: three axial worm-thread pitches.
 //   ---
 //   worm_root_diam = Positive nominal minimum worm-core diameter; alternative to worm_diam. Uses tooth size and clearance; does not cut a bore.
 //   mod = Normal module, shared with the worm. Inherits when omitted.
@@ -6659,7 +6661,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 // Description:
 //   Calculates a stepped planetary gear assembly that exactly or approximately matches a desired transmission ratio.
 //   A stepped planetary gear assembly is like a simple planetary gear assembly but the planets are two stacked gears that rotate together.  The sun gear is in layer 1
-//   and meshes with a plent gear in layer 1; the ring gear is in layer 2 and meshes with a planet gear in layer 2.  
+//   and meshes with a planet gear in layer 1; the ring gear is in layer 2 and meshes with a planet gear in layer 2.  
 //   Like a simple planetary gear assembly, the transmission ratio depends on which element is fixed and which ones are considered the input and output shafts.
 //   The fixed element can be the ring gear, the sun gear, or the carrier (which holds the planet gears), and then you specify the desired ratio between the other two.
 //   .
@@ -6685,6 +6687,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   - ["ratio", realized_ratio]
 //   - ["mod", [mod1, mod2]]
 //   .
+//   The planets in each layer have their oun tooth count and profile shift, but the spins, positions and angles for the planets apply to both layers.
 //   The ratio constraints are always primary, either finding the exact match, the closest match, or any match in the specified interval.  
 //   Various parameters constrain the solution.  All four tooth counts are bounded by `max_teeth=`, which is a required bound.  All of the gears except
 //   the ring are constrained by the lower limit, `min_teeth=`, which defaults to 8.  The ring gear always has at least 12 teeth.
@@ -7268,7 +7271,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   For spur gears helical angles are chosen to be equal and opposite in sign, and the herringbone
 //   form inherits.  Bevel gears propagate their teeth counts and numerous parameters.  
 //   Crown face width maps to pinion thickness and vice versa. Worm-pair dimensions also
-//   propagate in the obvious fashion. For bevel gears only, profile shift inherits the negative of the parent value; other gear types
+//   propagate in the obvious fashion. For bevel gears profile shift inherits the negative of the parent value.
+//   A spur gear child of a crown gear inherits the profile shift from its parent. Other gear types
 //   do not inherit profile shift.  Settings like bore, backing, backlash, and finishing settings do not inherit.
 //   .
 //   You can use {{attach_gear()}} to attach a child gear to a parent gear in a designated location
@@ -7429,8 +7433,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //          stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
 //      }
 // Continues:
-//   A worm-face pair uses the same convention: the child's X+ points away from the parent shaft and
-//   its Y+ is parallel to the parent shaft.  A worm engages with its worm gear parent on its Y- side.
+//   A worm face gear pair uses the same convention: the child's X+ points away from the parent shaft and
+//   its Y+ is parallel to the parent shaft.  A worm engages with its worm face gear parent on its Y- side.
 // Figure(3D,Med,NoScales,VPR=[45.20,0.00,26.40],VPD=292.71,VPT=[-4.26,22.97,-28.26]):  A worm child of a worm face gear has the child worm's X+ (red) pointing away from the worm face gear shaft, with the child worm's Y+ (green) following the worm face gear shaft (in the Z+ direction)
 //   w=2; color_this("lightblue")
 //   worm_face_gear(mod=2, teeth=41, worm_diam=20, shaft_offset=35, face_width=13, backing=3)
@@ -7458,7 +7462,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //       stroke(130*[[0,0,0],[1,0,0]], endcap2="arrow2",color="red",width=w);
 //       stroke(130*[[0,0,0],[0,1,0]], endcap2="arrow2",color="green",width=w);
 //   }
-// Figure(3D,Med,NoAxes,VPR=[55.00,0.00,309.40]): With a crown gear child the Y+ axis (green) points toward the parent spur gear and the X+ axis (red) in on it's right side as seen from above the crown gear.  
+// Figure(3D,Med,NoAxes,VPR=[55.00,0.00,309.40]): With a crown gear child the Y+ axis (green) points toward the parent spur gear and the X+ axis (red) is on its right side as seen from above the crown gear.  
 //    w=3;  color_this("lightblue")
 //        spur_gear(teeth=9,mod=4)
 //           attach_gear(0,crown_pos=DOWN)
@@ -7471,7 +7475,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   For bevel gears, the child's Y+ is the projection of the parent's Z+ direction
 //   onto the plane of the bevel gear. With perpendicular shafts,
 //   its Y+ follows the parent's Z+.   The parent engagement is on Y-.
-// Figure(3D,Med,NoScales,VPR=[63.00,0.00,341.60],VPD=670.63,VPT=[85.59,73.22,48.73]): The bevel gear child has its Y+ axis (in green) defined by the projection of the parent Z+ onto the face of the child gear.   The X+ axis points up towards the teeth, and the Y+ axis is determined by the other two.  
+// Figure(3D,Med,NoScales,VPR=[63.00,0.00,341.60],VPD=670.63,VPT=[85.59,73.22,48.73]): The bevel gear child has its Y+ axis (in green) defined by the projection of the parent Z+ onto the face of the child gear.   The Z+ axis points up towards the teeth, and the X+ axis is determined by the other two.  
 //     w=3;
 //     bevel_gear(mod=4,teeth=20,mate_teeth=31,face_width=6,shaft_angle=70)
 //       attach_gear(37) bevel_gear()    {
@@ -7502,31 +7506,26 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   globoids, the teeth counts and working length.  They can be nested in either order and
 //   the child is automatically rotated 90 degrees to create the proper mesh.  The child
 //   cannot have any anchor but CENTER.  The engagement point is determined by `angle` or `dir=`.
-//   You can shift a cylindrical worm child using the `shift=` parameter.
+//   You can shift the child in a a cylindrical worm drive using the `shift=` parameter, which
+//   moves the child in the direction of the worm's shaft.  
 //   .
 //   For worm face drive in either order inheritance propagates the necessary parameters.
 //   The engagement point on the parent is determined by `angle` or `dir=`.  
-//   You can use `shift=` to shift either child in the direction of the worm's shaft.
-//   There are four positions for engagement.  To flip the worm to the lower position change
-//   to `left_handed=true`.  To control sideways position of the worm use `worm_face_pos=LEFT` or
-//   `worm_face_pos=RIGHT`.  
+//   You can use `shift=` to shift the child in the direction of the worm's shaft.
+//   A worm face gear can engage with the worm in four positions, given that the shaft offset is fixed. To flip the worm to the lower position change
+//   to `left_handed=true`.  To control sideways position of the worm use `worm_face_pos=LEFT` or `worm_face_pos=RIGHT` (the default).  
 //   .
-//   A crown gear parent uses `angle` to choose the pinion location around its toothed ring.
-//   The pinion is positioned with its top pointed radially outward.  With a spur gear parent
+//   A crown gear parent uses `angle` to choose the spur gear location around its toothed ring.
+//   The spur gear is positioned with its top face pointed radially outward.  With a spur gear parent
 //   and a crown child, `crown_pos=DOWN` or `UP` selects whether the crown center extends
 //   down toward the spur gear's Z- axis or UP towards Z+.  Crown gears require mating spur
-//   gears with zero helical angle.  A pinion child inherits its thickness from
-//   the crown face; a child crown inherits its face width from the pinion's thickness.  
-//   The spur gear is always centered on the face width of the crown gear.
-//   A crown parent supplies its mated spur gear tooth count, profile shift and root clearance 
-//   to a spur gear child. A crown child inherits these from its spur parent. Explicit values must match.
-//   .
-//   For a worm-face pair, `pos=` selects the point along the worm's shaft
-//   that aligns with the midpoint of the working span on the face gear, where `pos=0` is the center of the worm. 
-//   With a face-gear parent, angle selects the direction of the shaft offset.
+//   gears with zero helical angle.  A spur gear child inherits its thickness from
+//   the crown face; a child crown inherits its face width from the spur gear's thickness.  
+//   The spur gear is centered on the face width of the crown gear by default.  You can
+//   give `shift=` to move the child gear radially outwoard relative to the parent gear.  
 //   .
 //   Bevel gears inherit tooth counts, `shaft_angle`, `face_width`, `spiral`, and `cutter_radius`,
-//   and take opposite handedness and opposite profile sshift. Backing, bore, and body thickness are not inherited.
+//   and take opposite handedness and opposite profile shift. Backing, bore, and body thickness are not inherited.
 //   The `angle` parameter to `attach_gear()` selects the position where the gears mate;
 //   the `drive_angle` and `shaft_angle` parameters specify the angle between the shafts of
 //   the two bevel gears.  A bevel child accepts only the default "pitchbase" anchor. 
@@ -7544,7 +7543,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   the position.
 //   .
 //   Several variables starting with `$gear` are provided inside the child gear that you
-//   create using `gear_attach()`.  The `$gear_contact_dir` and `$gear_contact_angle`
+//   create using `attach_gear()`.  The `$gear_contact_dir` and `$gear_contact_angle`
 //   variables give the direction and angle to the nominal engagement point 
 //   to the parent in the current child reference frame (which will change as the child rotates).
 //   For external spur pairs it points toward the parent shaft.  For a pinion inside a parent ring
@@ -7644,7 +7643,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //                   recolor("orange") spur_gear(mod=1,teeth=20,thickness=5,shaft_diam=4)
 //                       attach_gear(90)
 //                           recolor("gold") spur_gear(teeth=40,shaft_diam=4);
-// Example(3D,Big,NoScales,VPR=[80.90,0.00,306.60],VPD=237,VPD=213.38,VPT=[7.82,-32.82,-6.88]): A crossed-helical input drives a coaxial cylindrical worm and a second compound spur stage.
+// Example(3D,Big,NoScales,VPR=[80.90,0.00,306.60],VPD=237,VPT=[7.82,-32.82,-6.88]): A crossed-helical input drives a coaxial cylindrical worm and a second compound spur stage.
 //   $fn=48; $gear_steps=12;
 //   gear_spin(90*sin(360*$t))
 //   spur_gear(mod=1,teeth=24,thickness=8,helical=20,profile_shift=0,backlash=.1,slices=24)
@@ -9733,28 +9732,20 @@ function globoid_worm_gear_radius_bound(teeth,thickness,_named,worm_diam,d,worm_
 // Topics: Gears, Parts
 // See Also: globoid_worm(), globoid_worm_gear()
 // Usage:
-//   limit = globoid_worm_pressure_angle_limit(other_angle, teeth=, worm_diam=, mod=|circ_pitch=|diam_pitch=, [worm_starts=], [clearance=]);
+//   limit = globoid_worm_pressure_angle_limit(angle, teeth=, worm_diam=, mod=|circ_pitch=|diam_pitch=, [worm_starts=], [clearance=]);
 // Description:
-//   Returns the upper normal pressure angle, in degrees, for one flank of an
-//   asymmetric globoid generating profile, with the other flank fixed at other_angle.
-//   Keep the chosen angle below this limit and use the same ordered pressure-angle
-//   pair on both the worm and its mating wheel. Either member of the pair may be
-//   adjusted: the generating-profile test is symmetric under exchange of the flanks.
+//   Returns the maximum pressure angle, for one flank of an
+//   asymmetric globoid when the other flank angle is given.  
+//   Keep the chosen angle below this limit. 
 //   .
-//   This performs the same profile test used by globoid_worm() and globoid_worm_gear():
-//   both straight flank generators must reach the clearance-extended tip radius,
-//   the tip span must exceed 2% of a tooth pitch, and the root-space span must exceed
-//   2% of a tooth pitch. The 2% values are the existing geometric margins, not min_tip.
 //   Clearance reduces the available tip and root space, so pass the clearance used
 //   for the actual pair. The limit also depends on tooth count, tooth size, worm
 //   diameter and start count. It does not depend on worm length or handedness.
 //   .
 //   Returns undef if no positive angle can satisfy this profile check with the
 //   other angle fixed. In that case change the other angle, clearance or dimensions.
-//   Invalid reference dimensions still produce an error. Passing this preflight
-//   check does not replace the final min_tip, worm-length, wheel-thickness or mesh checks.
 // Arguments:
-//   other_angle = Fixed normal pressure angle of the other flank, strictly between 0 and 90 degrees.
+//   angle = Pressure angle of a tooth flank, strictly between 0 and 90 degrees.
 //   ---
 //   teeth/mate_teeth = Number of teeth on the mating wheel; integer at least 12. Inherits when available.
 //   worm_diam/d = Worm pitch diameter at the throat. Inherits when available.
@@ -9770,19 +9761,19 @@ function globoid_worm_gear_radius_bound(teeth,thickness,_named,worm_diam,d,worm_
 //   pa=[min(45,.999*limit),fixed_angle];
 //   globoid_worm(mod=m,teeth=n,d=d,starts=s,pressure_angle=pa,
 //                clearance=c,worm_length="max");
-function globoid_worm_pressure_angle_limit(other_angle,_named,teeth,mate_teeth,
+function globoid_worm_pressure_angle_limit(angle,_named,teeth,mate_teeth,
                                          worm_diam,d,worm_root_diam,mod,circ_pitch,diam_pitch,
                                          worm_starts,starts,clearance) =
     assert(is_undef(_named),"\nToo many positional arguments (only 1 is accepted)")
-    assert(is_finite(other_angle) && other_angle>0 && other_angle<90,
-           "\nother_angle must be greater than zero and less than 90 degrees")
+    assert(is_finite(angle) && angle>0 && angle<90,
+           "\nangle must be greater than zero and less than 90 degrees")
     let(m=_inherit_gear_pitch("globoid_worm_pressure_angle_limit()",circ_pitch,diam_pitch,mod)/PI,
         N=_gear_mate_teeth(teeth,mate_teeth),s=_gear_worm_starts(starts,worm_starts),
         c=default(clearance,default(_gear_worm_family($parent_gear_type)==2?$parent_gear_clearance:undef,m/4)),
         dia=_gear_worm_diameter(d,worm_diam,worm_root_diam=worm_root_diam,
                    mod=mod,circ_pitch=circ_pitch,diam_pitch=diam_pitch,clearance=c,family=2))
     assert(_globoid_length_limit(m,N,dia,s,c)>0,"\nInvalid globoid reference dimensions")
-    let(cb=sqrt(1-pow(s*m/dia,2)),R=m*N/(2*cb),angles=[0,other_angle],
+    let(cb=sqrt(1-pow(s*m/dia,2)),R=m*N/(2*cb),angles=[0,angle],
         at=[for(a=angles)atan(tan(a)/cb)],
         P=[m,N,dia/2,R,R+dia/2,s/N,at,[for(a=at)R*sin(a)],0,c,s])
     _gaw_profile_valid(P,angles)?_gaw_angle_limit(P,angles,0):undef;
@@ -9791,7 +9782,7 @@ function globoid_worm_pressure_angle_limit(other_angle,_named,teeth,mate_teeth,
 
 
 // Function: worm_face_dist()
-// Synopsis: Returns the vetical distance between a worm face gear and a worm gear. 
+// Synopsis: Returns the vertical distance between a worm face gear and a worm. 
 // Topics: Gears, Parts
 // See Also: worm_face_gear(), worm_face_gear_worm_pos(), worm_face_gear_worm_spin()
 // Usage:
@@ -9862,7 +9853,8 @@ function worm_face_dist(worm_diam,_named,d,worm_root_diam,mod,circ_pitch,diam_pi
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Nonnegative shaft-axis separation; inherits from a face gear, otherwise calculated.
 //   gear_diam = Wheel outside diameter; inherits from a face gear, otherwise calculated.
-//   face_width = Radial tooth-band width; inherits from a face gear, otherwise two axial thread pitches.
+// !!!   face_width = Radial tooth-band width; inherits from a face gear, otherwise two axial thread pitches.
+// +++   face_width = Radial tooth-band width; inherits from a face gear, otherwise three axial thread pitches.
 //   worm_starts = Worm start count. Default: inherited or 1.
 //   pressure_angle = Matching scalar or ordered pressure-angle pair. Default: inherited or 20.
 //   left_handed = Worm handedness. Default: inherited or false.
@@ -9979,7 +9971,8 @@ function worm_face_gear_radius_bound(teeth,worm_diam,_named,mod,circ_pitch,diam_
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Distance between shaft axes; inherits from a face gear or is computed.
 //   gear_diam = Matching outside diameter; inherits from a face gear or is computed.
-//   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
+// !!!   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
+// +++   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
 //   backlash = Matching wheel tooth thinning. Default: inherited from a face gear or $backlash.
 //   min_tip = Matching minimum tip chord. Default: inherited from a face gear or 0.4*module.
 //   worm_starts = Number of worm starts. Default: inherited or 1.
@@ -10030,7 +10023,8 @@ function worm_face_gear_worm_pos(teeth,worm_diam,_named,mod,circ_pitch,diam_pitc
 //   mod/circ_pitch/diam_pitch = Matching normal tooth size; inherits when available.
 //   shaft_offset = Distance between shaft axes; inherits from a face gear or is computed.
 //   gear_diam = Matching outside diameter; inherits from a face gear or is computed.
-//   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
+// !!!   face_width = Matching radial band width; inherits from a face gear or defaults to two axial thread pitches.
+// +++   face_width = Matching radial band width; inherits from a face gear or defaults to three axial thread pitches.
 //   backlash = Matching wheel tooth thinning. Default: inherited from a face gear or $backlash.
 //   min_tip = Matching minimum tip chord. Default: inherited from a face gear or 0.4*module.
 //   worm_starts = Number of worm starts. Default: inherited or 1.
