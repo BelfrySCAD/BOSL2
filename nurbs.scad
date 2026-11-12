@@ -1585,13 +1585,21 @@ function nurbs_elevate_degree(control, degree, knots=undef,
                     ? concat(repeat(xknots[0], degree), xknots, repeat(last(xknots), degree))
                     : xknots,
         r         = _elevate_once(control, degree, U_full),
+        // Degree elevation increases exterior-knot multiplicities as well.
+        // Trim basis functions supported entirely outside the original open
+        // domain so that public u=0..1 still describes the same curve segment.
+        trim_left = type != "open" ? 0 :
+                    max(0,len([for(k=r[1]) if(k<U_full[degree]) 1])-r[2]),
+        trim_right = type != "open" ? 0 :
+                     max(0,len([for(k=r[1]) if(k>U_full[len(control)]) 1])-r[2]),
+        new_ctrl = type == "open" ? slice(r[0],trim_left,len(r[0])-trim_right-1) : r[0],
         new_knots = type == "clamped"
                     ? slice(r[1], degree+1, -degree-2)
-                    : r[1]
+                    : slice(r[1],trim_left,len(r[1])-trim_right-1)
     )
     times == 1
-    ? [type, r[2], r[0], new_knots, undef, undef]
-    : nurbs_elevate_degree(r[0], r[2], new_knots, type=type, times=times-1);
+    ? [type, r[2], new_ctrl, new_knots, undef, undef]
+    : nurbs_elevate_degree(new_ctrl, r[2], new_knots, type=type, times=times-1);
 
 
 // Length is the integral of speed ||C'(u)|| over the public u-domain.
@@ -3401,7 +3409,7 @@ function nurbs_interp_surface(points, degree, method="centripetal",
     )
     [[row_wrap ? "closed" : "clamped", col_wrap ? "closed" : "clamped"],
      [p_u, p_v], P, [u_knots, v_knots], undef, undef,
-     [u_params, v_params]];
+     [row_wrap ? u_sys[2] : u_params, col_wrap ? v_sys[2] : v_params]];
 
 
 module nurbs_interp_surface(points, degree, splinesteps=16,
@@ -5259,7 +5267,9 @@ function _build_closed_system(params, p, extra_pts=0) =
         ],
         N_mat      = _collocation_matrix_periodic(col_safe, n, p, U_full)
       )
-      [N_mat, base_bar]
+      // Report the parameter values actually used in the solve, including
+      // the displacement away from knots, in the public 0..1 domain.
+      [N_mat, base_bar, (col_safe-repeat(base_bar[p],n))/T]
     : let(
         extra_ts    = _widest_span_params(base_bar, extra_pts),
         aug_bar_raw = _insert_constraint_knots(base_bar, extra_ts),
@@ -5286,7 +5296,7 @@ function _build_closed_system(params, p, extra_pts=0) =
         // Periodic wrapping folds basis j < p by adding N_{j+M}.
         N_mat       = [for (k = [0:1:n-1]) _basis_row_periodic(col_safe[k], p, U_full, M)]
       )
-      [N_mat, aug_bar];
+      [N_mat, aug_bar, (col_safe-repeat(aug_bar[p],n))/T];
 
 
 // Build a clamped interpolation system with optional start/end first-derivative rows.

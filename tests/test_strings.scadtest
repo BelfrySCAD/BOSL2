@@ -581,3 +581,36 @@ module test_rand_str() {
 }
 test_rand_str();
 '''
+
+[[test]]
+name = "test_str_collapse_char"
+script = '''
+include <../std.scad>
+
+assert_equal(str_collapse_char(""), "");
+assert_equal(str_collapse_char(" "), " ");
+assert_equal(str_collapse_char("     "), " ");
+assert_equal(str_collapse_char("   alpha    beta   "), " alpha beta ");
+assert_equal(str_collapse_char("bookkeeper"), "bookkeeper");
+assert_equal(str_collapse_char("---a--bb---c-","-"), "-a-bb-c-");
+assert_equal(str_collapse_char("aaXXaaaXaaaa","a"), "aXXaXa");
+assert_equal(str_collapse_char("ééaéé","é"), "éaé");
+assert_equal(str_collapse_char("a\t\tb\t", "\t"), "a\tb\t");
+assert_equal(str_collapse_char(str_collapse_char("a  b   c")), "a b c");
+'''
+
+[[test]]
+name = "test_str_collapse_char_empty_pattern_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+echo(str_collapse_char("abc",""));
+'''
+
+[[test]]
+name = "test_str_collapse_char_multichar_pattern_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+echo(str_collapse_char("abab","ab"));
+'''

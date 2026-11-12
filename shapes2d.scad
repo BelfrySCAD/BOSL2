@@ -2466,7 +2466,6 @@ function _semicircle_geom(dims) =
 // Description:
 //   When called as a module, creates a 2D squircle with the specified squareness.    
 //   When called as a function, returns a 2D path for a squircle.
-
 //   .
 //   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a
 //   circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard
