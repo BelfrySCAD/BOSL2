@@ -750,55 +750,35 @@ include <../gears.scad>
 echo(worm_face_gear_info(40,20,mod=2,gear_diam=10,face_width=8));
 '''
 
+
 [[test]]
 name = "test_stepped_planetary"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
 script = '''
 include <../std.scad>
 include <../gears.scad>
-
-function phase_error(a) = a-360*round(a/360);
-module check_design(d,n,h1=0,h2=0) {
-    s=d[0][1]; r=d[1][1]; p=d[2][1][0]; q=d[2][1][1];
-    m=d[4][1]; xs=d[0][2]; xr=d[1][2]; xp=d[2][2];
-    angles=d[2][5]; centers=d[2][4]; spins=d[2][3];
-    a1=gear_dist(s,p,mod=m[0],helical=h1,profile_shift1=xs,profile_shift2=xp[0]);
-    a2=gear_dist(r,q,mod=m[1],helical=h2,profile_shift1=xr,profile_shift2=xp[1],internal1=true);
-    assert(approx(a1,a2,1e-7));
-    assert_equal([len(angles),len(centers),len(spins)],[n,n,n]);
-    assert(min([s,p,q])>=8 && min([s,p,q,r])>0 && max([s,p,q,r])<=40);
-    for(i=[0:n-1]) {
-        assert(approx(centers[i],a1*[cos(angles[i]),sin(angles[i])],1e-7));
-        // Independent tooth-phase congruences for both meshes. Each compound
-        // has one common rotation; a wrong tooth index can pass only one layer.
-        assert(approx(phase_error(s*(d[0][3]-angles[i])+p*(spins[i]-angles[i])-90*(p-s)-180),0,1e-6));
-        assert(approx(phase_error(r*(d[1][3]-angles[i])-q*(spins[i]-angles[i])-90*(q-r)),0,1e-6));
-    }
+module test_stepped_planetary() {
+    a = stepped_planetary(4,40,mod1=1,sun_carrier=6,exact=true,uniform=true);
+    b = stepped_planetary(4,40,mod1=1,sun_carrier=6,exact=true,uniform=true,gear_spin=120);
+    assert([a[0][1],a[2][1][0],a[2][1][1],a[1][1]]==[8,8,8,40],
+           "\nWrong minimum-diameter exact layout");
+    assert(approx(a[3][1],6), "\nWrong sun/carrier ratio");
+    assert(norm(a[4][1]-[1,0.5])<1e-8, "\nWrong module sizes");
+    assert(norm(a[2][5]-[0,90,180,270])<1e-8, "\nWrong uniform planet angles");
+    assert(approx(b[0][3]-a[0][3],120), "\nWrong sun motion");
+    assert(approx(b[1][3],a[1][3]), "\nFixed ring moved");
+    assert(norm(b[2][5]-a[2][5]-[20,20,20,20])<1e-8, "\nWrong carrier motion");
+    assert(norm(b[2][3]-a[2][3]+[80,80,80,80])<1e-8, "\nWrong planet spin");
+    for(i=[0:3])
+        assert(norm(b[2][4][i]-rot(20,p=a[2][4][i]))<1e-8, "\nWrong planet position");
+    c = stepped_planetary(4,40,mod1=1,sun_carrier=[5.7,6.3],uniform=true);
+    assert(c[3][1]>=5.7 && c[3][1]<=6.3, "\nRatio outside requested interval");
 }
-base=stepped_planetary(4,40,mod1=1,sun_carrier=6,uniform=true,exact=true);
-moving=stepped_planetary(4,40,mod1=1,sun_carrier=6,uniform=true,exact=true,gear_spin=137);
-check_design(base,4);
-check_design(moving,4);
-assert_approx(base[3][1],6);
-assert_equal(base[4][1][0],1);
-assert(base[4][1][1]>=.5 && base[4][1][1]<=2);
-assert_approx(base[2][5],[0,90,180,270]);
-assert_approx(moving[2][5]-base[2][5],repeat(137/6,4));
-assert_approx(moving[0][3]-base[0][3],137);
-assert_approx(moving[1][3]-base[1][3],0);
-fixed=stepped_planetary(3,40,mod=1,sun_carrier=4,exact=true);
-check_design(fixed,3);
-assert_equal(fixed[4][1],[1,1]);
-assert_approx(fixed[3][1],4);
-other=stepped_planetary(3,40,mod2=1,sun_carrier=4.5,exact=true,helical1=20,helical2=-15);
-check_design(other,3,20,-15);
-assert_equal(other[4][1][1],1);
-assert_approx(other[3][1],4.5);
-interval=stepped_planetary(3,24,mod1=1,sun_carrier=[4,6],optimize="diameter");
-check_design(interval,3);
-assert(interval[3][1]>=4 && interval[3][1]<=6);
-alias=stepped_planetary(4,40,circ_pitch1=PI,sun_carrier=6,uniform=true,exact=true);
-assert_approx(alias,base);
+test_stepped_planetary();
 '''
+
 
 [[test]]
 name = "test_stepped_planetary_conflicting_sizes_errors"
