@@ -96,6 +96,9 @@ $_gear_carrier = undef;
 $_gear_carrier_parent = undef;
 $_gear_chain_active = false;
 $_gear_driver = undef;
+/// Motion ownership: constructors resolve tooth geometry; poses carry placement and drive displacement.
+/// Ordinary tooth offsets are not drive input. Carrier state retains its meshing parent separately.
+/// Driver/mount identities survive gear_shaft() and gear_exit_carrier(); neither starts a new drive.
 // Motion provenance is independent of the geometry/reset scopes.
 $_gear_drive_id = undef;
 $_gear_mount_id = undef;
@@ -217,7 +220,6 @@ function _gear_worm_starts(starts,worm_starts) =
 //   thickness 10, and emits a deprecation message.  The legacy default gear size, which is no longer supported, was 
 //   `circ_pitch=5`.  The legacy support is temporary and will be removed in July 2027 with the
 //   final migration.  
-///   Delete GEAR_API_COMPAT blocks with tools/remove_compat.py for the final API.
 // Section: Quick Introduction to Gears
 //   This section gives a quick overview of gears with a focus on the information you need
 //   to know to understand the gear parameters and create some gears.  The topic of gears is very complex and highly technical and
@@ -458,7 +460,8 @@ function _gear_worm_starts(starts,worm_starts) =
 //   The effective pressure angle of helical gears is larger than the nominal pressure angle.  This can make it possible
 //   to avoid undercutting without having to use profile shifting, so smaller tooth count gears can be more effective
 //   using the helical form. 
-// Figure(Anim,Med,Frames=10,NoAxes,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible (coplanar) helical gears
+// Figure(Anim,Med,Frames=8,NoAxes,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible (coplanar) helical gears
+//   $fn=54;
 //   zrot($t*360/18)
 //     color("lightblue")spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=-29, shaft_diam=15);
 //   right(gear_dist(mod=5, teeth1=18, teeth2=18, helical=29))
@@ -473,7 +476,8 @@ function _gear_worm_starts(starts,worm_starts) =
 //   gears, a small adjustment in the angle is needed, so profile shifted gears won't mesh exactly at the sum of their angles.
 //   The calculation for gear spacing is different for skew axis gears than for parallel gears, so you do this using {{gear_dist_skew()}},
 //   and if you use profile shifting, then you can compute the angle using {{gear_skew_angle()}}. 
-// Figure(Anim,Med,NoAxes,Frames=10,VPT=[44.765,6.09492,-3.01199],VPR=[55.7,0,33.2],VPD=401.289): Two helical gears meshing with axes at a 45 degree angle
+// Figure(Anim,Med,NoAxes,Frames=8,VPT=[44.765,6.09492,-3.01199],VPR=[55.7,0,33.2],VPD=401.289): Two helical gears meshing with axes at a 45 degree angle
+//   $fn=54;
 //   dist = gear_dist_skew(mod=5, teeth1=18, teeth2=18, helical1=22.5,helical2=22.5);
 //    axiscolor="darkgray";
 //      down(10)color(axiscolor) cyl(d=15, l=145);
@@ -1038,6 +1042,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //       }
 //   }
 // Example(Anim,Med,NoAxes,Frames=8,VPT=[0,30,0],VPR=[0,0,0],VPD=300): Assembly of Gears
+//   motion = (1-cos(360*$t))/2;  // Move one tooth pitch out and back.
 //   $fn=12;
 //   n1 = 11; //red gear number of teeth
 //   n2 = 20; //green gear
@@ -1052,15 +1057,15 @@ function _gear_worm_starts(starts,worm_starts) =
 //   d13 = gear_dist(circ_pitch=circ_pitch,teeth1=n1,teeth2=n3);
 //   d14 = gear_dist(circ_pitch=circ_pitch,teeth1=n1,teeth2=n4);
 //   d1r = gear_dist(circ_pitch=circ_pitch,teeth1=n1,teeth2=0);
-//   a1 =  $t * 360 / n1;
-//   a2 = -$t * 360 / n2 + 180/n2;
-//   a3 = -$t * 360 / n3 - 3*90/n3;
-//   a4 = -$t * 360 / n4 - 3.5*180/n4;
+//   a1 =  motion * 360 / n1;
+//   a2 = -motion * 360 / n2 + 180/n2;
+//   a3 = -motion * 360 / n3 - 3*90/n3;
+//   a4 = -motion * 360 / n4 - 3.5*180/n4;
 //   color("#f77")              zrot(a1) spur_gear(circ_pitch=circ_pitch,teeth=n1,thickness=thickness,shaft_diam=hole);
 //   color("#7f7") back(d12)  zrot(a2) spur_gear(circ_pitch=circ_pitch,teeth=n2,thickness=thickness,shaft_diam=hole);
 //   color("#77f") right(d13) zrot(a3) spur_gear(circ_pitch=circ_pitch,teeth=n3,thickness=thickness,shaft_diam=hole);
 //   color("#fc7") left(d14)  zrot(a4) spur_gear(circ_pitch=circ_pitch,teeth=n4,thickness=thickness,shaft_diam=hole,hide=n4-3);
-//   color("#ccc") fwd(d1r) right(circ_pitch*$t)
+//   color("#ccc") fwd(d1r) right(circ_pitch*motion)
 //       rack(circ_pitch=circ_pitch,teeth=n5,thickness=thickness,width=rack_base,anchor=CENTER,orient=BACK);
 // Example(NoAxes,VPT=[1.13489,-4.48517,1.04995],VPR=[55,0,25],VPD=139.921): Helical gears meshing with non-parallel shafts
 //   ang1 = 30;
@@ -1083,7 +1088,8 @@ function _gear_worm_starts(starts,worm_starts) =
 //          shaft_diam=5, helical=ang2, slices=12,
 //          gear_spin=90-180/n
 //      );
-// Example(Anim,Big,NoAxes,Frames=50,VPT=[0,0,0],VPR=[55,0,25],VPD=220): Planetary Gear Assembly
+// Example(Big,NoAxes,VPT=[0,0,0],VPR=[55,0,25],VPD=220): Planetary Gear Assembly. Animated planetary gearing examples appear under {{planetary_gears()}}.
+//   carrier_angle=20;
 //   $fn=128;
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; thick=10; pa=20;
@@ -1094,7 +1100,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //       thickness=thick,
 //       pressure_angle=pa);
 //   for (a=[0:3]) {
-//       zrot($t*90+a*90) back(gd) {
+//       zrot(carrier_angle+a*90) back(gd) {
 //           color("green")
 //           spur_gear(
 //               circ_pitch=circ_pitch,
@@ -1102,11 +1108,11 @@ function _gear_worm_starts(starts,worm_starts) =
 //               thickness=thick,
 //               shaft_diam=5,
 //               pressure_angle=pa,
-//               spin=-$t*90*rteeth/pteeth);
+//               spin=-carrier_angle*rteeth/pteeth);
 //       }
 //   }
 //   color("orange")
-//   zrot($t*90*rteeth/cteeth+$t*90+180/cteeth)
+//   zrot(carrier_angle*rteeth/cteeth+carrier_angle+180/cteeth)
 //   spur_gear(
 //       circ_pitch=circ_pitch,
 //       teeth=cteeth,
@@ -1422,7 +1428,7 @@ module spur_gear(
 //   }
 //   left(10) { the_gear(0); the_rack(); }
 //   right(10) { the_gear(0.59); the_rack(); }
-// Example(2D): Planetary Gear Assembly
+// Example(2D,NoAxes,Med): Planetary Gear Assembly.  Animated planetary assembles appear under {{planetary_gears()}}.
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; pa=20;
 //   gd = gear_dist(circ_pitch=circ_pitch, teeth1=cteeth,teeth2=pteeth);
@@ -3163,7 +3169,8 @@ function _bevel_check_profile_shift(teeth,pa,x,m,clearance,backlash) =
 //       circ_pitch=5, teeth=t2, mate_teeth=t1, right_handed=true,
 //       slices=12, anchor="apex", backing=3, spin=180/t2
 //   );
-// Example(Anim,Frames=4,VPD=175,NoAxes): Manual Spacing of Pinion and Gear.  Here conical backing has been turned off.  
+// Example(Anim,Med,Frames=8,FrameMS=30,VPR=[64.00,0.00,26.50],VPD=125.55,VPT=[1.49,2.80,-2.57],NoAxes): Manual Spacing of Pinion and Gear.  Here conical backing has been turned off.  
+//   $fn=56;
 //   t1 = 14; t2 = 28; circ_pitch=5;
 //   color("lightblue")back(pitch_radius(circ_pitch=circ_pitch, teeth=t2)) {
 //     yrot($t*360/t1)
@@ -4030,7 +4037,7 @@ function _wfg_top_limit(r,P,lo,hi,nsearch,n=32) =
       ?_wfg_top_limit(r,P,mid,hi,nsearch,n-1)
       :_wfg_top_limit(r,P,lo,mid,nsearch,n-1);
 
-function _wfg_polar(r,a,z)=[r*cos(a),r*sin(a),z];
+function _gear_polar(r,a,z)=[r*cos(a),r*sin(a),z];
 
 /// A circumferential section: ascending flank, descending flank, root arc.
 /// The root arc joins this tooth to the next. Undercut remains in the envelope.
@@ -4048,9 +4055,9 @@ function _wfg_section(r,P,np,na,ns,pointed=false) =
     assert(top>root+1e-7*m,"\nmin_tip leaves no usable tooth height")
     assert(min([for(b=bb)period-b[1]+b[0]])>1e-9,
            "\nGenerated spaces remove a tooth; reduce backlash or revise offset/width")
-    [[for(k=[0:np])_wfg_polar(r,base+bb[k][1],zz[k]),
-      for(k=[np:-1:(pointed?1:0)])_wfg_polar(r,base+bb[k][0]+period,zz[k]),
-      if(!pointed) for(k=[1:na-1])_wfg_polar(r,base+bb[0][0]+period+(bb[0][1]-bb[0][0])*k/na,root)],
+    [[for(k=[0:np])_gear_polar(r,base+bb[k][1],zz[k]),
+      for(k=[np:-1:(pointed?1:0)])_gear_polar(r,base+bb[k][0]+period,zz[k]),
+      if(!pointed) for(k=[1:na-1])_gear_polar(r,base+bb[0][0]+period+(bb[0][1]-bb[0][0])*k/na,root)],
      top,clipped];
 
 /// Close each tooth to its root chord. Root vertices then form a simple ring.
@@ -4358,7 +4365,8 @@ function _wfg_geom(P,body) =
 //                  pressure_angle=[45,5], backing=3, backlash=.2)
 //       recolor("lightblue")
 //       attach_gear(90) worm(l=65);
-// Example(3D,Anim,FrameMS=55,Frames=20,NoScales,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[34.18,18.31,-26.67]): A worm face drive animation
+// Example(3D,Anim,FrameMS=90,Frames=12,NoScales,Med,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[34.18,18.31,-26.67]): A worm face drive animation
+//   $fn=80;
 //   gear_spin(360*$t)
 //       color_this("lightblue")
 //       worm(mod=2, d=20, starts=1, l=60)
@@ -4639,24 +4647,24 @@ function _gear_worm_face_pose(A,B,angle,shift,offset,anchor,worm_face_pos=RIGHT)
 //   `$gear_travel` is set to zero.
 //   `$gear_travel_offset` is set to zero.
 //   `$gear_travel_ratio` is set to zero.
-// Example(VPR=[83.00,0.00,20.80]): A single-start globoid worm.
+// Example(VPR=[83.00,0.00,20.80],NoScales): A single-start globoid worm.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45);
-// Example(VPR=[83.00,0.00,20.80]): Same worm with 4 starts has steeper threads.
+// Example(VPR=[83.00,0.00,20.80],NoScales): Same worm with 4 starts has steeper threads.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,starts=4);
-// Example(VPR=[83.00,0.00,20.80]): Left-handed worm.
+// Example(VPR=[83.00,0.00,20.80],NoScales): Left-handed worm.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,
 //                left_handed=true);
-// Example(VPR=[83.00,0.00,20.80]): Worm with no lead in.
+// Example(VPR=[83.00,0.00,20.80],NoScales): Worm with no lead in.
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,lead_in=0);
-// Example(VPR=[83.00,0.00,20.80]): Worm with rounding
+// Example(VPR=[83.00,0.00,20.80],NoScales): Worm with rounding
 //   globoid_worm(mod=2,teeth=55,d=24,worm_length=45,rounding=0.2);
-// Example(VPR=[83.00,0.00,20.80]): Worm with shaft extension
+// Example(VPR=[83.00,0.00,20.80],NoScales): Worm with shaft extension
 //   rad = globoid_worm_root_radius(mod=2, d=30,
 //                                  teeth=44, length=50);
 //   globoid_worm(mod=2, d=30, l=50, teeth=44)
 //      attach(TOP,BOT)
 //        cyl(r=rad, h=25);
-// Example(3D,Med): Mating to a globoid worm gear
+// Example(3D,Med,NoScales,VPR=[56.70,0.00,349.30],VPD=237.09,VPT=[0.52,0.05,10.11]): Mating to a globoid worm gear
 //   mod = 2;
 //   diam = 24;
 //   teeth = 45;
@@ -4666,7 +4674,7 @@ function _gear_worm_face_pose(A,B,angle,shift,offset,anchor,worm_face_pos=RIGHT)
 //     globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
 //   back(sep)
 //     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
-// Example(VPR=[83.00,0.00,20.80]): A globoid worm machined from a cylindrical blank will have the threads fade away into the blank.  To get this effect you can intersect the worm with a suitably sized cylinder.  Depending on the worm this process may clip the teeth in the middle of the worm.  We construct the worm oversized to get threads that run off the ends and clip it back to the finished length.  The mating worm gear should use the `worm_length=finished_length`, not the longer pre-trimmed length.  
+// Example(VPR=[83.00,0.00,20.80],NoAxes): A globoid worm machined from a cylindrical blank will have the threads fade away into the blank.  To get this effect you can intersect the worm with a suitably sized cylinder.  Depending on the worm this process may clip the teeth in the middle of the worm.  We construct the worm oversized to get threads that run off the ends and clip it back to the finished length.  The mating worm gear should use the `worm_length=finished_length`, not the longer pre-trimmed length.  
 //   m=2; N=55; d=24; starts=5; finished_length=60; stock_length=70;
 //   limit_r=globoid_worm_root_radius(mod=m,teeth=N,d=d,starts=starts,l=finished_length);
 //   intersection() {
@@ -4676,10 +4684,10 @@ function _gear_worm_face_pose(A,B,angle,shift,offset,anchor,worm_face_pos=RIGHT)
 //   }
 //   zflip_copy()
 //     up(finished_length/2) cyl(r=limit_r, l=15, $fn=144, anchor=BOT);
-// Example(VPR=[83.00,0.00,20.80]): Standard globoid worms may not be printable vertically without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
+// Example(VPR=[83.00,0.00,20.80],NoAxes): Standard globoid worms may not be printable vertically without support.  Here we construct an asymmetric worm that prints without support, but it is only suited for loading in one direcction.  
 //     globoid_worm(mod=2,24,45,mate_teeth=55,
 //                  pressure_angle=[45,5]);
-// Example(3D): A maximum-length worm with end shafts chosen to give a desired total length.
+// Example(3D,VPR=[71.50,0.00,28.00],VPD=408.67,VPT=[42.93,6.83,6.37],Med,NoAxes): A maximum-length worm with end shafts chosen to give a desired total length.
 //   req_len = 145;
 //   globoid_worm(mod=2,d=24,length="max",mate_teeth=55,starts=5,mesh_tol=.08) {
 //     for (end=[BOT,TOP])
@@ -4876,21 +4884,20 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 // Example: Thick worm gear with very small `min_tip` value shows sharp edges on the teeth
 //  globoid_worm_gear(mod=3, teeth=20, worm_diam=30, thickness=23.9,
 //                    worm_length=33, min_tip=0.01);
-// Example(3D,Med): Mating to a globoid worm
+// Example(3D,Med,VPR=[56.70,0.00,349.30],VPD=237.09,VPT=[0.52,0.05,10.11]): Mating to a globoid worm
 //   mod = 2;
 //   diam = 24;
 //   teeth = 45;
 //   length = 40;
 //   sep = globoid_worm_dist(mod=mod, worm_diam=diam, teeth=teeth);
-//   color("lightblue")
 //     globoid_worm_gear(mod=2,teeth=teeth,worm_diam=diam,worm_length=length);
-//   back(sep)
+//   back(sep) recolor("lightblue")
 //     globoid_worm(mod=2,teeth=teeth,worm_diam=diam,worm_length=length,orient=RIGHT);
 // Example(3D): Asymmetric worm gear
 //   m=2; N=25; d=24; s=5; L=30; pa=[40,5];
 //   globoid_worm_gear(mod=m,N,19,worm_diam=d,
 //       worm_length=L,worm_starts=s,pressure_angle=pa,rounding=.2,backlash=.1);
-// Example(3D,Med): An asymmetric double-enveloping pair
+// Example(3D,Med,VPR=[64.00,0.00,26.50],VPD=236.24,VPT=[-1.83,5.88,6.11]): An asymmetric double-enveloping pair
 //   m=2; N=45; d=24; s=5; L=50; pa=[45,5];
 //   a=globoid_worm_dist(mod=m,teeth=N,d=d,starts=s);
 //   color("lightblue") globoid_worm_gear(mod=m,N,16,worm_diam=d,
@@ -5072,7 +5079,6 @@ function _wormgear_tipradius(z,P,lo,hi,target,nsearch,niters,n=30) =
     _wormgear_tipchord(r=mid,b=b,P=P)<target
       ? _wormgear_tipradius(z=z,P=P,lo=lo,hi=mid,target=target,nsearch=nsearch,niters=niters,n=n-1)
       : _wormgear_tipradius(z=z,P=P,lo=mid,hi=hi,target=target,nsearch=nsearch,niters=niters,n=n-1);
-function _wormgear_polar(r,a,z) = [r*cos(a),r*sin(a),z];
 /// One CCW tooth followed by its root gap. All rows have the same point count.
 /// Return [points, shortened, top_radius, transverse_target]. A tooth can be
 /// wider ABOVE its undercut root, so do not require min_tip at the root.
@@ -5124,19 +5130,19 @@ function _wormgear_section(z,P,nprofile,narc,nsearch,niters,target,max_radius) =
                 : "face_chamfer/min_tip leaves insufficient tooth height; reduce face_chamfer or thickness"))
     let(
         points=[
-            for(j=[0:1:nprofile]) _wormgear_polar(r=rr[j],a=base+bb[j][1],z=z),
+            for(j=[0:1:nprofile]) _gear_polar(r=rr[j],a=base+bb[j][1],z=z),
             // One chord across the land, rather than a nearly collinear arc.
-            for(j=[nprofile:-1:0]) _wormgear_polar(r=rr[j],a=base+bb[j][0]+period,z=z),
+            for(j=[nprofile:-1:0]) _gear_polar(r=rr[j],a=base+bb[j][0]+period,z=z),
             for(j=[1:1:narc-1])
-                _wormgear_polar(r=root,a=base+bb[0][0]+period
+                _gear_polar(r=root,a=base+bb[0][0]+period
                     +(bb[0][1]-bb[0][0])*j/narc,z=z)
         ]
     ) [points,clipped,top,goal];
 /// Squared distances in 3D. Segment/segment minimum consists of the four
 /// endpoint/segment minima plus the interior stationary point (if feasible).
-function _wormgear_pointseg2(p,a,b) =
+function _gear_pointseg2(p,a,b) =
     let(v=b-a,w=p-a,vv=v*v,t=vv==0?0:max(0,min(1,(w*v)/vv)),d=w-t*v) d*d;
-function _wormgear_segdist2(p0,p1,q0,q1) =
+function _gear_segdist2(p0,p1,q0,q1) =
     let(
         u=p1-p0,v=q1-q0,w=p0-q0,
         a=u*u,b=u*v,c=v*v,d=u*w,e=v*w,den=a*c-b*b,
@@ -5145,8 +5151,8 @@ function _wormgear_segdist2(p0,p1,q0,q1) =
         delta=w+s*u-t*v
     )
     min([
-        _wormgear_pointseg2(p=p0,a=q0,b=q1), _wormgear_pointseg2(p=p1,a=q0,b=q1),
-        _wormgear_pointseg2(p=q0,a=p0,b=p1), _wormgear_pointseg2(p=q1,a=p0,b=p1),
+        _gear_pointseg2(p=p0,a=q0,b=q1), _gear_pointseg2(p=p1,a=q0,b=q1),
+        _gear_pointseg2(p=q0,a=p0,b=p1), _gear_pointseg2(p=q1,a=p0,b=p1),
         if(s>=0 && s<=1 && t>=0 && t<=1) max(0,delta*delta)
     ]);
 /// Pairs of opposite crest segments closer than the required width. Skipping
@@ -5161,7 +5167,7 @@ function _wormgear_narrow_pairs(sections,nprofile,goal) =
             dz=max(0,max(min(a.z,b.z),min(c.z,d.z))-min(max(a.z,b.z),max(c.z,d.z)))
         )
         if(dz<goal)
-        let(dist2=_wormgear_segdist2(p0=a,p1=b,q0=c,q1=d))
+        let(dist2=_gear_segdist2(p0=a,p1=b,q0=c,q1=d))
         if(dist2<goal*goal)
             [i,j,1.01*goal/sqrt(max(dist2,goal*goal*1e-12))]
     ];
@@ -5708,13 +5714,6 @@ function _dew_top(z,P,ba,goal,ns,lo,hi,n=26) =
     n==0?lo:let(mid=(lo+hi)/2)
     _dew_land(mid,_dew_limits(mid,z,P,ba,ns),P)<goal?
       _dew_top(z,P,ba,goal,ns,lo,mid,n-1):_dew_top(z,P,ba,goal,ns,mid,hi,n-1);
-function _dew_pointseg2(p,a,b) =
-    let(v=b-a,w=p-a,t=v*v==0?0:constrain((v*w)/(v*v),0,1),d=w-t*v)d*d;
-function _dew_segdist2(p0,p1,q0,q1) =
-    let(u=p1-p0,v=q1-q0,w=p0-q0,a=u*u,b=u*v,c=v*v,d=u*w,e=v*w,den=a*c-b*b,
-        s=den>1e-14*a*c?(b*e-c*d)/den:-1,t=den>1e-14*a*c?(a*e-b*d)/den:-1,D=w+s*u-t*v)
-    min([_dew_pointseg2(p0,q0,q1),_dew_pointseg2(p1,q0,q1),_dew_pointseg2(q0,p0,p1),_dew_pointseg2(q1,p0,p1),
-         if(s>=0&&s<=1&&t>=0&&t<=1)max(0,D*D)]);
 /// First row strictly below a height; rows descend in z. Binary bounds avoid
 /// enumerating every crest-segment pair when the worm has many axial samples.
 function _dew_below(rows,z,lo=0,hi) =
@@ -5726,7 +5725,7 @@ function _dew_badlands(rows,goal) =
          jhi=min(len(rows)-2,_dew_below(rows,rows[i+1][5]-goal)))
      for(j=[jlo:1:jhi])
      if(max(rows[i+1][5],rows[j+1][5])-min(rows[i][5],rows[j][5])<goal)
-     let(d2=_dew_segdist2(rows[i][1],rows[i+1][1],rows[j][2],rows[j+1][2]))
+     let(d2=_gear_segdist2(rows[i][1],rows[i+1][1],rows[j][2],rows[j+1][2]))
      if(d2<goal*goal)[i,j,1.01*goal/sqrt(max(d2,goal*goal*1e-12))]];
 function _gw_constants(P)=
     _gaw_asymmetric(P) ? _gaw_constants(P) :
@@ -5760,7 +5759,6 @@ function _gw_lead_scales(p,lead) =
     let(t=constrain((lead[0]-abs(p))/lead[1],0,1),
         a=_leadin_sqrt(t,1),h0=_leadin_sqrt(0,1).y)
     [a.x,constrain((a.y-h0)/(1-h0),0,1)];
-function _gw_lead_scale(p,lead) = _gw_lead_scales(p,lead).y;
 function _globoid_ease(u) = 1-sqrt(max(0,1-pow(constrain(u,0,1),2)));
 function _gw_round_data(P,size,tol) =
     _gaw_asymmetric(P) ? _gaw_round_data(P,size,tol) :
@@ -5779,7 +5777,6 @@ function _gw_section_width(e,P,h=1) =
         root=rd[1]>0 ? rd[2]*_globoid_ease((e-er+rd[1])/rd[1]):0,
         crest=dt>0 ? h*rd[4]*_globoid_ease((tip+dt-e)/dt):0)
     W+root-crest;
-function _gw_lead_width(p,P,h) = _gw_lead_scales(p,len(P)>12?P[12]:undef).x;
 function _gw_flank_tags(n,P) =
     _gaw_asymmetric(P) ? _gaw_flank_tags(n,P) :
     let(rd=len(P)>13?P[13]:[0]) rd[0]==0 ? [for(i=[0:n]) i/n] :
@@ -5815,9 +5812,6 @@ function _gw_row(p,P,profile,h,w) =
               sqrt(max(0,T*T+b*b-Z*Z)),
         r=P[4]-U*cp+Z*sp,z=U*sp+Z*cp)
         [r*ct,r*st,z]];
-function _gw_wp(p,v,P,height) =
-    let(sc=_gw_lead_scales(p,len(P)>12?P[12]:undef),h=default(height,sc.y))
-    _gw_row(p,P,_gw_profile([v],P),h,sc.x)[0];
 ///  to resolve a small end treatment. Cosine spacing resolves BOTH junctions.
 function _gw_lead_stations(ps,P) =
     _gaw_asymmetric(P) ? _gaw_lead_stations(ps,P) :
@@ -5860,13 +5854,7 @@ function _gw_trierr(p,a,b,c)=
  let(n=cross(b-a,c-a),nn=n*n,
      t=nn>0?((p-a)*n)/nn:0,foot=p-t*n,
      inside=nn>0 && cross(b-a,foot-a)*n>=0 && cross(c-b,foot-b)*n>=0 && cross(a-c,foot-c)*n>=0)
- inside?abs(t)*sqrt(nn):sqrt(min(_dew_pointseg2(p,a,b),_dew_pointseg2(p,b,c),_dew_pointseg2(p,c,a)));
-function _gw_cellerr(p0,p1,v0,v1,P,diag)=
- let(a=_gw_wp(p0,v0,P),b=_gw_wp(p0,v1,P),c=_gw_wp(p1,v0,P),d=_gw_wp(p1,v1,P))
- max([for(uv=[[.5,0],[0,.5],[1,.5],[.5,1],[.5,.5],[1/3,1/3],[2/3,2/3],[1/3,2/3],[2/3,1/3]])
-    let(p=_gw_wp(p0+(p1-p0)*uv[0],v0+(v1-v0)*uv[1],P))
-    min(diag==0?_gw_trierr(p,a,b,d):_gw_trierr(p,a,b,c),
-        diag==0?_gw_trierr(p,a,d,c):_gw_trierr(p,b,d,c))]);
+ inside?abs(t)*sqrt(nn):sqrt(min(_gear_pointseg2(p,a,b),_gear_pointseg2(p,b,c),_gear_pointseg2(p,c,a)));
 function _gw_flank_excess(p,P)=
     _gaw_asymmetric(P) ? _gaw_flank_excess(p,P) :
  let(r=norm([p.x,p.y]),U=P[4]-r,e=sqrt(U*U+p.z*p.z),
@@ -5941,7 +5929,7 @@ function _gw_make_raw(P,na,nf,nt,nr,nz,tol=1e99) =
                 flank=(ts[i+1]<=1 || ts[i]>=2) && local[3][j]==1 && local[3][j+1]==1,
                 ea=flank?_gw_flank_excess((a+d)/2,P):0,
                 eb=flank?_gw_flank_excess((b+c)/2,P):0)
-            (flank && ea*eb<0?ea<0:_dew_pointseg2(mids[j][i],a,d)<=_dew_pointseg2(mids[j][i],b,c))?0:1]],
+            (flank && ea*eb<0?ea<0:_gear_pointseg2(mids[j][i],a,d)<=_gear_pointseg2(mids[j][i],b,c))?0:1]],
         checkprofile=_gw_profile([for(i=[0:ns-2],t=[0,.5,1])ts[i]+(ts[i+1]-ts[i])*t],P),
         thirdprofile=_gw_profile([for(i=[0:ns-2],t=[1/3,2/3])ts[i]+(ts[i+1]-ts[i])*t],P),
         probes=[for(i=[0:16])let(j=floor((count-1)*i/16))
@@ -6515,7 +6503,8 @@ function _gear_tooth_profile(
 //   uniform = Require exactly evenly spaced planets. Default: false
 //   helical = Create gears with the specified helical angle. Default: 0
 //   gear_spin = rotate the driven gear by this number of degrees.  Default:0
-// Example(2D,NoAxes,Anim,Frames=72,FrameMS=50,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
+// Example(2D,NoAxes,Anim,Frames=36,FrameMS=100,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
+//   $fn=54;
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=3, max_teeth=28, ring_carrier=1.341, gear_spin=4/3*360/3*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -6523,7 +6512,7 @@ function _gear_tooth_profile(
 //     spur_gear2d(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //     spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
-// Example(2D,Med,NoAxes,Anim,FrameMS=55,Frames=72,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
+// Example(2D,Med,NoAxes,Anim,FrameMS=75,Frames=54,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6, gear_spin=3.6*360/5*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -6532,7 +6521,7 @@ function _gear_tooth_profile(
 //     spur_gear2d(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //       spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
-// Example(3D,Med,NoAxes,Anim,Frames=7,FrameMS=50,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
+// Example(3D,Med,NoAxes,Anim,Frames=7,FrameMS=40,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
 //   $fn=81;
 //   mod=1;
 //   helical=25;
@@ -6713,11 +6702,11 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   helical1 = Helical angle for layer 1
 //   helical2 = Helical angle for layer 2
 //   gear_spin = Drive the assembly from specificied input by this many degrees.  Default: 0
-// Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=78,VPT=[-0.62,1.28,2.03],Anim,Frames=72,FrameMS=30): Here we request an exact sun/carrier ratio of 6.  Planets rotate using {{zrot()}} which means children will rotate with them.  
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=78,VPT=[-0.62,1.28,2.03]): Here we request an exact sun/carrier ratio of 6.  Planets rotate using {{zrot()}} which means children will rotate with them.  
 //   $fn=48;  $gear_steps=12;  $backlash=0.1;
 //   h=4;
 //   data=stepped_planetary(3,60,mod1=1,min_teeth=12,
-//            sun_carrier=6,exact=true,uniform=true,gear_spin=720*$t);
+//            sun_carrier=6,exact=true,uniform=true,gear_spin=120);
 //   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
 //   up(1.5*h) color_this("royalblue")
 //       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
@@ -6729,11 +6718,11 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h)
 //           align(TOP) color_this("mediumseagreen")
 //           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1]);
-// Example(3D,Med,NoAxes,VPR=[41.70,0.00,32.00],VPD=126.00,VPT=[-0.08,3.86,3.87],Anim,Frames=60,FrameMS=30): Set the ring/carrier ratio to 1.4.  Even though exact=false we get this exact ratio.  Helical on the planets must be the opposite sign of the mating sun or ring.  This version doesn't use {{zrot()}} for the planets but `gearspin=`, which means children of the planets will not rotate with them.  
+// Example(3D,Med,NoAxes,VPR=[41.70,0.00,32.00],VPD=126.00,VPT=[-0.08,3.86,3.87]): Set the ring/carrier ratio to 1.4.  Even though exact=false we get this exact ratio.  Helical on the planets must be the opposite sign of the mating sun or ring.  This version doesn't use {{zrot()}} for the planets but `gearspin=`, which means children of the planets will not rotate with them.  
 //   $fn=48; $gear_steps=12; $backlash=0.1;
 //   h=8; helical=20;
 //   data=stepped_planetary(4,60,mod1=1,min_teeth=12,
-//        ring_carrier=1.4,exact=false,uniform=true, helical=helical,gear_spin=1.4*90*$t);
+//        ring_carrier=1.4,exact=false,uniform=true, helical=helical,gear_spin=20);
 //   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
 //   up(1.5*h) color_this("royalblue")
 //       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
@@ -6745,11 +6734,11 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h,helical=-helical,gear_spin=planets[3][$idx])
 //           align(TOP) color_this("mediumseagreen")
 //           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1],helical=-helical,gear_spin=planets[3][$idx]);
-// Example(3D,Med,NoAxes,VPR=[55.00,0.00,46.70],VPD=91.85,VPT=[-1.89,0.80,2.40],Anim,Frames=60,FrameMS=30): Set the sun/ring ratio to an interval and create a herringbone gear set with a fixed carrier.  The sun and ring turn in opposite directions.  
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,46.70],VPD=91.85,VPT=[-1.89,0.80,2.40]): Set the sun/ring ratio to an interval and create a herringbone gear set with a fixed carrier.  The sun and ring turn in opposite directions.  
 //   $fn=48;   $gear_steps=12;   $backlash=0.1;
 //   h=7; helical=25;
 //   data=stepped_planetary(3,60,mod1=1,min_teeth=12,
-//           sun_ring=[1.8,2]*PI,uniform=false, helical=helical,gear_spin=210*$t);
+//           sun_ring=[1.8,2]*PI,uniform=false, helical=helical,gear_spin=30);
 //   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
 //   up(1.5*h) color_this("royalblue")
 //       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
@@ -6762,7 +6751,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //           align(TOP) color_this("mediumseagreen")
 //           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1],helical=-helical,herringbone=true);
 // Example(3D,Med,NoAxes,Anim,Frames=75,FrameMS=40,VPR=[50.40,0.00,87.50],VPD=192.04,VPT=[0.31,-0.81,5.31]): Request a sun/carrier ratio of 6 with exact=false, and only 40 teeth.  We get a ratio of 5 instead of 6.  Increasing `max_teeth` or decreasing `min_teeth` improves this result and also significantly shrinks the design radius.  The sun drives the carrier and we assemble the model sun first using {{attach_gear()}} so that we can drive the sun from a previous gear.  The carrier stage outputs its motion to the pink gear which turns the purple gear.
-//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   $fn=60;  $gear_steps=12;  $backlash=0.1;
 //   h=8;
 //   data=stepped_planetary(5,40,mod1=1,min_teeth=12,
 //            sun_carrier=6,uniform=true,exact=false);
@@ -6789,31 +6778,30 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //            spur_gear(mod=3/4,teeth=10,anchor=BOT,thickness=4)
 //            attach_gear(125) color_this("mediumpurple") spur_gear(teeth=19);
 //       }
-// Example(3D,Med,NoAxes,Anim,VPR=[56.70,0.00,10.50],VPD=126.00,VPT=[1.41,-4.67,3.76],Frames=72,FrameMS=60): Ring driven system with carrier output needs to be built the same way, but ring first.
-//    $fn=48;  $gear_steps=12;  $backlash=0.1;
-//    h=6;
-//    data=stepped_planetary(3,40,mod1=1,min_teeth=6,
-//       ring_carrier=8/3,uniform=true,exact=true);
-//    sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
-//    ratio=data[3][1];
-//    gear_spin($t*120*ratio)
-//    ring_gear(mod=mod[1], teeth=ring[1], profile_shift=ring[2], thickness=h)
-//      gear_carrier_frame(ratio){
-//        // create planets         
-//        attach_gear(planets[5],phase=planets[3])
-//          let(planet_ind=$idx)
-//          color_this("coral")
-//          spur_gear(teeth=planets[1][1],profile_shift=planets[2][1])
-//            align(TOP) color_this("mediumseagreen")
-//            spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0])
-//               // create sun
-//               if(planet_ind==0) attach_gear(180)
-//                  recolor("lightblue") spur_gear(teeth=sun[1],profile_shift=sun[2]);
-//         // Create carrier
-//         up(1.5*h) color_this("red")
-//         linear_extrude(h/4) stroke(planets[4],width=1,closed=true);
-//      }
-// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=45,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires using {{gear_carrier_frame()}}.  
+// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=45,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires {{gear_carrier_frame()}}.  
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   h=8;
+//   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
+//       carrier_sun=1/7,uniform=true,exact=true);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   ratio=data[3][1];
+//   gear_spin($t*120)
+//     let(carrier_motion=gear_motion()){
+//       gear_shaft()
+//         color_this("lightblue") ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h)
+//           gear_carrier_frame(motion=carrier_motion)
+//             attach_gear(planets[5], phase=planets[3])
+//             let(planet_idx=$idx)
+//             spur_gear(teeth=planets[1][1], profile_shift=planets[2][1]) 
+//               align(TOP)
+//                   color_this("coral")   spur_gear(mod=mod[0], teeth=planets[1][0], profile_shift=planets[2][0])
+//              if (planet_idx==0)
+//              attach_gear(180) color_this("pink")
+//                spur_gear(teeth=sun[1], profile_shift=sun[2],thickness=2*h+1,anchor=BOT)
+//                   gear_exit_carrier()
+//                   attach_gear(0) color_this("lightgreen")spur_gear(teeth=7,thickness=h,anchor=TOP);
+//     }
+// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=70,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires using {{gear_carrier_frame()}}.  
 //   $fn=48;  $gear_steps=12;  $backlash=0.1;
 //   h=8;
 //   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
@@ -7398,8 +7386,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   helical1 = Sun and fixed-ring helix angle, strictly between -90 and 90 degrees. Default: helical
 //   helical2 = Output-ring helix angle, strictly between -90 and 90 degrees. Default: helical
 //   gear_spin = Rotation of the selected driving member (sun, output ring, or carrier), in degrees. Default: 0
-// Example(3D,Med,NoAxes,Anim,Frames=96,FrameMS=20,VPR=[49.70,0.00,7.70],VPD=213.38,VPT=[0.85,-1.91,7.73]): Construct a reversing Wolfrom gear assembly with a sun/ring ratio of 60.  Watch the purple ring carefully.  
-//   $fn=64;  $gear_steps=16;  $backlash=0.1;
+// Example(3D,Med,NoAxes,Anim,Frames=72,FrameMS=30,VPR=[49.70,0.00,7.70],VPD=213.38,VPT=[0.85,-1.91,7.73]): Construct a reversing Wolfrom gear assembly with a sun/ring ratio of 60.  Watch the purple ring carefully.  
+//   $fn=90;  $gear_steps=16;  $backlash=0.1;
 //   h=10;
 //   data=wolfrom_planetary(3,90,mod1=1.5,min_teeth=18,
 //            sun_ring=-60,exact=false,uniform=true,gear_spin=480*$t);
@@ -7437,15 +7425,14 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //                       ring_gear(teeth=rings[1][1],profile_shift=rings[2][1]);
 //           }
 //       }
-// Example(3D,Med,NoAxes,Anim,Frames=96,FrameMS=20,VPR=[50.40,0.00,87.50],VPD=217,VPT=[0.03,1.25,5.76]): Non-reversing output selected from an interval, with separate helix angles and ring backing on the layers.  The calculated ratio is 60.  
+// Example(3D,Med,NoAxes,VPR=[50.40,0.00,87.50],VPD=217,VPT=[0.03,1.25,5.76]): Non-reversing output selected from an interval, with separate helix angles and ring backing on the layers.  The calculated ratio is 60.  
 //   $fn=64; $gear_steps=16;  $backlash=0.1;
 //   h=15;
 //   data=wolfrom_planetary(3,90,mod1=1.5,min_teeth=18,sun_ring=[59.5,60.5],uniform=true,
 //       helical1=20,helical2=-15,backing1=3,backing2=2);
 //   ratio = data[5][1];
-//   echo(ratio=ratio);
 //   sun=data[0]; rings=data[1]; planets=data[2]; mod=data[4][1];
-//   gear_spin(1440*$t/3)  // One third carrier turn
+//   gear_spin(120)
 //   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,helical=20)
 //       gear_carrier_frame(ratio) {
 //           up(1.5*h+1) recolor("royalblue")
@@ -8168,16 +8155,16 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //   spur_gear(mod=2,teeth=24,thickness=28,helical=25,backlash=.1,slices=24)
 //       attach_gear(25,shift=-4)
 //           recolor("lightblue") spur_gear(teeth=36,thickness=14,anchor=TOP,backlash=.1,slices=36);
-// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=237.09,VPT=[33.17,10.33,-6.65],NoScales,Anim,Frames=48,FrameMS=55): A two-level compound train changes tooth size on the common shaft before driving its next mate.
-//   $fn=64;
-//   gear_spin(135*$t)
+// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=237.09,VPT=[33.17,10.33,-6.65],NoScales,Anim,Frames=12,FrameMS=55): A two-level compound train changes tooth size on the common shaft before driving its next mate.
+//   $fn=36;
+//   gear_spin(30*$t)
 //   spur_gear(mod=2,teeth=24,thickness=6,shaft_diam=4)
 //       attach_gear(0)
 //           recolor("lightblue") spur_gear(teeth=36,shaft_diam=4)
 //               attach(TOP,BOT)
-//                   recolor("orange") spur_gear(mod=1,teeth=20,thickness=5,shaft_diam=4)
+//                   recolor("orange") spur_gear(mod=1,teeth=18,thickness=5,shaft_diam=4)
 //                       attach_gear(90)
-//                           recolor("gold") spur_gear(teeth=40,shaft_diam=4);
+//                           recolor("gold") spur_gear(teeth=36,shaft_diam=4);
 // Example(3D,Big,NoScales,VPR=[80.90,0.00,306.60],VPD=237,VPT=[7.82,-32.82,-6.88]): A crossed-helical input drives a coaxial cylindrical worm and a second compound spur stage.
 //   $fn=48; $gear_steps=12;
 //   gear_spin(90*sin(360*$t))
@@ -8209,15 +8196,15 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 // Example(3D,NoAxes,Med,VPR=[90.00,0.00,0.00],VPD=1150,VPT=[-15.51,37.07,1.21]): The left hand image shows a worm face gear attached with `worm_face_pos=LEFT` and the right hand image shows `worm_face_pos=RIGHT` (the default). 
 //   xcopies(n=2,spacing=330)   
 //      worm(mod=3,worm_diam=45,worm_length=85)
-//          attach_gear(dir=BACK,worm_face_pos=$idx ? LEFT:RIGHT)
+//          attach_gear(dir=BACK,worm_face_pos=$idx ? LEFT:RIGHT) recolor("lightblue")
 //              worm_face_gear(teeth=47,shaft_offset=58);
-// Example(3D,Med,Anim,FrameMS=55,Frames=60,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
-//   gear_spin(-180*8/12*(0.5+0.5*cos(360*$t))) 
+// Example(3D,Med,Anim,FrameMS=90,Frames=36,NoScales,VPR=[72.10,0.00,25.20],VPD=237.09,VPT=[-2.30,6.00,14.92]): A skew rack starts near the LEFT end.
+//   gear_spin(-30*(1-cos(360*$t))) 
 //       spur_gear(mod=2,teeth=24,thickness=10,helical=17.5,backlash=.15,slices=32)
 //           attach_gear(90,rack_inset=2)
 //               recolor("lightblue") rack(teeth=12,thickness=10,helical=22.5,anchor=LEFT,backlash=.15);
-// Example(2D,Med,Anim,Frames=72,FrameMS=50,VPD=325,NoScales): A pinion rolling along a fixed rack is created by canceling the rack travel with an opposite movement
-//   travel=30*sin(360*$t);
+// Example(2D,Med,Anim,Frames=40,FrameMS=90,VPD=325,NoScales): A pinion rolling along a fixed rack is created by canceling the rack travel with an opposite movement
+//   travel=12*sin(360*$t);
 //   left(travel) gear_travel(travel)
 //       rack2d(mod=1.5,teeth=32)
 //           attach_gear(pos=0)
@@ -8225,8 +8212,8 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //                   // Ordinary children of this automatically driven pinion follow its rotation.
 //                   color("red") right(6) circle(d=3,$fn=16);
 //               }
-// Example(2D,Med,Anim,NoScales,Frames=120,VPD=325,FrameMS=30): The same method creates a pinion rolling around a fixed spur gear.
-//   spin=360*$t;
+// Example(2D,Med,NoScales,VPD=325): The same method creates a pinion rolling around a fixed spur gear.
+//   spin=30;
 //   zrot(-spin) gear_spin(spin)
 //       spur_gear2d(mod=1.5,teeth=36) {
 //           recolor("black") right(8) circle(d=3,$fn=16);
@@ -8235,10 +8222,10 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //                   color("red") right(5) circle(d=2.5,$fn=16);
 //               }
 //       }
-// Example(3D,Med,NoAxes,Anim,Frames=20,FrameMS=30,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Planetary gear with fixed carrier, built from ring inward.  Helical angle is handled automatically.  
+// Example(3D,Med,NoAxes,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Planetary gear with fixed carrier, built from ring inward.  Helical angle is handled automatically.  
 //   mod=1;
 //   helical=25;
-//   spin = 360/27*$t;
+//   spin = 10;
 //   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical);
 //   gear_spin(spin)
 //   ring_gear(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], helical=helical, backing=2)
@@ -8248,9 +8235,9 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //         if ($idx==0)
 //           attach_gear(180)
 //             spur_gear(teeth=gear_data[0][1], profile_shift=gear_data[0][2]);
-// Example(2D,Med,NoAxes,Anim,Frames=90,FrameMS=30,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): Planetary gear with fixed sun: build from the sun to the ring and counter-rotate the whole assembly to zero out the sun's rotation
+// Example(2D,Med,NoAxes,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): Planetary gear with fixed sun: build from the sun to the ring and counter-rotate the whole assembly to zero out the sun's rotation
 //   gear_data = planetary_gears(mod=1, n=3, max_teeth=28, ring_carrier=1.341);
-//   spin = 360*$t/3;
+//   spin = 30;
 //   zrot(-spin) gear_spin(spin)
 //   spur_gear2d(mod=1, teeth=gear_data[0][1], profile_shift=gear_data[0][2])   //sun
 //     attach_gear(gear_data[2][5])
@@ -8258,10 +8245,10 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //       spur_gear2d(teeth=gear_data[2][1],profile_shift=gear_data[2][2])
 //         if($idx==0)
 //           attach_gear(180)ring_gear2d(teeth=gear_data[1][1], profile_shift=gear_data[1][2],backing=2);
-// Example(2D,Med,NoAxes,Anim,FrameMS=55,Frames=72,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
+// Example(2D,Med,NoAxes,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6);
-//   spin=360/5*$t;
+//   spin=20;
 //   zrot(-spin) gear_spin(spin)
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], backing=2)
 //     attach_gear(gear_data[2][5])
@@ -8907,12 +8894,12 @@ module _gear_publish(S,pose) {
 //   angle = Angle to rotate the gear
 // Side Effects:
 //   Sets internal variables requesting rotational drive for the root gear.
-// Example(2D,Anim,Frames=72,FrameMS=55,VPD=263.43,VPT=[35.99,-1.57,-6.88],NoScales): The central gear is driven and transfers it's motion to the child
+// Example(2D,Anim,Frames=36,FrameMS=110,VPD=125,VPT=[14,0,0],NoScales): The central gear is driven and transfers it's motion to the child
 //   gear_spin(360*$t)
-//       spur_gear2d(mod=2,teeth=24) {
-//           color("red") right(12) circle(d=3,$fn=16);
-//           attach_gear(0) spur_gear2d(teeth=36)
-//               color("blue") right(18) circle(d=3,$fn=16);
+//       spur_gear2d(mod=2,teeth=12) {
+//           color("red") right(6) circle(d=3,$fn=16);
+//           attach_gear(0) spur_gear2d(teeth=12)
+//               color("blue") right(6) circle(d=3,$fn=16);
 //        }
 module gear_spin(angle)
 {
@@ -8933,7 +8920,7 @@ module gear_spin(angle)
 //   distance = Mechanical displacement in model units.
 // Side Effects:
 //   Sets internal variables requesting linear drive for the root rack.
-// Example(2D,Anim,NoAxes,FrameMS=55,Frames=72): A sliding rack drives a fixed-axis pinion.
+// Example(2D,Anim,NoAxes,FrameMS=110,Frames=36): A sliding rack drives a fixed-axis pinion.
 //   gear_travel(30*sin(360*$t))
 //       rack2d(mod=4,teeth=12)
 //           attach_gear(pos=0) spur_gear2d(teeth=10);
@@ -8987,10 +8974,10 @@ module _gear_drive(kind,value) {
 //   `$gear_input` retains the original chain input kind.
 //   `$gear_contact_dir` and `$gear_contact_angle` are re-expressed in the carrier frame.
 //   `$gear_chain_locs` and `$gear_chain_axes` are re-expressed in the carrier frame; no gear is added to their histories.
-// Example(3D,Med,NoAxes,Anim,Frames=225,FrameMS=25,VPR=[36.80,0.00,0],VPD=325.23,VPT=[1.12,-4.39,8.33]): A moving arm traces an ellipse.  
+// Example(3D,Med,NoAxes,Anim,Frames=72,FrameMS=75,VPR=[22.00,0.00,0.50],VPD=454.07,VPT=[0,-7.09,20.36]): A moving arm traces an ellipse.  
 //   $fn=48;  $gear_steps=8;
-//   pen_radius=20;
-//   spacing=gear_dist(mod=2,teeth1=36,teeth2=18);
+//   pen_radius=20; mod=6;
+//   spacing=gear_dist(mod=mod,teeth1=12,teeth2=6);
 //   arm_points=[[0,0],[spacing/2,-0.65*spacing-4],[spacing,0]];
 //   major=spacing+pen_radius;
 //   minor=spacing-pen_radius;
@@ -8998,19 +8985,19 @@ module _gear_drive(kind,value) {
 //   up(10) recolor("lightgray")
 //     linear_extrude(height=1) stroke(ellipse([major,minor]),closed=true);
 //   gear_spin(720*$t)
-//   spur_gear(mod=2,teeth=36,thickness=6,helical=0,profile_shift=0)
+//   spur_gear(mod=mod,teeth=12,thickness=6,helical=0)
 //       gear_carrier_frame(2) {
-//           recolor("slategray")down(5) linear_extrude(height=4)stroke(arm_points, width=8);
+//           recolor("slategray")down(5) linear_extrude(height=4,center=true)stroke(arm_points, width=8);
 //           attach_gear(0)
 //           recolor("mediumseagreen")
-//           spur_gear(teeth=18,thickness=6){
+//           spur_gear(teeth=6,thickness=6){
 //               up(5) recolor("darkorange") cyl(d=10,h=4);
 //               up(7) right(pen_radius/2) recolor("darkorange")
 //                   cuboid([pen_radius+6,5,3]);
 //               up(9) right(pen_radius) recolor("crimson") cyl(d=3,h=6);
 //           }
 //       }
-// Example(3D,Med,NoAxes,Anim,Frames=72,FrameMS=30,VPR=[246.00,0.00,336.50],VPD=142.49,VPT=[5.46,11.02,19.20]): The teal blue input gear and connected shaft drives the carrier with its six purple gears, while a gear train reverses the drive direction and then drives the ring gear in the opposite direction.  The planetary assembly thus receives two different inputs, one on the ring and one on the carrier, and produces output on the red sun gear.  The construction proceeds from the input gear, through the reversal gear chain, to the ring, the planets, and then the sun, with the sun ready to pass its output on to further gears.  The gear ratio of 6 is calculated and displayed.
+// Example(3D,Med,NoAxes,Anim,Frames=72,FrameMS=30,VPR=[246.00,0.00,336.50],VPD=155,VPT=[4,9,19]): The teal blue input gear and connected shaft drives the carrier with its six purple gears, while a gear train reverses the drive direction and then drives the ring gear in the opposite direction.  The planetary assembly thus receives two different inputs, one on the ring and one on the carrier, and produces output on the red sun gear.  The construction proceeds from the input gear, through the reversal gear chain, to the ring, the planets, and then the sun, with the sun ready to pass its output on to further gears.  The gear ratio of 6 is calculated and displayed.
 //   $fn=48; $gear_steps=12; $backlash=0.1;
 //   drive_teeth=18; upper_teeth=24; idler_teeth=12; planet_mod=1.08;
 //   train_mod=9/gear_dist(mod=1,teeth1=upper_teeth,teeth2=idler_teeth);
@@ -9156,50 +9143,50 @@ module gear_exit_carrier(_extra) {
 // Side Effects:
 //   Starts a separate shaft context without changing the original drive identity or gain units.
 //   Resets inherited tooth dimensions, initial phase, and spatial histories for the next gear.
-// Example(3D,Med,NoAxes,VPR=[55,0,25],VPT=[0,0,4],VPD=90,Anim,Frames=64,FrameMS=55): Without `gear_shaft()` both gears turn together.
-//   $fn=48;  $gear_steps=12;  $backlash=0.1;
-//   gear_spin(360*$t)
-//   spur_gear(mod=1,teeth=24,thickness=4) {
-//       align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
-//       align(TOP) recolor("mediumseagreen")
-//       spur_gear(mod=1,teeth=20,thickness=4)
-//         align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
-//   }
-// Example(3D,Med,NoAxes,VPR=[55,0,25],VPT=[0,0,4],VPD=90,Anim,Frames=64,FrameMS=55): With `gear_shaft()` the upper gear stays fixed.  
-//   $fn=48;  $gear_steps=12;  $backlash=0.1;
-//   gear_spin(360*$t)
-//   spur_gear(mod=1,teeth=24,thickness=4) {
-//       align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
-//       gear_shaft()
-//       align(TOP) recolor("mediumseagreen")
-//       spur_gear(mod=1,teeth=20,thickness=4)
-//         align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
-//   }
-// Example(2D,Med,NoAxes,VPR=[0,0,0],VPT=[0,0,1],VPD=220,Anim,Frames=100,FrameMS=40): Without `gear_shaft()` the two gears rotate together as a unit.
-//   $fn=48;  $gear_steps=12;
-//     gear_spin(360*$t)
-//     let(arm_motion=gear_motion())
-//       spur_gear2d(mod=1,teeth=24)
-//       gear_carrier_frame(motion=arm_motion)  {
-//           attach_gear(0)
-//           recolor("mediumseagreen") spur_gear2d(teeth=24)
-//                             align(TOP,RIGHT,inset=2) color_this("crimson")cyl(d=1,h=1);
-//           up(4) recolor("royalblue")
-//                stroke([[0,0],[24,0]],width=2);
+// Example(3D,Big,NoAxes,VPR=[31.50,0.00,0.00],VPD=125,VPT=[0,-18.13,30.70],Anim,Frames=72,FrameMS=50): Without `gear_shaft()` (left) both gears turn together as a stacked unit. With `gear_shaft()` (right) the upper gear stays fixed while the lower gear turns.  
+//   $fn=48; $gear_steps=12; $backlash=0.1;
+//   xdistribute(32) {
+//       gear_spin(360*$t)
+//       spur_gear(mod=2,teeth=12,thickness=4) {
+//           align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
+//           align(TOP) recolor("mediumseagreen")
+//           spur_gear(mod=2,teeth=10,thickness=4)
+//               align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
 //       }
-// Example(2D,Med,NoAxes,VPR=[0,0,0],VPT=[0,0,1],VPD=220,Anim,Frames=100,FrameMS=40): With `gear_shaft()` the central gear is fixed and the equal sized planet rotates around it, making two turns for each single revolution of the arm.
-//   $fn=48;  $gear_steps=12;
-//     gear_spin(360*$t)
-//     let(arm_motion=gear_motion())
-//       gear_shaft()
-//       spur_gear2d(mod=1,teeth=24)
-//       gear_carrier_frame(motion=arm_motion)  {
-//           attach_gear(0)
-//           recolor("mediumseagreen") spur_gear2d(teeth=24)
-//                             align(RIGHT,overlap=3) color_this("crimson")cyl(d=1,h=1);
-//           recolor("royalblue")
-//                stroke([[0,0],[24,0]],width=2);
+//       gear_spin(360*$t)
+//       spur_gear(mod=2,teeth=12,thickness=4) {
+//           align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
+//           gear_shaft()
+//           align(TOP) recolor("mediumseagreen")
+//           spur_gear(mod=2,teeth=10,thickness=4)
+//               align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
 //       }
+//   }
+// Example(2D,Big,NoAxes,VPR=[0.00,0.00,0.00],VPD=260,VPT=[0,0,23],Anim,Frames=72,FrameMS=55): Without `gear_shaft()` (left) the two gears rotate together as a unit. With `gear_shaft()` (right) the central gear stays fixed and the equal-sized planet turns twice for each arm revolution.
+//   $fn=48; $gear_steps=12;
+//   spacing=gear_dist(mod=2,teeth1=12,teeth2=12);
+//   xdistribute(55) {
+//       gear_spin(360*$t)
+//       let(arm_motion=gear_motion())
+//       spur_gear2d(mod=2,teeth=12)
+//           gear_carrier_frame(motion=arm_motion) {
+//               attach_gear(0)
+//                   recolor("mediumseagreen") spur_gear2d(teeth=12)
+//                       right(7) recolor("crimson") circle(d=2);
+//               stroke([[0,0],[spacing,0]],width=2,color="royalblue");
+//           }
+//       gear_spin(360*$t)
+//       let(arm_motion=gear_motion())
+//       gear_shaft()
+//       spur_gear2d(mod=2,teeth=12)
+//           gear_carrier_frame(motion=arm_motion) {
+//               attach_gear(0)
+//                   recolor("mediumseagreen") spur_gear2d(teeth=12)
+//                       right(7) recolor("crimson") circle(d=2);
+//               stroke([[0,0],[spacing,0]],width=2,color="royalblue");
+//           }
+//    }
+
 
 
 module gear_shaft(motion=0, _named) {
@@ -9274,6 +9261,7 @@ function _gear_root_motion_context() =
 function _gear_motion_input() = _gear_root_motion_context()?"rotation":$gear_input;
 function _gear_motion_parallel() =
     default($_gear_motion_plane_ok,true) && len([for(a=$gear_chain_axes) if(!is_undef(a) && (norm(cross(a,UP))>1e-9 || a.z<0)) 1])==0;
+/// Motion record: [tag, version, displacement, gain, input kind, driver identity, mount identity].
 function _gear_motion_record(m) =
     !is_list(m) || len(m)!=7 ? false :
     m[0]=="BOSL2_GEAR_MOTION" && m[1]==1 && is_finite(m[2]) && is_finite(m[3]) &&
@@ -9915,7 +9903,22 @@ function _gear_spacing_backlash(backlash,pressure_angle,helical) =
     backlash==0 ? 0 :
     assert(pressure_angle>0, "\nPositive spacing backlash requires pressure_angle > 0")
     backlash*cos(helical)/tan(pressure_angle);
-function _invol(a) = tan(a) - a*PI/180;
+/// The small-angle series avoids cancellation in tan(a)-a, through the x^13 term.
+function _invol(a) =
+    abs(a)>=5 ? tan(a)-a*PI/180 :
+    let(x=a*PI/180,x2=x*x)
+    x*x2*(1/3+x2*(2/15+x2*(17/315+x2*(62/2835+x2*(1382/155925+x2*21844/6081075)))));
+/// For small v, tan(x)-x >= x^3/3 supplies a finite angle bracket.
+/// For large v, t=tan(a) solves t-atan(t)=v in [v,v+PI/2] without a pole.
+function _gear_inverse_involute(v) =
+    assert(is_finite(v) && v>=0,
+           "\nTotal profile shift gives no finite nonnegative working pressure angle")
+    v==0 ? 0 :
+    let(a=v<0.5
+          ? root_find(function(a) _invol(a)-v,0,pow(4*v,1/3)*180/PI,tol=1e-12)
+          : atan(root_find(function(t) t-atan(t)*PI/180-v,v,v+PI/2,tol=1e-12)))
+    assert(a<90, "\nWorking pressure angle is too close to 90 degrees for stable calculation")
+    a;
 function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, pressure_angle, helical) =
   let(
       pressure_angle = atan(tan(pressure_angle)/cos(helical))
@@ -9925,11 +9928,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
   let(
       rhs = 2*(profile_shift1+profile_shift2)/(teeth1+teeth2)*cos(helical)*tan(pressure_angle) + _invol(a=pressure_angle)
   )
-  assert(rhs>0, "\nTotal profile shift is too small, so working pressure angle is negative, and no valid gear separation exists")
-  let(
-      pa_eff = root_find(function (x) _invol(a=x)-rhs, 1, 75)
-  )
-  pa_eff;
+  _gear_inverse_involute(rhs);
 
 
 // Function: gear_dist_skew()
@@ -9969,8 +9968,7 @@ function gear_dist_skew(
     assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
     let(pressure_angle=default(pressure_angle,20),
         backlash=default(backlash,0))
-  assert(all_nonnegative([teeth1,teeth2]),"\nMust give nonnegative values for teeth")
-  assert(teeth1>0 || teeth2>0, "\nOne of the teeth counts must be nonzero")
+  assert(_gear_skew_inputs(teeth1,teeth2,helical1,helical2,pressure_angle))
   let(
       profile_shift1 = auto_profile_shift(teeth=teeth1,pressure_angle=pressure_angle,helical=helical1,profile_shift=profile_shift1),
       profile_shift2 = auto_profile_shift(teeth=teeth2,pressure_angle=pressure_angle,helical=helical2,profile_shift=profile_shift2),
@@ -9988,13 +9986,22 @@ function gear_dist_skew(
       // This expression is a guess based on finding the cross section where pressure angles match so that there is a single
       // pressure angle to reference the movement by. 
       + spacing_backlash;
-function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) = 
-  let(
-      inv = function(a) tan(a) + a*PI/180, 
-      rhs = 2*(profile_shift1+profile_shift2)/(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*tan(pressure_angle) + _invol(a=pressure_angle),
-      pa_eff_normal = root_find(function (x) _invol(a=x)-rhs, 5, 75)
-  )
-  pa_eff_normal;
+function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) =
+    profile_shift1+profile_shift2==0 ? pressure_angle :
+    _gear_inverse_involute(2*(profile_shift1+profile_shift2)/
+        (teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*tan(pressure_angle)+_invol(pressure_angle));
+
+/// Shared boundary validation, including branches that do not need an angle inversion.
+function _gear_skew_inputs(teeth1,teeth2,helical1,helical2,pressure_angle) =
+    assert(all_nonnegative([teeth1,teeth2]), "\nMust give nonnegative values for teeth")
+    assert(teeth1>0 || teeth2>0, "\nOne of the teeth counts must be nonzero")
+    assert(is_finite(helical1) && abs(helical1)<90,
+           "\nhelical1 must be finite and strictly between -90 and 90 degrees")
+    assert(is_finite(helical2) && abs(helical2)<90,
+           "\nhelical2 must be finite and strictly between -90 and 90 degrees")
+    assert(is_finite(pressure_angle) && pressure_angle>=0 && pressure_angle<90,
+           "\npressure_angle must be finite and in [0,90) degrees")
+    true;
 
 
 // Function: gear_skew_angle()
@@ -10027,8 +10034,7 @@ function gear_skew_angle(
 ) =
     assert(is_undef(_named), "\nToo many positional arguments (only 6 are accepted)")
     let(pressure_angle=default(pressure_angle,20))
-   assert(all_nonnegative([teeth1,teeth2]),"\nMust give nonnegative values for teeth")
-   assert(teeth1>0 || teeth2>0, "\nOne of the teeth counts must be nonzero")
+   assert(_gear_skew_inputs(teeth1,teeth2,helical1,helical2,pressure_angle))
    let(
        mod = 1,  // This is independent of module size
        profile_shift1 = auto_profile_shift(teeth=teeth1,pressure_angle=pressure_angle,helical=helical1,profile_shift=profile_shift1),
@@ -10038,7 +10044,6 @@ function gear_skew_angle(
  : teeth1==0 || teeth2==0 ? helical1+helical2
  : let(
         a = gear_dist_skew(mod=mod,teeth1=teeth1,teeth2=teeth2,helical1=helical1,helical2=helical2,profile_shift1=profile_shift1,profile_shift2=profile_shift2,pressure_angle=pressure_angle),
-        b = gear_dist_skew(mod=mod,teeth1=teeth1,teeth2=teeth2,helical1=helical1,helical2=helical2,profile_shift1=0,profile_shift2=0,pressure_angle=pressure_angle),
         d1 = 2*pitch_radius(mod=mod,teeth=teeth1,helical=helical1),
         d2 = 2*pitch_radius(mod=mod,teeth=teeth2,helical=helical2),
         dw1 = 2*a*d1/(d1+d2),

@@ -1229,6 +1229,68 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 }
 
 
+
+// Exact arclength of the helix with radii r1,r2 that rotates through T radians and rises H.
+// With s in [0,1], R=r1+dr*s, speed = norm([dr, H, T*R]), which integrates in closed form.
+function _helix_arclength(r1, r2, T, H) =
+    let(
+        dr = r2-r1,
+        b = abs(T),
+        a2 = dr*dr + H*H
+    )
+    b==0 ? sqrt(a2)
+  : dr==0 ? sqrt(a2 + b*b*r1*r1)
+  : let(
+        u1 = b*r1,
+        u2 = b*r2,
+        s1 = sqrt(a2+u1*u1),
+        s2 = sqrt(a2+u2*u2)
+    )
+    (u2*s2 - u1*s1 + a2*ln((u2+s2)/(u1+s1))) / (2*b*dr);
+
+
+// Solve for the unknown helix parameters when arclength is given.
+// Returns [length, turns]; length is undef when angle is given.
+function _helix_solve_arclength(r1, r2, turns, angle, length, arclength) =
+    let(
+        dr = r2-r1,
+        ravg = (r1+r2)/2,
+        eps = 1e-9*arclength
+    )
+    is_def(turns) ?
+        // turns given: solve for length
+        let(
+            T = 2*PI*turns,
+            f = function(H) _helix_arclength(r1,r2,T,H) - arclength,
+            f0 = f(0)
+        )
+        assert(f0<=eps,
+               str("arclength is too short: a flat spiral with ",turns," turns already has length ",arclength+f0))
+        [f0>=-eps ? 0 : root_find(f, 0, arclength), turns]
+  : is_def(length) ?
+        // length given: solve for turns (right handed)
+        let(amin = norm([dr,length]))
+        assert(arclength>amin,
+               str("arclength must exceed ",amin," for this length and radii"))
+        let(
+            Tmax = arclength/ravg*(1+1e-6),    // arclength >= T*ravg
+            f = function(T) _helix_arclength(r1,r2,T,length) - arclength,
+            T = root_find(f, 0, Tmax)
+        )
+        [length, (length<0 ? -1 : 1)*T/(2*PI)]
+  :
+        // angle given: solve for turns (right handed)
+        assert(arclength>abs(dr),
+               str("arclength must exceed ",abs(dr)," for this change in radius"))
+        let(
+            dz = 2*PI*r1*tan(angle),
+            Nmax = arclength/(2*PI*ravg)*(1+1e-6),    // arclength >= 2*PI*N*ravg
+            f = function(N) _helix_arclength(r1,r2,2*PI*N,N*dz) - arclength,
+            N = root_find(f, 0, Nmax)
+        )
+        [undef, angle<0 ? -N : N];
+
+
 // Function: helix()
 // Synopsis: Creates a 3D helical path, including flat spirals.
 // SynTags: Path
@@ -1237,17 +1299,23 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 //
 // Usage:
 //   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
+//   path = helix(arclength=, turns=|angle=|l=|h=, r=|r1=|r2=, d=|d1=|d2=);
 // Description:
 //   Returns a 3D helical path on a cone, including the degenerate case of flat spirals.
-//   You can specify start and end radii.  You can give the length, the helix angle, or the number of turns: two
-//   of these three parameters define the helix.  For a flat helix you must give length 0 and a turn count.
-//   Helix will be right handed if turns is positive and left handed if it is negative.
+//   You can specify start and end radii.  You can give the length, the helix angle, the number of turns,
+//   or the arclength: two of these four parameters define the helix.  For a flat helix you must give
+//   a turn count or arc length along with either `length=0` or `angle=0`.  
+//   The helix will be right handed if turns is positive and left handed if it is negative.
 //   The angle is calculated based on the radius at the base of the helix.
+//   .
+//   The arclength is the length of the ideal helical curve.  It must must be large enough for the helix to reach a requested
+//   length or change in radius.  A specified `angle` must be strictly between -90 and 90 when you give `arclength`. 
 // Arguments:
-//   h/l = Height/length of helix measured parallel to the Z axis.  zero for a flat spiral
+//   l / h / length / height = Length of helix measured parallel to the Z axis.  Zero for a flat spiral.
 //   ---
 //   turns = Number of turns in helix, positive for right handed
 //   angle = Helix angle at the starting radius. With length supplied, its sign relative to length determines handedness; the path still ends at the supplied length.
+//   arclength = Length of the helical curve itself.  Must be positive.
 //   r = Radius of helix
 //   r1 = Radius of bottom of helix
 //   r2 = Radius of top of helix
@@ -1260,23 +1328,42 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 //   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
 // Example(3D): Flat helix (note points are still 3d)
 //   stroke(helix(h=0,r1=50,r2=25, turns=4));
-module helix(l,h,turns,angle, r, r1, r2, d, d1, d2) {no_module();}
-function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
+// Example(3D): Helix with specified arclength and turns, which determines the height
+//   stroke(helix(arclength=250, turns=3, r=10), dots=true, dots_color="blue");
+// Example(3D): Helix with specified arclength and angle, which determines the number of turns
+//   stroke(helix(arclength=200, angle=20, r=10), dots=true, dots_color="blue");
+// Example(3D): Tapered helix with specified arclength and height
+//   stroke(helix(arclength=300, h=60, r1=20, r2=10));
+
+module helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength) {no_module();}
+function helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength)=
+    assert(num_defined([l,h,length,height])<=1, "Specify at most one of l, h, length, and height")
     let(
         r1=get_radius(r=r,r1=r1,d=d,d1=d1,dflt=1),
         r2=get_radius(r=r,r1=r2,d=d,d1=d2,dflt=1),
-        length = first_defined([l,h])
+        length = first_defined([l,h,length,height])
     )
-    assert(num_defined([length,turns,angle])==2,"Must define exactly two of l/h, turns, and angle")
-    assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
+    assert(is_undef(arclength) || (is_finite(arclength) && arclength>0),
+           "arclength must be a positive finite number")
+    assert(num_defined([length,turns,angle,arclength])==2,
+           "Must define exactly two of l/h/length/height, turns, angle, and arclength")
     assert(is_undef(turns) || (is_finite(turns) && turns!=0), "turns must be finite and nonzero")
     assert(is_undef(length) || is_finite(length), "Helix length must be finite")
+    assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
     assert(is_undef(angle) || (is_finite(angle) && abs(angle)<=90 && r1>0),
            "angle must be nonzero and between -90 and 90, with a positive starting radius")
     assert(angle!=0 || is_undef(length), "Cannot give length with angle=0")
     assert(is_undef(angle) || abs(angle)<90 || is_undef(turns), "Cannot give turns with angle=±90")
-  
+    assert(is_undef(arclength) || (r1>0 && r2>=0), "With arclength, r1 must be positive and r2 nonnegative")
+    assert(is_undef(arclength) || is_undef(angle) || abs(angle)<90, "Cannot give arclength with angle=±90")
+    assert(is_undef(arclength) || is_undef(length) || arclength>=abs(length),
+           "arclength cannot be smaller than the helix length")
     let(
+        sol = is_undef(arclength) ? [length, turns]
+            : _helix_solve_arclength(r1,r2,turns,angle,length,arclength),
+        length = sol[0],
+        turns = sol[1],
+
         // length advances dz for each turn
         dz = is_def(angle) && length!=0 ? 2*PI*r1*tan(angle) : length/abs(turns),
 
