@@ -1244,7 +1244,7 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 //   Helix will be right handed if turns is positive and left handed if it is negative.
 //   The angle is calculated based on the radius at the base of the helix.
 // Arguments:
-//   h/l = Height/length of helix, zero for a flat spiral
+//   h/l = Height/length of helix measured parallel to the Z axis.  zero for a flat spiral
 //   ---
 //   turns = Number of turns in helix, positive for right handed
 //   angle = Helix angle at the starting radius. With length supplied, its sign relative to length determines handedness; the path still ends at the supplied length.
@@ -1271,8 +1271,11 @@ function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
     assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
     assert(is_undef(turns) || (is_finite(turns) && turns!=0), "turns must be finite and nonzero")
     assert(is_undef(length) || is_finite(length), "Helix length must be finite")
-    assert(is_undef(angle) || (is_finite(angle) && angle!=0 && abs(angle)<90 && r1>0),
-           "angle must be nonzero and strictly between -90 and 90, with a positive starting radius")
+    assert(is_undef(angle) || (is_finite(angle) && abs(angle)<=90 && r1>0),
+           "angle must be nonzero and between -90 and 90, with a positive starting radius")
+    assert(angle!=0 || is_undef(length), "Cannot give length with angle=0")
+    assert(is_undef(angle) || abs(angle)<90 || is_undef(turns), "Cannot give turns with angle=±90")
+  
     let(
         // length advances dz for each turn
         dz = is_def(angle) && length!=0 ? 2*PI*r1*tan(angle) : length/abs(turns),
@@ -1281,7 +1284,8 @@ function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
         endheight = is_def(length) ? length : abs(turns)*dz,
         N = segs(max(r1,r2))
     )
-    [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
+    maxtheta==0 ? [[r1,0,0],[r2,0,endheight]]
+  : [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
        let(R=lerp(r1,r2,theta/maxtheta))
        [R*cos(theta), R*sin(theta), theta/maxtheta * endheight]];
 

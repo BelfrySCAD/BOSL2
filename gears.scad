@@ -89,8 +89,18 @@ $gear_chain_axes = [];
 $_gear_parent_spec = undef;
 $_gear_attach_request = undef;
 $_gear_frame_motion = ident(4);
+$_gear_frame_phase = 0;
+// Carrier support [angular displacement, signed gain]. Entry retains a distinct
+// meshing parent while ordinary children belong to the carrier output shaft.
+$_gear_carrier = undef;
+$_gear_carrier_parent = undef;
 $_gear_chain_active = false;
 $_gear_driver = undef;
+// Motion provenance is independent of the geometry/reset scopes.
+$_gear_drive_id = undef;
+$_gear_mount_id = undef;
+$_gear_motion_plane_ok = true;
+$_gear_shaft_motion = undef;
 $gear_angle_offset = 0;
 $gear_travel_offset = 0;
 $worm_length = undef;
@@ -900,12 +910,9 @@ function _gear_worm_starts(starts,worm_starts) =
 // Usage: As a Module
 //   spur_gear(mod=|circ_pitch=|diam_pitch=, teeth, [thickness], [helical=], [herringbone=], [pressure_angle=], [profile_shift=], [shorten=], [backlash=], [shaft_diam=], [hide=], [gear_spin=], [clearance=], [slices=], [internal=], [$gear_steps=], [atype=], [anchor=], [spin=], [orient=], [interior=]) [ATTACHMENTS];
 // Description:
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
 //   Creates a involute spur gear, helical gear, herringbone gear, or a mask for an internal ring gear.
 //   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-quick-introduction-to-gears).
-//   Give the number of teeth.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent gear. 
 //   Spur gears have straight teeth and
 //   mesh together on parallel shafts without creating any axial thrust.  The teeth engage suddenly across their
 //   entire width, creating stress and noise.  Helical gears have angled teeth and engage more gradually, so they
@@ -1076,7 +1083,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //          shaft_diam=5, helical=ang2, slices=12,
 //          gear_spin=90-180/n
 //      );
-// Example(Anim,Big,NoAxes,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=220): Planetary Gear Assembly
+// Example(Anim,Big,NoAxes,Frames=50,VPT=[0,0,0],VPR=[55,0,25],VPD=220): Planetary Gear Assembly
 //   $fn=128;
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; thick=10; pa=20;
@@ -1141,14 +1148,14 @@ function spur_gear(
         helical = _inherit_gear_helical(helical=helical, invert=true),
         thickness = _inherit_gear_thickness(thickness=thickness)
     )
-    assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+    assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
     assert(is_finite(thickness) && thickness>0, "\nthickness must be greater than zero and finite")
     assert(is_finite(shaft_diam) && shaft_diam>=0, "\nshaft_diam must be nonnegative and finite")
-    assert(is_integer(hide) && hide>=0 && hide<teeth, "\nteeth must satisfy the documented integer range")
-    assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+    assert(is_integer(hide) && hide>=0 && hide<teeth, str("\nhide must be an integer from 0 to ",teeth-1,"; got ",hide))
+    assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
     assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
     assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-    assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_bool(herringbone), "\nherringbone must be boolean")
     assert(slices==undef || (is_integer(slices) && slices>0), "\nslices must be a positive integer or undef for automatic sampling")
     assert(is_finite(gear_spin), "\ngear_spin must be finite")
@@ -1228,14 +1235,14 @@ module spur_gear(
     helical = _inherit_gear_helical(helical=helical, invert=true);
     thickness = _inherit_gear_thickness(thickness=thickness);
     checks =
-        assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
         assert(is_finite(thickness) && thickness>0, "\nthickness must be greater than zero and finite")
         assert(is_finite(shaft_diam) && shaft_diam>=0, "\nshaft_diam must be nonnegative and finite")
-        assert(is_integer(hide) && hide>=0 && hide<teeth, "\nteeth must satisfy the documented integer range")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+        assert(is_integer(hide) && hide>=0 && hide<teeth, str("\nhide must be an integer from 0 to ",teeth-1,"; got ",hide))
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
         assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(is_bool(herringbone), "\nherringbone must be boolean")
         assert(slices==undef || (is_integer(slices) && slices>0), "\nslices must be a positive integer or undef for automatic sampling")
         assert(is_finite(gear_spin), "\ngear_spin must be finite");
@@ -1318,12 +1325,9 @@ module spur_gear(
 // Usage: As a Module
 //   spur_gear2d(mod=|circ_pitch=|diam_pitch=, teeth, [pressure_angle=], [profile_shift=], [shorten=], [backlash=], [helical=], [hide=], [gear_spin=], [clearance=], [internal=], [$gear_steps=], [shaft_diam=], [atype=], [anchor=], [spin=], [interior=]) [ATTACHMENTS];
 // Description:
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
 //   Creates a 2D involute spur gear, or a mask for an internal ring gear.
 //   For more information about gears, see [A Quick Introduction to Gears](gears.scad#section-quick-introduction-to-gears).
-//   Give the number of teeth.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent gear.
 //   .
 //   The module creates the gear in centered on the origin, with one tooth centered on the positive Y axis.
 //   In order for two gears to mesh they must have the same tooth size and `pressure_angle`
@@ -1473,13 +1477,13 @@ function spur_gear2d(
         PA = _inherit_gear_pa(pressure_angle=pressure_angle),
         helical = _inherit_gear_helical(helical=helical, invert=true)
     )
-    assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+    assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
     assert(is_finite(shaft_diam) && shaft_diam>=0, "\nshaft_diam must be nonnegative and finite")
-    assert(is_integer(hide) && hide>=0 && hide<teeth, "\nteeth must satisfy the documented integer range")
-    assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+    assert(is_integer(hide) && hide>=0 && hide<teeth, str("\nhide must be an integer from 0 to ",teeth-1,"; got ",hide))
+    assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
     assert(clearance==undef || is_finite(clearance), "\nclearance must be nonnegative and finite")
     assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-    assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_finite(gear_spin), "\ngear_spin must be finite")
     let(
         profile_shift = auto_profile_shift(teeth=teeth,pressure_angle=PA,helical=helical,profile_shift=profile_shift),
@@ -1545,13 +1549,13 @@ module spur_gear2d(
     PA = _inherit_gear_pa(pressure_angle=pressure_angle);
     helical = _inherit_gear_helical(helical=helical, invert=true);
     checks =
-        assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
         assert(is_finite(shaft_diam) && shaft_diam>=0, "\nshaft_diam must be nonnegative and finite")
-        assert(is_integer(hide) && hide>=0 && hide<teeth, "\nteeth must satisfy the documented integer range")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+        assert(is_integer(hide) && hide>=0 && hide<teeth, str("\nhide must be an integer from 0 to ",teeth-1,"; got ",hide))
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
         assert(clearance==undef || is_finite(clearance), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(is_finite(gear_spin), "\ngear_spin must be finite");
     profile_shift = auto_profile_shift(teeth=teeth,pressure_angle=PA,helical=helical,profile_shift=profile_shift);
     rgn = spur_gear2d(
@@ -1594,13 +1598,11 @@ module spur_gear2d(
 // Usage: As a Module
 //   ring_gear(mod=|circ_pitch=|diam_pitch=, teeth, [thickness], [backing], [$gear_steps=], [od=], [or=], [width=], [pressure_angle=], [helical=], [herringbone=], [profile_shift=], [clearance=], [backlash=], [anchor=], [spin=], [orient=], [atype=], [gear_spin=], [slices=]) [ATTACHMENTS];
 // Description:
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
 //   Creates a 3D involute ring gear.
 //   Meshing gears must have the same tooth size, pressure angle and helical angle as usual.
 //   Additionally, you must have more teeth on an internal gear than its mating external gear, and
 //   the profile shift on the ring gear must be at least as big as the profile shift on the mating gear.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent gear. 
 //   The ring gear's `profile_shift` defaults to zero, even when the mating spur gear may automatically profile shift.
 //   You may need to use {{auto_profile_shift()}} to find the profile shift of a mating spur gear if it has a small number of teeth
 //   and you use the default "auto" profile shift.  The gear spacing is given by {{gear_dist()}}.  
@@ -1691,12 +1693,12 @@ module ring_gear(
     helical = _inherit_gear_helical(helical=helical,invert=true);       // Maybe broken???
     thickness = _inherit_gear_thickness(thickness=thickness);
     checks =
-        assert(in_list(atype,["outside","pitch"]), "\nInvalid argument combination: in_list(atype,[\"outside\",\"pitch\"])")
+        assert(in_list(atype,["outside","pitch"]), str("\natype must be \"outside\" or \"pitch\"; got ",atype))
         assert(is_finite(profile_shift), "\nProfile shift for ring gears must be numerical")
-        assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
         assert(is_finite(thickness) && thickness>0, "\nthickness must be greater than zero and finite")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(is_bool(herringbone), "\nherringbone must be boolean")
         assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
@@ -1708,19 +1710,7 @@ module ring_gear(
     //rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true, helical=helical);
     rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=true,
                      profile_shift=profile_shift, pressure_angle=PA, backlash=backlash);
-    or = is_def(or) ?
-            assert(is_finite(or) && or>ar, "\nor is invalid or too small for teeth")
-            or
-       : is_def(od) ?
-            assert(is_finite(od) && od>2*ar, "\nod is invalid or too small for teeth")
-            od/2
-       : is_def(width) ?
-            assert(is_finite(width) && width>ar-rr, "\nwidth is invalid or too small for teeth")
-            rr+width
-       : is_def(backing) ?
-            assert(all_positive([backing]), "\nbacking must be a positive value")
-            ar+backing
-       : 2*ar - rr;    // default case
+    or = _ring_gear_outer_radius(ar,rr,backing,or,od,width);
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(-helical)/circum;
     slices = default(slices, ceil(abs(twist)/360*segs(pr)+1));
@@ -1778,13 +1768,12 @@ module ring_gear(
 // Usage: As a Module
 //   ring_gear2d(mod=|circ_pitch=|diam_pitch=, teeth, [backing], [$gear_steps=], [od=], [or=], [width=], [helical=], [pressure_angle=], [profile_shift=], [clearance=], [backlash=], [anchor=], [spin=], [atype=], [gear_spin=], [shorten=]) [ATTACHMENTS];
 // Description:
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
 //   Creates a 2D involute ring gear.
 //   Meshing gears must have the same tooth size, pressure angle and helical angle as usual.
 //   Additionally, you must have more teeth on an internal gear than its mating external gear, and
 //   the profile shift on the ring gear must be at least as big as the profile shift on the mating gear.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent gear. 
+//   .
 //   The ring gear's `profile_shift` defaults to zero, even when the mating spur gear may automatically profile shift.
 //   You may need to use {{auto_profile_shift()}} to find the profile shift of a mating spur gear if it has a small number of teeth
 //   and you use the default "auto" profile shift.  The gear spacing is given by {{gear_dist()}}.  
@@ -1873,12 +1862,12 @@ module ring_gear2d(
     PA = _inherit_gear_pa(pressure_angle=pressure_angle);
     helical = _inherit_gear_helical(helical=helical,invert=true);
     checks =
-        assert(in_list(atype,["outside","pitch"]), "\nInvalid argument combination: in_list(atype,[\"outside\",\"pitch\"])")
+        assert(in_list(atype,["outside","pitch"]), str("\natype must be \"outside\" or \"pitch\"; got ",atype))
         assert(is_finite(profile_shift), "\nProfile shift for ring gears must be numerical")
-        assert(is_integer(teeth) && teeth>3, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=4, str("\nteeth must be an integer at least 4; got ",teeth))
         assert(num_defined([backing,or,od,width])<=1, "\nCannot define more than one of backing, or, od and width")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
         assert(is_finite(gear_spin), "\ngear_spin must be finite");
@@ -1887,19 +1876,7 @@ module ring_gear2d(
     //rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
     rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=true,
                      profile_shift=profile_shift, pressure_angle=PA, backlash=backlash);
-    or = is_def(or) ?
-            assert(is_finite(or) && or>ar, "\nor is invalid or too small for teeth")
-            or
-       : is_def(od) ?
-            assert(is_finite(od) && od>2*ar, "\nod is invalid or too small for teeth")
-            od/2
-       : is_def(width) ?
-            assert(is_finite(width) && width>ar-rr, "\nwidth is invalid or too small for teeth")
-            rr+width
-       : is_def(backing) ?
-            assert(all_positive([backing]), "\nbacking must be a positive value")
-            ar+backing
-       : 2*ar - rr;    // default case
+    or = _ring_gear_outer_radius(ar,rr,backing,or,od,width);
     _spec = _gear_spec("ring2D",circ_pitch/PI,teeth,PA,helical,thickness=0,
                            shift=profile_shift,clearance=default(clearance,circ_pitch/PI/4),
                            internal=true,herringbone=false,two_d=true);
@@ -1924,6 +1901,23 @@ module ring_gear2d(
         _gear_publish(_spec,_pose) children();
     }
 }
+// Shared outside radius for ring constructors and assembly sizing.
+// ar is the outside tooth-root envelope; rr is the inner tooth-tip radius.
+function _ring_gear_outer_radius(ar,rr,backing,or,od,width) =
+    is_def(or) ?
+            assert(is_finite(or) && or>ar, str("\nor must exceed ",ar," for this ring; got ",or))
+            or
+       : is_def(od) ?
+            assert(is_finite(od) && od>2*ar, str("\nod must exceed ",2*ar," for this ring; got ",od))
+            od/2
+       : is_def(width) ?
+            assert(is_finite(width) && width>ar-rr, str("\nwidth must be greater than ",ar-rr,"; got ",width))
+            rr+width
+       : is_def(backing) ?
+            assert(all_positive([backing]), "\nbacking must be a positive value")
+            ar+backing
+       : 2*ar - rr;
+
 // Function&Module: rack()
 // Synopsis: Creates a straight or helical gear rack.
 // SynTags: Geom, VNF
@@ -1934,11 +1928,6 @@ module ring_gear2d(
 // Usage: As a Function
 //   vnf = rack(pitch=|mod=|circ_pitch=|diam_pitch=, teeth, [thickness], [backing], [bottom=], [width=], [helical=], [herringbone=], [profile_shift=], [pressure_angle=], [backlash=], [clearance=], [anchor=], [spin=], [orient=], [gear_travel=]);
 // Description:
-//   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
-//   as a synonym for consistency and compatibility with other gears.
-//   .
 //   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
 //   A rack meshes with an external spur or helical pinion using the same normal tooth size and pressure angle.
 //   The helical angle of the mating gear must be the negative of the rack's helical angle for the usual planar engagement.
@@ -1946,6 +1935,9 @@ module ring_gear2d(
 //   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
 //   When called as a module, creates a 3D rack shape.
 //   .
+//   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent spur gear. 
+//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
+//   as a synonym for consistency and compatibility with other gears.
 //   By default the rack has a backing whose height is equal to the height of the teeth.  You can specify a different backing size
 //   or you can specify the total width of the rack (from the bottom of the rack to tooth tips) or the
 //   bottom point of the rack, which is the distance from the pitch line to the bottom of the rack.
@@ -2070,12 +2062,12 @@ module rack(
     checks=
         assert(num_defined([backing,bottom,width])<=1,
                "\nspecify only one of backing, bottom, or width")
-        assert(is_integer(teeth) && teeth>0, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=1, str("\nteeth must be a positive integer; got ",teeth))
         assert(is_finite(thickness) && thickness>0, "\nthickness must be greater than zero and finite")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
         assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(is_bool(herringbone), "\nherringbone must be boolean")
         assert(is_finite(profile_shift), "\nprofile_shift must be finite")
         assert(is_finite(gear_travel), "\ngear_travel must be finite");
@@ -2083,10 +2075,10 @@ module rack(
     a = _adendum(circ_pitch=pitch, profile_shift=profile_shift);
     d = _dedendum(circ_pitch=pitch, clearance=clearance, profile_shift=profile_shift);
     bottom = is_def(bottom) ?
-                 assert(is_finite(bottom) && bottom>d, "\nbottom is invalid or too small for teeth")
+                 assert(is_finite(bottom) && bottom>d, str("\nbottom must be greater than ",d,"; got ",bottom))
                  bottom
            : is_def(width) ?
-                 assert(is_finite(width) && width>a+d, "\nwidth is invalid or too small for teeth")
+                 assert(is_finite(width) && width>a+d, str("\nwidth must be greater than ",a+d,"; got ",width))
                  width - a
            : is_def(backing) ?
                  assert(all_positive([backing]), "\nbacking must be a positive value")
@@ -2180,12 +2172,12 @@ function rack(
     )
     assert(num_defined([backing,bottom,width])<=1,
                "\nspecify only one of backing, bottom, or width")
-        assert(is_integer(teeth) && teeth>0, "\nteeth must satisfy the documented integer range")
+        assert(is_integer(teeth) && teeth>=1, str("\nteeth must be a positive integer; got ",teeth))
     assert(is_finite(thickness) && thickness>0, "\nthickness must be greater than zero and finite")
-    assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+    assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
     assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
     assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-    assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_bool(herringbone), "\nherringbone must be boolean")
     assert(is_finite(profile_shift), "\nprofile_shift must be finite")
     assert(is_finite(gear_travel), "\ngear_travel must be finite")
@@ -2194,10 +2186,10 @@ function rack(
         a = _adendum(circ_pitch=pitch, profile_shift=profile_shift),
         d = _dedendum(circ_pitch=pitch, clearance=clearance, profile_shift=profile_shift),
         bottom = is_def(bottom) ?
-                     assert(is_finite(bottom) && bottom>d, "\nbottom is invalid or too small for teeth")
+                     assert(is_finite(bottom) && bottom>d, str("\nbottom must be greater than ",d,"; got ",bottom))
                      bottom
                : is_def(width) ?
-                     assert(is_finite(width) && width>a+d, "\nwidth is invalid or too small for teeth")
+                     assert(is_finite(width) && width>a+d, str("\nwidth must be greater than ",a+d,"; got ",width))
                      width - a
                : is_def(backing) ?
                      assert(all_positive([backing]), "\nbacking must be a positive value")
@@ -2250,16 +2242,14 @@ function rack(
 // Usage: As a Module
 //   rack2d(pitch=|mod=|circ_pitch=|diam_pitch=, teeth, [backing], [bottom=], [width=], [helical=], [pressure_angle=], [profile_shift=], [backlash=], [clearance=], [gear_travel=], [rounding=], [anchor=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
-//   for consistency and compatibility with other gears.
-//   .
 //   Create a 2D rack, a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any spur gear or helical gear that has the same `circ_pitch` and `pressure_angle`.  
 //   When called as a function, returns a 2D path for the outline of the rack.
 //   When called as a module, creates a 2D rack shape.
 //   .
+//   Specify tooth size using `pitch`, `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent spur gear.  
+//   For a rack, `pitch=` specifies normal tooth pitch, perpendicular to the tooth lines, and `circ_pitch=` is permitted
+//   for consistency and compatibility with other gears.
 //   By default the rack has a backing whose height is equal to the height of the teeth.  You can specify a different backing size
 //   or you can specify the total width of the rack (from the bottom of the rack to tooth tips) or the
 //   bottom point of the rack, which is the distance from the pitch line to the bottom of the rack.
@@ -2340,11 +2330,11 @@ function rack2d(
         helical = _inherit_gear_helical(helical=helical,invert=true,rack=true),
         mod = module_value(circ_pitch=pitch)
     )
-    assert(is_integer(teeth) && teeth>0, "\nteeth must satisfy the documented integer range")
-    assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+    assert(is_integer(teeth) && teeth>=1, str("\nteeth must be a positive integer; got ",teeth))
+    assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
     assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
     assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-    assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_finite(gear_travel), "\ngear_travel must be finite")
     assert(num_defined([width,backing,bottom])<=1, "\nCan define only one of width, backing and bottom")
     let(
@@ -2352,10 +2342,10 @@ function rack2d(
         dedendum = _dedendum(circ_pitch=pitch, clearance=clearance, profile_shift=profile_shift),
         clear = default(clearance, 0.25 * mod),
         bottom = is_def(bottom) ?
-                     assert(is_finite(bottom) && bottom>dedendum, "\nbottom is invalid or too small for teeth")
+                     assert(is_finite(bottom) && bottom>dedendum, str("\nbottom must be greater than ",dedendum,"; got ",bottom))
                      bottom
                : is_def(width) ?
-                     assert(is_finite(width) && width>adendum+dedendum, "\nwidth is invalid or too small for teeth")
+                     assert(is_finite(width) && width>adendum+dedendum, str("\nwidth must be greater than ",adendum+dedendum,"; got ",width))
                      width - adendum
                : is_def(backing) ?
                      assert(all_positive([backing]), "\nbacking must be a positive value")
@@ -2443,21 +2433,21 @@ module rack2d(
     PA = _inherit_gear_pa(pressure_angle=pressure_angle);
     helical = _inherit_gear_helical(helical=helical,invert=true);
     checks =
-        assert(is_integer(teeth) && teeth>0, "\nteeth must satisfy the documented integer range")
-        assert(is_finite(PA) && PA>=0 && PA<90, "\nBad pressure_angle value.")
+        assert(is_integer(teeth) && teeth>=1, str("\nteeth must be a positive integer; got ",teeth))
+        assert(is_finite(PA) && PA>=0 && PA<90, str("\npressure_angle must be finite and in [0,90) degrees; got ",PA))
         assert(clearance==undef || (is_finite(clearance) && clearance>=0), "\nclearance must be nonnegative and finite")
         assert(is_finite(backlash) && backlash>=0, "\nbacklash must be nonnegative and finite")
-        assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+        assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
         assert(is_finite(gear_travel), "\ngear_travel must be finite")
         assert(num_defined([width,backing,bottom])<=1, "\nCan define only one of width, backing and bottom");
     trans_pitch = pitch / cos(helical);
     a = _adendum(circ_pitch=pitch, profile_shift=profile_shift);
     d = _dedendum(circ_pitch=pitch, clearance=clearance, profile_shift=profile_shift);
     bottom = is_def(bottom) ?
-                 assert(is_finite(bottom) && bottom>d, "\nbottom is invalid or too small for teeth")
+                 assert(is_finite(bottom) && bottom>d, str("\nbottom must be greater than ",d,"; got ",bottom))
                  bottom
            : is_def(width) ?
-                 assert(is_finite(width) && width>a+d, "\nwidth is invalid or too small for teeth")
+                 assert(is_finite(width) && width>a+d, str("\nwidth must be greater than ",a+d,"; got ",width))
                  width - a
            : is_def(backing) ?
                  assert(all_positive([backing]), "\nbacking must be a positive value")
@@ -2887,7 +2877,8 @@ function _crown_geom(P,body) =
 // Usage: As a Function
 //   vnf = crown_gear(mod=|circ_pitch=|diam_pitch=, teeth, [mate_teeth], [face_width], [backing=], [bottom=], [thickness=], [mate_profile_shift=], [mate_clearance=], [min_tip=], [mesh_tol=], [search_steps=], [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=], [anchor=], [spin=], [orient=], [gear_spin=]);
 // Description:
-//   Creates a crown gear, a face gear designed to mate with a (non-helical) spur gear with a specific number of teeth.  
+//   Creates a crown gear, a face gear designed to mate with a (non-helical) spur gear with a specific number of teeth.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent gear. 
 //   Supply `mate_teeth=`, or inherit it from a spur gear parent. The pinion's profile shift and root clearance
 //   must match `mate_profile_shift` and `mate_clearance`. These values inherit from a spur gear parent if you don't specify them.
 //   .
@@ -3070,9 +3061,6 @@ function _bevel_check_profile_shift(teeth,pa,x,m,clearance,backlash) =
 // Usage: As a Function
 //    vnf = bevel_gear([mod=|circ_pitch=|diam_pitch=], teeth, mate_teeth, [shaft_angle|drive_angle=], [backing=], [bottom=], [thickness=], [cone_backing=], [face_width=], [pressure_angle=], [clearance=], [profile_shift=], [backlash=], [spiral=], [cutter_radius=], [slices=], [gear_spin=], [anchor=], [spin=], [orient=], [left_handed=|right_handed=]);
 // Description:
-//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`. If you do not give a tooth
-//   size, it is inherited from the parent gear if available; otherwise, an error is displayed.
-//   .
 //   Creates a spiral, zerol, or straight bevel gear.  In straight bevel gear sets, when each tooth
 //   engages it impacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
 //   which makes them more prone to breakage.  Spiral bevel gears have teeth formed along spirals so
@@ -3083,6 +3071,7 @@ function _bevel_check_profile_shift(teeth,pa,x,m,clearance,backlash) =
 //   must specify both the number of teeth on the gear and the number of teeth on its mating gear.
 //   Additional requirements for bevel gears to mesh are that they share the same
 //   tooth size and the same pressure angle and they must be of opposite handedness.
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent bevel gear. 
 //   The pressure angle controls how much the teeth bulge at their
 //   sides and is almost always 20 degrees for standard bevel gears.  The ratio of `teeth` for two meshing gears
 //   gives how many times one will make a full
@@ -3897,7 +3886,7 @@ function worm_gear(
         P = _wormgear_data(m=m,teeth=teeth,d=worm_diam,starts=worm_starts,pa=pa,ps=ps,clear=c,
                           backlash=backlash,crown=crowning,left=left_handed,thickness=thickness,min_tip=nt)
     )
-    assert(is_finite(gear_spin), "\ninvalid gear_spin")
+    assert(is_finite(gear_spin), str("\ngear_spin must be finite; got ",gear_spin))
     assert(is_finite(face_chamfer) && face_chamfer>=0, "\nface_chamfer must be nonnegative")
     let(vnf = _wormgear_build(P=P,slices=slices,nprofile=nprofile,nsearch=nsearch,niters=niters,gear_spin=gear_spin,face_chamfer=face_chamfer))
     reorient(anchor,spin,orient, r=P[0], h=2*P[8], p=vnf);
@@ -3926,7 +3915,7 @@ module worm_gear(
     ps = _wormgear_resolve_shift(cp/PI,teeth,worm_diam,worm_starts,pa,profile_shift);
     assert(is_finite(shaft_diam) && shaft_diam>=0,
            "\nshaft_diam must be nonnegative");
-    assert(is_finite(gear_spin), "\ninvalid gear_spin");
+    assert(is_finite(gear_spin), str("\ngear_spin must be finite; got ",gear_spin));
     _spec = _gear_spec("worm_gear",cp/PI,teeth,pa,thickness=2*_wormgear_halfwidth(cp/PI,worm_diam,thickness),
                            shift=ps,worm_diam=worm_diam,starts=worm_starts,
                            worm_length=$parent_gear_worm_length,left_handed=left_handed,
@@ -4287,9 +4276,9 @@ function _wfg_geom(P,body) =
 // Topics: Gears, Parts
 // See Also: worm(), attach_gear(), worm_face_dist(), worm_face_gear_radius_bound(), worm_face_gear_worm_pos(), worm_face_gear_worm_spin()
 // Usage: As a Function
-//    vnf = worm_face_gear(teeth, [backing], [face_width], mod=|circ_pitch=|diam_pitch=, worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]);
+//    vnf = worm_face_gear([mod=|circ_pitch=|diam_pitch=], teeth, [backing], [face_width], worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]);
 // Usage: As a Module
-//   worm_face_gear(teeth, [backing], [face_width], mod=|circ_pitch=|diam_pitch=, worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [shaft_diam=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   worm_face_gear([mod=|circ_pitch=|diam_pitch=], teeth, [backing], [face_width], worm_diam=, [shaft_offset=], [gear_diam=], [worm_starts=], [pressure_angle=], [left_handed=], [clearance=], [backlash=], [min_tip=], [bottom=|thickness=], [shaft_diam=], [slices=], [search_steps=], [gear_spin=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a face gear for the existing cylindrical {{worm()}} on perpendicular, offset shafts.
 //   See [Worm Face Drives](gears.scad#subsection-worm-face-drive) for an overview.
@@ -4369,7 +4358,7 @@ function _wfg_geom(P,body) =
 //                  pressure_angle=[45,5], backing=3, backlash=.2)
 //       recolor("lightblue")
 //       attach_gear(90) worm(l=65);
-// Example(3D,Anim,FrameMS=30,Frames=20,NoScales,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[34.18,18.31,-26.67]): A worm face drive animation
+// Example(3D,Anim,FrameMS=55,Frames=20,NoScales,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[34.18,18.31,-26.67]): A worm face drive animation
 //   gear_spin(360*$t)
 //       color_this("lightblue")
 //       worm(mod=2, d=20, starts=1, l=60)
@@ -4838,7 +4827,7 @@ module globoid_worm(d,l,_named,teeth,worm_diam,
 //   teeth = Number of worm gear teeth, at least 12. Inherits mate_teeth from a parent globoid worm, or teeth from a parent worm gear.
 //   thickness = Full axial thickness. Inherits thickness from any parent that provides it. Default: worm_diam/2.
 //   ---
-//   mod = Normal module; mutually exclusive with circ_pitch and diam_pitch.
+//   mod = Normal module.
 //   diam_pitch = Normal diametral pitch, teeth per inch.
 //   circ_pitch = Normal circular pitch.
 //   worm_diam = Mating worm throat pitch diameter. Inherits when available; required otherwise.
@@ -6290,7 +6279,7 @@ function _dew_wheel(P,width,backlash,min_tip,tol,search_steps,rounding=0,crownin
 ///   internal = If true, create a mask for difference()ing from something else.
 ///   center = If true, centers the pitch circle of the tooth profile at the origin.  Default: false.
 ///   ---
-///   mod = Normal module: normal circular pitch divided by PI.
+///   mod = Normal module.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 ///   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 ///   helical = Helix angle. Default: 0
@@ -6514,7 +6503,7 @@ function _gear_tooth_profile(
 //   n = Number of planetary gears
 //   max_teeth = maximum number of teeth allowed on the ring gear, an integer at least 12.
 //   ---
-//   mod = The module of the gear, pitch diameter divided by tooth count. 
+//   mod = The module of the gear.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = Normal circular pitch.
 //   ring_carrier = set ring/carrier transmission ratio to this value in a ring driven system, must be between 1 and 2
@@ -6526,7 +6515,7 @@ function _gear_tooth_profile(
 //   uniform = Require exactly evenly spaced planets. Default: false
 //   helical = Create gears with the specified helical angle. Default: 0
 //   gear_spin = rotate the driven gear by this number of degrees.  Default:0
-// Example(2D,NoAxes,Anim,Frames=90,FrameMS=30,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
+// Example(2D,NoAxes,Anim,Frames=72,FrameMS=50,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=3, max_teeth=28, ring_carrier=1.341, gear_spin=4/3*360/3*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -6534,7 +6523,7 @@ function _gear_tooth_profile(
 //     spur_gear2d(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //     spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
-// Example(2D,Med,NoAxes,Anim,FrameMS=60,Frames=90,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
+// Example(2D,Med,NoAxes,Anim,FrameMS=55,Frames=72,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6, gear_spin=3.6*360/5*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -6556,13 +6545,6 @@ function _gear_tooth_profile(
 //   spur_gear(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], helical=helical, gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //       spur_gear(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], helical=-helical, gear_spin=gear_data[2][3][$idx]);
-// Example(2D): The search finds six evenly spaced planets 
-//   data=planetary_gears(mod=1,n=6,max_teeth=139,sun_carrier=3.8,uniform=true);
-//   echo(data);  // sun=49, planets=44, ring=137; actual ratio is 186/49.
-//   spur_gear2d(mod=1,teeth=data[0][1],profile_shift=data[0][2])
-//       attach_gear(data[2][5]) spur_gear2d(teeth=data[2][1],profile_shift=data[2][2])
-//           if ($idx==0)
-//               attach_gear(180) ring_gear2d(teeth=data[1][1],profile_shift=data[1][2],backing=2);
 function planetary_gears(
     n, max_teeth, _named, mod, circ_pitch, diam_pitch, ring_carrier, carrier_ring, sun_carrier,
     carrier_sun, ring_sun, sun_ring, helical, gear_spin, uniform=false
@@ -6574,7 +6556,7 @@ function planetary_gears(
     assert(num_defined([ring_carrier,carrier_ring,sun_carrier,carrier_sun,sun_ring,ring_sun])==1,
            "\nSpecify exactly one of ring_carrier, carrier_ring, sun_carrier, carrier_sun, sun_ring, and ring_sun")
     let(helical=default(helical,0),gear_spin=default(gear_spin,0))
-    assert(is_finite(helical) && abs(helical)<90, "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_finite(gear_spin), "\ngear_spin must be finite")
     let(m=module_value(mod=mod,circ_pitch=circ_pitch,diam_pitch=diam_pitch),
         values=[ring_carrier,carrier_ring,sun_carrier,carrier_sun,sun_ring,ring_sun],
@@ -6650,13 +6632,13 @@ function _planetary_pick(candidates,n,helical,i=0) =
 // Topics: Gears
 // See Also: planetary_gears(), spur_gear(), ring_gear(), attach_gear()
 // Usage: Specify tooth size in layer 1 and calculate size for layer 2
-//   data = stepped_planetary(n, max_teeth, mod1=|circ_pitch1=|diam_pitch1=, [auto_size_range=], [uniform=], [min_teeth=], [exact=], [optimize=], [max_diam=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = stepped_planetary(n, max_teeth, mod1=|circ_pitch1=|diam_pitch1=, [auto_size_range=], [uniform=], [min_teeth=], [exact=], [max_diam=], [backing=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
 // Usage: Specify tooth size in layer 2 and calculate size for layer 1
-//   data = stepped_planetary(n, max_teeth, mod2=|circ_pitch2=|diam_pitch2=, [auto_size_range=], [uniform=], [min_teeth=], [exact=], [optimize=], [max_diam=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = stepped_planetary(n, max_teeth, mod2=|circ_pitch2=|diam_pitch2=, [auto_size_range=], [uniform=], [min_teeth=], [exact=], [max_diam=], [backing=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
 // Usage: Fixed uniform tooth size
-//   data = stepped_planetary(n, max_teeth, mod=|circ_pitch=|diam_pitch=, [uniform=], [min_teeth=], [exact=], [optimize=], [max_diam=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = stepped_planetary(n, max_teeth, mod=|circ_pitch=|diam_pitch=, [uniform=], [min_teeth=], [exact=], [max_diam=], [backing=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
 // Usage: Fixed arbitrary pair of tooth sizes
-//   data = stepped_planetary(n, max_teeth, mod1=|circ_pitch1=|diam_pitch1=, mod2=|circ_pitch2=|diam_pitch2=, [uniform=], [min_teeth=], [exact=], [optimize=], [max_diam=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = stepped_planetary(n, max_teeth, mod1=|circ_pitch1=|diam_pitch1=, mod2=|circ_pitch2=|diam_pitch2=, [uniform=], [min_teeth=], [exact=], [max_diam=], [backing=], [ring_carrier=], [carrier_ring=], [sun_carrier=], [carrier_sun=], [sun_ring=], [ring_sun=], [helical=], [helical1=], [helical2=], [gear_spin=]);
 // Description:
 //   Calculates a stepped planetary gear assembly that exactly or approximately matches a desired transmission ratio.
 //   A stepped planetary gear assembly is like a simple planetary gear assembly but the planets are two stacked gears that rotate together.  The sun gear is in layer 1
@@ -6676,8 +6658,9 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   This is sometimes indicated by a negative transmission ratio.  For these cases you can give a positive or negative value.  
 //   By default you will get the closest possible match under the applied constraints.  If you set `exact=true` then your input is converted to a rational
 //   value using {{rational_approx()}}, and an exact match is calculated, or you get an error if no exact match is found.
-//   When `exact=false` you can provide a ratio interval, which specifies an allowed range of ratios.  When giving ranges for the `sun_ring` and `ring_sun` parameters
-//   you must use positive values.  
+//   When `exact=false` you can provide a ratio interval, which specifies an allowed range of ratios, with endpoints in either order.
+//   For `sun_ring` and `ring_sun`, both endpoints may be positive magnitudes or both negative signed ratios.  Intervals with mixed sign are not permitted.
+//   The returned ratio is always positive.  
 //   .
 //   The return uses the same format as {{planetary_gears()}}, with a list of entries describing the elements of the assembly.  The entries are:
 //   - ["sun", teeth, profile_shift, spin]
@@ -6690,13 +6673,11 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   The ratio constraints are always primary, either finding the exact match, the closest match, or any match in the specified interval.  
 //   Various parameters constrain the solution.  All four tooth counts are bounded by `max_teeth=`, which is a required bound.  All of the gears except
 //   the ring are constrained by the lower limit, `min_teeth=`, which defaults to 8.  The ring gear always has at least 12 teeth.
-//   When multiple designs meet the ratio requirement (either they are exactly equal or they fall within the allowed interval) then they are
-//   ranked based on the `optimize=` setting.  The default `optimize="balance"` first ranks them based on a gear size balance score and breaks ties
-//   by selecting the smallest diameter gear package.  The balance score is the ratio of the larger to the smaller pitch diameter of the two gears on each compound planet.
-//   A score of 1 indicates perfect balance.  
-//   Selecting `optimize="diameter"` minimizes the enclosing diameter without a balance preference.  Final tie breaking is done based on tooth counts
-//   of the gears, choosing the design with the smallest ring, smallest sun, smallest first planet, or smallest second planet in that order.  
-//   The enclosing diameter is the maximum of the ring tooth-root diameter (excluding ring backing), and the diameter of the circle that encloses the planets.
+//   Among equally accurate scalar-ratio designs, or all designs within a requested interval, the smallest enclosing diameter is selected.
+//   If diameters are equal, prefer the fewest ring teeth, then sun teeth, then first-planet teeth, then second-planet teeth.
+//   The enclosing diameter is the maximum of the complete ring diameter, including backing, and the circles enclosing the planets in either layer.
+//   The ring backing uses the same radial thickness and default as {{ring_gear()}}. Use the same `backing` when constructing the ring,
+//   or omit it in both calls. The default is calculated for each candidate's ring. Housing, carrier, and other supporting parts are not included.
 //   .
 //   The planet gears are positioned as evenly as possible around the sun gear, but exact uniformity is not always possible because all of the teeth
 //   must mesh correctly in both layers. You can require exact uniformity by specifying `uniform=true`. When `uniform=false` (the default), the gear positions are
@@ -6705,62 +6686,163 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //   When constructing the gear assembly, use `helical1` on the sun and `-helical1` on planet gear 1.  Use `helical2` on the ring and `-helical2` on planet gear 2.
 //   You can also use `herringbone=true` when constructing helical gears.  If you manually assemble the gear assembly you must apply the specified spins to each
 //   gear.  When `gear_spin=0` the first planet will always appear at angle 0.  It may be easier to assemble your gears using {{attach_gear()}}, either starting
-//   at the ring and working inward or starting at the sun and working outward.  
+//   at the ring and working inward or starting at the sun and working outward.
+//   .
+//   You can place the gears manually using the data from the returned data structure.  You can also place them using {{attach_gear()}}, possibly
+//   with other supporting gear motion modules.  See the examples below.  
 // Arguments:
 //   n = Number of identical compound planets, a positive integer.
 //   max_teeth = Maximum tooth count on any gear, an integer from 12 through 4096.  
 //   ---
 //   mod/circ_pitch/diam_pitch = Shared normal module, normal circular pitch, or diametral pitch fixing both layers equally.  Supply only one, without numbered tooth-size arguments.
-//   mod1/circ_pitch1/diam_pitch1 = Normal module, normal circular pitch, or diametral pitch for the sun and first planet gear.  Supply only one.  Calculated when only layer 2's tooth size is supplied.
-//   mod2/circ_pitch2/diam_pitch2 = Normal module, normal circular pitch, or diametral pitch for the ring and second planet gear.  Supply only one.  Calculated when only layer 1's tooth size is supplied.
-//   auto_size_range = Inclusive [minimum,maximum] factors for the calculated normal tooth size relative to the specified normal tooth size, measured using resolved modules.  Both factors must be positive and finite.  Applies only when one layer is calculated. Default: [0.5,2]
-//   ring_carrier = Ring/carrier ratio with fixed sun; a finite scalar target or inclusive [minimum,maximum] interval, all values greater than 1.
-//   carrier_ring = Carrier/ring ratio with fixed sun; a finite scalar target or inclusive [minimum,maximum] interval, all values strictly between 0 and 1.
-//   sun_carrier = Sun/carrier ratio with fixed ring; a finite scalar target or inclusive [minimum,maximum] interval, all values greater than 1.
-//   carrier_sun = Carrier/sun ratio with fixed ring; a finite scalar target or inclusive [minimum,maximum] interval, all values strictly between 0 and 1.
-//   sun_ring = Sun/ring ratio with fixed carrier; a finite nonzero scalar target of either sign, or an inclusive [minimum,maximum] interval of positive magnitudes.
-//   ring_sun = Ring/sun ratio with fixed carrier; a finite nonzero scalar target of either sign, or an inclusive [minimum,maximum] interval of positive magnitudes.
+//   mod1/circ_pitch1/diam_pitch1 = Normal module, normal circular pitch, or diametral pitch for the sun and first planet gear.  Supply only one.  Calculated when only layer 2's tooth size is given.
+//   mod2/circ_pitch2/diam_pitch2 = Normal module, normal circular pitch, or diametral pitch for the ring and second planet gear.  Supply only one.  Calculated when only layer 1's tooth size is given.
+//   auto_size_range = [minimum,maximum] factors for the calcluted tooth size relative to the specified tooth size.  Applies only when one layer is calculated. Default: [0.5,2]
+//   ring_carrier = Ring/carrier ratio with fixed sun; scalar or range, all values greater than 1.
+//   carrier_ring = Carrier/ring ratio with fixed sun; scalar or range, all values strictly between 0 and 1.
+//   sun_carrier = Sun/carrier ratio with fixed ring; scalar ro range, all values greater than 1.
+//   carrier_sun = Carrier/sun ratio with fixed ring; scalar or range, all values strictly between 0 and 1.
+//   sun_ring = Sun/ring ratio with fixed carrier; scalar or range (with either sign)
+//   ring_sun = Ring/sun ratio with fixed carrier; scalar or range (with either sign)
 //   min_teeth = Minimum tooth count on the sun and both planet gears, an integer at least 4 and no greater than max_teeth. Default: 8
-//   exact = Require the rational ratio reconstructed from a scalar target, without approximate fallback.  Cannot be combined with an interval. Default: false
-//   optimize = Geometric objective, "balance" or "diameter".  Ratio accuracy is primary for scalar targets; intervals optimize geometry without a nominal-ratio preference. Default: "balance"
-//   max_diam = Inclusive maximum enclosing diameter at the resolved modules, excluding ring backing and other non-toothed parts. Default: no diameter limit
-//   uniform = Require exactly equally spaced planets. Default: false
-//   helical = Shared default for the layer-specific helical angles. Default: 0
-//   helical1 = Signed sun-layer helix angle, strictly between -90 and 90 degrees. 
-//   helical2 = Signed ring-layer helix angle, strictly between -90 and 90 degrees.
-//   gear_spin = Rotation of the selected input from the initially assembled configuration, in degrees. Default: 0
-// Example: Find a four-planet design with the ring fixed.
-//   data = stepped_planetary(4, 40, mod1=1, sun_carrier=6, uniform=true);
-//   echo(data);
-// Example: Specify the ring-layer tooth size and both helix angles.
-//   data = stepped_planetary(3, 40, mod2=1, sun_carrier=9/2, exact=true, helical1=20, helical2=-15);
-//   echo(data[4]);
-// Example: Minimize diameter without a planet-balance preference.
-//   data = stepped_planetary(4, 60, mod1=1, sun_carrier=12, exact=true, optimize="diameter");
-// Example: Prefer balanced planets that fit inside the toothed-envelope allowance.
-//   data = stepped_planetary(4, 60, mod1=1, sun_carrier=6, max_diam=65);
-// Example: Prefer balanced planets with a ratio within five percent of 6:1.
-//   data = stepped_planetary(4, 150, mod1=1, sun_carrier=6*[0.95,1.05], uniform=true);
-// Example: Minimize diameter within asymmetric ratio limits.
-//   data = stepped_planetary(4, 150, mod1=1, sun_carrier=[11.5,12.2], optimize="diameter");
-// Example: Specify circular pitch on layer 1 and calculate layer 2.
-//   data = stepped_planetary(4, 150, circ_pitch1=PI, sun_carrier=6*[0.95,1.05]);
-// Example: Specify diametral pitch on layer 2 and calculate layer 1, using millimeter lengths.
-//   data = stepped_planetary(3, 40, diam_pitch2=25.4, sun_carrier=4.5);
-// Example: Mix tooth-size conventions while fixing both layers.
-//   data = stepped_planetary(4, 40, circ_pitch1=PI, diam_pitch2=50.8, sun_carrier=6, exact=true, uniform=true);
-// Example: Use the same circular pitch in both layers.
-//   data = stepped_planetary(3, 40, circ_pitch=PI, sun_carrier=4);
-// Example: Require an exact ratio written as a division expression.
-//   data = stepped_planetary(3, 60, mod1=1, sun_carrier=19/3, exact=true);
-// Example: Restrict the calculated teeth to the same normal size through twice as large.
-//   data = stepped_planetary(3, 40, diam_pitch1=25.4, sun_carrier=[3,5], auto_size_range=[1,2]);
+//   exact = If true gear must exactly match given ratio.  Otherwise returns best match  
+//   max_diam = Maximum diameter of result.  Default: no limit
+//   backing = Ring backing thickness.  Use the same value in {{ring_gear()}}. Default: height of the ring teeth (same default as {{ring_gear()}}
+//   uniform = Require equally spaced planets. Default: false
+//   helical = Helical angle.   Default: 0
+//   helical1 = Helical angle for layer 1
+//   helical2 = Helical angle for layer 2
+//   gear_spin = Drive the assembly from specificied input by this many degrees.  Default: 0
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=78,VPT=[-0.62,1.28,2.03],Anim,Frames=72,FrameMS=30): Here we request an exact sun/carrier ratio of 6.  Planets rotate using {{zrot()}} which means children will rotate with them.  
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   h=4;
+//   data=stepped_planetary(3,60,mod1=1,min_teeth=12,
+//            sun_carrier=6,exact=true,uniform=true,gear_spin=720*$t);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   up(1.5*h) color_this("royalblue")
+//       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,gear_spin=sun[3]);
+//   up(h) color_this("lightblue")
+//   ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h,gear_spin=ring[3]);
+//   for(i=[0:2]) move(planets[4][i]) zrot(planets[3][i])
+//       color_this("coral")
+//       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h)
+//           align(TOP) color_this("mediumseagreen")
+//           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1]);
+// Example(3D,Med,NoAxes,VPR=[41.70,0.00,32.00],VPD=126.00,VPT=[-0.08,3.86,3.87],Anim,Frames=60,FrameMS=30): Set the ring/carrier ratio to 1.4.  Even though exact=false we get this exact ratio.  Helical on the planets must be the opposite sign of the mating sun or ring.  This version doesn't use {{zrot()}} for the planets but `gearspin=`, which means children of the planets will not rotate with them.  
+//   $fn=48; $gear_steps=12; $backlash=0.1;
+//   h=8; helical=20;
+//   data=stepped_planetary(4,60,mod1=1,min_teeth=12,
+//        ring_carrier=1.4,exact=false,uniform=true, helical=helical,gear_spin=1.4*90*$t);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   up(1.5*h) color_this("royalblue")
+//       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,gear_spin=sun[3],helical=helical);
+//   up(h) color_this("lightblue")
+//   ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h,gear_spin=ring[3],helical=helical);
+//   move_copies(planets[4]) 
+//       color_this("coral")
+//       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h,helical=-helical,gear_spin=planets[3][$idx])
+//           align(TOP) color_this("mediumseagreen")
+//           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1],helical=-helical,gear_spin=planets[3][$idx]);
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,46.70],VPD=91.85,VPT=[-1.89,0.80,2.40],Anim,Frames=60,FrameMS=30): Set the sun/ring ratio to an interval and create a herringbone gear set with a fixed carrier.  The sun and ring turn in opposite directions.  
+//   $fn=48;   $gear_steps=12;   $backlash=0.1;
+//   h=7; helical=25;
+//   data=stepped_planetary(3,60,mod1=1,min_teeth=12,
+//           sun_ring=[1.8,2]*PI,uniform=false, helical=helical,gear_spin=210*$t);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   up(1.5*h) color_this("royalblue")
+//       linear_extrude(height=h/2) stroke(planets[4],width=1,closed=true);
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,gear_spin=sun[3],helical=helical,herringbone=true);
+//   up(h) color_this("lightblue")
+//   ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h,gear_spin=ring[3],helical=helical,herringbone=true);
+//   move_copies(planets[4]) zrot(planets[3][$idx])    
+//       color_this("coral")
+//       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h,helical=-helical,herringbone=true)
+//           align(TOP) color_this("mediumseagreen")
+//           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1],helical=-helical,herringbone=true);
+// Example(3D,Med,NoAxes,Anim,Frames=75,FrameMS=40,VPR=[50.40,0.00,87.50],VPD=192.04,VPT=[0.31,-0.81,5.31]): Request a sun/carrier ratio of 6 with exact=false, and only 40 teeth.  We get a ratio of 5 instead of 6.  Increasing `max_teeth` or decreasing `min_teeth` improves this result and also significantly shrinks the design radius.  The sun drives the carrier and we assemble the model sun first using {{attach_gear()}} so that we can drive the sun from a previous gear.  The carrier stage outputs its motion to the pink gear which turns the purple gear.
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   h=8;
+//   data=stepped_planetary(5,40,mod1=1,min_teeth=12,
+//            sun_carrier=6,uniform=true,exact=false);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   ratio=data[3][1];
+//   gear_spin($t*360)
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h)
+//       gear_carrier_frame(ratio){
+//          // Create planets
+//          attach_gear(planets[5],phase=planets[3])
+//            let(planet_ind=$idx)
+//            color_this("coral")
+//            spur_gear(teeth=planets[1][0],profile_shift=planets[2][0])
+//              align(TOP) color_this("mediumseagreen")
+//              spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1])
+//                 // create ring
+//                 if(planet_ind==0) attach_gear(180)
+//                    color_this("lightblue") ring_gear(teeth=ring[1],profile_shift=ring[2]);
+//          // Create carrier and output gear
+//          up(1.5*h) color_this("royalblue")
+//             linear_extrude(h/4) for(p=planets[4]) stroke([[0,0],p],width=2);
+//          up(1.5*h) color_this("royalblue") cyl(d=6,h=5,anchor=BOT)
+//              align(TOP) color_this("pink")
+//            spur_gear(mod=3/4,teeth=10,anchor=BOT,thickness=4)
+//            attach_gear(125) color_this("mediumpurple") spur_gear(teeth=19);
+//       }
+// Example(3D,Med,NoAxes,Anim,VPR=[56.70,0.00,10.50],VPD=126.00,VPT=[1.41,-4.67,3.76],Frames=72,FrameMS=60): Ring driven system with carrier output needs to be built the same way, but ring first.
+//    $fn=48;  $gear_steps=12;  $backlash=0.1;
+//    h=6;
+//    data=stepped_planetary(3,40,mod1=1,min_teeth=6,
+//       ring_carrier=8/3,uniform=true,exact=true);
+//    sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//    ratio=data[3][1];
+//    gear_spin($t*120*ratio)
+//    ring_gear(mod=mod[1], teeth=ring[1], profile_shift=ring[2], thickness=h)
+//      gear_carrier_frame(ratio){
+//        // create planets         
+//        attach_gear(planets[5],phase=planets[3])
+//          let(planet_ind=$idx)
+//          color_this("coral")
+//          spur_gear(teeth=planets[1][1],profile_shift=planets[2][1])
+//            align(TOP) color_this("mediumseagreen")
+//            spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0])
+//               // create sun
+//               if(planet_ind==0) attach_gear(180)
+//                  recolor("lightblue") spur_gear(teeth=sun[1],profile_shift=sun[2]);
+//         // Create carrier
+//         up(1.5*h) color_this("red")
+//         linear_extrude(h/4) stroke(planets[4],width=1,closed=true);
+//      }
+// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=45,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires using {{gear_carrier_frame()}}.  
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   h=8;
+//   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
+//       carrier_sun=1/7,uniform=true,exact=true);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   ratio=data[3][1];
+//   gear_spin($t*120)
+//     let(carrier_motion=gear_motion()){
+//       gear_shaft()
+//         color_this("lightblue") ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h)
+//           gear_carrier_frame(motion=carrier_motion)
+//             attach_gear(planets[5], phase=planets[3])
+//             let(planet_idx=$idx)
+//             spur_gear(teeth=planets[1][1], profile_shift=planets[2][1]) 
+//               align(TOP)
+//                   color_this("coral")   spur_gear(mod=mod[0], teeth=planets[1][0], profile_shift=planets[2][0])
+//              if (planet_idx==0)
+//              attach_gear(180) color_this("pink")
+//                spur_gear(teeth=sun[1], profile_shift=sun[2],thickness=2*h+1,anchor=BOT)
+//                   gear_exit_carrier()
+//                   attach_gear(0) color_this("lightgreen")spur_gear(teeth=7,thickness=h,anchor=TOP);
+//     }
+
 function stepped_planetary(
     n, max_teeth, _named, mod, mod1, mod2,
     circ_pitch, circ_pitch1, circ_pitch2, diam_pitch, diam_pitch1, diam_pitch2,
     ring_carrier, carrier_ring, sun_carrier, carrier_sun, ring_sun, sun_ring,
     helical, helical1, helical2, gear_spin, uniform=false, auto_size_range=[0.5,2],
-    min_teeth=8, exact=false, optimize="balance", max_diam
+    min_teeth=8, exact=false, max_diam, backing
 ) =
     assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
     assert(is_int(n) && n>0, "\nn must be a positive integer")
@@ -6770,7 +6852,7 @@ function stepped_planetary(
            "\nmin_teeth must be an integer from 4 through max_teeth")
     assert(is_bool(uniform), "\nuniform must be boolean")
     assert(is_bool(exact), "\nexact must be boolean")
-    assert(optimize=="balance" || optimize=="diameter", "\noptimize must be \"balance\" or \"diameter\"")
+    assert(is_undef(backing) || (is_finite(backing) && backing>0), "\nbacking must be positive and finite")
     assert(is_undef(max_diam) || (is_finite(max_diam) && max_diam>0),
            "\nmax_diam must be positive and finite")
     let(shared_size=num_defined([mod,circ_pitch,diam_pitch]),
@@ -6797,18 +6879,21 @@ function stepped_planetary(
            "\nSpecify exactly one of ring_carrier, carrier_ring, sun_carrier, carrier_sun, sun_ring, and ring_sun")
     let(mode=[for(i=[0:5]) if(!is_undef(values[i])) i][0], given=values[mode],
         interval=is_list(given))
-    assert(interval ? is_vector(given,2) && given[0]<=given[1] : is_finite(given),
-           "\nThe ratio must be a finite scalar target or two finite interval bounds in nondecreasing order")
+    assert(interval ? is_vector(given,2) : is_finite(given),
+           "\nThe ratio must be a finite scalar target or two finite interval endpoints")
     assert(!interval || !exact, "\nDo not combine a ratio interval with exact=true")
+    assert(!interval || mode<4 || (min(given)>0 || max(given)<0),
+           "\nA fixed-carrier ratio interval must have two nonzero endpoints of the same sign")
     let(target=interval?undef:mode>=4?abs(given):given,
-        interval_bounds=interval?given:undef)
-    assert(interval ? (mode==0 || mode==2 ? given[0]>1 :
-                       mode==1 || mode==3 ? given[0]>0 && given[1]<1 : given[0]>0) :
+        ends=!interval?undef:mode>=4?[abs(given[0]),abs(given[1])]:given,
+        interval_bounds=interval?[min(ends),max(ends)]:undef)
+    assert(interval ? (mode==0 || mode==2 ? interval_bounds[0]>1 :
+                       mode==1 || mode==3 ? interval_bounds[0]>0 && interval_bounds[1]<1 : interval_bounds[0]>0) :
                       (mode==0 || mode==2 ? target>1 : mode==1 || mode==3 ? target>0 && target<1 : target>0),
            str("\nInvalid transmission ratio: ",given,". ",
                mode==0 || mode==2 ? "The target or both interval endpoints must be greater than 1" :
                mode==1 || mode==3 ? "The target or both interval endpoints must lie strictly between 0 and 1" :
-               "A scalar fixed-carrier target must be nonzero; interval endpoints must be positive magnitudes"))
+               "A fixed-carrier target must be nonzero"))
     // Intervals have no nominal target and never undergo rational reconstruction.
     let(frac=interval?undef:rational_approx(target,2*max_teeth*max_teeth),
         reconstructed=!interval && frac[0]>0 && abs(frac[0]/frac[1]-target)<=1e-12*max(1,target),
@@ -6819,9 +6904,9 @@ function stepped_planetary(
         bounds=fixed?[m2/m1,m2/m1]:is_undef(m1)?[1/auto_size_range[1],1/auto_size_range[0]]:auto_size_range)
     assert(is_vector(bounds,2) && min(bounds)>0, "\nThe module ratio or its bounds exceed the supported numeric range")
     let(
-        // cfg: n,N,m1,m2,h1,h2,mode,target,uniform,auto_range,min,opt,max_diam,
+        // cfg: n,N,m1,m2,h1,h2,mode,target,uniform,auto_range,min,backing,max_diam,
         //      cos(h1),cos(h2),m2/m1 bounds,external shifts by layer,target fraction,ratio range.
-        cfg=[n,max_teeth,m1,m2,h1,h2,mode,target,uniform,auto_size_range,min_teeth,optimize,max_diam,
+        cfg=[n,max_teeth,m1,m2,h1,h2,mode,target,uniform,auto_size_range,min_teeth,backing,max_diam,
              cos(h1),cos(h2),bounds,
              [for(z=[0:max_teeth]) auto_profile_shift(teeth=z,helical=h1)],
              [for(z=[0:max_teeth]) auto_profile_shift(teeth=z,helical=h2)],exact?frac:undef,interval_bounds],
@@ -6890,9 +6975,6 @@ function _stepped_planetary_sort(v) = len(v)<2?v:
         [for(x=v) if(x==p) x],
         _stepped_planetary_sort([for(x=v) if(_stepped_planetary_less(p,x)) x]));
 
-// Constant for an exact-ratio sun/first-planet family; independent of module/helix.
-function _stepped_planetary_balance(s,p,q,r) =
-    let(a=p*(r-q),b=q*(s+p)) max(a,b)/min(a,b);
 function _stepped_planetary_modules(cfg,s,p,q,r) =
     let(M=(s+p)*cfg[14]/cfg[13]/(r-q))
     [is_undef(cfg[2])?cfg[3]/M:cfg[2],is_undef(cfg[3])?cfg[2]*M:cfg[3]];
@@ -6909,22 +6991,23 @@ function _stepped_planetary_lower_diam(cfg,s,p,q,r) =
         rs=m[0]*(s/(2*cfg[13])+1+cfg[16][s]),
         rp=m[0]*(p/(2*cfg[13])+1+cfg[16][p]),
         rq=m[1]*(q/(2*cfg[14])+1+cfg[17][q]),
-        rr=m[1]*(r/(2*cfg[14])+1.25+cfg[17][q]))
+        rr=m[1]*(r/(2*cfg[14])+1.25+cfg[17][q])+default(cfg[11],0))
     2*max(rs,rr,a0+rp,a0+rq);
 
-// Cheap count record [objective lower bound, secondary lower bound,r,s,p,q].
+// Cheap count record [diameter lower bound,r,s,p,q].
 function _stepped_planetary_count(cfg,s,p,q,r) =
     r<=q || q<cfg[10] || q>=cfg[1] || r<12 || r>cfg[1] ? undef :
     let(M=(s+p)*cfg[14]/cfg[13]/(r-q),b=cfg[15],
         L=(s*q+r*p)/_stepped_planetary_gcd(p,q))
     M<b[0]*(1-1e-10) || M>b[1]*(1+1e-10) || L<cfg[0] || (cfg[8] && L%cfg[0]!=0) ? undef :
-    let(lo=_stepped_planetary_lower_diam(cfg,s,p,q,r),bal=_stepped_planetary_balance(s,p,q,r))
+    let(lo=_stepped_planetary_lower_diam(cfg,s,p,q,r))
     !is_undef(cfg[12]) && lo>cfg[12]*(1+1e-10) ? undef :
-    cfg[11]=="balance"?[bal,lo,r,s,p,q]:[lo,0,r,s,p,q];
+    [lo,r,s,p,q];
 
 // Group exact families by (s,p), before materializing the r/q multiples.
-// Balance is constant throughout a group. Package lower bounds also let the
-// diameter objective prune whole groups instead of scoring every count tuple.
+// Package lower bounds prune whole groups instead of scoring every count tuple.
+// An omitted backing contributes zero to lower bounds; the final score resolves
+// the actual default tooth depth, including any profile clipping.
 function _stepped_planetary_sp_groups(cfg,A,B) = [
     for(s=[cfg[10]:cfg[1]],p=[cfg[10]:cfg[1]])
         if(A*s>B*p && _stepped_planetary_pair_ok(cfg,s,p))
@@ -6938,16 +7021,15 @@ function _stepped_planetary_sp_groups(cfg,A,B) = [
             a0=m1min*(s+p)/(2*cfg[13]),
             lower=2*max(m1min*(s/(2*cfg[13])+1+cfg[16][s]),
                         a0+m1min*(p/(2*cfg[13])+1+cfg[16][p]),
-                        m1min*C*r0/(delta*2*cfg[14])+1.25*m2min,
-                        a0+m1min*C*q0/(delta*2*cfg[14])+m2min),
-            ba=A*s-B*p,bb=B*(s+p),balance=max(ba,bb)/min(ba,bb))
+                        m1min*C*r0/(delta*2*cfg[14])+1.25*m2min+default(cfg[11],0),
+                        a0+m1min*C*q0/(delta*2*cfg[14])+m2min))
         if(is_undef(cfg[12]) || lower<=cfg[12]*(1+1e-10))
-            cfg[11]=="balance"?[balance,lower,s,p,q0,r0,lo,hi]:[lower,0,s,p,q0,r0,lo,hi]
+            [lower,s,p,q0,r0,lo,hi]
 ];
 function _stepped_planetary_pick_groups(cfg,groups,i=0,best=undef) =
-    i>=len(groups) || _stepped_planetary_cannot_improve(cfg,groups[i],best)?best:
-    let(g=groups[i],cs=[for(t=[g[6]:g[7]])
-          let(c=_stepped_planetary_count(cfg,g[2],g[3],g[4]*t,g[5]*t)) if(!is_undef(c)) c],
+    i>=len(groups) || _stepped_planetary_cannot_improve(groups[i],best)?best:
+    let(g=groups[i],cs=[for(t=[g[5]:g[6]])
+          let(c=_stepped_planetary_count(cfg,g[1],g[2],g[3]*t,g[4]*t)) if(!is_undef(c)) c],
         updated=_stepped_planetary_pick_counts(cfg,_stepped_planetary_sort(cs),best=best))
     _stepped_planetary_pick_groups(cfg,groups,i+1,updated);
 function _stepped_planetary_divisors(z,lo,hi) = [
@@ -7003,31 +7085,30 @@ function _stepped_planetary_feasible(cfg,v,w,r) =
         xr=w[1]+(r-q)*v[8],a=m1*v[4])
     !is_finite(m1) || m1<=0 || !is_finite(m2) || m2<=0 || !is_finite(a) || a<=0 ? undef :
     [s,p,q,r,v[2],v[3],w[1],xr,a,m1,m2,L];
-function _stepped_planetary_diameter(d,h1=0,h2=0) =
+function _stepped_planetary_diameter(d,h1=0,h2=0,backing) =
+    let(ar=outer_radius(mod=d[10],teeth=d[3],profile_shift=d[7],helical=h2,internal=true),
+        rr=is_undef(backing)?root_radius(mod=d[10],teeth=d[3],profile_shift=d[7],helical=h2,internal=true):undef,
+        ring_radius=_ring_gear_outer_radius(ar,rr,backing))
     2*max(outer_radius(mod=d[9],teeth=d[0],profile_shift=d[4],helical=h1),
-          outer_radius(mod=d[10],teeth=d[3],profile_shift=d[7],helical=h2,internal=true),
+          ring_radius,
           d[8]+outer_radius(mod=d[9],teeth=d[1],profile_shift=d[5],helical=h1),
           d[8]+outer_radius(mod=d[10],teeth=d[2],profile_shift=d[6],helical=h2));
 function _stepped_planetary_score(cfg,d) =
-    let(D=_stepped_planetary_diameter(d,cfg[4],cfg[5]))
+    let(D=_stepped_planetary_diameter(d,cfg[4],cfg[5],cfg[11]))
     !is_undef(cfg[12]) && D>cfg[12]*(1+1e-10)?undef:
-    cfg[11]=="balance"?[_stepped_planetary_balance(d[0],d[1],d[2],d[3]),D,d[3],d[0],d[1],d[2]]:
-                       [D,0,d[3],d[0],d[1],d[2]];
-function _stepped_planetary_quality_less(cfg,a,b) =
+    [D,d[3],d[0],d[1],d[2]];
+function _stepped_planetary_quality_less(a,b) =
     is_undef(b)?true:
-    cfg[11]=="balance" && a[0]!=b[0]?a[0]<b[0]:
-    let(i=cfg[11]=="balance"?1:0,eps=1e-10*max(a[i],b[i]))
-    abs(a[i]-b[i])>eps?a[i]<b[i]:_stepped_planetary_less([a[2],a[3],a[4],a[5]],[b[2],b[3],b[4],b[5]]);
-function _stepped_planetary_cannot_improve(cfg,c,best) =
-    is_undef(best)?false:
-    cfg[11]=="balance" ? c[0]>best[0][0] || (c[0]==best[0][0] && c[1]>best[0][1]*(1+1e-10)) :
-                         c[0]>best[0][0]*(1+1e-10);
+    let(eps=1e-10*max(a[0],b[0]))
+    abs(a[0]-b[0])>eps?a[0]<b[0]:_stepped_planetary_less([a[1],a[2],a[3],a[4]],[b[1],b[2],b[3],b[4]]);
+function _stepped_planetary_cannot_improve(c,best) =
+    !is_undef(best) && c[0]>best[0][0]*(1+1e-10);
 function _stepped_planetary_pick_counts(cfg,cs,i=0,best=undef) =
-    i>=len(cs) || _stepped_planetary_cannot_improve(cfg,cs[i],best)?best:
-    let(c=cs[i],d=_stepped_planetary_layout(c[3],c[4],c[5],c[2],cfg[0],cfg[2],cfg[3],
+    i>=len(cs) || _stepped_planetary_cannot_improve(cs[i],best)?best:
+    let(c=cs[i],d=_stepped_planetary_layout(c[2],c[3],c[4],c[1],cfg[0],cfg[2],cfg[3],
                    cfg[4],cfg[5],cfg[8],cfg[9]),
         score=is_undef(d)?undef:_stepped_planetary_score(cfg,d),
-        good=!is_undef(score) && _stepped_planetary_quality_less(cfg,score,is_undef(best)?undef:best[0]))
+        good=!is_undef(score) && _stepped_planetary_quality_less(score,is_undef(best)?undef:best[0]))
     _stepped_planetary_pick_counts(cfg,cs,i+1,good?[score,d]:best);
 
 // Private known-count helper retained for regression tests and future layout API.
@@ -7062,7 +7143,7 @@ function _stepped_planetary_try_fractions(cfg,fs,i=0,best=undef,error=undef) =
     i>=len(fs) || (!is_undef(best) && fs[i][0]>error+_stepped_planetary_error_tol(cfg))?best:
     let(f=fs[i],candidate=_stepped_planetary_exact(cfg,f[1],f[2]),
         good=!is_undef(candidate) && (is_undef(best) ||
-             _stepped_planetary_quality_less(cfg,candidate[0],best[0])))
+             _stepped_planetary_quality_less(candidate[0],best[0])))
     _stepped_planetary_try_fractions(cfg,fs,i+1,good?candidate:best,good?f[0]:error);
 
 // Complete fallback. For each sun/first-planet pair, restrict q by module bounds,
@@ -7107,11 +7188,11 @@ function _stepped_planetary_walk(cfg,v,q,b,left,right,best) =
     !is_undef(best) && error>best[0]+_stepped_planetary_error_tol(cfg)?best:
     let(c=_stepped_planetary_count(cfg,v[0],v[1],q,r),
         prune=!is_undef(best) && abs(error-best[0])<=_stepped_planetary_error_tol(cfg) &&
-              !is_undef(c) && _stepped_planetary_cannot_improve(cfg,c,best[1]),
+              !is_undef(c) && _stepped_planetary_cannot_improve(c,best[1]),
         d=is_undef(c)||prune?undef:_stepped_planetary_feasible(cfg,v,_stepped_planetary_planet_data(q,cfg[5]),r),
         score=is_undef(d)?undef:_stepped_planetary_score(cfg,d),
         good=!is_undef(score) && (is_undef(best) || error<best[0]-_stepped_planetary_error_tol(cfg) ||
-              _stepped_planetary_quality_less(cfg,score,best[1][0])),
+              _stepped_planetary_quality_less(score,best[1][0])),
         updated=good?[error,[score,d]]:best)
     _stepped_planetary_walk(cfg,v,q,b,use_left?left-b[2]:left,use_left?right:right+b[2],updated);
 
@@ -7123,14 +7204,14 @@ function _stepped_planetary_interval(cfg) =
     let(seed_limit=min(cfg[1],max(64,cfg[10]+1)),
         seed_cfg=[for(i=[0:len(cfg)-1]) i==1?seed_limit:cfg[i]],
         seed=seed_limit<cfg[1]?_stepped_planetary_interval_search(seed_cfg):undef,
-        cap=is_undef(seed)?undef:cfg[11]=="diameter"?seed[0][0]:seed[0][0]==1?seed[0][1]:undef,
+        cap=is_undef(seed)?undef:seed[0][0],
         bounded=[for(i=[0:len(cfg)-1]) i==12 && !is_undef(cap)?
                     (is_undef(cfg[12])?cap:min(cap,cfg[12])):cfg[i]])
     _stepped_planetary_interval_search(bounded,seed);
 
 // The small-count pass only supplies an incumbent. The full bounded search
 // still considers every family that could improve it; there is no early
-// heuristic answer. A perfect balance of 1 also makes its diameter a valid cap.
+// heuristic answer. The incumbent diameter is a valid cap for the full search.
 function _stepped_planetary_interval_search(cfg,best=undef) =
     let(N=cfg[1],m=cfg[10],domain=[_stepped_planetary_ratio_k(cfg[6],m/(N-1)),
                                 _stepped_planetary_ratio_k(cfg[6],N*N/(m*m))],
@@ -7155,10 +7236,10 @@ function _stepped_planetary_interval_fractions(cfg,fs,i=0,best=undef) =
     i>=len(fs)?best:
     let(f=fs[i],candidate=_stepped_planetary_exact(cfg,f[0],f[1]),
         good=!is_undef(candidate) &&
-             _stepped_planetary_quality_less(cfg,candidate[0],is_undef(best)?undef:best[0]))
+             _stepped_planetary_quality_less(candidate[0],is_undef(best)?undef:best[0]))
     _stepped_planetary_interval_fractions(cfg,fs,i+1,good?candidate:best);
 
-// Group record: objective/secondary lower bounds,s,p,dmin,dmax,qmin,qmax,vmin,vmax.
+// Group record: diameter lower bound,s,p,dmin,dmax,qmin,qmax,vmin,vmax.
 // Here v=d/q.  All bounds are conservative; final membership uses the user's
 // original ratio convention, including its inclusive endpoints.
 function _stepped_planetary_interval_groups(cfg,kl,kh,best=undef) = [
@@ -7178,41 +7259,29 @@ function _stepped_planetary_interval_groups(cfg,kl,kh,best=undef) = [
         let(ql=max(m,12-dh,_stepped_planetary_ceil(dl/vh)),
             qh=min(N-dl,_stepped_planetary_floor(dh/vl)))
         if(ql<=qh)
-        let(tl=p*vl/(s+p),th=p*vh/(s+p),balance=max(1,(tl>1?tl:th<1?1/th:1)*(1-2e-12)),
-            m1lo=is_undef(cfg[2])?cfg[3]*dl/C:cfg[2],
+        let(m1lo=is_undef(cfg[2])?cfg[3]*dl/C:cfg[2],
             m2lo=is_undef(cfg[3])?cfg[2]*C/dh:cfg[3],
             a0=m1lo*(s+p)/(2*cfg[13]),
             lower=2*max(m1lo*(s/(2*cfg[13])+1+cfg[16][s]),
                         a0+m1lo*(p/(2*cfg[13])+1+cfg[16][p]),
-                        a0*(1+1/vh)+1.25*m2lo,
+                        a0*(1+1/vh)+1.25*m2lo+default(cfg[11],0),
                         a0+a0/vh+m2lo))
         if(is_undef(cfg[12]) || lower<=cfg[12]*(1+1e-10))
-        let(g=cfg[11]=="balance"?[balance,lower,s,p,dl,dh,ql,qh,vl,vh]:
-                               [lower,0,s,p,dl,dh,ql,qh,vl,vh])
-        if(!_stepped_planetary_interval_prune(cfg,g,best)) g
+        let(g=[lower,s,p,dl,dh,ql,qh,vl,vh])
+        if(!_stepped_planetary_cannot_improve(g,best)) g
 ];
 
 function _stepped_planetary_interval_pick(cfg,groups,i=0,best=undef) =
-    i>=len(groups) || _stepped_planetary_interval_prune(cfg,groups[i],best)?best:
-    let(g=groups[i],v=_stepped_planetary_sun_data(g[2],g[3],cfg[0],cfg[4],cfg[5]),
+    i>=len(groups) || _stepped_planetary_cannot_improve(groups[i],best)?best:
+    let(g=groups[i],v=_stepped_planetary_sun_data(g[1],g[2],cfg[0],cfg[4],cfg[5]),
         cs=is_undef(v)?[]:_stepped_planetary_interval_counts(cfg,g,v,best),
         updated=_stepped_planetary_interval_candidates(cfg,v,_stepped_planetary_sort(cs),best=best))
     _stepped_planetary_interval_pick(cfg,groups,i+1,updated);
 
-// Tiny bound slack prevents excluding a tied balance through transformed-bound
-// roundoff.  The actual rational count balance is compared without that slack.
-function _stepped_planetary_interval_prune(cfg,c,best) =
-    is_undef(best)?false:
-    cfg[11]=="balance" ? c[0]>best[0][0]*(1+2e-12) ||
-        (c[0]==best[0][0] && c[1]>best[0][1]*(1+1e-10)) :
-        c[0]>best[0][0]*(1+1e-10);
-
 function _stepped_planetary_interval_counts(cfg,g,v,best) = [
-    let(T=(g[2]+g[3])/g[3],has_balance=cfg[11]=="balance" && !is_undef(best),
-        vl=has_balance?max(g[8],T/best[0][0]*(1-2e-12)):g[8],
-        vh=has_balance?min(g[9],T*best[0][0]*(1+2e-12)):g[9],
-        qlo=max(g[6],_stepped_planetary_ceil(g[4]/vh)),
-        qhi=min(g[7],_stepped_planetary_floor(g[5]/vl)))
+    let(vl=g[7],vh=g[8],
+        qlo=max(g[5],_stepped_planetary_ceil(g[3]/vh)),
+        qhi=min(g[6],_stepped_planetary_floor(g[4]/vl)))
     if(vl<=vh && qlo<=qhi)
     for(q=[qlo:qhi])
         let(b=_stepped_planetary_ring_bounds(cfg,v,q))
@@ -7221,18 +7290,18 @@ function _stepped_planetary_interval_counts(cfg,g,v,best) = [
             hi=min(b[1],q+_stepped_planetary_floor(vh*q)),
             first=lo+_stepped_planetary_mod(b[0]-lo,b[2]))
         if(first<=hi) for(r=[first:b[2]:hi])
-            let(ratio=_stepped_planetary_ratio(cfg[6],g[2],g[3],q,r))
+            let(ratio=_stepped_planetary_ratio(cfg[6],g[1],g[2],q,r))
             if(ratio>=cfg[19][0] && ratio<=cfg[19][1])
-            let(c=_stepped_planetary_count(cfg,g[2],g[3],q,r))
-            if(!is_undef(c) && !_stepped_planetary_interval_prune(cfg,c,best)) c
+            let(c=_stepped_planetary_count(cfg,g[1],g[2],q,r))
+            if(!is_undef(c) && !_stepped_planetary_cannot_improve(c,best)) c
 ];
 
 // Interval and scalar searches share the same geometry-only score and count tie-breaks.
 function _stepped_planetary_interval_candidates(cfg,v,cs,i=0,best=undef) =
-    i>=len(cs) || _stepped_planetary_cannot_improve(cfg,cs[i],best)?best:
-    let(c=cs[i],d=_stepped_planetary_feasible(cfg,v,_stepped_planetary_planet_data(c[5],cfg[5]),c[2]),
+    i>=len(cs) || _stepped_planetary_cannot_improve(cs[i],best)?best:
+    let(c=cs[i],d=_stepped_planetary_feasible(cfg,v,_stepped_planetary_planet_data(c[4],cfg[5]),c[1]),
         score=is_undef(d)?undef:_stepped_planetary_score(cfg,d),
-        good=!is_undef(score) && _stepped_planetary_quality_less(cfg,score,is_undef(best)?undef:best[0]))
+        good=!is_undef(score) && _stepped_planetary_quality_less(score,is_undef(best)?undef:best[0]))
     _stepped_planetary_interval_candidates(cfg,v,cs,i+1,good?[score,d]:best);
 
 function _stepped_planetary_result(d,n,mode,drive=0) =
@@ -7262,6 +7331,454 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 
 
 
+// Function: wolfrom_planetary()
+// Synopsis: Calculates a two-ring Wolfrom gear assembly
+// Topics: Gears
+// See Also: stepped_planetary(), spur_gear(), ring_gear(), attach_gear(), gear_carrier_frame()
+// Usage: Calculate one layer's tooth size from the other
+//   data = wolfrom_planetary(n, max_teeth, sun_ring=|ring_sun=|sun_carrier=|carrier_sun=|carrier_ring=|ring_carrier=, mod1=|circ_pitch1=|diam_pitch1=, [auto_size_range=], [min_teeth=], [uniform=], [exact=], [max_diam=], [backing=], [backing1=], [backing2=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = wolfrom_planetary(n, max_teeth, sun_ring=|ring_sun=|sun_carrier=|carrier_sun=|carrier_ring=|ring_carrier=, mod2=|circ_pitch2=|diam_pitch2=, [auto_size_range=], [min_teeth=], [uniform=], [exact=], [max_diam=], [backing=], [backing1=], [backing2=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+// Usage: Fix both tooth sizes
+//   data = wolfrom_planetary(n, max_teeth, sun_ring=|ring_sun=|sun_carrier=|carrier_sun=|carrier_ring=|ring_carrier=, mod=|circ_pitch=|diam_pitch=, [min_teeth=], [uniform=], [exact=], [max_diam=], [backing=], [backing1=], [backing2=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+//   data = wolfrom_planetary(n, max_teeth, sun_ring=|ring_sun=|sun_carrier=|carrier_sun=|carrier_ring=|ring_carrier=, mod1=|circ_pitch1=|diam_pitch1=, mod2=|circ_pitch2=|diam_pitch2=, [min_teeth=], [uniform=], [exact=], [max_diam=], [backing=], [backing1=], [backing2=], [helical=], [helical1=], [helical2=], [gear_spin=]);
+// Description:
+//   Calculates tooth counts, tooth sizes, profile shifts, and installation angles for a Wolfrom gear assembly.
+//   The sun meshes with identical compound planets. In layer 1, each planet also meshes with a fixed ring.
+//   In layer 2, the rigidly connected second planet gear meshes with a second ring, which is the output.
+//   .
+//   Select the signed input/output ratio with sun_ring, ring_sun, sun_carrier, carrier_sun, carrier_ring, or ring_carrier.
+//   All ratios use the first ring as the fixed member. The sign indicates relative rotation direction.
+//   A scalar requests the closest ratio of that sign; a pair of same-sign endpoints specifies an inclusive interval.
+//   Every ratio inside an interval is equally acceptable. With exact=true, a rational ratio is reconstructed using {{rational_approx()}}
+//   and must be matched exactly.
+//   .
+//   Supply a positive tooth size. A shared size fixes both layers equally; numbered sizes specify each layer.
+//   Supplying just one layer calculates the other from the common shaft spacing. Sizes cannot be changed independently afterward.
+//   The default profile shifts avoid external undercut, and ring shifts close the three working mesh distances.
+//   .
+//   Among equally accurate results for a scalar ratio, or all results inside an interval, the smallest enclosing diameter is selected.
+//   Both rings' backing and both planet envelopes are included. Supply the same backing values when constructing the rings.
+//   Equal-diameter ties prefer fewer fixed-ring teeth, then output-ring teeth, sun teeth, first-planet teeth, and second-planet teeth.
+//   .
+//   Positions are as evenly spaced as tooth alignment permits. Set uniform=true to require exact equal spacing.
+//   When `gear_spin=0` the first planet is on the X+ axis. All of the planets are identical to each other.  
+//   .
+//   The return is a list of entries describing the assembly:
+//   - ["sun", teeth, profile_shift, spin]
+//   - ["rings", [fixed_teeth, output_teeth], [fixed_shift, output_shift], [fixed_spin, output_spin]]
+//   - ["planets", [teeth1, teeth2], [profile_shift1, profile_shift2], spins, positions, angles]
+//   - ["ratio", realized_signed_ratio]
+//   - ["mod", [mod1, mod2]]
+//   - ["carrier", sun_carrier_ratio, carrier_spin]
+//   .
+//   Use the returned spins and positions for manual assembly or {{attach_gear()}} and {{gear_carrier_frame()}} for driven assembly. 
+// Arguments:
+//   n = Number of identical compound planets; a positive integer.
+//   max_teeth = Maximum tooth count on every gear, including both rings; integer from 12 through 4096.
+//   ---
+//   sun_ring / ring_sun / sun_carrier / carrier_sun / carrier_ring / ring_carrier = Signed ratio of the named shafts, with the first ring fixed. Supply one finite nonzero scalar or two same-sign interval endpoints.
+//   sun_carrier = Sun rotation / carrier rotation, with the first ring fixed.
+//   carrier_sun = Carrier rotation / sun rotation, with the first ring fixed.
+//   carrier_ring = Carrier rotation / output-ring rotation, with the first ring fixed.
+//   ring_carrier = Output-ring rotation / carrier rotation, with the first ring fixed.
+//   ring_sun = Output-ring rotation / sun rotation, with the first ring fixed.
+//   sun_ring = Sun rotation / output-ring rotation, with the first ring fixed.
+//   mod/circ_pitch/diam_pitch = Shared normal tooth size fixing both layers equally. Supply only one and do not combine with numbered sizes.
+//   mod1/circ_pitch1/diam_pitch1 = Normal tooth size for the sun, first planet, and fixed ring. Supply only one. Calculated when only layer 2 is specified.
+//   mod2/circ_pitch2/diam_pitch2 = Normal tooth size for the second planet and output ring. Supply only one. Calculated when only layer 1 is specified.
+//   auto_size_range = Inclusive factors for calculated/supplied normal tooth size, measured with resolved modules. Applies only to a calculated layer. Default: [0.5,2]
+//   min_teeth = Minimum sun and planet tooth count; integer at least 4 and no greater than max_teeth. Both rings have at least 12 teeth. Default: 8
+//   uniform = Require exactly equally spaced planets. Default: false
+//   exact = Require an exact reconstructed scalar ratio, with no approximate fallback. Default: false
+//   max_diam = Inclusive maximum enclosing diameter, including both rings' backing. Default: no diameter limit
+//   backing = Shared positive radial ring backing thickness. Numbered values override it. Default: each ring's tooth height
+//   backing1 = Positive radial backing thickness for the fixed ring. Default: backing, or the fixed ring's tooth height
+//   backing2 = Positive radial backing thickness for the output ring. Default: backing, or the output ring's tooth height
+//   helical = Shared default for the layer-specific helix angles. Default: 0
+//   helical1 = Sun and fixed-ring helix angle, strictly between -90 and 90 degrees. Default: helical
+//   helical2 = Output-ring helix angle, strictly between -90 and 90 degrees. Default: helical
+//   gear_spin = Rotation of the selected driving member (sun, output ring, or carrier), in degrees. Default: 0
+// Example(3D,Med,NoAxes,Anim,Frames=96,FrameMS=20,VPR=[49.70,0.00,7.70],VPD=213.38,VPT=[0.85,-1.91,7.73]): Construct a reversing Wolfrom gear assembly with a sun/ring ratio of 60.  Watch the purple ring carefully.  
+//   $fn=64;  $gear_steps=16;  $backlash=0.1;
+//   h=10;
+//   data=wolfrom_planetary(3,90,mod1=1.5,min_teeth=18,
+//            sun_ring=-60,exact=false,uniform=true,gear_spin=480*$t);
+//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//   up(1.5*h) color_this("royalblue")
+//       linear_extrude(1) stroke(planets[4],width=1,closed=true);
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,gear_spin=sun[3]);
+//   for(j=[0:1]) up(j*h)
+//       color_this(j==0?"lightblue":"plum")
+//       ring_gear(mod=mod[j],teeth=ring[1][j],profile_shift=ring[2][j],thickness=h,gear_spin=ring[3][j]);
+//   move_copies(planets[4]) zrot(planets[3][$idx])
+//       color_this("coral")
+//       spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0],thickness=h)
+//           align(TOP) color_this("mediumseagreen")
+//           spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1]);
+// Example(3D,Med,NoAxes,VPR=[49.70,0.00,7.70],VPD=213.38,VPT=[0.85,-1.91,7.73]): The same sun-driven assembly constructed with {{attach_gear()}}.
+//   $fn=64;  $gear_steps=8;  $backlash=0.1;
+//   h=10;
+//   data=wolfrom_planetary(3,90,mod1=1.5,min_teeth=18,sun_ring=-60,exact=true,uniform=true);
+//   sun=data[0]; rings=data[1]; planets=data[2]; mod=data[4][1];
+//   ratio = data[5][1];
+//   gear_spin(480*$t)
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h)
+//       gear_carrier_frame(ratio) {
+//           up(1.5*h) color_this("royalblue")
+//               linear_extrude(1) stroke(planets[4],width=1,closed=true);
+//           attach_gear(planets[5],phase=planets[3])
+//           let(i=$idx)
+//           color_this("coral") spur_gear(teeth=planets[1][0],profile_shift=planets[2][0]) {
+//               if(i==0) attach_gear(180) color_this("lightblue")
+//                   ring_gear(teeth=rings[1][0],profile_shift=rings[2][0]);
+//               align(TOP) color_this("mediumseagreen")
+//               spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1])
+//                   if(i==0) attach_gear(180) color_this("plum")
+//                       ring_gear(teeth=rings[1][1],profile_shift=rings[2][1]);
+//           }
+//       }
+// Example(3D,Med,NoAxes,Anim,Frames=96,FrameMS=20,VPR=[50.40,0.00,87.50],VPD=217,VPT=[0.03,1.25,5.76]): Non-reversing output selected from an interval, with separate helix angles and ring backing on the layers.  The calculated ratio is 60.  
+//   $fn=64; $gear_steps=16;  $backlash=0.1;
+//   h=15;
+//   data=wolfrom_planetary(3,90,mod1=1.5,min_teeth=18,sun_ring=[59.5,60.5],uniform=true,
+//       helical1=20,helical2=-15,backing1=3,backing2=2);
+//   ratio = data[5][1];
+//   echo(ratio=ratio);
+//   sun=data[0]; rings=data[1]; planets=data[2]; mod=data[4][1];
+//   gear_spin(1440*$t/3)  // One third carrier turn
+//   spur_gear(mod=mod[0],teeth=sun[1],profile_shift=sun[2],thickness=h,helical=20)
+//       gear_carrier_frame(ratio) {
+//           up(1.5*h+1) recolor("royalblue")
+//               linear_extrude(1) stroke(planets[4],width=1,closed=true);
+//           attach_gear(planets[5],phase=planets[3])
+//           let(i=$idx)
+//           recolor("coral") spur_gear(teeth=planets[1][0],profile_shift=planets[2][0]) {
+//               if(i==0) attach_gear(180) recolor("lightblue")
+//                   ring_gear(teeth=rings[1][0],profile_shift=rings[2][0],backing=3);
+//               align(TOP) recolor("mediumseagreen")
+//               spur_gear(mod=mod[1],teeth=planets[1][1],profile_shift=planets[2][1],helical=15)
+//                   if(i==0) attach_gear(180) recolor("plum")
+//                       ring_gear(teeth=rings[1][1],profile_shift=rings[2][1],backing=2);
+//           }
+//       }
+function wolfrom_planetary(
+    n, max_teeth, _named, sun_ring, ring_sun, sun_carrier, carrier_sun, carrier_ring, ring_carrier, mod, mod1, mod2,
+    circ_pitch, circ_pitch1, circ_pitch2, diam_pitch, diam_pitch1, diam_pitch2,
+    auto_size_range=[0.5,2], min_teeth=8, uniform=false, exact=false,
+    max_diam, backing, backing1, backing2, helical, helical1, helical2, gear_spin
+) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    assert(is_int(n) && n>0, "\nn must be a positive integer")
+    assert(is_int(max_teeth) && max_teeth>=12 && max_teeth<=4096,
+           "\nmax_teeth must be an integer from 12 through 4096")
+    assert(is_int(min_teeth) && min_teeth>=4 && min_teeth<=max_teeth,
+           "\nmin_teeth must be an integer from 4 through max_teeth")
+    assert(is_bool(uniform) && is_bool(exact), "\nuniform and exact must be boolean")
+    assert(is_undef(max_diam) || (is_finite(max_diam) && max_diam>0), "\nmax_diam must be positive and finite")
+    assert(len([for(b=[backing,backing1,backing2]) if(!is_undef(b) && !(is_finite(b) && b>0)) 1])==0,
+           "\nRing backing thicknesses must be positive and finite")
+    assert(num_defined([sun_ring,ring_sun,sun_carrier,carrier_sun,carrier_ring,ring_carrier])==1,
+           "\nSpecify exactly one of sun_ring, ring_sun, sun_carrier, carrier_sun, carrier_ring and ring_carrier")
+    let(selectors=[sun_ring,ring_sun,sun_carrier,carrier_sun,carrier_ring,ring_carrier],
+        mode=[for(j=[0:5]) if(!is_undef(selectors[j])) j][0],
+        request=selectors[mode],interval=is_list(request))
+    assert(interval?is_vector(request,2) && is_finite(request[0]) && is_finite(request[1]):is_finite(request),
+           "\nThe selected transmission ratio must be a finite scalar or a pair of finite interval endpoints")
+    assert(interval?(min(request)>0 || max(request)<0):request!=0,
+           "\nThe selected ratio must be nonzero; interval endpoints must have the same sign")
+    assert(!interval || !exact, "\nA ratio interval cannot be combined with exact=true")
+    assert((mode!=2 || min(interval?request:[request])>2) &&
+           (mode!=3 || (min(interval?request:[request])>0 && max(interval?request:[request])<0.5)),
+           "\nThe sun/carrier ratio must be greater than 2; the carrier/sun ratio must lie between 0 and 0.5")
+    let(target=interval?undef:request, ends=interval?[min(request),max(request)]:undef,
+        shared=num_defined([mod,circ_pitch,diam_pitch]),
+        count1=num_defined([mod1,circ_pitch1,diam_pitch1]), count2=num_defined([mod2,circ_pitch2,diam_pitch2]))
+    assert(shared<=1 && count1<=1 && count2<=1, "\nSpecify only one tooth-size convention in each scope")
+    assert(shared==0 || count1+count2==0, "\nDo not combine shared tooth-size arguments with numbered tooth-size arguments")
+    assert(shared+count1+count2>0, "\nSupply a tooth size for at least one layer")
+    let(m=_stepped_planetary_size(mod,circ_pitch,diam_pitch,"Shared tooth size"),
+        m1=shared?m:_stepped_planetary_size(mod1,circ_pitch1,diam_pitch1,"Layer 1 tooth size"),
+        m2=shared?m:_stepped_planetary_size(mod2,circ_pitch2,diam_pitch2,"Layer 2 tooth size"))
+    assert(is_vector(auto_size_range,2) && min(auto_size_range)>0 && auto_size_range[0]<=auto_size_range[1],
+           "\nauto_size_range must be two positive finite factors in nondecreasing order")
+    let(h=default(helical,0),h1=default(helical1,h),h2=default(helical2,h),u=default(gear_spin,0))
+    assert(is_finite(h) && abs(h)<90 && is_finite(h1) && abs(h1)<90 && is_finite(h2) && abs(h2)<90,
+           "\nHelical angles must be finite and strictly between -90 and 90 degrees")
+    assert(is_finite(u), "\ngear_spin must be finite")
+    let(fixed=!is_undef(m1) && !is_undef(m2),
+        bounds=fixed?[m2/m1,m2/m1]:is_undef(m1)?[1/auto_size_range[1],1/auto_size_range[0]]:auto_size_range)
+    assert(is_vector(bounds,2) && min(bounds)>0, "\nThe tooth-size ratio or its bounds exceed the supported numeric range")
+    // The reduced ratio denominator is at most N^3; numerator at most 2*N^3.
+    // Keep integer products within exact binary64 range by cross-cancellation below.
+    let(f=interval?undef:rational_approx(abs(target),max_teeth^3),
+        reconstructed=!interval && f[0]>0 && f[0]<=2*max_teeth^3 &&
+                      abs(f[0]/f[1]-abs(target))<=1e-12*max(1,abs(target)),
+        frac=reconstructed?[sign(target)*f[0],f[1]]:undef)
+    assert(!exact || reconstructed, "\nThe ratio cannot be reconstructed exactly within this tooth-count budget; increase max_teeth or use exact=false")
+    let(
+        // cfg: n,N,m1,m2,h1,h2,target,interval,uniform,auto_range,min,b1,b2,max_diam,
+        //      cos(h1),cos(h2),m2/m1 bounds,external shifts by layer,exact fraction.
+        cfg=[n,max_teeth,m1,m2,h1,h2,target,ends,uniform,auto_size_range,min_teeth,
+             default(backing1,backing),default(backing2,backing),max_diam,cos(h1),cos(h2),bounds,
+             [for(z=[0:max_teeth]) auto_profile_shift(teeth=z,helical=h1)],
+             [for(z=[0:max_teeth]) auto_profile_shift(teeth=z,helical=h2)],undef,mode],
+        want_exact=!interval && reconstructed && (exact || frac[0]/frac[1]==target),
+        exact_cfg=[for(i=[0:20]) i==19?frac:cfg[i]],
+        seed=want_exact?_wolfrom_planetary_search(exact_cfg):undef,
+        best=exact || !is_undef(seed)?seed:_wolfrom_planetary_search(cfg))
+    assert(!is_undef(best),str("\nNo ",exact?"exact-ratio ":"",uniform?"uniform ":"",n,
+           "-planet Wolfrom design satisfies the constraints with max_teeth=",max_teeth,
+           ". Increase max_teeth, reduce n, relax the ratio or size limits, or permit a calculated tooth size."))
+    _wolfrom_planetary_result(best[1],n,u,mode);
+
+// Return [signed numerator, positive denominator], reduced without subtracting rounded ratios.
+function _wolfrom_planetary_ratio_pair(s,p,q,r1,r2) =
+    let(a=(s+r1)*p*r2,b=s*(p*r2-r1*q),g=_stepped_planetary_gcd(a,abs(b)))
+    b==0?undef:[sign(b)*a/g,abs(b)/g];
+
+// Signed ratios; the first ring is fixed. Modes: sun/ring, ring/sun,
+// sun/carrier, carrier/sun, carrier/ring, ring/carrier.
+function _wolfrom_planetary_mode_pair(mode,s,p,q,r1,r2) =
+    let(A=s+r1,B=p*r2-r1*q,C=p*r2)
+    mode==0 ? _wolfrom_planetary_ratio_pair(s,p,q,r1,r2) :
+    mode==1 ? _wolfrom_planetary_reduce_pair(s*B,A*C) :
+    mode==2 ? _wolfrom_planetary_reduce_pair(A,s) :
+    mode==3 ? _wolfrom_planetary_reduce_pair(s,A) :
+    mode==4 ? _wolfrom_planetary_reduce_pair(C,B) :
+              _wolfrom_planetary_reduce_pair(B,C);
+function _wolfrom_planetary_reduce_pair(a,b) =
+    b==0?undef:let(g=_stepped_planetary_gcd(abs(a),abs(b)))
+    [sign(b)*a/g,abs(b)/g];
+// Convert the requested ratio to sun/output-ring for this sun/planet-1 family.
+function _wolfrom_planetary_as_sun_ring(mode,s,p,v) =
+    let(A=2*(s+p)/s)
+    mode==0?v:mode==1?1/v:mode==4?A*v:mode==5?A/v:undef;
+function _wolfrom_planetary_as_fraction(mode,s,p,f) =
+    let(A=2*(s+p))
+    mode==0?f:mode==1?_wolfrom_planetary_reduce_pair(f[1],f[0]):
+    mode==4?_wolfrom_planetary_reduce_pair(A*f[0],s*f[1]):
+    mode==5?_wolfrom_planetary_reduce_pair(A*f[1],s*f[0]):undef;
+function _wolfrom_planetary_family_range(mode,s,p,v) =
+    is_undef(v) || mode==2 || mode==3?undef:let(a=_wolfrom_planetary_as_sun_ring(mode,s,p,v[0]),
+                          b=_wolfrom_planetary_as_sun_ring(mode,s,p,v[1]))
+    [min(a,b),max(a,b)];
+
+// Exact target fixes r2/q for each (s,p). All cross-cancellation precedes multiplication;
+// reject factors whose reduced product cannot fit a bounded tooth count.
+function _wolfrom_planetary_second_pair(s,p,f,N) =
+    let(r1=s+2*p,g1=_stepped_planetary_gcd(abs(f[0]),s+r1),g2=_stepped_planetary_gcd(s,f[1]),
+        a=(f[0]/g1)*(s/g2),b=(f[1]/g2)*((s+r1)/g1),d=a-b)
+    d==0 || sign(a)!=sign(d)?undef:
+    let(g=_stepped_planetary_gcd(abs(a),abs(d)),A=abs(a)/g,B=abs(d)/g,
+        x=_stepped_planetary_gcd(A,p),y=_stepped_planetary_gcd(r1,B),
+        aa=A/x,bb=B/y,cc=r1/y,dd=p/x,
+        z=_stepped_planetary_gcd(cc,dd),c=cc/z,e=dd/z)
+    aa>N/c || bb>N/e?undef:
+    let(r=aa*c,q=bb*e) r<=q?undef:[q,r];
+
+function _wolfrom_planetary_lattice(s,p,q,r2) =
+    _stepped_planetary_gcd(2*(s+p),(s*q+r2*p)/_stepped_planetary_gcd(p,q));
+
+/// Nominal fixed-ring count is derived, never changed to rescue incompatible fixed modules.
+/// Layout: s,p,q,r1,r2,xs,xp,xq,xr1,xr2,a,m1,m2,L.
+function _wolfrom_planetary_layout(s,p,q,r2,n,mod1,mod2,helical1=0,helical2=0,uniform=false,auto_size_range=[0.5,2],sun_data) =
+    let(L=_wolfrom_planetary_lattice(s,p,q,r2))
+    L<n || (uniform && L%n!=0) || p*r2==(s+2*p)*q?undef:
+    let(v=is_undef(sun_data)?_stepped_planetary_sun_data(s,p,n,helical1,helical2):sun_data,
+        scfg=[n,max(s,p,q,r2),mod1,mod2,helical1,helical2,0,2,uniform,auto_size_range],
+        d=is_undef(v)?undef:_stepped_planetary_feasible(scfg,v,_stepped_planetary_planet_data(q,helical2),r2))
+    is_undef(d)?undef:
+    let(gap=n==1?1:2*d[8]*sin(180*floor(L/n)/L),
+        rp=outer_radius(mod=d[9],teeth=p,profile_shift=d[5],helical=helical1),
+        rq=outer_radius(mod=d[10],teeth=q,profile_shift=d[6],helical=helical2))
+    n>1 && gap-2*max(rp,rq)<=1e-9*d[8]?undef:
+    [s,p,q,s+2*p,r2,d[4],d[5],d[6],d[4]+2*d[5],d[7],d[8],d[9],d[10],L];
+
+function _wolfrom_planetary_ring_radius(m,z,x,h,b) =
+    let(ar=outer_radius(mod=m,teeth=z,profile_shift=x,helical=h,internal=true),
+        rr=is_undef(b)?root_radius(mod=m,teeth=z,profile_shift=x,helical=h,internal=true):undef)
+    _ring_gear_outer_radius(ar,rr,b);
+function _wolfrom_planetary_diameter(d,h1=0,h2=0,backing1,backing2,ring1_radius) =
+    2*max(is_undef(ring1_radius)?_wolfrom_planetary_ring_radius(d[11],d[3],d[8],h1,backing1):ring1_radius,
+          _wolfrom_planetary_ring_radius(d[12],d[4],d[9],h2,backing2),
+          d[10]+outer_radius(mod=d[11],teeth=d[1],profile_shift=d[6],helical=h1),
+          d[10]+outer_radius(mod=d[12],teeth=d[2],profile_shift=d[7],helical=h2),
+          outer_radius(mod=d[11],teeth=d[0],profile_shift=d[5],helical=h1));
+
+// Lower envelope bounds ignore omitted backing, which is positive, and the
+// nonnegative working-distance increase. They never rule out a better package.
+function _wolfrom_planetary_lower(cfg,s,p,q,r2) =
+    let(M=(s+p)*cfg[15]/cfg[14]/(r2-q),m1=is_undef(cfg[2])?cfg[3]/M:cfg[2],
+        m2=is_undef(cfg[3])?cfg[2]*M:cfg[3],a=m1*(s+p)/(2*cfg[14]),
+        xs=cfg[17][s],xp=cfg[17][p],xq=cfg[18][q])
+    2*max(m1*((s+2*p)/(2*cfg[14])+1.25+xs+2*xp)+default(cfg[11],0),
+          m2*(r2/(2*cfg[15])+1.25+xq)+default(cfg[12],0),
+          a+m1*(p/(2*cfg[14])+1+xp),a+m2*(q/(2*cfg[15])+1+xq));
+function _wolfrom_planetary_error_tol(cfg) =
+    !is_undef(cfg[7]) || !is_undef(cfg[19])?0:4e-15*max(1,abs(cfg[6]));
+function _wolfrom_planetary_better(cfg,a,b) =
+    is_undef(b)?true:
+    abs(a[0]-b[0])>_wolfrom_planetary_error_tol(cfg)?a[0]<b[0]:
+    abs(a[1]-b[1])>1e-10*max(a[1],b[1])?a[1]<b[1]:
+    _stepped_planetary_less([a[2],a[3],a[4],a[5],a[6]],[b[2],b[3],b[4],b[5],b[6]]);
+function _wolfrom_planetary_diam_cap(cfg,best) =
+    let(usebest=!is_undef(best) && (!is_undef(cfg[7]) || !is_undef(cfg[19]) || best[0][0]==0))
+    !usebest?cfg[13]:is_undef(cfg[13])?best[0][1]:min(cfg[13],best[0][1]);
+
+// Each candidate has two supplied motion constraints (sun input and fixed ring).
+// The search ranks ratio accuracy first for scalars, and package size first for intervals.
+function _wolfrom_planetary_candidate(cfg,s,p,q,r2,best) =
+    let(r1=s+2*p,f=_wolfrom_planetary_mode_pair(cfg[20],s,p,q,r1,r2),M=(s+p)*cfg[15]/cfg[14]/(r2-q),
+        L=_wolfrom_planetary_lattice(s,p,q,r2))
+    is_undef(f) || M<cfg[16][0]*(1-1e-10) || M>cfg[16][1]*(1+1e-10) ||
+    L<cfg[0] || (cfg[8] && L%cfg[0]!=0)?best:
+    let(v=f[0]/f[1],interval=!is_undef(cfg[7]),ex=!is_undef(cfg[19]))
+    (ex && f!=cfg[19]) ||
+    (interval?(v<cfg[7][0] || v>cfg[7][1]):sign(v)!=sign(cfg[6]))?best:
+    let(error=interval || ex?0:abs(v-cfg[6]),
+        lo=max(_wolfrom_planetary_lower(cfg,s,p,q,r2),len(cfg)>22 && !is_undef(cfg[22])?2*cfg[22]:0),
+        tied=!is_undef(best) && abs(error-best[0][0])<=_wolfrom_planetary_error_tol(cfg))
+    (!is_undef(cfg[13]) && lo>cfg[13]*(1+1e-10)) ||
+    (!is_undef(best) && (error>best[0][0]+_wolfrom_planetary_error_tol(cfg) ||
+                        (tied && (lo>best[0][1]*(1+1e-10) ||
+                         (lo>=best[0][1] && !_stepped_planetary_less([r1,r2,s,p,q],
+                                           [best[0][2],best[0][3],best[0][4],best[0][5],best[0][6]]))))))?best:
+    let(d=_wolfrom_planetary_layout(s,p,q,r2,cfg[0],cfg[2],cfg[3],cfg[4],cfg[5],cfg[8],cfg[9],len(cfg)>21?cfg[21]:undef),
+        D=is_undef(d)?undef:_wolfrom_planetary_diameter(d,cfg[4],cfg[5],cfg[11],cfg[12],len(cfg)>22?cfg[22]:undef),
+        score=is_undef(D)?undef:[error,D,r1,r2,s,p,q])
+    is_undef(D) || !is_finite(D) || (!is_undef(cfg[13]) && D>cfg[13]*(1+1e-10))?best:
+    _wolfrom_planetary_better(cfg,score,is_undef(best)?undef:best[0])?[score,d]:best;
+
+function _wolfrom_planetary_group_lower(cfg,s,p) =
+    let(C=(s+p)*cfg[15]/cfg[14],dl=max(1,_stepped_planetary_ceil(C/cfg[16][1])),
+        dh=min(cfg[1]-cfg[10],_stepped_planetary_floor(C/cfg[16][0])),
+        m1=is_undef(cfg[2])?cfg[3]*dl/C:cfg[2],a=m1*(s+p)/(2*cfg[14]))
+    dl>dh?undef:
+    2*max(m1*((s+2*p)/(2*cfg[14])+1.25+cfg[17][s]+2*cfg[17][p])+default(cfg[11],0),
+          a+m1*(p/(2*cfg[14])+1+cfg[17][p]));
+function _wolfrom_planetary_groups(cfg,best=undef) = [
+    let(N=cfg[1],m=cfg[10],cap=_wolfrom_planetary_diam_cap(cfg,best))
+    if(N>=3*m)
+    for(s=[m:N-2*m],p=[m:floor((N-s)/2)])
+        if(!cfg[8] || (2*(s+p))%cfg[0]==0)
+        let(lower=_wolfrom_planetary_group_lower(cfg,s,p))
+        if(!is_undef(lower) && (is_undef(cap) || lower<=cap*(1+1e-10))) [lower,s,p]
+];
+function _wolfrom_planetary_search(cfg) =
+    let(limit=min(cfg[1],max(48,3*cfg[10])),
+        seedcfg=[for(i=[0:20]) i==1?limit:cfg[i]],
+        seed=limit<cfg[1]?_wolfrom_planetary_pick_groups(seedcfg,
+                     _stepped_planetary_sort(_wolfrom_planetary_groups(seedcfg))):undef)
+    _wolfrom_planetary_pick_groups(cfg,_stepped_planetary_sort(_wolfrom_planetary_groups(cfg,seed)),best=seed);
+function _wolfrom_planetary_pick_groups(cfg,gs,i=0,best=undef) =
+    i>=len(gs)?best:
+    let(cap=_wolfrom_planetary_diam_cap(cfg,best),g=gs[i])
+    !is_undef(cap) && g[0]>cap*(1+1e-10)?best:
+    let(s=g[1],p=g[2],v=_stepped_planetary_sun_data(s,p,cfg[0],cfg[4],cfg[5]),
+        r1radius=is_undef(v) || is_undef(cfg[2]) ||
+                 (is_undef(cfg[7]) && is_undef(cfg[19]) && (is_undef(best) || best[0][0]!=0))?undef:
+            _wolfrom_planetary_ring_radius(cfg[2],s+2*p,v[2]+2*v[3],cfg[4],cfg[11]),
+        canonical=is_undef(cfg[6])?undef:_wolfrom_planetary_as_sun_ring(cfg[20],s,p,cfg[6]),
+        range=_wolfrom_planetary_family_range(cfg[20],s,p,cfg[7]),
+        frac=is_undef(cfg[19])?undef:_wolfrom_planetary_as_fraction(cfg[20],s,p,cfg[19]),
+        family=concat(cfg,[v,r1radius,canonical,range,frac]),
+        fixed_mode=cfg[20]==2 || cfg[20]==3,
+        fp=_wolfrom_planetary_mode_pair(cfg[20],s,p,cfg[10],s+2*p,cfg[10]+1),
+        fixed_error=is_undef(cfg[6])?undef:abs(fp[0]/fp[1]-cfg[6]),
+        impossible_target=fixed_mode && (is_undef(cfg[7]) ?
+                  (!is_undef(cfg[19]) ? fp!=cfg[19]:
+                   !is_undef(best) && fixed_error>best[0][0]+_wolfrom_planetary_error_tol(cfg)) :
+                  fp[0]/fp[1]<cfg[7][0] || fp[0]/fp[1]>cfg[7][1]),
+        impossible=!is_undef(cap) && !is_undef(r1radius) && 2*r1radius>cap*(1+1e-10),
+        updated=is_undef(v)||impossible||impossible_target?best:
+                     !is_undef(cfg[19]) && !fixed_mode?_wolfrom_planetary_exact_family(family,s,p,best):
+                     _wolfrom_planetary_q(family,s,p,cfg[10],best))
+    _wolfrom_planetary_pick_groups(cfg,gs,i+1,updated);
+function _wolfrom_planetary_exact_family(cfg,s,p,best) =
+    let(f=_wolfrom_planetary_second_pair(s,p,cfg[25],cfg[1]))
+    is_undef(f)?best:
+    let(C=(s+p)*cfg[15]/cfg[14],delta=f[1]-f[0],
+        lo=max(1,ceil(cfg[10]/f[0]),ceil(12/f[1]),_stepped_planetary_ceil(C/(cfg[16][1]*delta))),
+        hi=min(floor(cfg[1]/f[1]),_stepped_planetary_floor(C/(cfg[16][0]*delta))))
+    lo>hi?best:_wolfrom_planetary_multiples(cfg,s,p,f,lo,hi,best);
+function _wolfrom_planetary_multiples(cfg,s,p,f,t,end,best) =
+    t>end?best:_wolfrom_planetary_multiples(cfg,s,p,f,t+1,end,
+        _wolfrom_planetary_candidate(cfg,s,p,f[0]*t,f[1]*t,best));
+
+// Bounds for r2 at fixed s,p,q. Each sign branch is strictly decreasing in r2.
+// Uniform indexing gives an arithmetic progression, not a guessed tooth rounding.
+function _wolfrom_planetary_ring_bounds(cfg,s,p,q,best=undef) =
+    let(N=cfg[1],C=(s+p)*cfg[15]/cfg[14],r1=s+2*p,K=(s+r1)/s,t=r1*q/p,
+        fixed_mode=cfg[20]==2 || cfg[20]==3,
+        target=cfg[23], interval=!is_undef(cfg[24]),
+        positive=fixed_mode?undef:interval?cfg[24][0]>0:target>0,
+        e=is_undef(best)?undef:best[0][0]+_wolfrom_planetary_error_tol(cfg),
+        // The error envelope is in the requested ratio, then transformed.
+        requested=fixed_mode || interval || is_undef(e) || e>=abs(cfg[6])?undef:[cfg[6]-e,cfg[6]+e],
+        window=interval?cfg[24]:fixed_mode?undef:_wolfrom_planetary_family_range(cfg[20],s,p,requested),
+        bounded=!is_undef(window),
+        lo0=max(12,q+1,q+_stepped_planetary_ceil(C/cfg[16][1]),
+                is_undef(positive)?0:positive?floor(t)+1:0),
+        hi0=min(N,q+_stepped_planetary_floor(C/cfg[16][0]),
+                is_undef(positive)||positive?N:ceil(t)-1))
+    lo0>hi0 || (!is_undef(positive) && bounded && positive && window[1]<=K)?undef:
+    let(lo=bounded?max(lo0,_stepped_planetary_ceil(window[1]*t/(window[1]-K))):lo0,
+        hi=bounded && (!positive || window[0]>K)?
+           min(hi0,_stepped_planetary_floor(window[0]*t/(window[0]-K))):hi0,
+        g=_stepped_planetary_gcd(p,q),P=p/g,Q=q/g,
+        d=cfg[8]?_stepped_planetary_gcd(P,cfg[0]):1)
+    lo>hi || (cfg[8] && (s*Q)%d!=0)?undef:
+    let(stride=cfg[8]?cfg[0]/d:1,
+        residue=stride==1?0:_stepped_planetary_mod(-s*Q/d*_stepped_planetary_inverse(P/d,stride),stride),
+        first=lo+_stepped_planetary_mod(residue-lo,stride),
+        last=hi-_stepped_planetary_mod(hi-residue,stride))
+    first>last?undef:[first,last,stride];
+function _wolfrom_planetary_q(cfg,s,p,q,best) =
+    q>=cfg[1]?best:
+    let(b=_wolfrom_planetary_ring_bounds(cfg,s,p,q,best),
+        target=cfg[23],K=2*(s+p)/s,fixed_mode=cfg[20]==2 || cfg[20]==3,
+        ideal=is_undef(b) || !is_undef(cfg[7]) || fixed_mode?0:
+                target>0 && target<=K?b[1]:
+                min(b[1],max(b[0],target*(s+2*p)*q/p/(target-K))),
+        left=is_undef(b)?0:b[0]+b[2]*floor((ideal-b[0])/b[2]),
+        updated=is_undef(b)?best:!is_undef(cfg[7]) || fixed_mode?
+               _wolfrom_planetary_interval_r(cfg,s,p,q,b,b[0],best):
+               _wolfrom_planetary_walk(cfg,s,p,q,b,left,left+b[2],best))
+    _wolfrom_planetary_q(cfg,s,p,q+1,updated);
+function _wolfrom_planetary_interval_r(cfg,s,p,q,b,r,best) =
+    r>b[1]?best:_wolfrom_planetary_interval_r(cfg,s,p,q,b,r+b[2],
+        _wolfrom_planetary_candidate(cfg,s,p,q,r,best));
+function _wolfrom_planetary_walk(cfg,s,p,q,b,left,right,best) =
+    left<b[0] && right>b[1]?best:
+    let(lf=left<b[0]?undef:_wolfrom_planetary_mode_pair(cfg[20],s,p,q,s+2*p,left),
+        rf=right>b[1]?undef:_wolfrom_planetary_mode_pair(cfg[20],s,p,q,s+2*p,right),
+        le=is_undef(lf)?1/0:abs(lf[0]/lf[1]-cfg[6]),
+        re=is_undef(rf)?1/0:abs(rf[0]/rf[1]-cfg[6]),
+        useleft=le<=re,r=useleft?left:right,e=min(le,re))
+    !is_undef(best) && e>best[0][0]+_wolfrom_planetary_error_tol(cfg)?best:
+    _wolfrom_planetary_walk(cfg,s,p,q,b,useleft?left-b[2]:left,useleft?right:right+b[2],
+        _wolfrom_planetary_candidate(cfg,s,p,q,r,best));
+
+function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
+    let(s=d[0],p=d[1],q=d[2],r1=d[3],r2=d[4],L=d[13],g=_stepped_planetary_gcd(p,q),
+        P=p/g,Q=q/g,L2=(s*q+r2*p)/g,inverse=_stepped_planetary_inverse(Q,P),
+        phi0=90+90*(2-s)/p,carrier_ratio=(s+r1)/s,ring_per_carrier=1-r1*q/(r2*p),
+        c=mode==0 || mode==2?drive/carrier_ratio:mode==1 || mode==5?drive/ring_per_carrier:drive,
+        sun_drive=carrier_ratio*c,ring_drive=ring_per_carrier*c,
+        pf=_wolfrom_planetary_mode_pair(mode,s,p,q,r1,r2),ratio=pf[0]/pf[1],
+        cells=[for(i=[0:n-1]) i==0?0:round(i*L/n)],
+        angles=[for(j=cells) 360*j/L+c],positions=[for(a=angles) d[10]*[cos(a),sin(a)]],
+        motion=(s+p)/p*c-s/p*sun_drive,
+        spins=[for(j=cells) let(j2=j*(L2/L),k=P==1?0:_stepped_planetary_mod(-j2*inverse,P))
+                   _stepped_planetary_mod(phi0+360/p*((s+p)*j/L+k),360/g)+motion],
+        ring1=_stepped_planetary_mod(p/r1*(phi0+90)-90,360/r1),
+        ring2=_stepped_planetary_mod(q/r2*(phi0+90)-90,360/r2)+ring_drive)
+    [["sun",s,d[5],sun_drive],
+     ["rings",[r1,r2],[d[8],d[9]],[ring1,ring2]],
+     ["planets",[p,q],[d[6],d[7]],spins,positions,angles],
+     ["ratio",ratio],["mod",[d[11],d[12]]],["carrier",carrier_ratio,c]];
+
+
 // Section: Gear Attachment
 //   Gear modules propagate construction parameters such as gear type, tooth size and tooth number, 
 //   which enables child gear modules to inherit those parameters and construct a compatible
@@ -7286,6 +7803,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   The gear assembly necessarily proceeds pairwise in a tree-like fashion, with each
 //   gear constructed to mate properly with its parent.  If a gear meets an earlier gear
 //   in the chain then it is your responsibility to ensure that the mesh is compatible. 
+
+
 // Module: attach_gear()
 // Synopsis: Positions a gear as a child of another gear with proper tooth mesh
 // Topics: Gears, Attachments
@@ -7304,6 +7823,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   worm() attach_gear([angle], [dir=]) worm_gear();
 // Usage: Attaching a worm face gear to a worm
 //   worm(...) attach_gear([angle], [dir=], [shift=], [worm_face_pos=]) worm_face_gear();
+// Usage: Selecting a rotary gear's ordinary-child frame
+//   PARENT() attach_gear([angle], phase=, [dir=], [pos=], [shift=]) CHILD_GEAR();
 // Description:
 //   Places a child gear relative to its parent with meshing teeth, and propagates motion to the child
 //   specified using {{gear_spin()}} (or {{gear_travel()}} for racks).
@@ -7315,6 +7836,8 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   `angle` parameter or the `dir` parameter.  For planar arrangements of parallel axis gears attachment
 //   angles and directions use the common reference frame defined by the first gear.  Angle is measured counterclockwise from X+
 //   in that reference frame.  
+//   A gear_carrier_frame() establishes a new reference for its planetary branch. Those placement directions
+//   rotate with the carrier; a coaxial carrier-output gear instead starts a stationary-axis output branch.
 //   If you provide a list of angles then a copy of the child gear will be placed
 //   at each angle.  Alternatively `dir=` is a direction vector lying in the XY plane or a list
 //   of direction vectors.  The children will appear in the directions of the listed vectors.
@@ -7564,17 +8087,29 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   For racks it gives the pitch-line origin. The second gives shaft-axis unit vectors
 //   in the same order, or undef for racks. Both lists use the current child frame.
 //
+//   A rotary gear attached with `phase=` retains its automatically meshed tooth geometry, but its ordinary children
+//   use an outgoing frame with the specified zero-drive orientation, in degrees relative to the gear's stationary
+//   assembly reference.  The phase does not change the driven rotation, gear ratio, or automatic meshing.
+//   Omitting phase preserves the existing child coordinate frame.  A scalar applies to every placement;
+//   a list supplies one finite orientation for each attachment angle or position.
+//   The option requires a rotary child; an attached rack does not accept it.  Fractional and negative angles are allowed.
+//   Later automatic gear placements retain their stationary assembly reference; they do not follow the selected child-frame angle.
+//   Within a carrier branch, this means the carrier reference: phase changes rigid-child indexing, not orbital placement.
+//   An ordinary coaxial gear child inherits the selected frame, but not the parent's local tooth offset.
+//   For a compound planet, use its zero-drive installation phase; keep animation in the driving module rather than in this phase.
 //   The `$gear_rotation` parameter reports the driven rotation of the current gear around its shaft.
 //   The `$gear_angle_offset` parameter reports the tooth-alignment offset  
 //   plus any user specified local `gear_spin=` passed to the gear as a parameter.
 //   Within the rotating child frame, this is
 //   the extra angle needed to align a feature with the constructor's reference tooth geometry.
+//   With `phase=`, `$gear_angle_offset` is measured relative to the selected outgoing child frame.
 //   For racks, `$gear_travel` reports motion from the initially placed rack position, and
 //   `$gear_travel_offset` reports the additional locally specified `gear_travel=` offset in model units.
 //   The initial tooth-alignment translation is part of the rack's placement.
 // Arguments:
 //   angle = Placement angle in degrees, or a list of angles. Default: 0 for a non-rack parent when `dir` is omitted.
 //   ---
+//   phase = Zero-drive angular orientation, in degrees, of the attached rotary gear's ordinary-child frame in the stationary assembly reference.  Scalar or one value per placement. Does not rotate the teeth or affect meshing. Default: preserve the existing child frame.
 //   dir = One 2D/3D direction vector, or a list of direction vectors, in the parent's stationary XY plane. Magnitude is ignored.   
 //   pos = Child gear mounting position along a parent rack's X axis (scalar or list). Default: 0
 //   shift = Signed distance to shift child gear or worm along the parent shaft for parallel 3D spur and ring gear pairs, along the pinion shaft for a 3D rack and pinion pair or for cylindrical worms or worm face gears. Default: 0
@@ -7588,6 +8123,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   Sets internal variables requesting mating placement and gear inheritance.
 //   `$gear_rotation` is set inside the child gear to the total gear rotation of a rotating gear resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
 //   `$gear_angle_offset` is set inside the child gear to its angular tooth-alignment offset in degrees, including meshing alignment and local `gear_spin`.
+//   `$gear_angle_offset` includes the offset relative to any explicitly selected `phase=` child frame.
 //   `$gear_ratio` is set inside the child gear to the signed angular gain: (output degrees)/(input degrees) for rotational input, or (output degrees)/(input travel) for travel input in model units.
 //   `$gear_travel` is set inside the child rack to the displacement in model units of the rack resulting from {{gear_spin()}} or {{gear_travel()}} applied to the gear chain root.
 //   `$gear_travel_offset` is set inside the child rack to the local `gear_travel`, in model units.
@@ -7632,9 +8168,9 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //   spur_gear(mod=2,teeth=24,thickness=28,helical=25,backlash=.1,slices=24)
 //       attach_gear(25,shift=-4)
 //           recolor("lightblue") spur_gear(teeth=36,thickness=14,anchor=TOP,backlash=.1,slices=36);
-// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=237.09,VPT=[33.17,10.33,-6.65],NoScales,Anim,Frames=90,FrameMS=45): A two-level compound train changes tooth size on the common shaft before driving its next mate.
+// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=237.09,VPT=[33.17,10.33,-6.65],NoScales,Anim,Frames=48,FrameMS=55): A two-level compound train changes tooth size on the common shaft before driving its next mate.
 //   $fn=64;
-//   gear_spin(360*$t)
+//   gear_spin(135*$t)
 //   spur_gear(mod=2,teeth=24,thickness=6,shaft_diam=4)
 //       attach_gear(0)
 //           recolor("lightblue") spur_gear(teeth=36,shaft_diam=4)
@@ -7675,12 +8211,12 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //      worm(mod=3,worm_diam=45,worm_length=85)
 //          attach_gear(dir=BACK,worm_face_pos=$idx ? LEFT:RIGHT)
 //              worm_face_gear(teeth=47,shaft_offset=58);
-// Example(3D,Med,Anim,FrameMS=60,Frames=90,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
+// Example(3D,Med,Anim,FrameMS=55,Frames=60,NoScales,VPR=[72.10,0.00,25.20],VPD=325.23,VPT=[3.96,8.55,13.82]): A skew rack starts near the LEFT end.
 //   gear_spin(-180*8/12*(0.5+0.5*cos(360*$t))) 
 //       spur_gear(mod=2,teeth=24,thickness=10,helical=17.5,backlash=.15,slices=32)
 //           attach_gear(90,rack_inset=2)
 //               recolor("lightblue") rack(teeth=12,thickness=10,helical=22.5,anchor=LEFT,backlash=.15);
-// Example(2D,Med,Anim,Frames=100,FrameMS=40,VPD=325,NoScales): A pinion rolling along a fixed rack is created by canceling the rack travel with an opposite movement
+// Example(2D,Med,Anim,Frames=72,FrameMS=50,VPD=325,NoScales): A pinion rolling along a fixed rack is created by canceling the rack travel with an opposite movement
 //   travel=30*sin(360*$t);
 //   left(travel) gear_travel(travel)
 //       rack2d(mod=1.5,teeth=32)
@@ -7699,7 +8235,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //                   color("red") right(5) circle(d=2.5,$fn=16);
 //               }
 //       }
-// Example(3D,Med,NoAxes,Anim,Frames=20,FrameMS=50,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Planetary gear with fixed carrier, built from ring inward.  Helical angle is handled automatically.  
+// Example(3D,Med,NoAxes,Anim,Frames=20,FrameMS=30,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Planetary gear with fixed carrier, built from ring inward.  Helical angle is handled automatically.  
 //   mod=1;
 //   helical=25;
 //   spin = 360/27*$t;
@@ -7722,7 +8258,7 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //       spur_gear2d(teeth=gear_data[2][1],profile_shift=gear_data[2][2])
 //         if($idx==0)
 //           attach_gear(180)ring_gear2d(teeth=gear_data[1][1], profile_shift=gear_data[1][2],backing=2);
-// Example(2D,Med,NoAxes,Anim,FrameMS=60,Frames=80,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
+// Example(2D,Med,NoAxes,Anim,FrameMS=55,Frames=72,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): Planetary gear with fixed ring: build from the ring inward and counter-rotate to zero out the ring's rotation.
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6);
 //   spin=360/5*$t;
@@ -7734,9 +8270,50 @@ function _stepped_planetary_result(d,n,mode,drive=0) =
 //         if ($idx==0)
 //           attach_gear(180)
 //             spur_gear2d(teeth=gear_data[0][1], profile_shift=gear_data[0][2]);
-
-
-module attach_gear(angle, _named, dir, pos, rack_inset, crown_pos, shift, worm_face_pos) {
+// Example(3D,Big,NoAxes,Frames=150,FrameMS=30,VPR=[36.80,0.00,0],VPD=385,VPT=[-0.97,-0.43,11.29]): Two gear-cam cartridges with different phases.  Undoing the cartridge's in-plane rotation keeps the follower and guides parallel to the stationary mounting axes.
+//    $fn=64;
+//    $gear_steps=20;
+//    $backlash=0.15;
+//    input_angle=540*$t;
+//    installed_phase=[-5,85];
+//    cam_radius=10;
+//    eccentricity=5;
+//    gear_spin(input_angle)
+//      recolor("gold")
+//      spur_gear(mod=2,teeth=24,thickness=6)
+//        attach_gear([0,180],phase=installed_phase)
+//        let(cartridge_index=$idx)
+//        recolor("cornflowerblue")
+//        spur_gear(teeth=36,thickness=6) {
+//            align(TOP)
+//            recolor("mediumseagreen")
+//            spur_gear(mod=1.5,teeth=18,thickness=6) {
+//                // Components of the manufactured cartridge, all in its rotating frame.
+//                align(TOP) recolor("dimgray") cuboid([10,7,6])
+//                  align(TOP) right(eccentricity)
+//                      recolor("darkorange")
+//                        cyl(r=cam_radius,h=4){
+//                          align(TOP,RIGHT,inset=2)
+//                        recolor("crimson") cyl(d=2.5,h=2);
+//                      }    
+//                // Move the guide in Y as the eccentric cam turns, but NEVER rotate
+//                // the stationary guide rails with the cartridge. Because these
+//                // parts are here, the gear's attachment determines their X center.
+//                let(cam_angle=installed_phase[cartridge_index]+$gear_rotation,
+//                    cam_top=cam_radius+eccentricity*sin(cam_angle))
+//                  up(11)zrot(-cam_angle) {
+//                     back(cam_top) recolor("slategray") {
+//                           cuboid([30,4,4],anchor=FWD);
+//                           cuboid([4,24,4],anchor=FWD);
+//                     }
+//                     xcopies(spacing=17*2)
+//                        back(25)
+//                            recolor("silver") cuboid([3,36,3],anchor=CTR);
+//                }
+//            }
+//        }
+ 
+module attach_gear(angle, _named, dir, pos, rack_inset, crown_pos, shift, worm_face_pos, phase) {
     assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)");
     assert(!is_undef($_gear_parent_spec), "\nattach_gear() needs a parent gear module");
     assert(is_undef($_gear_attach_request), "\nPlace a child gear between successive attach_gear() calls");
@@ -7759,12 +8336,19 @@ module attach_gear(angle, _named, dir, pos, rack_inset, crown_pos, shift, worm_f
                  is_undef(dir) ? _gear_placement_values(default(angle,0),"angle") :
                  [for(v=is_vector(dir)?[dir]:dir) _gear_direction_angle(v)];
     assert(is_undef(dir) || is_list(dir), "\ndir must be a direction vector or a list of direction vectors");
+    phases = _gear_child_phase_values(phase,len(placements));
     for(i=[0:1:len(placements)-1])
         let($idx=i,$ang=israck?undef:placements[i],$pos=israck?placements[i]:pos,
             $_gear_attach_request=[israck?undef:placements[i],israck?placements[i]:pos,
-                                   rack_inset,crown_pos,shift,worm_face_pos])
+                                   rack_inset,crown_pos,shift,worm_face_pos,phases[i]])
             children();
 }
+function _gear_child_phase_values(phase,n) =
+    is_undef(phase) || is_finite(phase) ? [for(i=[0:1:n-1]) phase] :
+    assert(is_list(phase) && len(phase)==n &&
+           len([for(p=phase) if(!is_finite(p)) 1])==0,
+           str("\nphase must be a finite number or a list of ",n,
+               " finite numbers matching the placements")) phase;
 function _gear_placement_values(v,name) =
     assert(is_finite(v) || (is_list(v) && len([for(x=v) if(!is_finite(x)) 1])==0),
            str("\n",name," must be a finite number or a list of finite numbers"))
@@ -7837,13 +8421,33 @@ function _gear_rotation_matrix(M) =
 /// Pose = [placement, local body spin, angular displacement, tooth phase,
 /// angular gain, contact, ancestor locations, ancestor axes, child transform,
 /// travel, tooth travel, linear gain, local body travel, full local motion,
-/// root input kind, automatic-chain flag, optional rack rotary reference]. The flag distinguishes driven motion
+/// root input kind, automatic-chain flag, optional rack rotary reference, optional outgoing frame phase]. The flag distinguishes driven motion
 /// from a manual gear_spin/gear_travel even at zero displacement.
 /// Angular and linear gains use degrees or length per unit of the root input.
 /// Direct children keep their own tooth offsets. Only a frame established by
 /// attach_gear() supplies inherited motion; parallel shaft/slide axes retain its
 /// scalar gains while tilted compounds retain the carried coordinate frame.
+// Append provenance after family-specific pose calculations. This is not a
+// physical transform and does not change legacy public motion or histories.
 function _gear_pose(S,phase=0,anchor=CENTER,spin=0,orient=UP,travel=0,geom) =
+    let(p=is_undef($_gear_shaft_motion) ? _gear_pose_impl(S,phase,anchor,spin,orient,travel,geom) :
+          _gear_shaft_root_pose(S,phase,anchor,spin,orient,travel),
+        // A constructor reorientation establishes a different mounting reference.
+        // Captured pre-gear motion belongs to the drive's axes, not these new axes.
+        remount=is_undef($_gear_parent_spec) && !is_undef($_gear_driver) &&
+                (default(spin,0)!=0 || default(orient,UP)!=UP),
+        mount=is_undef($_gear_mount_id) || remount?function() 0:$_gear_mount_id,
+        aligned=default($_gear_motion_plane_ok,true) &&
+            (is_undef($_gear_parent_spec) || !is_undef($_gear_attach_request) ||
+             _gear_motion_stack_ok(S,anchor,spin,orient,geom)))
+    concat([for(i=[0:18]) i<len(p)?p[i]:i==17?0:undef],[[mount,$_gear_drive_id,aligned]]);
+function _gear_motion_stack_ok(S,anchor,spin,orient,geom) =
+    !_gear_is_circular(S[0]) || default(spin,0)!=0 || default(orient,UP)!=UP ? false :
+    let(B=_gear_parent_attachment(),
+        C=is_undef(geom)?_gear_anchor_transform(S,default(anchor,CENTER)):
+          _attach_transform(default(anchor,CENTER),0,UP,_change_anchors(geom)), D=B*C)
+    norm([D[0][3],D[1][3]])<1e-9;
+function _gear_pose_impl(S,phase=0,anchor=CENTER,spin=0,orient=UP,travel=0,geom) =
     assert(is_finite(phase), "\ngear_spin must be finite")
     assert(is_finite(travel), "\ngear_travel must be finite")
     let(rack=_gear_is_rack(S[0]),driven=!is_undef($_gear_driver),
@@ -7859,10 +8463,15 @@ function _gear_pose(S,phase=0,anchor=CENTER,spin=0,orient=UP,travel=0,geom) =
     let(mate=!is_undef($_gear_attach_request),
         anchor=mate && S[0]=="rack" ? _gear_rack_anchor(default(anchor,CENTER)) : default(anchor,CENTER),
         spin=default(spin,0),orient=default(orient,UP))
+    !mate && !is_undef($_gear_carrier_parent) ?
+        let($_gear_carrier=undef,$_gear_carrier_parent=undef)
+            _gear_carrier_output_pose(S,phase,anchor,spin,orient,travel,geom) :
     mate ?
         assert(spin==0 && orient==UP,
                "\nUse spin and orient on the root or a direct child; attach_gear() sets its mate's shaft orientation")
-        _gear_mate_pose($_gear_parent_spec,S,$_gear_attach_request,phase,anchor,travel) :
+        _gear_child_frame(S,
+            _gear_mate_pose($_gear_parent_spec,S,$_gear_attach_request,phase,anchor,travel),
+            len($_gear_attach_request)>6?$_gear_attach_request[6]:undef) :
         _gear_compound_pose(S,phase,anchor,spin,orient,travel,geom);
 /// The outer part of plain BOSL2 attach(), or align() without extra offsets.
 /// No general transform tracking is enabled. Constructor anchor/spin/orient are
@@ -7873,6 +8482,8 @@ function _gear_parent_attachment() =
             from=$_gear_parent_spec[14]?BACK:UP,to=$attach_anchor[2]) :
     !is_undef($attach_alignment) ? move($attach_anchor[1]) : ident(4);
 /// Ordinary nesting does not copy tooth phase or add a physical transform.
+/// An explicitly selected outgoing frame is already outside the child;
+/// retain its phase for coaxial pose bookkeeping even without a mechanical drive.
 /// A driven parent's rotation/translation is already outside its children.
 /// Re-express that motion only when it is about the child's own shaft/slide;
 /// an offset or tilted child otherwise stays in the inherited moving frame.
@@ -7891,26 +8502,76 @@ function _gear_compound_pose(S,phase,anchor,spin,orient,travel,geom) =
         sense=parallel?sign(axis.z):sliding?sign(length_axis.x):1,
         motion=driven ? (rack?0:q) : active&&parallel?sense*$gear_rotation:0,
         slide=driven ? (rack?q:0) : active&&sliding?sense*$gear_travel:0,
-        actual=motion+phase,travel_phase=slide+travel,
+        frame_phase=parallel?sense*default($_gear_frame_phase,0):0,
+        support=_gear_carrier_motion(),
+        actual=motion+frame_phase+phase,travel_phase=slide+travel,
         gain=driven ? (rack?0:1) : active&&parallel?sense*$gear_ratio:0,
         linear_gain=driven ? (rack?1:0) : active&&sliding?sense*$gear_travel_ratio:0,
-        full=driven ? (rack?right(slide):zrot(motion)) :
-             !active?ident(4):parallel?zrot(motion):sliding?right(slide):ident(4),
-        childmotion=driven?full:ident(4),
+        full=driven ? (rack?right(slide):zrot(motion+frame_phase)) :
+             parallel?zrot(motion-support+frame_phase):active&&sliding?right(slide):ident(4),
+        // The inherited frame phase is physically present already. Add only new drive motion.
+        childmotion=driven?(rack?right(slide):zrot(motion)):ident(4),
         inv=rot_inverse(D*childmotion),contact=_gear_vector_in(inv,$gear_contact_dir),
         // A same-plane compound rack retains the reference. A reoriented rack
         // establishes its own canonical reference, like a rack at the chain root.
         rackref=rack && prack && !is_undef($_gear_rack_reference) ?
                     rot_inverse(_gear_rotation_matrix(D))*$_gear_rack_reference :
                     rack?_gear_rack_frame(S):undef)
-    [ident(4),phase+(driven?motion:0),motion,actual,gain,contact,
+    assert(is_undef($_gear_carrier) ||
+           (_gear_is_circular(S[0]) && parallel && sense==1 && spin==0 && orient==UP),
+           "\nA rigid gear inside a carrier frame must be coaxial, parallel, and unrotated; use its local gear_spin for tooth indexing")
+    _gear_carrier_pose([ident(4),phase+(driven?motion:0),motion,actual,gain,contact,
      concat(apply(inv,$gear_chain_locs),[[0,0,0]]),
      concat(_gear_axes_in(inv,$gear_chain_axes),[rack?undef:UP]),childmotion,
      slide,travel_phase,linear_gain,travel+(driven?slide:0),full,
-     driven?$_gear_driver[0]:$gear_input,active||driven,rackref];
+     driven?$_gear_driver[0]:$gear_input,active||driven,rackref,frame_phase]);
 
+// Only an ordinary, coaxial gear immediately inside the frame is an output
+// member. It inherits carrier motion, then starts stationary-axis mating again.
+function _gear_carrier_output_pose(S,phase,anchor,spin,orient,travel,geom) =
+    let(B=_gear_parent_attachment(),
+        C=is_undef(geom) ? rot(spin,from=UP,to=orient)*_gear_anchor_transform(S,anchor) :
+          _attach_transform(anchor,spin,is_undef($anchor_override)?orient:UP,_change_anchors(geom)),
+        D=B*C)
+    assert(_gear_is_circular(S[0]) && spin==0 && orient==UP &&
+           norm(cross(_gear_vector_in(D,UP),UP))<1e-9 &&
+           _gear_vector_in(D,UP).z>0 && abs(D[0][3])+abs(D[1][3])<1e-9,
+           "\nA carrier output gear must be a coaxial spur or ring with parallel axes; use only axial placement")
+    _gear_compound_pose(S,phase,anchor,spin,orient,travel,geom);
+
+function _gear_carrier_motion() = is_undef($_gear_carrier)?0:$_gear_carrier[0];
+function _gear_carrier_gain() = is_undef($_gear_carrier)?0:$_gear_carrier[1];
+function _gear_mesh_rotation() = !is_undef($_gear_carrier_parent)?$_gear_carrier_parent[0]:
+                               $gear_rotation-_gear_carrier_motion();
+function _gear_mesh_tooth_angle() = !is_undef($_gear_carrier_parent)?$_gear_carrier_parent[1]:
+                                  $_gear_tooth_angle-_gear_carrier_motion();
+function _gear_mesh_gain() = !is_undef($_gear_carrier_parent)?$_gear_carrier_parent[2]:
+                           $gear_ratio-_gear_carrier_gain();
+function _gear_carrier_pose(pose) = is_undef($_gear_carrier) ? pose :
+    concat([for(i=[0:17]) i<len(pose)?pose[i]:i==17?0:undef],[$_gear_carrier]);
+
+// Change only the outgoing ordinary-child frame, not the attached gear's body or mesh.
+// The requested zero-drive angle is absolute in the gear's stationary assembly reference.
+// Store the scalar angle as pose[17] for coaxial propagation; pose[13] carries
+// the full frame transform that subsequent automatic mates cancel.
+function _gear_child_frame(S,pose,phase) =
+    is_undef(phase) ? pose :
+    assert(!_gear_is_rack(S[0]),"\nphase requires a rotary attached gear, not a rack")
+    assert(is_finite(phase),"\nphase must be finite")
+    let(F=zrot(phase),inv=zrot(-phase))
+    [for(i=[0:max(17,len(pose)-1)])
+        i==5?_gear_vector_in(inv,pose[5]):
+        i==6?apply(inv,pose[6]):
+        i==7?_gear_axes_in(inv,pose[7]):
+        i==8?pose[8]*F:
+        i==13?pose[13]*F:
+        i==17?phase:
+        i<len(pose)?pose[i]:undef];
 
 function _gear_mate_pose(A,B,request,offset,anchor,travel=0) =
+    assert(is_undef($_gear_carrier) ||
+           (_gear_is_circular(A[0]) && _gear_is_circular(B[0]) && abs(A[4]+B[4])<1e-9),
+           "\nAutomatic mating inside a carrier frame requires parallel-axis spur or ring gears")
     let(reverse_face=A[0]=="worm" && B[0]=="worm_face" && len(request)>5 && request[5]==LEFT)
     assert(len(request)<6 || is_undef(request[5]) || (A[0]=="worm" && B[0]=="worm_face"),
            "\nworm_face_pos is only used when a cylindrical worm parent receives a worm-face child")
@@ -7965,15 +8626,16 @@ function _gear_mate_pose(A,B,request,offset,anchor,travel=0) =
 function _gear_finish_rotary(T,motion,actual,gain,contact,C=ident(4)) =
     let(relative=rot_inverse($_gear_frame_motion)*T,full=zrot(motion),
         inv=rot_inverse(relative*full),d=_gear_vector_in(rot_inverse(full),contact))
-    [relative*rot_inverse(C),actual,motion,actual,gain,d,
+    _gear_carrier_pose([relative*rot_inverse(C),actual,
+     motion+_gear_carrier_motion(),actual+_gear_carrier_motion(),gain+_gear_carrier_gain(),d,
      concat(apply(inv,$gear_chain_locs),[[0,0,0]]),
      concat(_gear_axes_in(inv,$gear_chain_axes),[UP]),full,
-     0,0,0,0,full,$gear_input,$_gear_chain_active];
+     0,0,0,0,full,$gear_input,$_gear_chain_active]);
 
 function _gear_finish_pose(T,slope,phase,offset,period,contact,C=ident(4)) =
     let(p=phase-period*round(phase/period)+offset)
-    _gear_finish_rotary(T,slope*$gear_rotation,slope*$_gear_tooth_angle+p,
-                       slope*$gear_ratio,contact,C);
+    _gear_finish_rotary(T,slope*_gear_mesh_rotation(),slope*_gear_mesh_tooth_angle()+p,
+                       slope*_gear_mesh_gain(),contact,C);
 
 function _gear_finish_linear(T,motion,offset,gain,contact,C=ident(4),rack_reference=undef) =
     let(relative=rot_inverse($_gear_frame_motion)*T,full=right(motion),
@@ -8171,7 +8833,10 @@ function _gear_bevel_pose(A,B,angle,offset,anchor) =
 module _gear_place(pose) {
     multmatrix(pose[0])
     let($_gear_attach_request=undef,$_gear_parent_spec=undef,$_gear_driver=undef,
-        $_gear_frame_motion=ident(4),$_gear_chain_active=false,$_gear_rack_reference=undef,
+        $_gear_shaft_motion=undef,
+        $_gear_frame_motion=ident(4),$_gear_frame_phase=0,
+        $_gear_carrier=undef,$_gear_carrier_parent=undef,
+        $_gear_chain_active=false,$_gear_rack_reference=undef,
         $parent_gear_type=undef,$parent_gear_mod=undef,
         $parent_gear_teeth=undef,$parent_gear_pa=undef,$parent_gear_helical=undef,
         $parent_gear_thickness=undef,$parent_gear_face_width=undef,$parent_gear_shaft_offset=undef,$_gear_worm_face_data=undef,$parent_gear_worm_diam=undef,
@@ -8190,7 +8855,13 @@ module _gear_place(pose) {
 module _gear_publish(S,pose) {
     multmatrix(pose[8])
     let($_gear_attach_request=undef,$_gear_parent_spec=S,$_gear_driver=undef,
-        $_gear_frame_motion=pose[13],$_gear_chain_active=pose[15],
+        $_gear_shaft_motion=undef,
+        $_gear_mount_id=len(pose)>19?pose[19][0]:$_gear_mount_id,
+        $_gear_motion_plane_ok=len(pose)>19?pose[19][2]:true,
+        $_gear_drive_id=len(pose)>19?pose[19][1]:$_gear_drive_id,
+        $_gear_frame_motion=pose[13],$_gear_frame_phase=len(pose)>17?pose[17]:0,
+        $_gear_carrier=len(pose)>18?pose[18]:undef,$_gear_carrier_parent=undef,
+        $_gear_chain_active=pose[15],
         $_gear_rack_reference=_gear_is_rack(S[0]) && len(pose)>16 ? pose[16] : undef,
         $parent_gear_type=S[0],$parent_gear_mod=S[1],
         $parent_gear_teeth=S[2],$parent_gear_pa=S[3],$parent_gear_helical=S[4],
@@ -8206,7 +8877,8 @@ module _gear_publish(S,pose) {
         $parent_gear_left_handed=_gear_worm_family(S[0])>0?S[10]:S[0]=="bevel"?S[16][5]:undef,
         $parent_gear_clearance=S[11],$parent_gear_herringbone=S[13],
         $gear_rotation=pose[2],$_gear_tooth_angle=pose[3],$gear_ratio=pose[4],
-        $gear_angle_offset=pose[3]-pose[2],$gear_travel_offset=pose[10]-pose[9],
+        $gear_angle_offset=pose[3]-pose[2]-(len(pose)>17?pose[17]:0),
+        $gear_travel_offset=pose[10]-pose[9],
         $gear_travel=pose[9],$_gear_tooth_travel=pose[10],$gear_travel_ratio=pose[11],
         $gear_input=pose[14],
         $gear_contact_dir=pose[5],
@@ -8217,6 +8889,7 @@ module _gear_publish(S,pose) {
         children();
 }
 
+
 // Module: gear_spin()
 // Synopsis: Drives a rotary gear chain by an angle.
 // Topics: Gears, Attachments
@@ -8224,14 +8897,17 @@ module _gear_publish(S,pose) {
 // Usage:
 //   gear_spin(angle) gear_1() attach_gear() gear_2() ...
 // Description:
-//   Applies rotation to its child gear.  This rotation propagates through a chain of gears constructed with nested {{attach_gear()}} invocations.
+//   Supplies a rotary input for the assembly. Normally, the first gear turns by this angle and passes motion through {{attach_gear()}}.
+//   Before constructing the first gear, {{gear_motion()}} can capture the input for a carrier, and {{gear_shaft()}} can select a different
+//   motion for that first gear. For example, the central gear can stay fixed while its carrier follows the input.
+//   Ordinary geometry directly beneath this module is not rotated; it is a motion source, not a replacement for zrot().
 //   The root's `anchor`, `spin`, and `orient` place its reference frame normally.  Adding another `gear_spin()` or a {{gear_travel()}} into
 //   the gear chain is not permitted. 
 // Arguments:
 //   angle = Angle to rotate the gear
 // Side Effects:
 //   Sets internal variables requesting rotational drive for the root gear.
-// Example(2D,Anim,Frames=100,FrameMS=60,VPD=263.43,VPT=[35.99,-1.57,-6.88],NoScales,Frames=120): The central gear is driven and transfers it's motion to the child
+// Example(2D,Anim,Frames=72,FrameMS=55,VPD=263.43,VPT=[35.99,-1.57,-6.88],NoScales): The central gear is driven and transfers it's motion to the child
 //   gear_spin(360*$t)
 //       spur_gear2d(mod=2,teeth=24) {
 //           color("red") right(12) circle(d=3,$fn=16);
@@ -8257,7 +8933,7 @@ module gear_spin(angle)
 //   distance = Mechanical displacement in model units.
 // Side Effects:
 //   Sets internal variables requesting linear drive for the root rack.
-// Example(2D,Anim,NoAxes,FrameMS=60,Frames=90): A sliding rack drives a fixed-axis pinion.
+// Example(2D,Anim,NoAxes,FrameMS=55,Frames=72): A sliding rack drives a fixed-axis pinion.
 //   gear_travel(30*sin(360*$t))
 //       rack2d(mod=4,teeth=12)
 //           attach_gear(pos=0) spur_gear2d(teeth=10);
@@ -8270,8 +8946,358 @@ module _gear_drive(kind,value) {
            "\nA driven gear chain cannot contain another gear_spin() or gear_travel()");
     assert(is_undef($_gear_attach_request),
            "\nPlace the drive module before the root gear, not between attach_gear() and its child");
-    let($_gear_driver=[kind,value]) children();
+    assert(is_undef($_gear_shaft_motion), "\nPlace a gear after gear_shaft() before adding a drive");
+    // Establish the mounting identity before the first gear so a rotary input
+    // can be captured and supplied to a carrier without a placeholder gear.
+    let($_gear_driver=[kind,value],$_gear_drive_id=function() 0,
+        $_gear_mount_id=is_undef($_gear_parent_spec)?function() 0:$_gear_mount_id)
+        children();
 }
+
+
+// Module: gear_carrier_frame()
+// Synopsis: Establishes a rotating support for a parallel-axis gear branch.
+// Topics: Gears, Attachments
+// See Also: attach_gear(), gear_spin(), planetary_gears(), stepped_planetary()
+// Usage:
+//   PARENT_GEAR gear_carrier_frame(ratio) CHILDREN;
+//   PARENT_GEAR gear_carrier_frame(0) CHILDREN;   // Stationary carrier
+// Usage: Carrier motion from another shaft in the same drive
+//   PARENT_GEAR gear_carrier_frame(motion) CHILDREN;
+// Description:
+//   Builds a rotating gear support either as a rotational gain from the parent gear or using a precalculated gear motion from {{gear_motion()}}.
+//   When you give a ratio value the carrier rotation is the parent rotation divided by the specified value.
+//   A positional motion record from {{gear_motion()}} follows another shaft; a positional 0 holds the carrier stationary.  This is useful for planetary gear assemblies or other
+//   assemblies where a gear rotates around another gear instead of rotating on a fixed shaft.  
+//   .
+//   The carrier's `gearspin=0` X+ and Y+ axes are aligned with the parent's starting reference frame, so attached gears use those axes for placement.
+//   Non-gear objects inside the frame move with the carrier.  Use {{gear_exit_carrier()}} at a central output to leave the carrier and resume a fixed-axis gear train.  
+//   .
+//   The supported parent is a spur or ring. Automatic mates within the moving branch must have parallel axes, and
+//   gear stacking must be coaxial.
+//   Place this module directly under its gear.  
+//   Nested moving carrier frames, racks in the planetary branch, bevel/crossed-axis planets, and an independently
+//   driven carrier with a separate root input are not supported. 
+// Arguments:
+//   ratio/motion = If a ration, (parent rotation)/(carrier rotation).  If zero then fixed motion.  Or give a motion from {{gear_motion()}}.
+// Side Effects:
+//   `$gear_rotation` is set to carrier angular displacement in degrees inside the frame.
+//   `$gear_ratio` is set to carrier angular gain: degrees per degree of rotational input, or degrees per model-unit travel input.
+//   `$gear_angle_offset` is set to zero in the tooth-aligned carrier frame.
+//   `$gear_input` retains the original chain input kind.
+//   `$gear_contact_dir` and `$gear_contact_angle` are re-expressed in the carrier frame.
+//   `$gear_chain_locs` and `$gear_chain_axes` are re-expressed in the carrier frame; no gear is added to their histories.
+// Example(3D,Med,NoAxes,Anim,Frames=225,FrameMS=25,VPR=[36.80,0.00,0],VPD=325.23,VPT=[1.12,-4.39,8.33]): A moving arm traces an ellipse.  
+//   $fn=48;  $gear_steps=8;
+//   pen_radius=20;
+//   spacing=gear_dist(mod=2,teeth1=36,teeth2=18);
+//   arm_points=[[0,0],[spacing/2,-0.65*spacing-4],[spacing,0]];
+//   major=spacing+pen_radius;
+//   minor=spacing-pen_radius;
+//   assert(minor>0,"\nKeep the pen offset shorter than the arm");
+//   up(10) recolor("lightgray")
+//     linear_extrude(height=1) stroke(ellipse([major,minor]),closed=true);
+//   gear_spin(720*$t)
+//   spur_gear(mod=2,teeth=36,thickness=6,helical=0,profile_shift=0)
+//       gear_carrier_frame(2) {
+//           recolor("slategray")down(5) linear_extrude(height=4)stroke(arm_points, width=8);
+//           attach_gear(0)
+//           recolor("mediumseagreen")
+//           spur_gear(teeth=18,thickness=6){
+//               up(5) recolor("darkorange") cyl(d=10,h=4);
+//               up(7) right(pen_radius/2) recolor("darkorange")
+//                   cuboid([pen_radius+6,5,3]);
+//               up(9) right(pen_radius) recolor("crimson") cyl(d=3,h=6);
+//           }
+//       }
+// Example(3D,Med,NoAxes,Anim,Frames=72,FrameMS=30,VPR=[246.00,0.00,336.50],VPD=142.49,VPT=[5.46,11.02,19.20]): The teal blue input gear and connected shaft drives the carrier with its six purple gears, while a gear train reverses the drive direction and then drives the ring gear in the opposite direction.  The planetary assembly thus receives two different inputs, one on the ring and one on the carrier, and produces output on the red sun gear.  The construction proceeds from the input gear, through the reversal gear chain, to the ring, the planets, and then the sun, with the sun ready to pass its output on to further gears.  The gear ratio of 6 is calculated and displayed.
+//   $fn=48; $gear_steps=12; $backlash=0.1;
+//   drive_teeth=18; upper_teeth=24; idler_teeth=12; planet_mod=1.08;
+//   train_mod=9/gear_dist(mod=1,teeth1=upper_teeth,teeth2=idler_teeth);
+//   sun_teeth=24; planet_teeth=18; ring_teeth=60;
+//   planet_angles=[0,60,120,180,240,300];
+//   orbit=gear_dist(mod=planet_mod,teeth1=sun_teeth,teeth2=planet_teeth);
+//   pin_r=outer_radius(mod=planet_mod,teeth=ring_teeth,internal=true)+1;
+//   sun_color = "#D95C5C";ring_color = "#70B85A";drive_color = "#48C8E8";planet_color = "#9B70C0";
+//   gear_spin(60*$t) recolor(drive_color)
+//     spur_gear(mod=1,teeth=drive_teeth,thickness=4) {   // Drive gear 
+//       align(TOP) cyl(d=4,h=25);
+//       let(carrier_motion=gear_motion())
+//       attach_gear(0)
+//         recolor("orange") spur_gear(teeth=drive_teeth)
+//           align(TOP) cyl(d=4,h=4)
+//           align(TOP) spur_gear(mod=train_mod,teeth=upper_teeth)
+//           attach_gear(180) recolor("yellow") spur_gear(teeth=idler_teeth)
+//           attach_gear(180) recolor(ring_color) spur_gear(teeth=upper_teeth,shaft_diam=6) {
+//              align(TOP) tube(od=8,wall=1,h=11)
+//              align(TOP){
+//                tube(od=10,wall=2,h=2)
+//                  zrot_copies([for(a=planet_angles) a+30]) {
+//                     attach(RIGHT,LEFT,overlap=2) cuboid([pin_r-3,2,2]);
+//                     right(pin_r) down(1) cyl(d=2,h=12,anchor=BOT);
+//                  }
+//              }
+//              up(24)  // Up to ring gear layer
+//                 ring_gear(mod=planet_mod,teeth=ring_teeth,backing=2)
+//                   gear_carrier_frame(carrier_motion) {
+//                     // Create carrier frame arms
+//                     recolor(drive_color) { 
+//                       down(6) cyl(d=8,h=2);
+//                       down(3)
+//                         zrot_copies(planet_angles)
+//                           right(orbit) cyl(d=3,h=8)
+//                           align(LEFT,BOT,overlap=2) cuboid([orbit,2,2]);
+//                     }
+//                     // Create planet gears
+//                     attach_gear(planet_angles)
+//                        recolor(planet_color) spur_gear(teeth=planet_teeth,shaft_diam=3.6)
+//                          if($idx==0) attach_gear(180)
+//                             // Create sun gear
+//                             recolor(sun_color)
+//                               spur_gear(teeth=sun_teeth) {
+//                                  echo(gear_ratio=$gear_ratio);
+//                                  align(BOT,RIGHT,inset=3) recolor("white") cyl(d=2,h=1/2);
+//                               }
+//                   }
+//           }
+//     }
+module gear_carrier_frame(ratio, _named, motion) {
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)");
+    assert(num_defined([ratio,motion])==1, "\nSpecify one carrier ratio or motion value");
+    assert(is_undef(motion) || (is_num(motion) && motion==0) || _gear_motion_record(motion),
+           "\nSupply a motion value returned by gear_motion(), or 0 for a stationary carrier");
+    assert(is_undef(ratio) || (is_finite(ratio) || _gear_motion_record(ratio)),
+           "\nThe positional argument must be a finite gear ratio, 0, or a motion returned by gear_motion()");
+    assert(is_undef(ratio) || !is_num(ratio) || ratio==0 || is_finite(ratio),
+           str("\nThe carrier ratio must be finite; got ",ratio));
+    assert(!is_undef($_gear_parent_spec) && _gear_is_circular($_gear_parent_spec[0]),
+           "\ngear_carrier_frame() needs a parent spur or ring gear");
+    assert(is_undef($_gear_attach_request), "\nPlace a gear between attach_gear() and gear_carrier_frame()");
+    assert(is_undef($attach_to) && is_undef($attach_alignment),
+           "\nPlace gear_carrier_frame() directly under its gear, before attach() or align()");
+    assert(is_undef($_gear_driver), "\nPlace the drive before the parent gear, not before its carrier frame");
+    assert(is_undef($_gear_carrier), "\nNested moving carrier frames are not supported");
+    // Keep calculations in let() scopes after validation: ordinary assignments
+    // in a module body are evaluated before its assertion statements.
+    let(selected=is_undef(motion)?ratio:motion,
+        m=is_num(selected) && selected!=0?undef:_gear_resolve_motion(selected),
+        carrier=is_undef(m)?$gear_rotation/selected:m[2], gain=is_undef(m)?$gear_ratio/selected:m[3],
+        relative_motion=$gear_rotation-carrier, relative_gain=$gear_ratio-gain,
+        turn=$gear_angle_offset+carrier-$gear_rotation)
+    assert(is_finite(carrier) && is_finite(gain) && is_finite(relative_motion) &&
+           is_finite(relative_gain) && is_finite(turn), "\nCarrier motion exceeds the supported numeric range")
+    let(F=zrot(turn), inv=zrot(-turn), contact=_gear_vector_in(inv,$gear_contact_dir))
+    // Parent children already carry parent rotation. Replace only this branch's
+    // frame with the carrier motion and the parent's initial tooth alignment.
+    multmatrix(F)
+    let($_gear_carrier=[carrier,gain,len($gear_chain_locs)-1],
+        $_gear_carrier_parent=[relative_motion,relative_motion,relative_gain],
+        $_gear_frame_motion=ident(4),$_gear_frame_phase=0,
+        $gear_rotation=carrier,$gear_ratio=gain,$_gear_tooth_angle=carrier,
+        $gear_angle_offset=0,
+        $gear_contact_dir=contact,
+        $gear_contact_angle=is_undef(contact) || norm([contact.x,contact.y])<1e-12?undef:atan2(contact.y,contact.x),
+        $gear_chain_locs=apply(inv,$gear_chain_locs),
+        $gear_chain_axes=_gear_axes_in(inv,$gear_chain_axes))
+        children();
+}
+
+
+// Module: gear_exit_carrier()
+// Synopsis: Takes a central output from a carrier branch into a fixed-axis gear train.
+// Topics: Gears, Attachments
+// See Also: gear_carrier_frame(), gear_motion(), gear_shaft(), attach_gear()
+// Usage:
+//   OUTPUT_GEAR gear_exit_carrier() CHILDREN;
+// Description:
+//   Continues a central carrier-branch output as a fixed-axis shaft, retaining its rotation.  
+//   Its ordinary children turn with the shaft, and subsequent {{attach_gear()}} placements use
+//   the stationary center as mounting reference.  
+//   Call it directly beneath the central output gear. 
+// Side Effects:
+//   Leaves the current carrier context while retaining shaft motion, gain, tooth alignment, and spatial histories.
+module gear_exit_carrier(_extra) {
+    assert(is_undef(_extra), "\nToo many positional arguments (only 0 are accepted)");
+    assert(_gear_motion_context(), "\ngear_exit_carrier() needs an enclosing rotary spur or ring gear");
+    assert(is_undef($_gear_attach_request) && is_undef($attach_to) && is_undef($attach_alignment),
+           "\nPlace gear_exit_carrier() directly under the output gear, before another attachment");
+    assert(!is_undef($_gear_carrier) && is_undef($_gear_carrier_parent),
+           "\ngear_exit_carrier() needs an output gear reached inside a carrier branch");
+    assert(_gear_motion_parallel(), "\nA fixed-axis output must have a parallel, consistently directed axis");
+    let(k=len($_gear_carrier)>2?$_gear_carrier[2]:undef)
+    assert(is_int(k) && k>=0 && k<len($gear_chain_locs), "\nThe carrier-axis history is unavailable")
+    let(v=$gear_chain_locs[k], scale=max(1,max([for(j=[k:len($gear_chain_locs)-1])
+            let(d=$gear_chain_locs[j]-v) norm([d.x,d.y])]))) 
+    assert(norm([v.x,v.y])<=1e-9*scale,
+           "\nThe output shaft must coincide with the carrier's central axis; an orbiting shaft cannot be made stationary")
+    let($_gear_carrier=undef,$_gear_carrier_parent=undef,
+        $_gear_frame_motion=zrot($gear_rotation+default($_gear_frame_phase,0)))
+        children();
+}
+
+// Module: gear_shaft()
+// Synopsis: Establishes a separate coaxial shaft with a specified motion.
+// Topics: Gears, Attachments
+// See Also: gear_motion(), gear_carrier_frame(), gear_exit_carrier()
+// Usage:
+//   PARENT_GEAR gear_shaft([motion]) CHILD_GEAR();
+// Usage: Start with a stationary or motion-connected shaft
+//   gear_spin(angle) gear_shaft([motion]) FIRST_GEAR();
+// Description:
+//   Starts a separate coaxial shaft for the following gear. By default, the new shaft stays stationary even when the enclosing gear turns.
+//   To make it follow another shaft, give a previous gear rotation from {{gear_motion()}}.  
+//   The selected motion replaces rather than adds to inherited motion.
+//   The new shaft has zero initial tooth phase and its gear begins a new tree.
+//   Supply the new gear's tooth size explicitly. 
+//   Construct the new gear directly beneath this module. From a carrier branch, first use {{gear_exit_carrier()}}.
+//   The new coaxial spur/ring shaft inherits the original drive input and mounting frame. 
+// Arguments:
+//   motion = Motion returned by {{gear_motion()}}, or 0 for a stationary shaft. Default: 0
+// Side Effects:
+//   Starts a separate shaft context without changing the original drive identity or gain units.
+//   Resets inherited tooth dimensions, initial phase, and spatial histories for the next gear.
+// Example(3D,Med,NoAxes,VPR=[55,0,25],VPT=[0,0,4],VPD=90,Anim,Frames=64,FrameMS=55): Without `gear_shaft()` both gears turn together.
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   gear_spin(360*$t)
+//   spur_gear(mod=1,teeth=24,thickness=4) {
+//       align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
+//       align(TOP) recolor("mediumseagreen")
+//       spur_gear(mod=1,teeth=20,thickness=4)
+//         align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
+//   }
+// Example(3D,Med,NoAxes,VPR=[55,0,25],VPT=[0,0,4],VPD=90,Anim,Frames=64,FrameMS=55): With `gear_shaft()` the upper gear stays fixed.  
+//   $fn=48;  $gear_steps=12;  $backlash=0.1;
+//   gear_spin(360*$t)
+//   spur_gear(mod=1,teeth=24,thickness=4) {
+//       align(TOP,RIGHT) recolor("crimson") cyl(d=2,h=1);
+//       gear_shaft()
+//       align(TOP) recolor("mediumseagreen")
+//       spur_gear(mod=1,teeth=20,thickness=4)
+//         align(TOP,RIGHT,inset=3) recolor("crimson") cyl(d=2,h=1);
+//   }
+// Example(2D,Med,NoAxes,VPR=[0,0,0],VPT=[0,0,1],VPD=220,Anim,Frames=100,FrameMS=40): Without `gear_shaft()` the two gears rotate together as a unit.
+//   $fn=48;  $gear_steps=12;
+//     gear_spin(360*$t)
+//     let(arm_motion=gear_motion())
+//       spur_gear2d(mod=1,teeth=24)
+//       gear_carrier_frame(motion=arm_motion)  {
+//           attach_gear(0)
+//           recolor("mediumseagreen") spur_gear2d(teeth=24)
+//                             align(TOP,RIGHT,inset=2) color_this("crimson")cyl(d=1,h=1);
+//           up(4) recolor("royalblue")
+//                stroke([[0,0],[24,0]],width=2);
+//       }
+// Example(2D,Med,NoAxes,VPR=[0,0,0],VPT=[0,0,1],VPD=220,Anim,Frames=100,FrameMS=40): With `gear_shaft()` the central gear is fixed and the equal sized planet rotates around it, making two turns for each single revolution of the arm.
+//   $fn=48;  $gear_steps=12;
+//     gear_spin(360*$t)
+//     let(arm_motion=gear_motion())
+//       gear_shaft()
+//       spur_gear2d(mod=1,teeth=24)
+//       gear_carrier_frame(motion=arm_motion)  {
+//           attach_gear(0)
+//           recolor("mediumseagreen") spur_gear2d(teeth=24)
+//                             align(RIGHT,overlap=3) color_this("crimson")cyl(d=1,h=1);
+//           recolor("royalblue")
+//                stroke([[0,0],[24,0]],width=2);
+//       }
+
+
+module gear_shaft(motion=0, _named) {
+    assert(is_undef(_named), "\nToo many positional arguments (only 1 is accepted)");
+    assert(_gear_root_motion_context() || _gear_motion_context(),
+           "\nPlace gear_shaft() inside a rotary spur or ring gear, or before the first gear inside gear_spin()");
+    assert(is_undef($_gear_attach_request) && is_undef($attach_to) && is_undef($attach_alignment),
+           "\nPlace gear_shaft() before a separate gear, not within an unfinished attachment");
+    assert(is_undef($_gear_carrier), "\nLeave the carrier through gear_exit_carrier() before starting a separate shaft");
+    assert(is_undef($_gear_shaft_motion), "\nPlace a gear between successive gear_shaft() calls");
+    assert(_gear_motion_parallel(), "\nSeparate shafts require parallel, consistently directed axes");
+    // Before the first gear, the root input has not rotated any geometry yet.
+    // Consume that pending input without cancelling an unapplied rotation.
+    let(m=_gear_resolve_motion(motion),
+        turn=_gear_root_motion_context()?0:$gear_rotation+default($_gear_frame_phase,0))
+    multmatrix(zrot(-turn))
+    let($_gear_shaft_motion=m,$_gear_parent_spec=undef,$_gear_attach_request=undef,$_gear_driver=undef,
+        $_gear_frame_motion=ident(4),$_gear_frame_phase=0,$_gear_carrier=undef,$_gear_carrier_parent=undef,
+        $_gear_chain_active=!is_undef(m[4]),$_gear_rack_reference=undef,
+        $parent_gear_type=undef,$parent_gear_mod=undef,$parent_gear_teeth=undef,$parent_gear_pa=undef,
+        $parent_gear_helical=undef,$parent_gear_thickness=undef,$parent_gear_face_width=undef,
+        $parent_gear_shaft_offset=undef,$_gear_worm_face_data=undef,$parent_gear_profile_shift=undef,
+        $parent_gear_clearance=undef,$parent_gear_herringbone=undef,
+        $parent_gear_worm_diam=undef,$parent_gear_starts=undef,$parent_gear_worm_length=undef,
+        $parent_gear_wheel_teeth=undef,$parent_gear_left_handed=undef,$worm_length=undef,
+        $gear_rotation=0,$gear_ratio=0,$_gear_tooth_angle=0,$gear_angle_offset=0,
+        $gear_travel=0,$gear_travel_ratio=0,$_gear_tooth_travel=0,$gear_travel_offset=0,
+        $gear_input=m[4],$gear_contact_dir=undef,$gear_contact_angle=undef,$gear_chain_locs=[],$gear_chain_axes=[])
+        children();
+}
+
+
+
+
+// Function: gear_motion()
+// Synopsis: Captures a shaft's motion for another shaft or a carrier.
+// Topics: Gears, Attachments
+// See Also: gear_shaft(), gear_carrier_frame(), gear_exit_carrier(), gear_spin()
+// Usage:
+//   motion = gear_motion();
+// Description:
+//    Returns the current shaft's rotation so another shaft or carrier can follow it.
+//    Before the first gear inside {{gear_spin()}}, it returns that input rotation.   Use the returned data object as input to  {{gear_shaft()}} or {{gear_carrier_frame()}}.
+//    Capture it with let() inside the source gear's scope, as subsequent scopes will change the motion.  
+function gear_motion(_extra) =
+    assert(is_undef(_extra), "\nToo many positional arguments (only 0 are accepted)")
+    assert(is_undef($_gear_shaft_motion), "\nPlace a gear after gear_shaft() before capturing its motion")
+    let(root=_gear_root_motion_context())
+    assert(root || _gear_motion_context(),
+           "\nCapture motion inside a rotary spur or ring gear, its carrier frame, or before the first gear inside gear_spin()")
+    assert(is_undef($_gear_attach_request) && is_undef($attach_to) && is_undef($attach_alignment),
+           "\nCapture motion before starting another attachment")
+    assert(_gear_motion_parallel(), "\nMotion connections require parallel, consistently directed shaft axes")
+    ["BOSL2_GEAR_MOTION",1,root?$_gear_driver[1]:$gear_rotation,root?1:$gear_ratio,
+     _gear_motion_input(),$_gear_drive_id,$_gear_mount_id];
+
+
+
+
+
+
+// Private motion records retain identity by closure identity, not by matching
+// angles or input kinds. Records from different driver evaluations cannot match.
+function _gear_motion_context() =
+    !is_undef($_gear_parent_spec) && _gear_is_circular($_gear_parent_spec[0]) && is_function($_gear_mount_id);
+// A rotary input is available before a gear consumes it. No synthetic gear,
+// physical rotation, or change to the published shaft variables is necessary.
+function _gear_root_motion_context() =
+    is_undef($_gear_parent_spec) && is_undef($_gear_shaft_motion) && !$_gear_chain_active &&
+    !is_undef($_gear_driver) && $_gear_driver[0]=="rotation" &&
+    is_function($_gear_drive_id) && is_function($_gear_mount_id);
+function _gear_motion_input() = _gear_root_motion_context()?"rotation":$gear_input;
+function _gear_motion_parallel() =
+    default($_gear_motion_plane_ok,true) && len([for(a=$gear_chain_axes) if(!is_undef(a) && (norm(cross(a,UP))>1e-9 || a.z<0)) 1])==0;
+function _gear_motion_record(m) =
+    !is_list(m) || len(m)!=7 ? false :
+    m[0]=="BOSL2_GEAR_MOTION" && m[1]==1 && is_finite(m[2]) && is_finite(m[3]) &&
+    (is_undef(m[4]) || m[4]=="rotation" || m[4]=="travel") &&
+    (is_undef(m[5]) || is_function(m[5])) && is_function(m[6]);
+function _gear_resolve_motion(m) =
+    assert(_gear_motion_parallel(), "\nMotion connections require coaxial ordinary stacks and parallel, consistently directed shaft axes")
+    let(input=_gear_motion_input(),
+        v=is_num(m) && m==0 ? ["BOSL2_GEAR_MOTION",1,0,0,input,$_gear_drive_id,$_gear_mount_id] : m)
+    assert(_gear_motion_record(v), "\nSupply a motion value returned by gear_motion(), or 0 for a stationary shaft")
+    assert(v[5]==$_gear_drive_id && v[4]==input,
+           "\nMotion values must belong to the same original driver; independent drives cannot be connected")
+    assert(v[6]==$_gear_mount_id,
+           "\nMotion values must belong to the same mounting reference")
+    v;
+function _gear_shaft_root_pose(S,phase,anchor,spin,orient,travel) =
+    assert(_gear_is_circular(S[0]), "\nA separate motion-connected shaft requires a spur or ring gear")
+    assert(default(spin,0)==0 && default(orient,UP)==UP,
+           "\nA separate shaft must keep spin=0 and orient=UP; rotate the complete assembly instead")
+    assert(is_finite(phase), "\ngear_spin must be finite")
+    let(m=$_gear_shaft_motion,q=m[2],g=m[3],full=zrot(q))
+    [ident(4),phase+q,q,phase+q,g,undef,[[0,0,0]],[UP],full,
+     0,0,0,0,full,m[4],!is_undef(m[4]),undef,0];
+
 
 
 // Section: Computing Gear Dimensions
@@ -8332,9 +9358,12 @@ function circular_pitch(
     assert(is_undef(_named), "\nToo many positional arguments (only 0 are accepted)")
     assert(num_defined([mod,circ_pitch,diam_pitch])==1,
            "\nspecify exactly one of mod=, circ_pitch=, or diam_pitch=")
-    circ_pitch != undef ? assert(is_finite(circ_pitch) && circ_pitch>0, "\nSpecify one positive finite tooth-size measure") circ_pitch :
-    diam_pitch != undef ? assert(is_finite(diam_pitch) && diam_pitch>0, "\nSpecify one positive finite tooth-size measure") PI*INCH/diam_pitch :
-    assert(is_finite(mod) && mod>0, "\nSpecify one positive finite tooth-size measure") mod*PI;
+    circ_pitch != undef ? assert(is_finite(circ_pitch) && circ_pitch>0, str("
+circ_pitch must be positive and finite; got ",circ_pitch)) circ_pitch :
+    diam_pitch != undef ? assert(is_finite(diam_pitch) && diam_pitch>0, str("
+diam_pitch must be positive and finite; got ",diam_pitch)) PI*INCH/diam_pitch :
+    assert(is_finite(mod) && mod>0, str("
+mod must be positive and finite; got ",mod)) mod*PI;
 // Function: diametral_pitch()
 // Synopsis: Returns tooth size expressed as "diametral pitch".
 // Topics: Gears, Parts
@@ -8527,7 +9556,7 @@ function pitch_radius(
         helical=is_undef(helical)?0:helical
     )
     let( circ_pitch = circular_pitch(circ_pitch=circ_pitch, mod=mod, diam_pitch=diam_pitch) )
-    assert(is_finite(helical), "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(is_finite(circ_pitch), "\nSpecify one positive finite tooth-size measure")
     circ_pitch * teeth / PI / 2 / cos(helical);
 // Function: outer_radius()
@@ -8834,7 +9863,7 @@ function gear_dist(
     assert(teeth1>0 || teeth2>0, "\nOne of the teeth counts must be nonzero")
     assert(is_bool(internal1), "\ninternal1 must be boolean")
     assert(is_bool(internal2), "\ninternal2 must be boolean")
-    assert(is_finite(helical), "\nhelical must be finite and between -90 and 90 degrees")
+    assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
     assert(!(internal1&&internal2), "\nCannot specify both gears as internal")
     assert(!(internal1 || internal2) || (teeth1>0 && teeth2>0), "\nCannot specify internal gear with rack (zero tooth count)")
     let(
@@ -9102,7 +10131,7 @@ function get_profile_shift(
   assert(teeth1>0 || teeth2>0, "\nOne of the teeth counts must be nonzero")
   assert(is_bool(internal1), "\ninternal1 must be boolean")
   assert(is_bool(internal2), "\ninternal2 must be boolean")
-  assert(is_finite(helical), "\nhelical must be finite and between -90 and 90 degrees")
+  assert(is_finite(helical) && abs(helical)<90, str("\nhelical must be finite and strictly between -90 and 90 degrees; got ",helical))
   assert(!(internal1&&internal2), "\nCannot specify both gears as internal")
   assert(!(internal1 || internal2) || (teeth1>0 && teeth2>0), "\nCannot specify internal gear with rack (zero tooth count)")
   let(
@@ -9631,6 +10660,129 @@ function globoid_worm_outer_radius(teeth,worm_diam,_named,z,worm_starts,clearanc
         c=default(clearance,default(_gear_worm_family($parent_gear_type)==2?$parent_gear_clearance:undef,m/4)),
         L=_globoid_length(worm_length,l,length,h,height))
     _globoid_worm_radius(N,d,m,s,c,L,z,true);
+
+
+// Function: globoid_worm_radius_bound()
+// Synopsis: Returns a taper-aware upper bound on the outside radius of a globoid worm.
+// Topics: Gears, Parts
+// See Also: globoid_worm(), globoid_worm_outer_radius(), globoid_worm_root_radius(), globoid_worm_max_length()
+// Usage:
+//   r = globoid_worm_radius_bound([mod=|circ_pitch=|diam_pitch=], [teeth], [worm_diam|d=], [worm_length=|l=|length=|h=|height=], [worm_starts=|starts=], [pressure_angle=], [clearance=], [lead_in=], [rounding=], [mesh_tol=], [steps=]);
+// Description:
+//   Returns an upper bound on the outer radius of the entire worm produced by {{globoid_worm()}} taking
+//       into account the thread termination and tapering.
+//   Use this radius to size a cylindrical space around the whole worm. Unlike
+//   {{globoid_worm_outer_radius()}}, which returns a nominal radius at an axial
+//   position or length, this calculation accounts for the reduced thread height
+//   and width near the ends.
+//       .
+//   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it
+//   from a parent gear. The tooth count, throat pitch diameter, and working
+//   length must also be supplied or inherited. Give the same pressure angle,
+//   clearance, lead-in, rounding, and surface-detail tolerance as the worm.  Handedness does not change the bound.
+// Arguments:
+//   teeth = Number of teeth on the mating worm gear, at least 12. Inherits when available.
+//   worm_diam/d = Worm pitch diameter at the throat. Inherits when available.
+//   ---
+//   mod = Normal module; specify only one tooth-size measure.
+//   circ_pitch = Normal circular pitch.
+//   diam_pitch = Normal diametral pitch, teeth per inch.
+//   worm_length/l/length/h/height = Working worm length, or "max" for the maximum supported length. Inherits when available.
+//   worm_starts/starts = Number of worm starts. Inherits when available. Default: 1
+//   pressure_angle = Normal pressure angle, or [pa_bot, pa_top] pair, in degrees. Inherits when available. Default: 20
+//   clearance = Nominal extra root depth at the throat. Inherits from a parent globoid worm or globoid worm gear when available. Default: module/4
+//   lead_in = Length of the thread taper at each end, or zero for an abrupt cutoff. Does not inherit. Default: 2*module+clearance
+//   rounding = Maximum crest and root rounding, matching the worm. Does not inherit. Default: 0
+//   mesh_tol = Surface-detail tolerance used by the worm. Used here only to reproduce its thread-end inset. Does not inherit. Default: module/100
+//   steps = Positive integer number of conservative taper intervals. Default: 32
+// Example(3D): Size a cylindrical space around a tapered globoid worm.
+//   m=2; N=55; d=24; s=5; L=60; pa=20;
+//   r=globoid_worm_radius_bound(mod=m, teeth=N, d=d, starts=s,
+//                               length=L, pressure_angle=pa);
+//   globoid_worm(mod=m, d=d, length=L, mate_teeth=N, starts=s,
+//                pressure_angle=pa);
+//   %cyl(r=r+0.5, l=L);
+function globoid_worm_radius_bound(teeth,worm_diam,_named,
+    mod,circ_pitch,diam_pitch,d,starts,worm_starts,
+    worm_length,l,length,h,height,pressure_angle,clearance,
+    lead_in,rounding=0,mesh_tol,steps=32) =
+    assert(is_undef(_named), "\nToo many positional arguments (only 2 are accepted)")
+    let(steps=default(steps,32))
+    assert(is_int(steps) && steps>0, "\nsteps must be a positive integer")
+    let(N=_gear_mate_teeth(teeth,undef),d=_gear_worm_diameter(d,worm_diam),
+        s=_gear_worm_starts(starts,worm_starts),
+        L=_globoid_length(worm_length,l,length,h,height),
+        P=_dew_parameters(N,d,mod,circ_pitch,diam_pitch,s,L,pressure_angle,clearance,false),
+        tol=default(mesh_tol,P[0]/100))
+    assert(_dew_mesh_tolerance(tol,P), "\nInvalid mesh tolerance")
+    let(rd=_gw_round_data(P,default(rounding,0),tol),constants=_gw_constants(P),
+        B=concat(P,[constants,undef,rd]),
+        lead=_gw_lead_data(B,default(lead_in,2*P[0]+P[9]),tol),
+        Q=concat(P,[constants,lead,rd]))
+    _globoid_bound(Q,steps);
+
+
+function _globoid_bound_value(T,b,tr,h,w,beta,side,p,a) =
+    let(X=tr+(T-tr)*h,Z=side*w*(T*sin(beta)-b*cos(beta)),
+        U=sqrt(max(0,X*X+b*b-Z*Z)),g=side*w*sin(beta))
+    [a-U*cos(p)+Z*sin(p),-cos(p)*(h*X-g*Z)/U+g*sin(p)];
+
+/// At fixed scales and phase the flank radius is a linear term minus the
+/// square root of a quadratic. Its curvature has constant sign. Endpoints and
+/// the (at most one) concave stationary maximum therefore suffice.
+function _globoid_bound_flank(b,tr,tt,beta,side,h,w,p,a) =
+    let(f0=_globoid_bound_value(tt,b,tr,h,w,beta,side,p,a),
+        f1=_globoid_bound_value(tr,b,tr,h,w,beta,side,p,a),
+        g=side*w*sin(beta),j=-side*w*b*cos(beta),d=(1-h)*tr,
+        A=h*h-g*g,B=2*(h*d-g*j),
+        D=4*((h*h-g*g)*b*b-pow(h*j-g*d,2)),s=g*tan(p),den=A-s*s,
+        interior=D>0 && den>0 && A>0 && f0[1]>0 && f1[1]<0,
+        t=interior?constrain((s*sqrt(D/den)-B)/(2*A),tt,tr):tt)
+    max(f0[0],f1[0],interior?_globoid_bound_value(t,b,tr,h,w,beta,side,p,a)[0]:f0[0]);
+
+function _globoid_bound_symmetric(Q,steps) =
+    let(a=Q[4],lead=Q[12],er=Q[3]+Q[0]+Q[9],b=Q[7],
+        tr=Q[11][6],tt=Q[11][7],beta=90/Q[1]+Q[6]+Q[13][2],
+        root=a-sqrt(er*er-Q[8]*Q[8]),
+        vals=lead[1]==0?
+            [_globoid_bound_flank(b,tr,tt,beta,1,1,1,lead[0],a)]:
+            [for(i=[0:steps-1])
+                let(p0=lead[0]-lead[1]+lead[1]*i/steps,
+                    p1=lead[0]-lead[1]+lead[1]*(i+1)/steps,
+                    sc=_gw_lead_scales(p0,lead))
+                _globoid_bound_flank(b,tr,tt,beta,1,sc.y,sc.x,p1,a)])
+    max(root,max(vals));
+
+/// Asymmetric radial flattening is enclosed by meridional straight-line
+/// flattening on each flank (convexity of Euclidean norm). Both actual taper
+/// ends are retained; do not replace their displaced center by zero.
+function _globoid_bound_asymmetric(Q,steps) =
+    let(a=Q[4],lead=Q[12],er=Q[3]+Q[0]+Q[9],et=Q[3]-Q[0],pivot=Q[11][4],
+        root=a-sqrt(er*er-Q[8]*Q[8]),
+        base=[for(flank=[0,1],end=[-1,1])
+            let(b=Q[7][flank],tr=sqrt(er*er-b*b),tt=sqrt(et*et-b*b),
+                beta=90/Q[1]+Q[6][flank]+(flank==0?pivot:-pivot)+Q[13][2],
+                side=flank==0?-1:1,p=lead[4]+end*(lead[0]-lead[1])+pivot)
+            _globoid_bound_flank(b,tr,tt,beta,side,1,1,p,a)],
+        vals=lead[1]==0?base:concat(base,
+            [for(i=[0:steps-1])
+                let(d0=lead[0]-lead[1]+lead[1]*i/steps,
+                    d1=lead[0]-lead[1]+lead[1]*(i+1)/steps,
+                    sc0=_gw_lead_scales(lead[4]+d0,lead),
+                    sc1=_gw_lead_scales(lead[4]+d1,lead))
+                for(flank=[0,1],end=[-1,1],width=[sc0.x,sc1.x],dist=[d0,d1])
+                    let(b=Q[7][flank],tr=sqrt(er*er-b*b),tt=sqrt(et*et-b*b),
+                        beta=90/Q[1]+Q[6][flank]+(flank==0?pivot:-pivot)+Q[13][2],
+                        side=flank==0?-1:1,p=lead[4]+end*dist+pivot)
+                    _globoid_bound_flank(b,tr,tt,beta,side,sc0.y,width,p,a)]))
+    max(root,max(vals));
+
+function _globoid_bound(Q,steps) =
+    min(_dew_worm_radius(Q[3]-Q[0],Q[8],Q),
+        _gaw_asymmetric(Q)?_globoid_bound_asymmetric(Q,steps):_globoid_bound_symmetric(Q,steps));
+
+
+
 
 // Function: worm_gear_radius_bound()
 // Synopsis: Returns an upper bound on the outside radius of a cylindrical worm gear.
