@@ -826,3 +826,159 @@ include <../std.scad>
 include <../gears.scad>
 echo(stepped_planetary(3,16,mod1=1,sun_carrier=4,max_diam=.1));
 '''
+
+
+[[test]]
+name = "test_wolfrom_planetary"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+module test_wolfrom_planetary() {
+    d = [for(u=[0,120]) wolfrom_planetary(3,90,mod1=1,min_teeth=4,
+        sun_ring=-60,exact=true,uniform=true,gear_spin=u)];
+    assert(approx(d[0][3][1],-60), "\nWrong sun/ring ratio");
+    assert(len(d[0][2][4])==3, "\nExpected three planets");
+    assert(approx(d[1][0][3]-d[0][0][3],120), "\nWrong sun motion");
+    assert(norm(d[1][1][3]-d[0][1][3]-[0,-2])<1e-8, "\nWrong ring motion");
+    assert(approx(d[1][5][2]*d[1][5][1],120), "\nWrong carrier motion");
+}
+test_wolfrom_planetary();
+'''
+
+[[test]]
+name = "test_wolfrom_planetary_carrier_intervals"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+// Both calls previously emitted undefined-arithmetic warnings.
+a = wolfrom_planetary(3,40,mod1=1,min_teeth=4,uniform=true,sun_carrier=[3.5,4.5]);
+b = wolfrom_planetary(3,40,mod1=1,min_teeth=4,uniform=true,carrier_sun=[1/4.5,1/3.5]);
+assert(a[3][1]>=3.5 && a[3][1]<=4.5, "\nSun/carrier ratio outside interval");
+assert(b[3][1]>=1/4.5 && b[3][1]<=1/3.5, "\nCarrier/sun ratio outside interval");
+'''
+
+[[test]]
+name = "test_gear_motion"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+$fn=12; $gear_steps=3;
+module test_gear_motion() {
+    for(u=[-60,0,60]) gear_spin(u)
+        spur_gear2d(mod=1,teeth=24,gear_spin=17)
+            attach_gear(0) spur_gear2d(teeth=48)
+                let(m=gear_motion()) gear_shaft(motion=m)
+                    spur_gear2d(mod=1,teeth=24) {
+                        assert(norm([$gear_rotation,$gear_ratio]-[-u/2,-0.5])<1e-8, "\nCopied motion changed");
+                        assert($gear_input=="rotation" && gear_motion()==m, "\nMotion identity changed");
+                    }
+}
+test_gear_motion();
+'''
+
+[[test]]
+name = "test_gear_shaft"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+$fn=12; $gear_steps=3;
+module test_gear_shaft() {
+    gear_spin(60) let(m=gear_motion())
+        gear_shaft() spur_gear2d(mod=1,teeth=24) {
+            assert([$gear_rotation,$gear_ratio]==[0,0], "\nDefault shaft is not fixed");
+            gear_shaft(m) spur_gear2d(mod=1,teeth=24)
+                assert([$gear_rotation,$gear_ratio]==[60,1], "\nInput motion was not restored");
+        }
+}
+test_gear_shaft();
+'''
+
+[[test]]
+name = "test_gear_carrier_frame"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+$fn=12; $gear_steps=3;
+module test_gear_carrier_frame() {
+    gear_spin(60) spur_gear2d(mod=1,teeth=24) {
+        gear_carrier_frame(2) {
+            assert(norm([$gear_rotation,$gear_ratio]-[30,0.5])<1e-8, "\nWrong carrier ratio");
+            attach_gear(0) spur_gear2d(teeth=24)
+                assert(norm([$gear_rotation,$gear_ratio])<1e-8, "\nWrong planet motion");
+        }
+        gear_carrier_frame(motion=0)
+            assert([$gear_rotation,$gear_ratio]==[0,0], "\nCarrier should be fixed");
+    }
+}
+test_gear_carrier_frame();
+'''
+
+[[test]]
+name = "test_gear_exit_carrier"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+$fn=12; $gear_steps=3;
+module test_gear_exit_carrier() {
+    for(u=[-30,0,30]) gear_spin(u) let(m=gear_motion())
+        gear_shaft() ring_gear2d(mod=1,teeth=72)
+            gear_carrier_frame(motion=m)
+                attach_gear(0) spur_gear2d(teeth=24)
+                    attach_gear(180) spur_gear2d(teeth=24)
+                        gear_exit_carrier()
+                            attach_gear(90) spur_gear2d(teeth=48) {
+                                assert(norm([$gear_rotation,$gear_ratio]-[-2*u,-2])<1e-8, "\nWrong output motion");
+                                assert(norm(apply(zrot($gear_rotation),$gear_chain_locs[0])-[0,-36,0])<1e-8,
+                                       "\nOutput shaft still orbits with carrier");
+                            }
+}
+test_gear_exit_carrier();
+'''
+
+[[test]]
+name = "test_gear_carrier_frame_rejects_numeric_named_motion"
+expect_success = false
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+gear_spin(0) spur_gear2d(mod=1,teeth=24) gear_carrier_frame(motion=2);
+'''
+
+[[test]]
+name = "test_globoid_worm_radius_bound"
+expect_success = true
+assert_no_echoes = true
+assert_no_warnings = true
+script = '''
+include <../std.scad>
+include <../gears.scad>
+module test_globoid_worm_radius_bound() {
+    r = globoid_worm_radius_bound(mod=2,teeth=55,d=24,starts=5,length=60);
+    assert(approx(r,19.794968821870803,1e-8), "\nWrong default 32-interval bound");
+    assert(approx(r,globoid_worm_radius_bound(mod=2,55,24,starts=5,l=60,steps=32)), "\nAliases differ");
+    assert(approx(2*r,globoid_worm_radius_bound(mod=4,teeth=55,d=48,starts=5,length=120)), "\nScaling failed");
+    assert(approx(globoid_worm_radius_bound(mod=2,teeth=55,d=24,starts=5,length=60,lead_in=0),
+                  20.25488918556563,1e-8), "\nWrong untapered bound");
+}
+test_globoid_worm_radius_bound();
+'''
