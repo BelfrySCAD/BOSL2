@@ -219,7 +219,10 @@ function _gear_worm_starts(starts,worm_starts) =
 //   An old style call such as `spur_gear(5,20,10)` still means circ_pitch 5, 20 teeth and
 //   thickness 10, and emits a deprecation message.  The legacy default gear size, which is no longer supported, was 
 //   `circ_pitch=5`.  The legacy support is temporary and will be removed in July 2027 with the
-//   final migration.  
+//   final migration.
+//   .
+//   The legacy crown gear was inaccurate and didn't have a proper mesh.  An accurate model requires that the crown gear be sized to the mating spur gear.
+//   If you must adapt an existing model that places two different spur gears into a crown gear, try using the larger tooth count for `mate_teeth`.  
 // Section: Quick Introduction to Gears
 //   This section gives a quick overview of gears with a focus on the information you need
 //   to know to understand the gear parameters and create some gears.  The topic of gears is very complex and highly technical and
@@ -792,7 +795,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   back(pitch_radius(mod=1,teeth=32)+7/2)
 //     up(gear_dist(mod=1,teeth1=0,teeth2=9))spur_gear(mod=1, teeth=9,orient=BACK,thickness=7,gear_spin=360/9/2);
 // Continues:
-//   When constructing a crown gear you need to mate it to a non-helical spur gear with a specified number of teeth.  
+//   A crown gear is constructed to mate with a non-helical spur gear with a specified number of teeth.  
 //   You specify the pressure angle of the mating spur gear, but the teeth of a crown gear have pressure angle that varies
 //   along the width of the tooth.  The vertical separation of the spur gear from the crown gear is given
 //   by {{gear_dist()}} where you treat the crown gear as a rack.  The inner radius of the teeth on the
@@ -6778,30 +6781,31 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //            spur_gear(mod=3/4,teeth=10,anchor=BOT,thickness=4)
 //            attach_gear(125) color_this("mediumpurple") spur_gear(teeth=19);
 //       }
+// Example(3D,Med,NoAxes,Anim,VPR=[56.70,0.00,10.50],VPD=126.00,VPT=[1.41,-4.67,3.76],Frames=72,FrameMS=60): Ring driven system with carrier output needs to be built the same way, but ring first.
+//    $fn=54;  $gear_steps=12;  $backlash=0.1;
+//    h=6;
+//    data=stepped_planetary(3,40,mod1=1,min_teeth=6,
+//       ring_carrier=8/3,uniform=true,exact=true);
+//    sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
+//    ratio=data[3][1];
+//    gear_spin($t*120*ratio)
+//    ring_gear(mod=mod[1], teeth=ring[1], profile_shift=ring[2], thickness=h)
+//      gear_carrier_frame(ratio){
+//        // create planets
+//        attach_gear(planets[5],phase=planets[3])
+//          let(planet_ind=$idx)
+//          color_this("coral")
+//          spur_gear(teeth=planets[1][1],profile_shift=planets[2][1])
+//            align(TOP) color_this("mediumseagreen")
+//            spur_gear(mod=mod[0],teeth=planets[1][0],profile_shift=planets[2][0])
+//               // create sun
+//               if(planet_ind==0) attach_gear(180)
+//                  recolor("lightblue") spur_gear(teeth=sun[1],profile_shift=sun[2]);
+//         // Create carrier
+//         up(1.5*h) color_this("red")
+//         linear_extrude(h/4) stroke(planets[4],width=1,closed=true);
+//      }
 // Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=45,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires {{gear_carrier_frame()}}.  
-//   $fn=48;  $gear_steps=12;  $backlash=0.1;
-//   h=8;
-//   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
-//       carrier_sun=1/7,uniform=true,exact=true);
-//   sun=data[0]; ring=data[1]; planets=data[2]; mod=data[4][1];
-//   ratio=data[3][1];
-//   gear_spin($t*120)
-//     let(carrier_motion=gear_motion()){
-//       gear_shaft()
-//         color_this("lightblue") ring_gear(mod=mod[1],teeth=ring[1],profile_shift=ring[2],thickness=h)
-//           gear_carrier_frame(motion=carrier_motion)
-//             attach_gear(planets[5], phase=planets[3])
-//             let(planet_idx=$idx)
-//             spur_gear(teeth=planets[1][1], profile_shift=planets[2][1]) 
-//               align(TOP)
-//                   color_this("coral")   spur_gear(mod=mod[0], teeth=planets[1][0], profile_shift=planets[2][0])
-//              if (planet_idx==0)
-//              attach_gear(180) color_this("pink")
-//                spur_gear(teeth=sun[1], profile_shift=sun[2],thickness=2*h+1,anchor=BOT)
-//                   gear_exit_carrier()
-//                   attach_gear(0) color_this("lightgreen")spur_gear(teeth=7,thickness=h,anchor=TOP);
-//     }
-// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=70,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires using {{gear_carrier_frame()}}.  
 //   $fn=48;  $gear_steps=12;  $backlash=0.1;
 //   h=8;
 //   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
@@ -11234,3 +11238,7 @@ function worm_face_gear_worm_spin(teeth,worm_diam,_named,mod,circ_pitch,diam_pit
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+
+
+
+
