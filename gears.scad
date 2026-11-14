@@ -253,7 +253,7 @@ function _gear_worm_starts(starts,worm_starts) =
 // Continues:
 //   The term "involute" refers to the shape of the teeth:  the curves of the teeth are involutes of circles, 
 //   which are curves that optimize gear performance.
-// Figure(2D,Med,NoAxes,VPT=[8,74,0],VPR=[0,0,0],VPD=150): The three marked circles are key references on gear teeth.  The pitch circle, which is roughly in the middle of the teeth, is the reference used to define the pitch of teeth on the gear.  The pressure angle is the angle the tooth makes with the pitch circle.  In this example, the pressure angle is 20 degrees as shown by the red lines.  
+// Figure(2D,Med,NoAxes,VPT=[8,74,0],VPR=[0,0,0],VPD=150): The three marked circles are key references on gear teeth.  The pitch circle, which is roughly in the middle of the teeth, is the reference used to define the pitch of teeth on the gear.  The pressure angle is the angle the tooth makes with the pitch circle.  In this example, the pressure angle is 20° as shown by the red lines.  
 //   $fn=128;
 //   intersection(){
 //     spur_gear2d(mod=5,teeth=30,pressure_angle=20);
@@ -293,7 +293,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   sure to multiply by `INCH`.  The diametral pitch is given based on inches under the assumption that OpenSCAD units are millimeters.
 //   .
 //   You cannot directly specify the size of a gear.  The diameter of a gear depends on its tooth count
-//   and tooth size.  If you want a gear with a particular diameter you can get close by seeting the module to `d/teeth`,
+//   and tooth size.  If you want a gear with a particular diameter you can get close by setting the module to `d/teeth`,
 //   but that specifies the pitch circle, so the gear teeth will have a somewhat larger radius.  You should **not**
 //   apply scale() to gears.  Always change their size by adjusting the tooth size parameters.  
 //   .
@@ -305,7 +305,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   Increasing pressure angle makes the tooth stronger, increases power transmission, and can reduce tooth interference for
 //   gears with a small number of teeth, but it also increases gear wear and meshing noise.  Higher pressure angles also
 //   increase the force that tries to push the gears apart, and hence the load on the gear axles.  The current standard pressure
-//   angle is 20 degrees.  It replaces an old 14.5 degree standard.  
+//   angle is 20°.  It replaces an old 14.5° standard.  
 // Figure(2D,Med,NoAxes): Teeth of the same size with different pressure angles.  The industry standard is 20°.
 //   pang = [30,20,14.5];
 //   ycopies(n=3, spacing=25){
@@ -338,10 +338,10 @@ function _gear_worm_starts(starts,worm_starts) =
 //   If the clearance is too large it can lead to a self-intersecting gear profile.  When this occurs, you
 //   will see a message indicating that the profile was clipped, and what the required clearance is to
 //   avoid the clipping.  This can be a starting point for adjusting the clipping.  Typical gear pressure angles,
-//   as noted above, are 14.5, 20, or sometimes 25 degrees, but in some cases, larger pressure angles
+//   as noted above, are 14.5°, 20°, or sometimes 25°, but in some cases, larger pressure angles
 //   may be useful.  These large pressure angles can give rise to self-intersecting gear geometry even
 //   with a zero clearance.  To get a valid model, such gears need a **negative** clearance value.
-// Figure(2D,NoAxes): This gear has a 55 degree pressure angle. If you don't specify clearance, the message tells you it clipped at -2.2.  Here we have used -2.3 to avoid a sharp corner in the valleys between teeth.  
+// Figure(2D,NoAxes): This gear has a 55° pressure angle. If you don't specify clearance, the message tells you it clipped at -2.2.  Here we have used -2.3 to avoid a sharp corner in the valleys between teeth.  
 //   spur_gear2d(mod=5, teeth=7, profile_shift=0, pressure_angle=55,clearance=-2.3);
 // Continues:
 //   Another clearance requirement can present a serious problem when the number of teeth is low.  As the gear rotates, the
@@ -370,11 +370,11 @@ function _gear_worm_starts(starts,worm_starts) =
 //   spur_gear2d(mod=5, teeth=7);
 //   color("green")spur_gear2d(mod=5, teeth=7, profile_shift=0);
 // Continues:
-//   The minimum number of teeth to avoid undercutting is 17 for a pressure angle of 20, but it is 32 for a pressure
-//   angle of 14.5 degrees.  It can be computed as `2/(sin(alpha))^2` where `alpha` is the pressure angle.
+//   The minimum number of teeth to avoid undercutting is 17 for a pressure angle of 20°, but it is 32 for a pressure
+//   angle of 14.5°.  It can be computed as `2/(sin(alpha))^2` where `alpha` is the pressure angle.
 //   By default, the gear modules produce corrected gears.  You can override this by specifying the profile shift
 //   yourself.  A small undercut may be acceptable, for example: a rule of thumb indicates that gears as small as 14
-//   teeth are OK with a 20 degree pressure angle, because the undercut is too small to weaken the teeth significantly.  
+//   teeth are OK with a 20° pressure angle, because the undercut is too small to weaken the teeth significantly.  
 // Figure(2D,Med,NoAxes,VPT=[1.33179,10.6532,-0.0144912],VPR=[0,0,0],VPD=155.556): Basic five tooth gear form on the left.  Corrected gear with profile shifting on the right.  The profile shifted teeth lack the weak undercut section.  The axis of the corrected gear is shifted away from the mating rack.
 //   $fn=32;
 //   ang1=-20;
@@ -440,7 +440,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   the helical angles must be opposite each other, so a gear with a helical angle of 35 must mesh with one
 //   that has an angle of −35.  The industry convention refers to these as left-handed and right handed.  In
 //   this library, positive helical angles produce a left handed gear and negative angles produce a right handed gear.
-// Figure(3D,Med,NoAxes,VPT=[73.6023,-29.9518,-12.535],VPR=[76,0,1.2],VPD=610): Left and right handed helical gears at 35 degrees.
+// Figure(3D,Med,NoAxes,VPT=[73.6023,-29.9518,-12.535],VPR=[76,0,1.2],VPD=610): Left and right handed helical gears at 35°.
 //   spur_gear(mod=5, teeth=20, helical=35, thickness=70,slices=15);
 //   right(150)
 //   spur_gear(mod=5, teeth=20, helical=-35, thickness=70,slices=15);
@@ -601,7 +601,7 @@ function _gear_worm_starts(starts,worm_starts) =
 // Subsection: Worm Drive
 //   A worm drive is a gear system for connecting perpendicular offset shafts.  They offer higher load capacity compared to
 //   crossed helical gears.  The assembly is driven by the "worm", which is a gear that resembles a screw.
-//   Like a screw, it can have one, or several starts.  These starts correspond to teeth on a helical gear;
+//   Like a screw, it can have one or more starts.  These starts correspond to teeth on a helical gear;
 //   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
 //   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
 //   superficially resembles a helical gear at a very slight angle, but it has a different tooth form.  
@@ -735,11 +735,11 @@ function _gear_worm_starts(starts,worm_starts) =
 //   but with a zero angle.  These share advantages of straight teeth and spiral teeth: they are quiet like
 //   straight teeth but they lack the axial thrust of spiral gears, and they can operate in both directions.
 //   They are also reportedly stronger than either spiral or bevel gears.
-// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45 degree angled teeth.  To get a gear like this you must specify a spiral angle of zero and a cutter radius of zero.  This gear would mate with a copy of itself and would change direction of rotation without changing the rotation rate. 
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45° angled teeth.  To get a gear like this you must specify a spiral angle of zero and a cutter radius of zero.  This gear would mate with a copy of itself and would change direction of rotation without changing the rotation rate. 
 //   bevel_gear(mod=3,teeth=35,mate_teeth=35,face_width=20,spiral=0,cutter_radius=0);
-// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45 degree angled teeth.  A gear like this has a positive spiral angle, which determines how sloped the teeth are and a positive cutter radius, which determines how curved the teeth are.  
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45° angled teeth.  A gear like this has a positive spiral angle, which determines how sloped the teeth are and a positive cutter radius, which determines how curved the teeth are.  
 //   bevel_gear(mod=3,teeth=35,mate_teeth=35,face_width=20,slices=12);
-// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Zerol tooth bevel gear with 45 degree angled teeth.  A gear like this has a spiral angle of zero, but a positive cutter radius, which determines how curved the teeth are.  
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Zerol tooth bevel gear with 45° angled teeth.  A gear like this has a spiral angle of zero, but a positive cutter radius, which determines how curved the teeth are.  
 //   bevel_gear(mod=3,teeth=35,mate_teeth=35,face_width=20,spiral=0,slices=12);
 // Continues:
 //   Bevel gears have demanding requirements for successful mating of two gears.  Of course the tooth size
@@ -749,10 +749,10 @@ function _gear_worm_starts(starts,worm_starts) =
 //   the geometry of the gear.  You cannot simply mate two arbitary gears that have the same tooth size
 //   and pressure angle like you can with helical gears: the gears must be designed in pairs to work together.
 //   .
-//   It is most common to design bevel gears so operate with their shafts at 90 degree angles, but
+//   It is most common to design bevel gears so operate with their shafts at 90° angles, but
 //   this is not required, and you can design pairs of bevel gears for any desired shaft angle.
 //   Note, however, that some shaft angles may result in extreme bevel gear configurations.  
-// Figure(3D,Med,NoAxes,VPT=[-1.42254,-1.98925,13.5702],VPR=[76,0,145],VPD=263.435): Two zerol bevel gears mated with shafts at 90 degrees.  
+// Figure(3D,Med,NoAxes,VPT=[-1.42254,-1.98925,13.5702],VPR=[76,0,145],VPD=263.435): Two zerol bevel gears mated with shafts at 90°.  
 //   bevel_gear(mod=3,teeth=35,face_width=undef,spiral=0,mate_teeth=15,backing=3);
 //   cyl(h=28,d=3,$fn=16,anchor=BOT);
 //   color("lightblue")left(pitch_radius(mod=3,teeth=35))up(pitch_radius(mod=3,teeth=15))
@@ -771,10 +771,10 @@ function _gear_worm_starts(starts,worm_starts) =
 //   sometimes also a crown gear.  The latter term may be confusing because it also refers to a similar looking
 //   but very different type of gear that is described below.  A planar bevel gear can only mate with another
 //   compatible bevel gear.  It has a degenerate cone with its apex on the gear itself, so the mating pinion gear cannot
-//   mate at a 90 degree angle because if it did, its cone could not meet the center of the planar bevel gear.
+//   mate at a 90° angle because if it did, its cone could not meet the center of the planar bevel gear.
 //   If you request a larger shaft angle, the teeth of the bevel gear will tilt inward, producing an internal bevel gear.
 //   Gears with this design are rarely used.  The mate of an interior gear is always an exterior gear.  
-// Figure(Med,VPT=[-1.07698,0.67915,-2.25898],VPD=263.435,VPR=[69.7,0,49.3],NoAxes): Internal bevel gear (yellow) mated to an external bevel gear (blue) to achieve a 135 degree shaft angle.  
+// Figure(Med,VPT=[-1.07698,0.67915,-2.25898],VPD=263.435,VPR=[69.7,0,49.3],NoAxes): Internal bevel gear (yellow) mated to an external bevel gear (blue) to achieve a 135° shaft angle.  
 //   ang=135;
 //   bevel_gear(mod=3,teeth=35,mate_teeth=15,shaft_angle=ang,spiral=0,cone_backing=false);
 //      down(15)cyl(h=40,d=3,$fn=16,anchor=BOT);
@@ -837,8 +837,8 @@ function _gear_worm_starts(starts,worm_starts) =
 // Continues:
 //   You can slide the worm along its axis without changing its engagement until you run out of worm length.
 //   Its height above the worm face gear is provided by {{worm_face_dist()}}.  The library supports asymmetric pressure
-//   angles. Helicon gears commonly use a small angle like 10 degrees on the drive side and a large
-//   angle like 35 degrees on the coast side.
+//   angles. Helicon gears commonly use a small angle like 10° on the drive side and a large
+//   angle like 35° on the coast side.
 // Section: Backlash (Fitting Real Gears Together)
 //   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
 //   the teeth.  Real gears need space between the teeth to prevent the gears from jamming, to provide space
@@ -931,7 +931,7 @@ function _gear_worm_starts(starts,worm_starts) =
 //   The module creates the gear in the XY plane, centered on the origin, with one tooth centered on the positive Y axis.
 //   In order for two gears to mesh they must have the same tooth size and `pressure_angle`, and
 //   generally the helical angles should be of opposite sign.  
-//   The pressure angle inherits from the parent when available; otherwise it defaults to 20 degrees. Another common value is 14.5 degrees.
+//   The pressure angle inherits from the parent when available; otherwise it defaults to 20°. Another common value is 14.5°.
 //   Ideally the teeth count of two meshing gears will be relatively prime because this ensures that
 //   every tooth on one gear will meet every tooth on the other, creating even wear.
 //   .
@@ -1340,7 +1340,7 @@ module spur_gear(
 //   .
 //   The module creates the gear in centered on the origin, with one tooth centered on the positive Y axis.
 //   In order for two gears to mesh they must have the same tooth size and `pressure_angle`
-//   The pressure angle inherits from the parent when available; otherwise it defaults to 20 degrees. Another common value is 14.5 degrees.
+//   The pressure angle inherits from the parent when available; otherwise it defaults to 20°. Another common value is 14.5°.
 //   Ideally the teeth count of two meshing gears will be relatively prime because this ensures that
 //   every tooth on one gear will meet every tooth on the other, creating even wear.
 //   .
@@ -1991,7 +1991,7 @@ function _ring_gear_outer_radius(ar,rr,backing,or,od,width) =
 //   `$gear_travel_ratio` is set to signed linear gain: (output travel)/(input rotation) for rotational input, or (output travel)/(input travel) for travel input. 
 //   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
 //   `$gear_contact_dir` is set to the engagement direction with the parent in the current child frame, which is always UP for 3D racks engaged with a parent.
-//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90 degrees for racks.
+//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90° for racks.
 //   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
 //   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
 //   `$gear_rotation` is set to zero.
@@ -2296,7 +2296,7 @@ function rack(
 //   `$gear_travel_ratio` is set to signed linear gain: (output travel)/(input rotation) for rotational input, or (output travel)/(input travel) for travel input. 
 //   `$gear_input` is set to "rotation" (degrees), "travel" (model units), or undef for an undriven chain.
 //   `$gear_contact_dir` is set to the engagement direction with the parent in the current child frame, which is always BACK for 2D racks engaged to a parent.
-//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90 degrees for racks.
+//   `$gear_contact_angle` is set to the corresponding engagement angle, which is always 90° for racks.
 //   `$gear_chain_locs` is set to a list of gear center coordinates (pitch-line origins for racks) in the current child frame, with the root gear first and the current gear last.
 //   `$gear_chain_axes` is set to a list of shaft-axis unit vectors (`undef` for racks) in the current child frame, with the root gear first and the current gear last.
 //   `$gear_rotation` is set to zero.
@@ -3082,7 +3082,7 @@ function _bevel_check_profile_shift(teeth,pa,x,m,clearance,backlash) =
 //   tooth size and the same pressure angle and they must be of opposite handedness.
 //   Specify tooth size using `mod`, `circ_pitch`, or `diam_pitch`, or inherit it from a parent bevel gear. 
 //   The pressure angle controls how much the teeth bulge at their
-//   sides and is almost always 20 degrees for standard bevel gears.  The ratio of `teeth` for two meshing gears
+//   sides and is almost always 20° for standard bevel gears.  The ratio of `teeth` for two meshing gears
 //   gives how many times one will make a full
 //   revolution when the other makes one full revolution.  If the two numbers are coprime (i.e.
 //   are not both divisible by the same number greater than 1), then every tooth on one gear will meet
@@ -3232,7 +3232,7 @@ function _bevel_check_profile_shift(teeth,pa,x,m,clearance,backlash) =
 //     bevel_gear(mod=mod, teeth=t1,mate_teeth=t2, bottom=bot, shaft_angle=angle, shaft_diam=shaft, slices=12);
 //   xrot(angle) back(r2) color("orange")
 //     bevel_gear(mod=mod, teeth=t2,mate_teeth=t1, bottom=bot, shaft_angle=angle, shaft_diam=shaft, right_handed=true, slices=12);
-// Example(NoAxes,VPT=[-0.482968,-0.51139,-4.48142],VPR=[69.7,0,40.9],VPD=263.435): At this extreme 135 degree angle the yellow gear has internal teeth.  This is a rare configuration.  
+// Example(NoAxes,VPT=[-0.482968,-0.51139,-4.48142],VPR=[69.7,0,40.9],VPD=263.435): At this extreme 135° angle the yellow gear has internal teeth.  This is a rare configuration.  
 //   ang=135;
 //   bevel_gear(mod=3,teeth=35,mate_teeth=15,shaft_angle=ang);   
 //   color("lightblue")
@@ -3474,7 +3474,7 @@ function _worm_pressure_angle(pressure_angle) =
     assert(is_finite(a) || (is_vector(a,2) && all([for(p=a)is_finite(p)])),
            "\npressure_angle must be a finite number or [pa_bot,pa_top]")
     assert(is_list(a)?min(a)>=0 && max(a)<90:a>=0 && a<90,
-           "\nEach pressure angle must be at least zero and less than 90 degrees")
+           "\nEach pressure angle must be at least zero and less than 90°")
     is_list(a) && a[0]==a[1]?a[0]:a;
 function _worm_swap_angles(pa) = is_list(pa)?[pa[1],pa[0]]:pa;
 function _worm_slopes(pa,cb) = is_list(pa)?[tan(pa[0])/cb,tan(pa[1])/cb]:tan(pa)/cb;
@@ -6805,7 +6805,7 @@ function _planetary_pick(candidates,n,helical,i=0) =
 //         up(1.5*h) color_this("red")
 //         linear_extrude(h/4) stroke(planets[4],width=1,closed=true);
 //      }
-// Example(3D,Med,NoAxes,Anim,Frames=64,FrameMS=45,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires {{gear_carrier_frame()}}.  
+// Example(3D,Med,NoAxes,Anim,Frames=75,FrameMS=66,VPR=[51.50,0.00,351.40],VPD=120,VPT=[-0.41,1.45,0.29]): Build a carrier driven system with a sun output using gear attachment.  This requires {{gear_carrier_frame()}}.  
 //   $fn=48;  $gear_steps=12;  $backlash=0.1;
 //   h=8;
 //   data=stepped_planetary(3,27,mod1=1,min_teeth=9,
@@ -8017,7 +8017,7 @@ function _wolfrom_planetary_result(d,n,drive=0,mode=0) =
 //   .
 //   Worm drive pairs inherit the shared worm diameter, worm starts, pressure angle and for
 //   globoids, the teeth counts and working length.  They can be nested in either order and
-//   the child is automatically rotated 90 degrees to create the proper mesh.  The child
+//   the child is automatically rotated 90° to create the proper mesh.  The child
 //   cannot have any anchor but CENTER.  The engagement point is determined by `angle` or `dir=`.
 //   You can shift the child in a a cylindrical worm drive using the `shift=` parameter, which
 //   moves the child in the direction of the worm's shaft.  
@@ -10025,7 +10025,7 @@ function _gear_skew_inputs(teeth1,teeth2,helical1,helical2,pressure_angle) =
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: "auto"
 //   ---
 //   pressure_angle = Normal pressure angle in degrees. Default: 20.
-// Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
+// Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5° more.  
 //   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1=teeth1, teeth2=teeth2, helical1=ha1, helical2=ha2);
 //   ang = gear_skew_angle(teeth1=teeth1, teeth2=teeth2, helical1=ha1, helical2=ha2);  // Returns 57.7
