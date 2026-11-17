@@ -1229,6 +1229,205 @@ module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
 }
 
 
+// Exact arclength of the helix with radii r1,r2 that rotates through T radians and rises H.
+// With s in [0,1], R=r1+dr*s, speed = norm([dr, H, T*R]), which integrates in closed form.
+function _helix_arclength(r1, r2, T, H) =
+    let(
+        dr = r2-r1,
+        b = abs(T),
+        a2 = dr*dr + H*H
+    )
+    b==0 ? sqrt(a2)
+  : dr==0 ? sqrt(a2 + b*b*r1*r1)
+  : let(
+        u1 = b*r1,
+        u2 = b*r2,
+        s1 = sqrt(a2+u1*u1),
+        s2 = sqrt(a2+u2*u2)
+    )
+    (u2*s2 - u1*s1 + a2*ln((u2+s2)/(u1+s1))) / (2*b*dr);
+
+
+// Solve for the unknown helix parameters given arclength.  All inputs are unsigned:
+// turns, angle, length are passed as absolute values (or undef) and A is abs(arclength).
+// Returns [length, turns], both unsigned.
+function _helix_solve_arclength(r1, r2, turns, angle, length, A) =
+    let(
+        dr = r2-r1,
+        ravg = (r1+r2)/2,
+        eps = 1e-9*A
+    )
+    is_def(turns) ?
+        // turns given: solve for length
+        let(
+            T = 2*PI*turns,
+            f = function(H) _helix_arclength(r1,r2,T,H) - A,
+            f0 = f(0)
+        )
+        assert(f0<=eps,
+               str("abs(arclength) is too short: a flat spiral with ",turns," turns already has length ",A+f0))
+        [f0>=-eps ? 0 : root_find(f, 0, A), turns]
+  : is_def(length) ?
+        // length given: solve for turns
+        let(amin = norm([dr,length]))
+        assert(A>amin,
+               str("arclength must exceed ",amin," for this length and radii"))
+        let(
+            Tmax = A/ravg*(1+1e-6),    // A >= T*ravg
+            f = function(T) _helix_arclength(r1,r2,T,length) - A,
+            T = root_find(f, 0, Tmax)
+        )
+        [length, T/(2*PI)]
+  :
+        // angle given: solve for turns and length
+        assert(A>abs(dr),
+               str("arclength must exceed ",abs(dr)," for this change in radius"))
+        angle==90 ?
+            // straight line, no turns
+            [sqrt(A*A-dr*dr), 0]
+      : let(
+            dz = 2*PI*r1*tan(angle),
+            Nmax = A/(2*PI*ravg)*(1+1e-6),    // A >= 2*PI*N*ravg
+            f = function(N) _helix_arclength(r1,r2,2*PI*N,N*dz) - A,
+            N = root_find(f, 0, Nmax)
+        )
+        [N*dz, N];
+
+
+module helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength, cw, ccw) {no_module();}
+function helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength, cw, ccw)=
+    assert(num_defined([l,h,length,height])<=1, "Specify at most one of l, h, length, and height")
+    let(
+        r1=get_radius(r=r,r1=r1,d=d,d1=d1,dflt=1),
+        r2=get_radius(r=r,r1=r2,d=d,d1=d2,dflt=1),
+        length = first_defined([l,h,length,height])
+    )
+    assert(num_defined([length,turns,angle,arclength])==2,
+           "Must define exactly two of l/h/length/height, turns, angle, and arclength")
+    assert(is_undef(cw) || is_bool(cw), "cw must be true or false")
+    assert(is_undef(ccw) || is_bool(ccw), "ccw must be true or false")
+    assert(is_undef(cw) || is_undef(ccw) || cw!=ccw, "cw and ccw contradict each other")
+    assert(is_undef(turns) || (is_undef(cw) && is_undef(ccw)),
+           "Cannot give cw or ccw with turns; the sign of turns sets the rotation direction")
+    assert(is_undef(arclength) || (is_finite(arclength) && arclength!=0),
+           "arclength must be a nonzero finite number")
+    assert(is_undef(turns) || (is_finite(turns) && turns!=0), "turns must be finite and nonzero")
+    assert(is_undef(length) || is_finite(length), "Helix length must be finite")
+    assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
+    assert(is_undef(angle) || (is_finite(angle) && abs(angle)<=90 && r1>0),
+           "angle must be between -90 and 90, with a positive starting radius")
+    assert(angle!=0 || is_undef(length), "Cannot give length with angle=0")
+    assert(is_undef(angle) || abs(angle)<90 || is_undef(turns), "Cannot give turns with angle=±90")
+    assert(is_undef(angle) || is_undef(length) || sign(angle)==sign(length),
+           "angle and length must have the same sign")
+    assert(is_undef(arclength) || arclength>0 || is_def(turns),
+           "arclength can be negative only when turns is given; with length or angle they set the direction")
+    assert(is_undef(arclength) || (r1>0 && r2>=0), "With arclength, r1 must be positive and r2 nonnegative")
+    let(
+        // direction of travel along z
+        up0 = is_def(angle) ? sign(angle)
+            : is_def(length) ? sign(length)
+            : sign(arclength),
+        up = up0==0 ? 1 : up0,
+
+        // rotation direction: sign of turns, else cw/ccw, else counterclockwise
+        rot = is_def(turns) ? sign(turns)
+            : is_def(cw) ? (cw ? -1 : 1)
+            : is_def(ccw) ? (ccw ? 1 : -1)
+            : 1,
+
+        // unsigned length and turns (either may be undef when not needed)
+        sol = is_undef(arclength)
+            ? [is_def(length) ? abs(length) : undef,
+               is_def(turns) ? abs(turns) : undef]
+            : _helix_solve_arclength(r1, r2,
+                                     is_def(turns) ? abs(turns) : undef,
+                                     is_def(angle) ? abs(angle) : undef,
+                                     is_def(length) ? abs(length) : undef,
+                                     abs(arclength)),
+        H = sol[0],
+        Nt = sol[1],
+
+        // unsigned rise per turn, and unsigned number of turns
+        dz = is_def(angle) ? 2*PI*r1*tan(abs(angle)) : H/Nt,
+        nturns = is_def(Nt) ? Nt : H/dz,
+
+        endheight = up*(is_def(H) ? H : Nt*dz),
+        maxtheta = 360*rot*nturns,
+        N = segs(max(r1,r2))
+    )
+    maxtheta==0 ? [[r1,0,0],[r2,0,endheight]]
+  : [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
+       let(R=lerp(r1,r2,theta/maxtheta))
+       [R*cos(theta), R*sin(theta), theta/maxtheta * endheight]];
+
+
+// Function: helix()
+// Synopsis: Creates a 3D helical path or flat spiral.
+// SynTags: Path
+// Topics: Path Generators, Paths, Drawing Tools
+// See Also: pie_slice(), stroke(), thread_helix(), path_sweep()
+// Usage:
+//   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=, [cw=|ccw=]);
+//   path = helix(arclength=, turns=|angle=|l=|h=, r=|r1=|r2=, d=|d1=|d2=, [cw=|ccw=]);
+// Description:
+//   Returns a 3D helical path on a cone, including the degenerate case of flat spirals.
+//   You can specify start and end radii.  You can give the length, the helix angle, the number of turns,
+//   or the arclength: two of these four parameters define the helix.  Specify a flat helix with either
+//   `length=0` or `angle=0` and provide a turn count or arclength.  
+//   .
+//   The `turns` parameter specifies the number of turns to rotate in the counterclockwise (positive) direction as
+//   seen from above.  If `turns<0` then the curve spirals clockwise. 
+//   .
+//   The `length` parameter specifies the most extreme Z coordinate of the curve, so a positive value
+//   produces a curve that spirals up, above the XY plane, a negative value produces a curve below the XY plane and
+//   zero gives a planar curve.  
+//   .
+//   The `arclength` parameter specifies the length of the ideal helical curve.  When you give `turns`
+//   the `arclength` value can be negative to specify a helix that goes down below the XY plane.
+//   When you give `angle` or `length` the sign of those parameters indicates whether the curves
+//   is ascending or descending, and `arclength` must be positive.  
+//   .
+//   The angle is calculated at the starting radius (`r1`) in the vertical direction.  It does not follow the
+//   slope of the cone.  It must be between -90 and 90.  The degenerate helix at angle ±90 is a straight line.
+//   When `angle<0` this specifies a downward angle, so the helix spirals down.  If you give `length` then
+//   the sign of `length` must match the sign of `angle`: you cannot request a downward traveling curve
+//   that terminates at a positive Z value.  
+//   .
+//   If you give `turns` then its sign controls the direction of rotation.  When you
+//   do not give `turns` the helix rotates counter-clockwise by default.  Change 
+//   its direction of rotation by giving setting `cw=` or `ccw=` to true or false.  
+// Example(3D):
+//   stroke(helix(turns=2.5, h=100, r=50), dots=true, dots_color="blue");
+// Example(3D):  Helix that turns the other way
+//   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
+// Example(3D): Flat helix (note points are still 3d)
+//   stroke(helix(h=0,r1=50,r2=25, turns=4));
+// Example(3D): Specified arclength and turns, which determines the height
+//   stroke(helix(arclength=350, turns=2, r=20), dots=true, dots_color="blue");
+// Example(3D): Specified arclength and angle, which determines the number of turns
+//   stroke(helix(arclength=200, angle=20, r=10), dots=true, dots_color="blue");
+// Example(3D): Tapered helix with specified arclength and height
+//   stroke(helix(arclength=300, h=60, r1=20, r2=10));
+// Example(3D): Descending helix, using a negative arclength with turns
+//   stroke(helix(arclength=-250, turns=3, r=10), dots=true, dots_color="blue");
+// Example(3D): Clockwise rotation with arclength and height
+//   stroke(helix(arclength=250, h=40, r=10,cw=true), dots=true, dots_color="blue",width=0.5);
+// Arguments:
+//   l / h / length / height = Length of helix measured parallel to the Z axis.  Zero for a flat spiral. 
+//   ---
+//   turns = Number of turns in helix in the counterclockwise direction.
+//   angle = Helix angle at the startinfg radius, measured from the horizontal.  Negative angles descend.  (Must match the sign of `length` if they are combined.)
+//   arclength = Length of the helical curve.  Must be positive unless you give `turns`, where a negative value makes the helix descend.
+//   r = Radius of helix
+//   r1 = Radius of bottom of helix
+//   r2 = Radius of top of helix
+//   d = Diameter of helix
+//   d1 = Diameter of bottom of helix
+//   d2 = Diameter of top of helix
+//   cw = If true, rotate clockwise.  If false, rotate counterclockwise.  Not allowed with `turns`.  Default: counterclockwise rotation
+//   ccw = If true, rotate counterclockwise.  If false, rotate clockwise.  Not allowed with `turns`.  Default: counterclockwise rotation
+
 
 // Exact arclength of the helix with radii r1,r2 that rotates through T radians and rises H.
 // With s in [0,1], R=r1+dr*s, speed = norm([dr, H, T*R]), which integrates in closed form.
@@ -1249,132 +1448,120 @@ function _helix_arclength(r1, r2, T, H) =
     (u2*s2 - u1*s1 + a2*ln((u2+s2)/(u1+s1))) / (2*b*dr);
 
 
-// Solve for the unknown helix parameters when arclength is given.
-// Returns [length, turns]; length is undef when angle is given.
-function _helix_solve_arclength(r1, r2, turns, angle, length, arclength) =
+// Solve for the unknown helix parameters given arclength.  All inputs are unsigned:
+// turns, angle, length are passed as absolute values (or undef) and A is abs(arclength).
+// Returns [length, turns], both unsigned.
+function _helix_solve_arclength(r1, r2, turns, angle, length, A) =
     let(
         dr = r2-r1,
         ravg = (r1+r2)/2,
-        eps = 1e-9*arclength
+        eps = 1e-9*A
     )
     is_def(turns) ?
         // turns given: solve for length
         let(
             T = 2*PI*turns,
-            f = function(H) _helix_arclength(r1,r2,T,H) - arclength,
+            f = function(H) _helix_arclength(r1,r2,T,H) - A,
             f0 = f(0)
         )
         assert(f0<=eps,
-               str("arclength is too short: a flat spiral with ",turns," turns already has length ",arclength+f0))
-        [f0>=-eps ? 0 : root_find(f, 0, arclength), turns]
+               str("abs(arclength) is too short: a flat spiral with ",turns," turns already has length ",A+f0))
+        [f0>=-eps ? 0 : root_find(f, 0, A), turns]
   : is_def(length) ?
-        // length given: solve for turns (right handed)
+        // length given: solve for turns
         let(amin = norm([dr,length]))
-        assert(arclength>amin,
+        assert(A>amin,
                str("arclength must exceed ",amin," for this length and radii"))
         let(
-            Tmax = arclength/ravg*(1+1e-6),    // arclength >= T*ravg
-            f = function(T) _helix_arclength(r1,r2,T,length) - arclength,
+            Tmax = A/ravg*(1+1e-6),    // A >= T*ravg
+            f = function(T) _helix_arclength(r1,r2,T,length) - A,
             T = root_find(f, 0, Tmax)
         )
-        [length, (length<0 ? -1 : 1)*T/(2*PI)]
+        [length, T/(2*PI)]
   :
-        // angle given: solve for turns (right handed)
-        assert(arclength>abs(dr),
+        // angle given: solve for turns and length
+        assert(A>abs(dr),
                str("arclength must exceed ",abs(dr)," for this change in radius"))
-        let(
+        angle==90 ?
+            // straight line, no turns
+            [sqrt(A*A-dr*dr), 0]
+      : let(
             dz = 2*PI*r1*tan(angle),
-            Nmax = arclength/(2*PI*ravg)*(1+1e-6),    // arclength >= 2*PI*N*ravg
-            f = function(N) _helix_arclength(r1,r2,2*PI*N,N*dz) - arclength,
+            Nmax = A/(2*PI*ravg)*(1+1e-6),    // A >= 2*PI*N*ravg
+            f = function(N) _helix_arclength(r1,r2,2*PI*N,N*dz) - A,
             N = root_find(f, 0, Nmax)
         )
-        [undef, angle<0 ? -N : N];
+        [N*dz, N];
 
 
-// Function: helix()
-// Synopsis: Creates a 3D helical path, including flat spirals.
-// SynTags: Path
-// Topics: Path Generators, Paths, Drawing Tools
-// See Also: pie_slice(), stroke(), thread_helix(), path_sweep()
-//
-// Usage:
-//   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
-//   path = helix(arclength=, turns=|angle=|l=|h=, r=|r1=|r2=, d=|d1=|d2=);
-// Description:
-//   Returns a 3D helical path on a cone, including the degenerate case of flat spirals.
-//   You can specify start and end radii.  You can give the length, the helix angle, the number of turns,
-//   or the arclength: two of these four parameters define the helix.  For a flat helix you must give
-//   a turn count or arc length along with either `length=0` or `angle=0`.  
-//   The helix will be right handed if turns is positive and left handed if it is negative.
-//   The angle is calculated based on the radius at the base of the helix.
-//   .
-//   The arclength is the length of the ideal helical curve.  It must must be large enough for the helix to reach a requested
-//   length or change in radius.  A specified `angle` must be strictly between -90 and 90 when you give `arclength`. 
-// Arguments:
-//   l / h / length / height = Length of helix measured parallel to the Z axis.  Zero for a flat spiral.
-//   ---
-//   turns = Number of turns in helix, positive for right handed
-//   angle = Helix angle at the starting radius. With length supplied, its sign relative to length determines handedness; the path still ends at the supplied length.
-//   arclength = Length of the helical curve itself.  Must be positive.
-//   r = Radius of helix
-//   r1 = Radius of bottom of helix
-//   r2 = Radius of top of helix
-//   d = Diameter of helix
-//   d1 = Diameter of bottom of helix
-//   d2 = Diameter of top of helix
-// Example(3D):
-//   stroke(helix(turns=2.5, h=100, r=50), dots=true, dots_color="blue");
-// Example(3D):  Helix that turns the other way
-//   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
-// Example(3D): Flat helix (note points are still 3d)
-//   stroke(helix(h=0,r1=50,r2=25, turns=4));
-// Example(3D): Helix with specified arclength and turns, which determines the height
-//   stroke(helix(arclength=250, turns=3, r=10), dots=true, dots_color="blue");
-// Example(3D): Helix with specified arclength and angle, which determines the number of turns
-//   stroke(helix(arclength=200, angle=20, r=10), dots=true, dots_color="blue");
-// Example(3D): Tapered helix with specified arclength and height
-//   stroke(helix(arclength=300, h=60, r1=20, r2=10));
-
-module helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength) {no_module();}
-function helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength)=
+module helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength, cw, ccw) {no_module();}
+function helix(l,h,turns,angle, r, r1, r2, d, d1, d2, length, height, arclength, cw, ccw)=
     assert(num_defined([l,h,length,height])<=1, "Specify at most one of l, h, length, and height")
     let(
         r1=get_radius(r=r,r1=r1,d=d,d1=d1,dflt=1),
         r2=get_radius(r=r,r1=r2,d=d,d1=d2,dflt=1),
         length = first_defined([l,h,length,height])
     )
-    assert(is_undef(arclength) || (is_finite(arclength) && arclength>0),
-           "arclength must be a positive finite number")
     assert(num_defined([length,turns,angle,arclength])==2,
            "Must define exactly two of l/h/length/height, turns, angle, and arclength")
+    assert(is_undef(cw) || is_bool(cw), "cw must be true or false")
+    assert(is_undef(ccw) || is_bool(ccw), "ccw must be true or false")
+    assert(is_undef(cw) || is_undef(ccw) || cw!=ccw, "cw and ccw contradict each other")
+    assert(is_undef(turns) || (is_undef(cw) && is_undef(ccw)),
+           "Cannot give cw or ccw with turns; the sign of turns sets the rotation direction")
+    assert(is_undef(arclength) || (is_finite(arclength) && arclength!=0),
+           "arclength must be a nonzero finite number")
     assert(is_undef(turns) || (is_finite(turns) && turns!=0), "turns must be finite and nonzero")
     assert(is_undef(length) || is_finite(length), "Helix length must be finite")
     assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
     assert(is_undef(angle) || (is_finite(angle) && abs(angle)<=90 && r1>0),
-           "angle must be nonzero and between -90 and 90, with a positive starting radius")
+           "angle must be between -90 and 90, with a positive starting radius")
     assert(angle!=0 || is_undef(length), "Cannot give length with angle=0")
     assert(is_undef(angle) || abs(angle)<90 || is_undef(turns), "Cannot give turns with angle=±90")
+    assert(is_undef(angle) || is_undef(length) || sign(angle)==sign(length),
+           "angle and length must have the same sign")
+    assert(is_undef(arclength) || arclength>0 || is_def(turns),
+           "arclength can be negative only when turns is given; with length or angle they set the direction")
     assert(is_undef(arclength) || (r1>0 && r2>=0), "With arclength, r1 must be positive and r2 nonnegative")
-    assert(is_undef(arclength) || is_undef(angle) || abs(angle)<90, "Cannot give arclength with angle=±90")
-    assert(is_undef(arclength) || is_undef(length) || arclength>=abs(length),
-           "arclength cannot be smaller than the helix length")
     let(
-        sol = is_undef(arclength) ? [length, turns]
-            : _helix_solve_arclength(r1,r2,turns,angle,length,arclength),
-        length = sol[0],
-        turns = sol[1],
+        // direction of travel along z
+        up0 = is_def(angle) ? sign(angle)
+            : is_def(length) ? sign(length)
+            : sign(arclength),
+        up = up0==0 ? 1 : up0,
 
-        // length advances dz for each turn
-        dz = is_def(angle) && length!=0 ? 2*PI*r1*tan(angle) : length/abs(turns),
+        // rotation direction: sign of turns, else cw/ccw, else counterclockwise
+        rot = is_def(turns) ? sign(turns)
+            : is_def(cw) ? (cw ? -1 : 1)
+            : is_def(ccw) ? (ccw ? 1 : -1)
+            : 1,
 
-        maxtheta = is_def(turns) ? 360*turns : 360*length/dz,
-        endheight = is_def(length) ? length : abs(turns)*dz,
+        // unsigned length and turns (either may be undef when not needed)
+        sol = is_undef(arclength)
+            ? [is_def(length) ? abs(length) : undef,
+               is_def(turns) ? abs(turns) : undef]
+            : _helix_solve_arclength(r1, r2,
+                                     is_def(turns) ? abs(turns) : undef,
+                                     is_def(angle) ? abs(angle) : undef,
+                                     is_def(length) ? abs(length) : undef,
+                                     abs(arclength)),
+        H = sol[0],
+        Nt = sol[1],
+
+        // unsigned rise per turn, and unsigned number of turns
+        dz = is_def(angle) ? 2*PI*r1*tan(abs(angle)) : H/Nt,
+        nturns = is_def(Nt) ? Nt : H/dz,
+
+        endheight = up*(is_def(H) ? H : Nt*dz),
+        maxtheta = 360*rot*nturns,
         N = segs(max(r1,r2))
     )
     maxtheta==0 ? [[r1,0,0],[r2,0,endheight]]
   : [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
        let(R=lerp(r1,r2,theta/maxtheta))
        [R*cos(theta), R*sin(theta), theta/maxtheta * endheight]];
+
+
 
 
 function _normal_segment(p1,p2) =

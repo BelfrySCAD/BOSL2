@@ -106,6 +106,51 @@ module test_helix() {
     // Z should go from 0 to l=10
     assert_approx(path[0].z, 0);
     assert_approx(last(path).z, 10);
+        r=10; turns=2.5; H=40;
+    A = norm([2*PI*r*turns, H]);                 // exact for constant radius
+    ang = atan(H/(turns*2*PI*r));
+    ex = function(s,z) [r*cos(360*turns), s*r*sin(360*turns), z];
+
+    // arclength + turns
+    assert(approx(last(helix(arclength=A, turns=turns, r=r)),   ex(1,H),   eps=1e-6));
+    assert(approx(last(helix(arclength=-A, turns=turns, r=r)),  ex(1,-H),  eps=1e-6));
+    assert(approx(last(helix(arclength=-A, turns=-turns, r=r)), ex(-1,-H), eps=1e-6));
+
+    // arclength + length
+    assert(approx(last(helix(arclength=A, l=H, r=r)),  ex(1,H),  eps=1e-6));
+    assert(approx(last(helix(arclength=A, l=-H, r=r)), ex(1,-H), eps=1e-6));
+
+    // arclength + angle
+    assert(approx(last(helix(arclength=A, angle=ang, r=r)),  ex(1,H),  eps=1e-6));
+    assert(approx(last(helix(arclength=A, angle=-ang, r=r)), ex(1,-H), eps=1e-6));
+
+    // cw / ccw
+    assert(approx(last(helix(arclength=A, l=H, r=r, cw=true)),   ex(-1,H), eps=1e-6));
+    assert(approx(last(helix(arclength=A, l=H, r=r, cw=false)),  ex(1,H),  eps=1e-6));
+    assert(approx(last(helix(arclength=A, l=H, r=r, ccw=true)),  ex(1,H),  eps=1e-6));
+    assert(approx(last(helix(arclength=A, l=H, r=r, ccw=false)), ex(-1,H), eps=1e-6));
+    assert(approx(last(helix(arclength=A, l=H, r=r, cw=true, ccw=false)), ex(-1,H), eps=1e-6));
+    assert(approx(last(helix(arclength=A, angle=ang, r=r, cw=true)),   ex(-1,H),  eps=1e-6));
+    assert(approx(last(helix(arclength=A, angle=-ang, r=r, cw=true)),  ex(-1,-H), eps=1e-6));
+    assert(approx(last(helix(angle=ang, l=H, r=r, cw=true)),           ex(-1,H),  eps=1e-6));
+
+    // flat spiral
+    assert(approx(last(helix(arclength=2*PI*r*turns, angle=0, r=r)).z, 0, eps=1e-6));
+    assert(approx(last(helix(arclength=2*PI*r*turns, l=0, r=r)).z, 0, eps=1e-6));
+
+    // straight line at angle=±90
+    assert(approx(helix(arclength=5, angle=90, r1=3, r2=0),  [[3,0,0],[0,0,4]],  eps=1e-9));
+    assert(approx(helix(arclength=5, angle=-90, r1=3, r2=0), [[3,0,0],[0,0,-4]], eps=1e-9));
+
+    // tapered: polyline length at high resolution matches the requested arclength
+    assert(approx(path_length(helix(arclength=100, turns=2, r1=10, r2=3, $fn=1000)), 100, eps=1e-2));
+    assert(approx(path_length(helix(arclength=100, l=20, r1=10, r2=0, $fn=1000)),    100, eps=1e-2));
+
+    // legacy calls unchanged
+    assert(approx(last(helix(turns=turns, l=H, r=r)),  ex(1,H),  eps=1e-6));
+    assert(approx(last(helix(turns=turns, l=-H, r=r)), ex(1,-H), eps=1e-6));
+    assert(approx(last(helix(angle=ang, l=H, r=r)),    ex(1,H),  eps=1e-6));
+
 }
 test_helix();
 '''
