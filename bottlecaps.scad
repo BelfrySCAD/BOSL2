@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: bottlecaps.scad
-//   Caps and necks for PCO18XX standard plastic beverage bottles, SPI bottles and jars, and mason jars.
+//   Caps and necks for PCO18XX standard plastic beverage bottles, Bericap 38 mm bottles, 48-41 jugs, SPI bottles and jars, and mason jars.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps.scad>
@@ -403,6 +403,465 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     }
 }
 
+
+
+
+// Section: Bericap 38 mm Bottle Threading
+//   BERICAP makes a range of 38 mm closures for still and hot-fill beverages and for large water bottles.
+//   Two of these finishes are modeled here:
+//   * **38 mm 2-start HF** (hot fill), found on 1 L juice bottles. Two thread starts with a 3.63 mm thread pitch (7.26 mm lead).
+//   * **38 mm 3-start CF** (BERICAP 3439 compatible), found on 5 L still water bottles. Three thread starts with a 3.0 mm thread pitch (9.0 mm lead).
+//   .
+//   BERICAP does not publish detailed drawings of these finishes. The thread profiles, thread diameters, and bore
+//   diameters used here were measured from real bottles and caps. The other neck dimensions (thread length, tamper bead, and support ring)
+//   are approximations, so check them against your own bottles. The caps do not include a tamper-evident band.
+
+
+// Module: bericap38hf_neck()
+// Synopsis: Creates a neck for a Bericap 38 mm 2-start HF bottle.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bericap38hf_cap(), bericap38cf_neck()
+// Usage:
+//   bericap38hf_neck([wall]) [ATTACHMENTS];
+// Description:
+//   Creates an approximation of a BERICAP-compatible 38 mm 2-start HF (hot fill) threaded bottle neck, as found on 1 L juice bottles.
+// Arguments:
+//   wall = Wall thickness in mm, measured from the base of the threads.  Default: the standard bore diameter of 32.5 mm (1.25 mm wall)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "support-ring"
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "tamper-ring" = Centered at the top of the tamper bead.
+//   "support-ring" = Centered at the bottom of the support ring.
+// Example:
+//   bericap38hf_neck();
+// Example: Standard anchors
+//   bericap38hf_neck() show_anchors(custom=false);
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bericap38hf_neck()
+//           show_anchors(std=false);
+
+function bericap38hf_neck(wall, anchor, spin, orient) = no_function("bericap38hf_neck");
+
+module bericap38hf_neck(wall, anchor="support-ring", spin=0, orient=UP)
+{
+    _profile_bottle_neck(_BERICAP38HF_SPECS, wall=wall, anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+// Module: bericap38hf_cap()
+// Synopsis: Creates a cap for a Bericap 38 mm 2-start HF bottle.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bericap38hf_neck(), bericap38cf_cap()
+// Usage:
+//   bericap38hf_cap([h], [r|d], [wall], [texture], [$slop]) [ATTACHMENTS];
+// Description:
+//   Creates a basic cap for a BERICAP-compatible 38 mm 2-start HF (hot fill) threaded bottle, as found on 1 L juice bottles.
+//   The cap has no tamper-evident band.  The inner diameter of the cap is increased by `2 * $slop`, so you can add clearance if needed.
+// Arguments:
+//   h = The height of the cap.  Default: tall enough to reach the tamper bead of the neck
+//   r = Outer radius of the cap.
+//   d = Outer diameter of the cap.
+//   wall = Wall thickness in mm.  Default: 2
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
+//   ---
+//   $slop = Increase inner diameter by `2 * $slop`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "inside-top" = Centered on the inside top of the cap.
+// Example:
+//   bericap38hf_cap();
+// Example: Ribbed cap
+//   bericap38hf_cap(texture="ribbed");
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bericap38hf_cap(texture="knurled")
+//           show_anchors(std=false);
+
+function bericap38hf_cap(h, r, d, wall, texture, anchor, spin, orient) = no_function("bericap38hf_cap");
+
+module bericap38hf_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP)
+{
+    _profile_bottle_cap(_BERICAP38HF_SPECS, "bericap38hf_cap", h=h, r=r, d=d, wall=wall, texture=texture,
+                        anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+// Module: bericap38cf_neck()
+// Synopsis: Creates a neck for a Bericap 38 mm 3-start CF bottle.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bericap38cf_cap(), bericap38hf_neck()
+// Usage:
+//   bericap38cf_neck([wall]) [ATTACHMENTS];
+// Description:
+//   Creates an approximation of a 38 mm 3-start CF threaded bottle neck that is compatible with the BERICAP 3439 closure, as found on 5 L still water bottles.
+// Arguments:
+//   wall = Wall thickness in mm, measured from the base of the threads.  Default: the standard bore diameter of 33.4 mm (1.3 mm wall)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "support-ring"
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "tamper-ring" = Centered at the top of the tamper bead.
+//   "support-ring" = Centered at the bottom of the support ring.
+// Example:
+//   bericap38cf_neck();
+// Example: Standard anchors
+//   bericap38cf_neck() show_anchors(custom=false);
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bericap38cf_neck()
+//           show_anchors(std=false);
+
+function bericap38cf_neck(wall, anchor, spin, orient) = no_function("bericap38cf_neck");
+
+module bericap38cf_neck(wall, anchor="support-ring", spin=0, orient=UP)
+{
+    _profile_bottle_neck(_BERICAP38CF_SPECS, wall=wall, anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+// Module: bericap38cf_cap()
+// Synopsis: Creates a cap for a Bericap 38 mm 3-start CF bottle.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bericap38cf_neck(), bericap38hf_cap()
+// Usage:
+//   bericap38cf_cap([h], [r|d], [wall], [texture], [$slop]) [ATTACHMENTS];
+// Description:
+//   Creates a basic cap for a 38 mm 3-start CF threaded bottle that is compatible with the BERICAP 3439 closure, as found on 5 L still water bottles.
+//   The cap has no tamper-evident band.  The inner diameter of the cap is increased by `2 * $slop`, so you can add clearance if needed.
+// Arguments:
+//   h = The height of the cap.  Default: tall enough to reach the tamper bead of the neck
+//   r = Outer radius of the cap.
+//   d = Outer diameter of the cap.
+//   wall = Wall thickness in mm.  Default: 2
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
+//   ---
+//   $slop = Increase inner diameter by `2 * $slop`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "inside-top" = Centered on the inside top of the cap.
+// Example:
+//   bericap38cf_cap();
+// Example: Knurled cap
+//   bericap38cf_cap(texture="knurled");
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bericap38cf_cap(texture="ribbed")
+//           show_anchors(std=false);
+
+function bericap38cf_cap(h, r, d, wall, texture, anchor, spin, orient) = no_function("bericap38cf_cap");
+
+module bericap38cf_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP)
+{
+    _profile_bottle_cap(_BERICAP38CF_SPECS, "bericap38cf_cap", h=h, r=r, d=d, wall=wall, texture=texture,
+                        anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+
+// Section: 48-41 Jug Threading
+//   The 48-41 finish is a single-start 48 mm thread with a 41 mm bore, found on 3 to 5 L jugs. It has a 3.3 mm thread pitch.
+//   .
+//   The thread profiles, thread diameters, and bore diameter used here were measured from real jugs and caps.
+//   The other neck dimensions (thread length, tamper bead, and support ring) are approximations, so check them against your own jugs.
+//   The cap does not include a tamper-evident band.
+
+
+// Module: bottle4841_neck()
+// Synopsis: Creates a neck for a 48-41 jug.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bottle4841_cap()
+// Usage:
+//   bottle4841_neck([wall]) [ATTACHMENTS];
+// Description:
+//   Creates an approximation of a 48-41 threaded jug neck, as found on 3 to 5 L jugs.
+// Arguments:
+//   wall = Wall thickness in mm, measured from the base of the threads.  Default: the standard bore diameter of 41 mm (2 mm wall)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "support-ring"
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "tamper-ring" = Centered at the top of the tamper bead.
+//   "support-ring" = Centered at the bottom of the support ring.
+// Example:
+//   bottle4841_neck();
+// Example: Standard anchors
+//   bottle4841_neck() show_anchors(custom=false);
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bottle4841_neck()
+//           show_anchors(std=false);
+
+function bottle4841_neck(wall, anchor, spin, orient) = no_function("bottle4841_neck");
+
+module bottle4841_neck(wall, anchor="support-ring", spin=0, orient=UP)
+{
+    _profile_bottle_neck(_BOTTLE4841_SPECS, wall=wall, anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+// Module: bottle4841_cap()
+// Synopsis: Creates a cap for a 48-41 jug.
+// SynTags: Geom
+// Topics: Bottles, Threading
+// See Also: bottle4841_neck()
+// Usage:
+//   bottle4841_cap([h], [r|d], [wall], [texture], [$slop]) [ATTACHMENTS];
+// Description:
+//   Creates a basic cap for a 48-41 threaded jug, as found on 3 to 5 L jugs.
+//   The cap has no tamper-evident band.  The inner diameter of the cap is increased by `2 * $slop`, so you can add clearance if needed.
+// Arguments:
+//   h = The height of the cap.  Default: tall enough to reach the tamper bead of the neck
+//   r = Outer radius of the cap.
+//   d = Outer diameter of the cap.
+//   wall = Wall thickness in mm.  Default: 2
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", "sharp_knurled", "ribbed", "sharp_ribbed", or "hex_faces". Default: "none"
+//   ---
+//   $slop = Increase inner diameter by `2 * $slop`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Named Anchors:
+//   "inside-top" = Centered on the inside top of the cap.
+// Example:
+//   bottle4841_cap();
+// Example: Hex cap
+//   bottle4841_cap(texture="hex_faces");
+// Example: Custom named anchors
+//   expose_anchors(0.3)
+//       bottle4841_cap(texture="ribbed")
+//           show_anchors(std=false);
+
+function bottle4841_cap(h, r, d, wall, texture, anchor, spin, orient) = no_function("bottle4841_cap");
+
+module bottle4841_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP)
+{
+    _profile_bottle_cap(_BOTTLE4841_SPECS, "bottle4841_cap", h=h, r=r, d=d, wall=wall, texture=texture,
+                        anchor=anchor, spin=spin, orient=orient)
+        children();
+}
+
+
+// Specifications for the Bericap and 48-41 finishes.
+// Thread profiles are given in mm as [radial, axial] points, listed from the bottom of the thread up.
+// Neck profiles have radial 0 at the thread base and increase outward.
+// Cap profiles have radial 0 at the thread base (the cap wall) and decrease inward.
+// Distances named *_top are measured down from the top of the neck.
+//   inner_d      = bore diameter
+//   root_d       = diameter at the base of the neck threads
+//   neck_profile = neck thread profile
+//   cap_major_d  = diameter at the base of the cap threads
+//   cap_profile  = cap thread profile
+//   pitch        = axial distance between adjacent threads
+//   starts       = number of thread starts
+//   turns        = number of turns of each thread start
+//   lip_h        = height of the plain lip above the neck threads
+//   tamper_top   = distance from the top of the neck down to the top of the tamper bead
+//   tamper_h     = height of the tamper bead
+//   tamper_d     = diameter of the tamper bead
+//   support_top  = distance from the top of the neck down to the top of the support ring
+//   support_h    = thickness of the support ring
+//   support_d    = diameter of the support ring
+//   base_h       = height of the neck below the support ring
+
+_BERICAP38HF_SPECS = [
+    ["inner_d", 32.5],
+    ["root_d", 35.0],
+    ["neck_profile", [[0,0], [1.2,0.4], [1.2,0.9], [0,1.9]]],
+    ["cap_major_d", 37.5],
+    ["cap_profile", [[0,0], [-1.0,1.0], [-1.0,1.5], [0,1.9]]],
+    ["pitch", 3.63],
+    ["starts", 2],
+    ["turns", 0.9],
+    ["lip_h", 1.5],
+    ["tamper_top", 12],
+    ["tamper_h", 2.5],
+    ["tamper_d", 38.6],
+    ["support_top", 18],
+    ["support_h", 1.5],
+    ["support_d", 45],
+    ["base_h", 3]
+];
+
+_BERICAP38CF_SPECS = [
+    ["inner_d", 33.4],
+    ["root_d", 36.0],
+    ["neck_profile", [[0,0], [1.0,0.4], [1.0,0.8], [0,1.6]]],
+    ["cap_major_d", 38.2],
+    ["cap_profile", [[0,0], [-1.0,0.8], [-1.0,1.2], [0,1.6]]],
+    ["pitch", 3.0],
+    ["starts", 3],
+    ["turns", 0.5],
+    ["lip_h", 1.5],
+    ["tamper_top", 10],
+    ["tamper_h", 2.5],
+    ["tamper_d", 39.4],
+    ["support_top", 16],
+    ["support_h", 1.5],
+    ["support_d", 46],
+    ["base_h", 3]
+];
+
+_BOTTLE4841_SPECS = [
+    ["inner_d", 41.0],
+    ["root_d", 45.0],
+    ["neck_profile", [[0,0], [1.35,0.4], [1.35,0.7], [0,1.5]]],
+    ["cap_major_d", 48.0],
+    ["cap_profile", [[0,0], [-1.0,1.0], [-1.0,1.25], [0,1.5]]],
+    ["pitch", 3.3],
+    ["starts", 1],
+    ["turns", 1.5],
+    ["lip_h", 1.5],
+    ["tamper_top", 10.5],
+    ["tamper_h", 2.5],
+    ["tamper_d", 49],
+    ["support_top", 17],
+    ["support_h", 1.5],
+    ["support_d", 56],
+    ["base_h", 3]
+];
+
+
+// Converts a [radial, axial] thread profile in mm into a profile for thread_helix().
+// For a neck (external thread), the base of the thread is at y=0.  For a cap (internal thread),
+// the crest of the thread is at y=0.  The base of the thread is pushed `overlap` mm into
+// the wall so that the thread unions cleanly with it.
+function _profile_bottle_thread(pts, pitch, internal=false, overlap=0.1) =
+    let(
+        w = max(column(pts,1)),
+        depth = max([for (p=pts) abs(p[0])]),
+        prof = [
+            for (p=pts)
+                let(rad = abs(p[0]))
+                [(p[1]-w/2)/pitch,
+                 internal ? (rad==0 ? depth+overlap : depth-rad)/pitch
+                          : (rad==0 ? 0 : rad+overlap)/pitch]
+        ]
+    )
+    internal ? prof : reverse(prof);
+
+
+// Length of the threaded section of a neck or cap, including the thread width.
+function _profile_bottle_thread_len(spec, profile) =
+    struct_val(spec,"pitch") * struct_val(spec,"starts") * struct_val(spec,"turns")
+    + max(column(struct_val(spec,profile),1));
+
+
+module _profile_bottle_neck(spec, wall, anchor, spin, orient)
+{
+    root_d = struct_val(spec,"root_d");
+    inner_d = is_def(wall) ? root_d - 2*wall : struct_val(spec,"inner_d");
+    checks = assert(is_undef(wall) || (wall>0 && inner_d>0), "\nwall must be positive and less than the neck radius.");
+    pitch = struct_val(spec,"pitch");
+    depth = max(column(struct_val(spec,"neck_profile"),0));
+    lip_h = struct_val(spec,"lip_h");
+    tamper_top = struct_val(spec,"tamper_top");
+    tamper_h = struct_val(spec,"tamper_h");
+    tamper_d = struct_val(spec,"tamper_d");
+    support_top = struct_val(spec,"support_top");
+    support_h = struct_val(spec,"support_h");
+    support_d = struct_val(spec,"support_d");
+    base_h = struct_val(spec,"base_h");
+    thread_w = max(column(struct_val(spec,"neck_profile"),1));
+    h = base_h + support_h + support_top;
+    tamper_z = h - tamper_top;     // Top of the tamper bead.
+    chamf = 0.5;
+    profile = _profile_bottle_thread(struct_val(spec,"neck_profile"), pitch);
+
+    $fn = segs(support_d/2);
+    anchors = [
+        named_anchor("support-ring", [0,0,base_h-h/2]),
+        named_anchor("tamper-ring", [0,0,tamper_z-h/2])
+    ];
+    attachable(anchor,spin,orient, d=root_d, l=h, anchors=anchors) {
+        down(h/2) {
+            rotate_extrude(convexity=10) {
+                polygon([
+                    [inner_d/2, 0],
+                    [root_d/2, 0],
+                    [root_d/2, base_h],
+                    [support_d/2-chamf, base_h],
+                    [support_d/2, base_h+chamf],
+                    [support_d/2, base_h+support_h-chamf],
+                    [support_d/2-chamf, base_h+support_h],
+                    [root_d/2, base_h+support_h],
+                    [root_d/2, tamper_z-tamper_h],
+                    [tamper_d/2, tamper_z-tamper_h/3],     // Sloped underside of the tamper bead.
+                    [tamper_d/2, tamper_z],
+                    [root_d/2, tamper_z],
+                    [root_d/2, h-chamf],
+                    [root_d/2-chamf, h],
+                    [inner_d/2, h]
+                ]);
+            }
+            up(h-lip_h-thread_w/2)
+                thread_helix(d=root_d-0.2, pitch=pitch, profile=profile,
+                             starts=struct_val(spec,"starts"), turns=struct_val(spec,"turns"),
+                             lead_in=-2*depth, anchor=TOP);
+        }
+        children();
+    }
+}
+
+
+module _profile_bottle_cap(spec, modname, h, r, d, wall, texture, anchor, spin, orient)
+{
+    pitch = struct_val(spec,"pitch");
+    cap_id = struct_val(spec,"cap_major_d") + 2*get_slop();
+    depth = max([for (p=struct_val(spec,"cap_profile")) abs(p[0])]);
+    lip_h = struct_val(spec,"lip_h");
+    thread_len = _profile_bottle_thread_len(spec, "cap_profile");
+    thread_w = max(column(struct_val(spec,"cap_profile"),1));
+    thread_gap = lip_h/2;           // Space between the inside top of the cap and the threads.
+    min_skirt = thread_gap + thread_len;
+    profile = _profile_bottle_thread(struct_val(spec,"cap_profile"), pitch, internal=true);
+
+    rr = get_radius(r=r, d=d, dflt=undef);
+    wwall = default(u_sub(rr,cap_id/2), default(wall, 2));
+    hh = default(h, struct_val(spec,"tamper_top") - 0.5 + wwall);
+    checks =
+        assert(wwall > 0, "\nwall must be positive.")
+        assert(hh >= min_skirt + wwall, str("\nheight can't be less than ", min_skirt + wwall, "."));
+
+    $fn = segs(struct_val(spec,"support_d")/2);
+    w = cap_id + 2*wwall;
+    skirt = hh - wwall;
+    anchors = [
+        named_anchor("inside-top", [0,0,-(hh/2-wwall)])
+    ];
+    attachable(anchor,spin,orient, d=w, l=hh, anchors=anchors) {
+        // Built open end down, as it sits on the bottle, then flipped so the closed top is at the bottom.
+        xrot(180) down(hh/2) {
+            difference() {
+                _tex_cyl(w, hh, texture, BOTTOM, modname);
+                down(0.01) cyl(d=cap_id, h=skirt+0.01, anchor=BOTTOM);
+            }
+            up(skirt-thread_gap-thread_w/2)
+                thread_helix(d=cap_id-2*depth, pitch=pitch, profile=profile, internal=true,
+                             starts=struct_val(spec,"starts"), turns=struct_val(spec,"turns"),
+                             lead_in=-2*depth, anchor=TOP);
+        }
+        children();
+    }
+}
 
 
 
