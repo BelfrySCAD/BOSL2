@@ -180,3 +180,81 @@ module test_mason_cap() {
 }
 test_mason_cap();
 '''
+
+[[test]]
+name = "test_bericap38hf_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bericap38hf_neck() {
+    $fn = 8;
+    bericap38hf_neck();
+}
+test_bericap38hf_neck();
+'''
+
+[[test]]
+name = "test_bericap38hf_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bericap38hf_cap() {
+    $fn = 8;
+    bericap38hf_cap();
+}
+test_bericap38hf_cap();
+'''
+
+[[test]]
+name = "test_bericap38cf_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bericap38cf_neck() {
+    $fn = 8;
+    bericap38cf_neck();
+}
+test_bericap38cf_neck();
+'''
+
+[[test]]
+name = "test_bericap38cf_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bericap38cf_cap() {
+    $fn = 8;
+    bericap38cf_cap();
+}
+test_bericap38cf_cap();
+'''
+
+[[test]]
+name = "test_bottle4841_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bottle4841_neck() {
+    $fn = 8;
+    bottle4841_neck();
+}
+test_bottle4841_neck();
+'''
+
+[[test]]
+name = "test_bottle4841_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bottle4841_cap() {
+    $fn = 8;
+    bottle4841_cap();
+}
+test_bottle4841_cap();
+'''
